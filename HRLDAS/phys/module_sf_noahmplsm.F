@@ -1,526 +1,9 @@
-MODULE NOAHMP_TABLES
-
-    IMPLICIT NONE
-
-    INTEGER, PRIVATE, PARAMETER :: MVT   = 27
-    INTEGER, PRIVATE, PARAMETER :: MBAND = 2
-    INTEGER, PRIVATE, PARAMETER :: MSC   = 8
-    INTEGER, PRIVATE, PARAMETER :: MAX_SOILTYP = 30
-
-! MPTABLE.TBL vegetation parameters
-
-    INTEGER :: ISURBAN_TABLE
-    INTEGER :: ISWATER_TABLE
-    INTEGER :: ISBARREN_TABLE
-    INTEGER :: ISICE_TABLE
-    INTEGER :: EBLFOREST_TABLE
-
-    REAL :: CH2OP_TABLE(MVT)       !maximum intercepted h2o per unit lai+sai (mm)
-    REAL :: DLEAF_TABLE(MVT)       !characteristic leaf dimension (m)
-    REAL :: Z0MVT_TABLE(MVT)       !momentum roughness length (m)
-    REAL :: HVT_TABLE(MVT)         !top of canopy (m)
-    REAL :: HVB_TABLE(MVT)         !bottom of canopy (m)
-    REAL :: DEN_TABLE(MVT)         !tree density (no. of trunks per m2)
-    REAL :: RC_TABLE(MVT)          !tree crown radius (m)
-    REAL :: MFSNO_TABLE(MVT)       !snowmelt curve parameter ()
-    REAL :: SAIM_TABLE(MVT,12)     !monthly stem area index, one-sided
-    REAL :: LAIM_TABLE(MVT,12)     !monthly leaf area index, one-sided
-    REAL :: SLA_TABLE(MVT)         !single-side leaf area per Kg [m2/kg]
-    REAL :: DILEFC_TABLE(MVT)      !coeficient for leaf stress death [1/s]
-    REAL :: DILEFW_TABLE(MVT)      !coeficient for leaf stress death [1/s]
-    REAL :: FRAGR_TABLE(MVT)       !fraction of growth respiration  !original was 0.3 
-    REAL :: LTOVRC_TABLE(MVT)      !leaf turnover [1/s]
-
-    REAL :: C3PSN_TABLE(MVT)       !photosynthetic pathway: 0. = c4, 1. = c3
-    REAL :: KC25_TABLE(MVT)        !co2 michaelis-menten constant at 25c (pa)
-    REAL :: AKC_TABLE(MVT)         !q10 for kc25
-    REAL :: KO25_TABLE(MVT)        !o2 michaelis-menten constant at 25c (pa)
-    REAL :: AKO_TABLE(MVT)         !q10 for ko25
-    REAL :: VCMX25_TABLE(MVT)      !maximum rate of carboxylation at 25c (umol co2/m**2/s)
-    REAL :: AVCMX_TABLE(MVT)       !q10 for vcmx25
-    REAL :: BP_TABLE(MVT)          !minimum leaf conductance (umol/m**2/s)
-    REAL :: MP_TABLE(MVT)          !slope of conductance-to-photosynthesis relationship
-    REAL :: QE25_TABLE(MVT)        !quantum efficiency at 25c (umol co2 / umol photon)
-    REAL :: AQE_TABLE(MVT)         !q10 for qe25
-    REAL :: RMF25_TABLE(MVT)       !leaf maintenance respiration at 25c (umol co2/m**2/s)
-    REAL :: RMS25_TABLE(MVT)       !stem maintenance respiration at 25c (umol co2/kg bio/s)
-    REAL :: RMR25_TABLE(MVT)       !root maintenance respiration at 25c (umol co2/kg bio/s)
-    REAL :: ARM_TABLE(MVT)         !q10 for maintenance respiration
-    REAL :: FOLNMX_TABLE(MVT)      !foliage nitrogen concentration when f(n)=1 (%)
-    REAL :: TMIN_TABLE(MVT)        !minimum temperature for photosynthesis (k)
-
-    REAL :: XL_TABLE(MVT)          !leaf/stem orientation index
-    REAL :: RHOL_TABLE(MVT,MBAND)  !leaf reflectance: 1=vis, 2=nir
-    REAL :: RHOS_TABLE(MVT,MBAND)  !stem reflectance: 1=vis, 2=nir
-    REAL :: TAUL_TABLE(MVT,MBAND)  !leaf transmittance: 1=vis, 2=nir
-    REAL :: TAUS_TABLE(MVT,MBAND)  !stem transmittance: 1=vis, 2=nir
-
-    REAL :: MRP_TABLE(MVT)         !microbial respiration parameter (umol co2 /kg c/ s)
-    REAL :: CWPVT_TABLE(MVT)       !empirical canopy wind parameter
-
-    REAL :: WRRAT_TABLE(MVT)       !wood to non-wood ratio
-    REAL :: WDPOOL_TABLE(MVT)      !wood pool (switch 1 or 0) depending on woody or not [-]
-    REAL :: TDLEF_TABLE(MVT)       !characteristic T for leaf freezing [K]
-
-    REAL :: NROOT_TABLE(MVT)       !number of soil layers with root present
-    REAL :: RGL_TABLE(MVT)         !Parameter used in radiation stress function
-    REAL :: RS_TABLE(MVT)          !Minimum stomatal resistance [s m-1]
-    REAL :: HS_TABLE(MVT)          !Parameter used in vapor pressure deficit function
-    REAL :: TOPT_TABLE(MVT)        !Optimum transpiration air temperature [K]
-    REAL :: RSMAX_TABLE(MVT)       !Maximal stomatal resistance [s m-1]
-
-! SOILPARM.TBL parameters
-
-    INTEGER            :: SLCATS
-
-    REAL :: BEXP_TABLE(MAX_SOILTYP)          !maximum intercepted h2o per unit lai+sai (mm)
-    REAL :: SMCDRY_TABLE(MAX_SOILTYP)      !characteristic leaf dimension (m)
-    REAL :: F1_TABLE(MAX_SOILTYP)         !momentum roughness length (m)
-    REAL :: SMCMAX_TABLE(MAX_SOILTYP)      !top of canopy (m)
-    REAL :: SMCREF_TABLE(MAX_SOILTYP)      !bottom of canopy (m)
-    REAL :: PSISAT_TABLE(MAX_SOILTYP)      !tree density (no. of trunks per m2)
-    REAL :: DKSAT_TABLE(MAX_SOILTYP)       !tree crown radius (m)
-    REAL :: DWSAT_TABLE(MAX_SOILTYP)       !monthly stem area index, one-sided
-    REAL :: SMCWLT_TABLE(MAX_SOILTYP)      !monthly leaf area index, one-sided
-    REAL :: QUARTZ_TABLE(MAX_SOILTYP)         !single-side leaf area per Kg [m2/kg]
-
-! GENPARM.TBL parameters
-
-    REAL :: SLOPE_TABLE(9)    !slope factor for soil drainage
-    
-    REAL :: CSOIL_TABLE       !Soil heat capacity [J m-3 K-1]
-    REAL :: REFDK_TABLE       !Parameter in the surface runoff parameterization
-    REAL :: REFKDT_TABLE      !Parameter in the surface runoff parameterization
-    REAL :: FRZK_TABLE        !Frozen ground parameter
-    REAL :: ZBOT_TABLE        !Depth [m] of lower boundary soil temperature
-    REAL :: CZIL_TABLE        !Parameter used in the calculation of the roughness length for heat
-
-! MPTABLE.TBL radiation parameters
-
-    REAL :: ALBSAT_TABLE(MSC,MBAND)   !saturated soil albedos: 1=vis, 2=nir
-    REAL :: ALBDRY_TABLE(MSC,MBAND)   !dry soil albedos: 1=vis, 2=nir
-    REAL :: ALBICE_TABLE(MBAND)       !albedo land ice: 1=vis, 2=nir
-    REAL :: ALBLAK_TABLE(MBAND)       !albedo frozen lakes: 1=vis, 2=nir
-    REAL :: OMEGAS_TABLE(MBAND)       !two-stream parameter omega for snow
-    REAL :: BETADS_TABLE              !two-stream parameter betad for snow
-    REAL :: BETAIS_TABLE              !two-stream parameter betad for snow
-    REAL :: EG_TABLE(2)               !emissivity
-
-! MPTABLE.TBL global parameters
-
-    REAL :: CO2_TABLE      !co2 partial pressure
-    REAL :: O2_TABLE       !o2 partial pressure
-    REAL :: TIMEAN_TABLE   !gridcell mean topgraphic index (global mean)
-    REAL :: FSATMX_TABLE   !maximum surface saturated fraction (global mean)
-    REAL :: Z0SNO_TABLE    !snow surface roughness length (m) (0.002)
-    REAL :: SSI_TABLE      !liquid water holding capacity for snowpack (m3/m3) (0.03)
-    REAL :: SWEMX_TABLE    !new snow mass to fully cover old snow (mm)
-
-CONTAINS
-
-  subroutine read_mp_veg_parameters(DATASET_IDENTIFIER)
-    implicit none
-    character(len=*), intent(in) :: DATASET_IDENTIFIER
-    integer :: ierr
-    INTEGER :: IK,IM
-
-    integer :: NVEG
-    character(len=256) :: VEG_DATASET_DESCRIPTION
-
-    INTEGER :: ISURBAN
-    INTEGER :: ISWATER
-    INTEGER :: ISBARREN
-    INTEGER :: ISICE
-    INTEGER :: EBLFOREST
-
-    REAL, DIMENSION(MVT) :: SAI_JAN,SAI_FEB,SAI_MAR,SAI_APR,SAI_MAY,SAI_JUN, &
-                                     SAI_JUL,SAI_AUG,SAI_SEP,SAI_OCT,SAI_NOV,SAI_DEC
-    REAL, DIMENSION(MVT) :: LAI_JAN,LAI_FEB,LAI_MAR,LAI_APR,LAI_MAY,LAI_JUN, &
-                                     LAI_JUL,LAI_AUG,LAI_SEP,LAI_OCT,LAI_NOV,LAI_DEC
-    REAL, DIMENSION(MVT) :: RHOL_VIS, RHOL_NIR, RHOS_VIS, RHOS_NIR, &
-                                     TAUL_VIS, TAUL_NIR, TAUS_VIS, TAUS_NIR
-    REAL, DIMENSION(MVT) :: CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, &
-                     AVCMX, AQE, LTOVRC,  DILEFC,  DILEFW,  RMF25 ,  SLA   ,  FRAGR ,  TMIN  ,  VCMX25,  TDLEF ,  &
-                     BP, MP, QE25, RMS25, RMR25, ARM, FOLNMX, WDPOOL, WRRAT, MRP, NROOT, RGL, RS, HS, TOPT, RSMAX, &
-		     SLAREA, EPS1, EPS2, EPS3, EPS4, EPS5
-			     
-    NAMELIST / noahmp_usgs_veg_categories / VEG_DATASET_DESCRIPTION, NVEG
-    NAMELIST / noahmp_usgs_parameters / ISURBAN, ISWATER, ISBARREN, ISICE, EBLFOREST, &
-         CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, AVCMX, AQE, &
-         LTOVRC,  DILEFC,  DILEFW,  RMF25 ,  SLA   ,  FRAGR ,  TMIN  ,  VCMX25,  TDLEF ,  BP, MP, QE25, RMS25, RMR25, ARM, &
-         FOLNMX, WDPOOL, WRRAT, MRP, NROOT, RGL, RS, HS, TOPT, RSMAX, &
-         SAI_JAN, SAI_FEB, SAI_MAR, SAI_APR, SAI_MAY, SAI_JUN,SAI_JUL,SAI_AUG,SAI_SEP,SAI_OCT,SAI_NOV,SAI_DEC, &
-         LAI_JAN, LAI_FEB, LAI_MAR, LAI_APR, LAI_MAY, LAI_JUN,LAI_JUL,LAI_AUG,LAI_SEP,LAI_OCT,LAI_NOV,LAI_DEC, &
-         RHOL_VIS, RHOL_NIR, RHOS_VIS, RHOS_NIR, TAUL_VIS, TAUL_NIR, TAUS_VIS, TAUS_NIR, SLAREA, EPS1, EPS2, EPS3, EPS4, EPS5
-	 
-    NAMELIST / noahmp_modis_veg_categories / VEG_DATASET_DESCRIPTION, NVEG
-    NAMELIST / noahmp_modis_parameters / ISURBAN, ISWATER, ISBARREN, ISICE, EBLFOREST, &
-         CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, AVCMX, AQE, &
-         LTOVRC,  DILEFC,  DILEFW,  RMF25 ,  SLA   ,  FRAGR ,  TMIN  ,  VCMX25,  TDLEF ,  BP, MP, QE25, RMS25, RMR25, ARM, &
-         FOLNMX, WDPOOL, WRRAT, MRP, NROOT, RGL, RS, HS, TOPT, RSMAX, &
-         SAI_JAN, SAI_FEB, SAI_MAR, SAI_APR, SAI_MAY, SAI_JUN,SAI_JUL,SAI_AUG,SAI_SEP,SAI_OCT,SAI_NOV,SAI_DEC, &
-         LAI_JAN, LAI_FEB, LAI_MAR, LAI_APR, LAI_MAY, LAI_JUN,LAI_JUL,LAI_AUG,LAI_SEP,LAI_OCT,LAI_NOV,LAI_DEC, &
-         RHOL_VIS, RHOL_NIR, RHOS_VIS, RHOS_NIR, TAUL_VIS, TAUL_NIR, TAUS_VIS, TAUS_NIR, SLAREA, EPS1, EPS2, EPS3, EPS4, EPS5
-
-    ! Initialize our variables to bad values, so that if the namelist read fails, we come to a screeching halt as soon as we try to use anything.
-    CH2OP_TABLE  = -1.E36
-    DLEAF_TABLE  = -1.E36
-    Z0MVT_TABLE  = -1.E36
-    HVT_TABLE    = -1.E36
-    HVB_TABLE    = -1.E36
-    DEN_TABLE    = -1.E36
-    RC_TABLE     = -1.E36
-    MFSNO_TABLE  = -1.E36
-    RHOL_TABLE   = -1.E36
-    RHOS_TABLE   = -1.E36
-    TAUL_TABLE   = -1.E36
-    TAUS_TABLE   = -1.E36
-    XL_TABLE     = -1.E36
-    CWPVT_TABLE  = -1.E36
-    C3PSN_TABLE  = -1.E36
-    KC25_TABLE   = -1.E36
-    AKC_TABLE    = -1.E36
-    KO25_TABLE   = -1.E36
-    AKO_TABLE    = -1.E36
-    AVCMX_TABLE  = -1.E36
-    AQE_TABLE    = -1.E36
-    LTOVRC_TABLE = -1.E36
-    DILEFC_TABLE = -1.E36
-    DILEFW_TABLE = -1.E36
-    RMF25_TABLE  = -1.E36
-    SLA_TABLE    = -1.E36
-    FRAGR_TABLE  = -1.E36
-    TMIN_TABLE   = -1.E36
-    VCMX25_TABLE = -1.E36
-    TDLEF_TABLE  = -1.E36
-    BP_TABLE     = -1.E36
-    MP_TABLE     = -1.E36
-    QE25_TABLE   = -1.E36
-    RMS25_TABLE  = -1.E36
-    RMR25_TABLE  = -1.E36
-    ARM_TABLE    = -1.E36
-    FOLNMX_TABLE = -1.E36
-    WDPOOL_TABLE = -1.E36
-    WRRAT_TABLE  = -1.E36
-    MRP_TABLE    = -1.E36
-    SAIM_TABLE   = -1.E36
-    LAIM_TABLE   = -1.E36
-    NROOT_TABLE  = -1.E36
-    RGL_TABLE    = -1.E36
-    RS_TABLE     = -1.E36
-    HS_TABLE     = -1.E36
-    TOPT_TABLE   = -1.E36
-    RSMAX_TABLE  = -1.E36
-    ISURBAN_TABLE      = -99999
-    ISWATER_TABLE      = -99999
-    ISBARREN_TABLE     = -99999
-    ISICE_TABLE        = -99999
-    EBLFOREST_TABLE    = -99999
-
-    open(15, file="MPTABLE.TBL", status='old', form='formatted', action='read', iostat=ierr)
-    if (ierr /= 0) then
-       write(*,'("****** Error ******************************************************")')
-       write(*,'("Cannot find file MPTABLE.TBL")')
-       write(*,'("STOP")')
-       write(*,'("*******************************************************************")')
-       call wrf_error_fatal("STOP in Noah-MP read_mp_veg_parameters")
-    endif
-
-    if ( trim(DATASET_IDENTIFIER) == "USGS" ) then
-       read(15,noahmp_usgs_veg_categories)
-       read(15,noahmp_usgs_parameters)
-    else if ( trim(DATASET_IDENTIFIER) == "MODIFIED_IGBP_MODIS_NOAH" ) then
-       read(15,noahmp_modis_veg_categories)
-       read(15,noahmp_modis_parameters)
-    else
-       write(*,'("Unrecognized DATASET_IDENTIFIER in subroutine READ_MP_VEG_PARAMETERS")')
-       write(*,'("DATASET_IDENTIFIER = ''", A, "''")') trim(DATASET_IDENTIFIER)
-       call wrf_error_fatal("STOP in Noah-MP read_mp_veg_parameters")
-    endif
-    close(15)
-
-      ISURBAN_TABLE       = ISURBAN
-      ISWATER_TABLE       = ISWATER
-     ISBARREN_TABLE       = ISBARREN
-        ISICE_TABLE       = ISICE
-    EBLFOREST_TABLE       = EBLFOREST
-
-     CH2OP_TABLE(1:NVEG)  = CH2OP(1:NVEG)
-     DLEAF_TABLE(1:NVEG)  = DLEAF(1:NVEG)
-     Z0MVT_TABLE(1:NVEG)  = Z0MVT(1:NVEG)
-       HVT_TABLE(1:NVEG)  = HVT(1:NVEG)
-       HVB_TABLE(1:NVEG)  = HVB(1:NVEG)
-       DEN_TABLE(1:NVEG)  = DEN(1:NVEG)
-        RC_TABLE(1:NVEG)  = RC(1:NVEG)
-     MFSNO_TABLE(1:NVEG)  = MFSNO(1:NVEG)
-        XL_TABLE(1:NVEG)  = XL(1:NVEG)
-     CWPVT_TABLE(1:NVEG)  = CWPVT(1:NVEG)
-     C3PSN_TABLE(1:NVEG)  = C3PSN(1:NVEG)
-      KC25_TABLE(1:NVEG)  = KC25(1:NVEG)
-       AKC_TABLE(1:NVEG)  = AKC(1:NVEG)
-      KO25_TABLE(1:NVEG)  = KO25(1:NVEG)
-       AKO_TABLE(1:NVEG)  = AKO(1:NVEG)
-     AVCMX_TABLE(1:NVEG)  = AVCMX(1:NVEG)
-       AQE_TABLE(1:NVEG)  = AQE(1:NVEG)
-    LTOVRC_TABLE(1:NVEG)  = LTOVRC(1:NVEG)
-    DILEFC_TABLE(1:NVEG)  = DILEFC(1:NVEG)
-    DILEFW_TABLE(1:NVEG)  = DILEFW(1:NVEG)
-     RMF25_TABLE(1:NVEG)  = RMF25(1:NVEG)
-       SLA_TABLE(1:NVEG)  = SLA(1:NVEG)
-     FRAGR_TABLE(1:NVEG)  = FRAGR(1:NVEG)
-      TMIN_TABLE(1:NVEG)  = TMIN(1:NVEG)
-    VCMX25_TABLE(1:NVEG)  = VCMX25(1:NVEG)
-     TDLEF_TABLE(1:NVEG)  = TDLEF(1:NVEG)
-        BP_TABLE(1:NVEG)  = BP(1:NVEG)
-        MP_TABLE(1:NVEG)  = MP(1:NVEG)
-      QE25_TABLE(1:NVEG)  = QE25(1:NVEG)
-     RMS25_TABLE(1:NVEG)  = RMS25(1:NVEG)
-     RMR25_TABLE(1:NVEG)  = RMR25(1:NVEG)
-       ARM_TABLE(1:NVEG)  = ARM(1:NVEG)
-    FOLNMX_TABLE(1:NVEG)  = FOLNMX(1:NVEG)
-    WDPOOL_TABLE(1:NVEG)  = WDPOOL(1:NVEG)
-     WRRAT_TABLE(1:NVEG)  = WRRAT(1:NVEG)
-       MRP_TABLE(1:NVEG)  = MRP(1:NVEG)
-     NROOT_TABLE(1:NVEG)  = NROOT(1:NVEG)
-       RGL_TABLE(1:NVEG)  = RGL(1:NVEG)
-        RS_TABLE(1:NVEG)  = RS(1:NVEG)
-        HS_TABLE(1:NVEG)  = HS(1:NVEG)
-      TOPT_TABLE(1:NVEG)  = TOPT(1:NVEG)
-     RSMAX_TABLE(1:NVEG)  = RSMAX(1:NVEG)
-    
-    ! Put LAI and SAI into 2d array from monthly lines in table; same for canopy radiation properties
-
-    SAIM_TABLE(1:NVEG, 1) = SAI_JAN(1:NVEG)
-    SAIM_TABLE(1:NVEG, 2) = SAI_FEB(1:NVEG)
-    SAIM_TABLE(1:NVEG, 3) = SAI_MAR(1:NVEG)
-    SAIM_TABLE(1:NVEG, 4) = SAI_APR(1:NVEG)
-    SAIM_TABLE(1:NVEG, 5) = SAI_MAY(1:NVEG)
-    SAIM_TABLE(1:NVEG, 6) = SAI_JUN(1:NVEG)
-    SAIM_TABLE(1:NVEG, 7) = SAI_JUL(1:NVEG)
-    SAIM_TABLE(1:NVEG, 8) = SAI_AUG(1:NVEG)
-    SAIM_TABLE(1:NVEG, 9) = SAI_SEP(1:NVEG)
-    SAIM_TABLE(1:NVEG,10) = SAI_OCT(1:NVEG)
-    SAIM_TABLE(1:NVEG,11) = SAI_NOV(1:NVEG)
-    SAIM_TABLE(1:NVEG,12) = SAI_DEC(1:NVEG)
-
-    LAIM_TABLE(1:NVEG, 1) = LAI_JAN(1:NVEG)
-    LAIM_TABLE(1:NVEG, 2) = LAI_FEB(1:NVEG)
-    LAIM_TABLE(1:NVEG, 3) = LAI_MAR(1:NVEG)
-    LAIM_TABLE(1:NVEG, 4) = LAI_APR(1:NVEG)
-    LAIM_TABLE(1:NVEG, 5) = LAI_MAY(1:NVEG)
-    LAIM_TABLE(1:NVEG, 6) = LAI_JUN(1:NVEG)
-    LAIM_TABLE(1:NVEG, 7) = LAI_JUL(1:NVEG)
-    LAIM_TABLE(1:NVEG, 8) = LAI_AUG(1:NVEG)
-    LAIM_TABLE(1:NVEG, 9) = LAI_SEP(1:NVEG)
-    LAIM_TABLE(1:NVEG,10) = LAI_OCT(1:NVEG)
-    LAIM_TABLE(1:NVEG,11) = LAI_NOV(1:NVEG)
-    LAIM_TABLE(1:NVEG,12) = LAI_DEC(1:NVEG)
-
-    RHOL_TABLE(1:NVEG,1)  = RHOL_VIS(1:NVEG) !leaf reflectance: 1=vis, 2=nir
-    RHOL_TABLE(1:NVEG,2)  = RHOL_NIR(1:NVEG) !leaf reflectance: 1=vis, 2=nir
-    RHOS_TABLE(1:NVEG,1)  = RHOS_VIS(1:NVEG) !stem reflectance: 1=vis, 2=nir
-    RHOS_TABLE(1:NVEG,2)  = RHOS_NIR(1:NVEG) !stem reflectance: 1=vis, 2=nir
-    TAUL_TABLE(1:NVEG,1)  = TAUL_VIS(1:NVEG) !leaf transmittance: 1=vis, 2=nir
-    TAUL_TABLE(1:NVEG,2)  = TAUL_NIR(1:NVEG) !leaf transmittance: 1=vis, 2=nir
-    TAUS_TABLE(1:NVEG,1)  = TAUS_VIS(1:NVEG) !stem transmittance: 1=vis, 2=nir
-    TAUS_TABLE(1:NVEG,2)  = TAUS_NIR(1:NVEG) !stem transmittance: 1=vis, 2=nir
-
-  end subroutine read_mp_veg_parameters
-
-  subroutine read_mp_soil_parameters()
-    IMPLICIT NONE
-    INTEGER :: IERR
-    CHARACTER*4         :: SLTYPE
-    INTEGER             :: ITMP, NUM_SLOPE, LC
-    CHARACTER(len=256)  :: message
-    
-
-    ! Initialize our variables to bad values, so that if the namelist read fails, we come to a screeching halt as soon as we try to use anything.
-       BEXP_TABLE = -1.E36
-     SMCDRY_TABLE = -1.E36
-         F1_TABLE = -1.E36
-     SMCMAX_TABLE = -1.E36
-     SMCREF_TABLE = -1.E36
-     PSISAT_TABLE = -1.E36
-      DKSAT_TABLE = -1.E36
-      DWSAT_TABLE = -1.E36
-     SMCWLT_TABLE = -1.E36
-     QUARTZ_TABLE = -1.E36
-      SLOPE_TABLE = -1.E36
-      CSOIL_TABLE = -1.E36
-      REFDK_TABLE = -1.E36
-     REFKDT_TABLE = -1.E36
-       FRZK_TABLE = -1.E36
-       ZBOT_TABLE = -1.E36
-       CZIL_TABLE = -1.E36
-
-!
-!-----READ IN SOIL PROPERTIES FROM SOILPARM.TBL
-!
-    OPEN(19, FILE='SOILPARM.TBL',FORM='FORMATTED',STATUS='OLD',IOSTAT=ierr)
-    IF(ierr .NE. 0 ) THEN
-      WRITE(message,FMT='(A)') 'module_sf_noahmpdrv.F: read_mp_soil_parameters: failure opening SOILPARM.TBL'
-      CALL wrf_error_fatal ( message )
-    END IF
-
-    READ (19,*)
-    READ (19,*) SLTYPE
-    READ (19,*) SLCATS
-    WRITE( message , * ) 'SOIL TEXTURE CLASSIFICATION = ', TRIM ( SLTYPE ) , ' FOUND', &
-               SLCATS,' CATEGORIES'
-    CALL wrf_message ( message )
-
-    DO LC=1,SLCATS
-      READ (19,*) ITMP,BEXP_TABLE(LC),SMCDRY_TABLE(LC),F1_TABLE(LC),SMCMAX_TABLE(LC),    &
-                  SMCREF_TABLE(LC),PSISAT_TABLE(LC),DKSAT_TABLE(LC), DWSAT_TABLE(LC),   &
-                  SMCWLT_TABLE(LC), QUARTZ_TABLE(LC)
-    ENDDO
-
-    CLOSE (19)
-
-!
-!-----READ IN GENERAL PARAMETERS FROM GENPARM.TBL
-!
-    OPEN(19, FILE='GENPARM.TBL',FORM='FORMATTED',STATUS='OLD',IOSTAT=ierr)
-    IF(ierr .NE. 0 ) THEN
-      WRITE(message,FMT='(A)') 'module_sf_noahlsm.F: read_mp_soil_parameters: failure opening GENPARM.TBL'
-      CALL wrf_error_fatal ( message )
-    END IF
-
-    READ (19,*)
-    READ (19,*)
-    READ (19,*) NUM_SLOPE
-
-    DO LC=1,NUM_SLOPE
-        READ (19,*) SLOPE_TABLE(LC)
-    ENDDO
-
-    READ (19,*)
-    READ (19,*)
-    READ (19,*)
-    READ (19,*)
-    READ (19,*)
-    READ (19,*) CSOIL_TABLE
-    READ (19,*)
-    READ (19,*)
-    READ (19,*)
-    READ (19,*) REFDK_TABLE
-    READ (19,*)
-    READ (19,*) REFKDT_TABLE
-    READ (19,*)
-    READ (19,*) FRZK_TABLE
-    READ (19,*)
-    READ (19,*) ZBOT_TABLE
-    READ (19,*)
-    READ (19,*) CZIL_TABLE
-    READ (19,*)
-    READ (19,*)
-    READ (19,*)
-    READ (19,*)
-
-    CLOSE (19)
-
-  end subroutine read_mp_soil_parameters
-
-  subroutine read_mp_rad_parameters()
-    implicit none
-    integer :: ierr
-
-    REAL :: ALBICE(MBAND),ALBLAK(MBAND),OMEGAS(MBAND),BETADS,BETAIS,EG(2)
-    REAL :: ALBSAT_VIS(MSC)
-    REAL :: ALBSAT_NIR(MSC)
-    REAL :: ALBDRY_VIS(MSC)
-    REAL :: ALBDRY_NIR(MSC)
-
-    NAMELIST / noahmp_rad_parameters / ALBSAT_VIS,ALBSAT_NIR,ALBDRY_VIS,ALBDRY_NIR,ALBICE,ALBLAK,OMEGAS,BETADS,BETAIS,EG
-
-
-    ! Initialize our variables to bad values, so that if the namelist read fails, we come to a screeching halt as soon as we try to use anything.
-    ALBSAT_TABLE     = -1.E36
-    ALBDRY_TABLE     = -1.E36
-    ALBICE_TABLE     = -1.E36
-    ALBLAK_TABLE     = -1.E36
-    OMEGAS_TABLE     = -1.E36
-    BETADS_TABLE     = -1.E36
-    BETAIS_TABLE     = -1.E36
-    EG_TABLE         = -1.E36
-
-    open(15, file="MPTABLE.TBL", status='old', form='formatted', action='read', iostat=ierr)
-    if (ierr /= 0) then
-       write(*,'("****** Error ******************************************************")')
-       write(*,'("Cannot find file MPTABLE.TBL")')
-       write(*,'("STOP")')
-       write(*,'("*******************************************************************")')
-       call wrf_error_fatal("STOP in Noah-MP read_mp_rad_parameters")
-    endif
-
-    read(15,noahmp_rad_parameters)
-    close(15)
-
-    ALBSAT_TABLE(:,1) = ALBSAT_VIS ! saturated soil albedos: 1=vis, 2=nir
-    ALBSAT_TABLE(:,2) = ALBSAT_NIR ! saturated soil albedos: 1=vis, 2=nir
-    ALBDRY_TABLE(:,1) = ALBDRY_VIS ! dry soil albedos: 1=vis, 2=nir
-    ALBDRY_TABLE(:,2) = ALBDRY_NIR ! dry soil albedos: 1=vis, 2=nir
-    ALBICE_TABLE      = ALBICE
-    ALBLAK_TABLE      = ALBLAK
-    OMEGAS_TABLE      = OMEGAS
-    BETADS_TABLE      = BETADS
-    BETAIS_TABLE      = BETAIS
-    EG_TABLE          = EG
-
-  end subroutine read_mp_rad_parameters
-
-  subroutine read_mp_global_parameters()
-    implicit none
-    integer :: ierr
-
-    REAL :: CO2,O2,TIMEAN,FSATMX,Z0SNO,SSI,SWEMX
-
-    NAMELIST / noahmp_global_parameters / CO2,O2,TIMEAN,FSATMX,Z0SNO,SSI,SWEMX
-
-
-    ! Initialize our variables to bad values, so that if the namelist read fails, we come to a screeching halt as soon as we try to use anything.
-       CO2_TABLE     = -1.E36
-        O2_TABLE     = -1.E36
-    TIMEAN_TABLE     = -1.E36
-    FSATMX_TABLE     = -1.E36
-     Z0SNO_TABLE     = -1.E36
-       SSI_TABLE     = -1.E36
-     SWEMX_TABLE     = -1.E36
-
-    open(15, file="MPTABLE.TBL", status='old', form='formatted', action='read', iostat=ierr)
-    if (ierr /= 0) then
-       write(*,'("****** Error ******************************************************")')
-       write(*,'("Cannot find file MPTABLE.TBL")')
-       write(*,'("STOP")')
-       write(*,'("*******************************************************************")')
-       call wrf_error_fatal("STOP in Noah-MP read_mp_global_parameters")
-    endif
-
-    read(15,noahmp_global_parameters)
-    close(15)
-
-       CO2_TABLE     = CO2
-        O2_TABLE     = O2
-    TIMEAN_TABLE     = TIMEAN
-    FSATMX_TABLE     = FSATMX
-     Z0SNO_TABLE     = Z0SNO
-       SSI_TABLE     = SSI
-     SWEMX_TABLE     = SWEMX
-
-  end subroutine read_mp_global_parameters
-
-END MODULE NOAHMP_TABLES
-
-!== begin module_header ============================================================================
-
 MODULE MODULE_SF_NOAHMPLSM
 
   IMPLICIT NONE
 
   public  :: noahmp_options
   public  :: NOAHMP_SFLX
-  public  :: FRH2O           
 
   private :: ATM
   private :: PHENOLOGY
@@ -550,6 +33,7 @@ MODULE MODULE_SF_NOAHMPLSM
   private ::               HSTEP   
   private ::                         ROSR12
   private ::       PHASECHANGE
+  private ::               FRH2O           
 
   private :: WATER
   private ::       CANWATER
@@ -566,7 +50,6 @@ MODULE MODULE_SF_NOAHMPLSM
   private ::               SRT
   private ::                         WDFCND1        
   private ::                         WDFCND2       
-!  private ::                         INFIL       
   private ::               SSTEP
   private ::       GROUNDWATER
   private ::       SHALLOWWATERTABLE
@@ -577,7 +60,6 @@ MODULE MODULE_SF_NOAHMPLSM
 !  private ::       CH4FLUX
 
   private :: ERROR
-  private :: TRANSFER_MP_PARAMETERS
 
 ! =====================================options for different schemes================================
 ! **recommended
@@ -792,11 +274,10 @@ contains
 !
 !== begin noahmp_sflx ==============================================================================
 
-  SUBROUTINE NOAHMP_SFLX (&
+  SUBROUTINE NOAHMP_SFLX (parameters, &
                    ILOC    , JLOC    , LAT     , YEARLEN , JULIAN  , COSZ    , & ! IN : Time/Space-related
                    DT      , DX      , DZ8W    , NSOIL   , ZSOIL   , NSNOW   , & ! IN : Model configuration 
                    SHDFAC  , SHDMAX  , VEGTYP  , ICE     , IST     ,           & ! IN : Vegetation/Soil characteristics
-                   SOILTYP ,SLOPETYP ,SOILCOLOR,                               & ! IN : Vegetation/Soil characteristics
                    SMCEQ   ,                                                   & ! IN : Vegetation/Soil characteristics
                    SFCTMP  , SFCPRS  , PSFC    , UU      , VV      , Q2      , & ! IN : Forcing
                    QC      , SOLDN   , LWDN    ,                               & ! IN : Forcing
@@ -833,13 +314,12 @@ contains
   implicit none
 ! --------------------------------------------------------------------------------------------------
 ! input
+  type (noahmp_parameters), INTENT(IN) :: parameters
+
   INTEGER                        , INTENT(IN)    :: ICE    !ice (ice = 1)
   INTEGER                        , INTENT(IN)    :: IST    !surface type 1->soil; 2->lake
-  INTEGER                        , INTENT(INOUT)    :: VEGTYP !vegetation type 
-  INTEGER                        , INTENT(IN)    :: SOILTYP !vegetation type 
-  INTEGER                        , INTENT(IN)    :: SLOPETYP !vegetation type 
-  INTEGER                        , INTENT(IN)    :: SOILCOLOR !vegetation type 
-   INTEGER                        , INTENT(IN)    :: NSNOW  !maximum no. of snow layers        
+  INTEGER                        , INTENT(IN)    :: VEGTYP !vegetation type 
+  INTEGER                        , INTENT(IN)    :: NSNOW  !maximum no. of snow layers        
   INTEGER                        , INTENT(IN)    :: NSOIL  !no. of soil layers        
   INTEGER                        , INTENT(IN)    :: ILOC   !grid index
   INTEGER                        , INTENT(IN)    :: JLOC   !grid index
@@ -1069,8 +549,6 @@ contains
   LOGICAL                             :: FROZEN_GROUND ! used to define latent heat pathway
   LOGICAL                             :: FROZEN_CANOPY ! used to define latent heat pathway
   
-  type (noahmp_parameters) :: parameters
-
   ! INTENT (OUT) variables need to be assigned a value.  These normally get assigned values
   ! only if DVEG == 2.
   nee = 0.0
@@ -1080,8 +558,6 @@ contains
       PAHG  = 0.
       PAHB  = 0.
       PAH  = 0.
-
-    CALL TRANSFER_MP_PARAMETERS(VEGTYP,SOILTYP,SLOPETYP,SOILCOLOR,parameters)
 
 ! --------------------------------------------------------------------------------------------------
 ! re-process atmospheric forcing
@@ -8704,164 +8180,6 @@ END  SUBROUTINE SHALLOWWATERTABLE
 ! ********************************* end of carbon subroutines *****************************
 ! ==================================================================================================
 
-!== begin transfer_mp_parameters ===================================================================
-
-SUBROUTINE TRANSFER_MP_PARAMETERS(VEGTYPE,SOILTYPE,SLOPETYPE,SOILCOLOR,parameters)
-
-  USE NOAHMP_TABLES
-
-  implicit none
-
-  INTEGER, INTENT(IN)    :: VEGTYPE
-  INTEGER, INTENT(IN)    :: SOILTYPE
-  INTEGER, INTENT(IN)    :: SLOPETYPE
-  INTEGER, INTENT(IN)    :: SOILCOLOR
-    
-  type (noahmp_parameters), intent(out) :: parameters
-    
-  REAL    :: REFDK
-  REAL    :: REFKDT
-  REAL    :: FRZK
-  REAL    :: FRZFACT
-
-  parameters%ISWATER   =   ISWATER_TABLE
-  parameters%ISBARREN  =  ISBARREN_TABLE
-  parameters%ISICE     =     ISICE_TABLE
-  parameters%EBLFOREST = EBLFOREST_TABLE
-
-  parameters%URBAN_FLAG = .FALSE.
-  IF( VEGTYPE == ISURBAN_TABLE .or. VEGTYPE == 31 .or.VEGTYPE  == 32 .or. VEGTYPE == 33) THEN
-     parameters%URBAN_FLAG = .TRUE.
-  ENDIF
-
-!------------------------------------------------------------------------------------------!
-! Transfer veg parameters
-!------------------------------------------------------------------------------------------!
-
-  parameters%CH2OP  =  CH2OP_TABLE(VEGTYPE)       !maximum intercepted h2o per unit lai+sai (mm)
-  parameters%DLEAF  =  DLEAF_TABLE(VEGTYPE)       !characteristic leaf dimension (m)
-  parameters%Z0MVT  =  Z0MVT_TABLE(VEGTYPE)       !momentum roughness length (m)
-  parameters%HVT    =    HVT_TABLE(VEGTYPE)       !top of canopy (m)
-  parameters%HVB    =    HVB_TABLE(VEGTYPE)       !bottom of canopy (m)
-  parameters%DEN    =    DEN_TABLE(VEGTYPE)       !tree density (no. of trunks per m2)
-  parameters%RC     =     RC_TABLE(VEGTYPE)       !tree crown radius (m)
-  parameters%MFSNO  =  MFSNO_TABLE(VEGTYPE)       !snowmelt m parameter ()
-  parameters%SAIM   =   SAIM_TABLE(VEGTYPE,:)     !monthly stem area index, one-sided
-  parameters%LAIM   =   LAIM_TABLE(VEGTYPE,:)     !monthly leaf area index, one-sided
-  parameters%SLA    =    SLA_TABLE(VEGTYPE)       !single-side leaf area per Kg [m2/kg]
-  parameters%DILEFC = DILEFC_TABLE(VEGTYPE)       !coeficient for leaf stress death [1/s]
-  parameters%DILEFW = DILEFW_TABLE(VEGTYPE)       !coeficient for leaf stress death [1/s]
-  parameters%FRAGR  =  FRAGR_TABLE(VEGTYPE)       !fraction of growth respiration  !original was 0.3 
-  parameters%LTOVRC = LTOVRC_TABLE(VEGTYPE)       !leaf turnover [1/s]
-
-  parameters%C3PSN  =  C3PSN_TABLE(VEGTYPE)       !photosynthetic pathway: 0. = c4, 1. = c3
-  parameters%KC25   =   KC25_TABLE(VEGTYPE)       !co2 michaelis-menten constant at 25c (pa)
-  parameters%AKC    =    AKC_TABLE(VEGTYPE)       !q10 for kc25
-  parameters%KO25   =   KO25_TABLE(VEGTYPE)       !o2 michaelis-menten constant at 25c (pa)
-  parameters%AKO    =    AKO_TABLE(VEGTYPE)       !q10 for ko25
-  parameters%VCMX25 = VCMX25_TABLE(VEGTYPE)       !maximum rate of carboxylation at 25c (umol co2/m**2/s)
-  parameters%AVCMX  =  AVCMX_TABLE(VEGTYPE)       !q10 for vcmx25
-  parameters%BP     =     BP_TABLE(VEGTYPE)       !minimum leaf conductance (umol/m**2/s)
-  parameters%MP     =     MP_TABLE(VEGTYPE)       !slope of conductance-to-photosynthesis relationship
-  parameters%QE25   =   QE25_TABLE(VEGTYPE)       !quantum efficiency at 25c (umol co2 / umol photon)
-  parameters%AQE    =    AQE_TABLE(VEGTYPE)       !q10 for qe25
-  parameters%RMF25  =  RMF25_TABLE(VEGTYPE)       !leaf maintenance respiration at 25c (umol co2/m**2/s)
-  parameters%RMS25  =  RMS25_TABLE(VEGTYPE)       !stem maintenance respiration at 25c (umol co2/kg bio/s)
-  parameters%RMR25  =  RMR25_TABLE(VEGTYPE)       !root maintenance respiration at 25c (umol co2/kg bio/s)
-  parameters%ARM    =    ARM_TABLE(VEGTYPE)       !q10 for maintenance respiration
-  parameters%FOLNMX = FOLNMX_TABLE(VEGTYPE)       !foliage nitrogen concentration when f(n)=1 (%)
-  parameters%TMIN   =   TMIN_TABLE(VEGTYPE)       !minimum temperature for photosynthesis (k)
-
-  parameters%XL     =     XL_TABLE(VEGTYPE)       !leaf/stem orientation index
-  parameters%RHOL   =   RHOL_TABLE(VEGTYPE,:)     !leaf reflectance: 1=vis, 2=nir
-  parameters%RHOS   =   RHOS_TABLE(VEGTYPE,:)     !stem reflectance: 1=vis, 2=nir
-  parameters%TAUL   =   TAUL_TABLE(VEGTYPE,:)     !leaf transmittance: 1=vis, 2=nir
-  parameters%TAUS   =   TAUS_TABLE(VEGTYPE,:)     !stem transmittance: 1=vis, 2=nir
-
-  parameters%MRP    =    MRP_TABLE(VEGTYPE)       !microbial respiration parameter (umol co2 /kg c/ s)
-  parameters%CWPVT  =  CWPVT_TABLE(VEGTYPE)       !empirical canopy wind parameter
-
-  parameters%WRRAT  =  WRRAT_TABLE(VEGTYPE)       !wood to non-wood ratio
-  parameters%WDPOOL = WDPOOL_TABLE(VEGTYPE)       !wood pool (switch 1 or 0) depending on woody or not [-]
-  parameters%TDLEF  =  TDLEF_TABLE(VEGTYPE)       !characteristic T for leaf freezing [K]
-
-  parameters%NROOT  =  NROOT_TABLE(VEGTYPE)       !number of soil layers with root present
-  parameters%RGL    =    RGL_TABLE(VEGTYPE)       !Parameter used in radiation stress function
-  parameters%RSMIN  =     RS_TABLE(VEGTYPE)       !Minimum stomatal resistance [s m-1]
-  parameters%HS     =     HS_TABLE(VEGTYPE)       !Parameter used in vapor pressure deficit function
-  parameters%TOPT   =   TOPT_TABLE(VEGTYPE)       !Optimum transpiration air temperature [K]
-  parameters%RSMAX  =  RSMAX_TABLE(VEGTYPE)       !Maximal stomatal resistance [s m-1]
-
-!------------------------------------------------------------------------------------------!
-! Transfer rad parameters
-!------------------------------------------------------------------------------------------!
-
-   parameters%ALBSAT    = ALBSAT_TABLE(SOILCOLOR,:)
-   parameters%ALBDRY    = ALBDRY_TABLE(SOILCOLOR,:)
-   parameters%ALBICE    = ALBICE_TABLE
-   parameters%ALBLAK    = ALBLAK_TABLE               
-   parameters%OMEGAS    = OMEGAS_TABLE
-   parameters%BETADS    = BETADS_TABLE
-   parameters%BETAIS    = BETAIS_TABLE
-   parameters%EG        = EG_TABLE
-
-!------------------------------------------------------------------------------------------!
-! Transfer global parameters
-!------------------------------------------------------------------------------------------!
-
-   parameters%CO2       =    CO2_TABLE
-   parameters%O2        =     O2_TABLE
-   parameters%TIMEAN    = TIMEAN_TABLE
-   parameters%FSATMX    = FSATMX_TABLE
-   parameters%Z0SNO     =  Z0SNO_TABLE
-   parameters%SSI       =    SSI_TABLE
-   parameters%SWEMX     =  SWEMX_TABLE
-
-! ----------------------------------------------------------------------
-!  Transfer soil parameters
-! ----------------------------------------------------------------------
-
-    parameters%BEXP   = BEXP_TABLE   (SOILTYPE)
-    parameters%DKSAT  = DKSAT_TABLE  (SOILTYPE)
-    parameters%DWSAT  = DWSAT_TABLE  (SOILTYPE)
-    parameters%F1     = F1_TABLE     (SOILTYPE)
-    parameters%PSISAT = PSISAT_TABLE (SOILTYPE)
-    parameters%QUARTZ = QUARTZ_TABLE (SOILTYPE)
-    parameters%SMCDRY = SMCDRY_TABLE (SOILTYPE)
-    parameters%SMCMAX = SMCMAX_TABLE (SOILTYPE)
-    parameters%SMCREF = SMCREF_TABLE (SOILTYPE)
-    parameters%SMCWLT = SMCWLT_TABLE (SOILTYPE)
-
-! ----------------------------------------------------------------------
-! Transfer GENPARM parameters
-! ----------------------------------------------------------------------
-    parameters%CSOIL  = CSOIL_TABLE
-    parameters%ZBOT   = ZBOT_TABLE
-    parameters%CZIL   = CZIL_TABLE
-
-    FRZK   = FRZK_TABLE
-    REFDK  = REFDK_TABLE
-    REFKDT = REFKDT_TABLE
-    parameters%KDT    = REFKDT * parameters%DKSAT / REFDK
-    parameters%SLOPE  = SLOPE_TABLE(SLOPETYPE)
-
-    IF(parameters%URBAN_FLAG)THEN  ! Hardcoding some urban parameters for soil
-       parameters%SMCMAX = 0.45 
-       parameters%SMCREF = 0.42 
-       parameters%SMCWLT = 0.40 
-       parameters%SMCDRY = 0.40 
-       parameters%CSOIL  = 3.E6
-    ENDIF
-
-! adjust FRZK parameter to actual soil type: FRZK * FRZFACT
-
-    IF(SOILTYPE /= 14) then
-      FRZFACT = (parameters%SMCMAX / parameters%SMCREF) * (0.412 / 0.468)
-      parameters%FRZX = FRZK * FRZFACT
-    END IF
-
- END SUBROUTINE TRANSFER_MP_PARAMETERS
-
 !== begin noahmp_options ===========================================================================
 
   subroutine noahmp_options(idveg     ,iopt_crs  ,iopt_btr  ,iopt_run  ,iopt_sfc  ,iopt_frz , & 
@@ -8903,3 +8221,518 @@ SUBROUTINE TRANSFER_MP_PARAMETERS(VEGTYPE,SOILTYPE,SLOPETYPE,SOILCOLOR,parameter
   end subroutine noahmp_options
  
 END MODULE MODULE_SF_NOAHMPLSM
+
+MODULE NOAHMP_TABLES
+
+    IMPLICIT NONE
+
+    INTEGER, PRIVATE, PARAMETER :: MVT   = 27
+    INTEGER, PRIVATE, PARAMETER :: MBAND = 2
+    INTEGER, PRIVATE, PARAMETER :: MSC   = 8
+    INTEGER, PRIVATE, PARAMETER :: MAX_SOILTYP = 30
+
+! MPTABLE.TBL vegetation parameters
+
+    INTEGER :: ISURBAN_TABLE
+    INTEGER :: ISWATER_TABLE
+    INTEGER :: ISBARREN_TABLE
+    INTEGER :: ISICE_TABLE
+    INTEGER :: EBLFOREST_TABLE
+
+    REAL :: CH2OP_TABLE(MVT)       !maximum intercepted h2o per unit lai+sai (mm)
+    REAL :: DLEAF_TABLE(MVT)       !characteristic leaf dimension (m)
+    REAL :: Z0MVT_TABLE(MVT)       !momentum roughness length (m)
+    REAL :: HVT_TABLE(MVT)         !top of canopy (m)
+    REAL :: HVB_TABLE(MVT)         !bottom of canopy (m)
+    REAL :: DEN_TABLE(MVT)         !tree density (no. of trunks per m2)
+    REAL :: RC_TABLE(MVT)          !tree crown radius (m)
+    REAL :: MFSNO_TABLE(MVT)       !snowmelt curve parameter ()
+    REAL :: SAIM_TABLE(MVT,12)     !monthly stem area index, one-sided
+    REAL :: LAIM_TABLE(MVT,12)     !monthly leaf area index, one-sided
+    REAL :: SLA_TABLE(MVT)         !single-side leaf area per Kg [m2/kg]
+    REAL :: DILEFC_TABLE(MVT)      !coeficient for leaf stress death [1/s]
+    REAL :: DILEFW_TABLE(MVT)      !coeficient for leaf stress death [1/s]
+    REAL :: FRAGR_TABLE(MVT)       !fraction of growth respiration  !original was 0.3 
+    REAL :: LTOVRC_TABLE(MVT)      !leaf turnover [1/s]
+
+    REAL :: C3PSN_TABLE(MVT)       !photosynthetic pathway: 0. = c4, 1. = c3
+    REAL :: KC25_TABLE(MVT)        !co2 michaelis-menten constant at 25c (pa)
+    REAL :: AKC_TABLE(MVT)         !q10 for kc25
+    REAL :: KO25_TABLE(MVT)        !o2 michaelis-menten constant at 25c (pa)
+    REAL :: AKO_TABLE(MVT)         !q10 for ko25
+    REAL :: VCMX25_TABLE(MVT)      !maximum rate of carboxylation at 25c (umol co2/m**2/s)
+    REAL :: AVCMX_TABLE(MVT)       !q10 for vcmx25
+    REAL :: BP_TABLE(MVT)          !minimum leaf conductance (umol/m**2/s)
+    REAL :: MP_TABLE(MVT)          !slope of conductance-to-photosynthesis relationship
+    REAL :: QE25_TABLE(MVT)        !quantum efficiency at 25c (umol co2 / umol photon)
+    REAL :: AQE_TABLE(MVT)         !q10 for qe25
+    REAL :: RMF25_TABLE(MVT)       !leaf maintenance respiration at 25c (umol co2/m**2/s)
+    REAL :: RMS25_TABLE(MVT)       !stem maintenance respiration at 25c (umol co2/kg bio/s)
+    REAL :: RMR25_TABLE(MVT)       !root maintenance respiration at 25c (umol co2/kg bio/s)
+    REAL :: ARM_TABLE(MVT)         !q10 for maintenance respiration
+    REAL :: FOLNMX_TABLE(MVT)      !foliage nitrogen concentration when f(n)=1 (%)
+    REAL :: TMIN_TABLE(MVT)        !minimum temperature for photosynthesis (k)
+
+    REAL :: XL_TABLE(MVT)          !leaf/stem orientation index
+    REAL :: RHOL_TABLE(MVT,MBAND)  !leaf reflectance: 1=vis, 2=nir
+    REAL :: RHOS_TABLE(MVT,MBAND)  !stem reflectance: 1=vis, 2=nir
+    REAL :: TAUL_TABLE(MVT,MBAND)  !leaf transmittance: 1=vis, 2=nir
+    REAL :: TAUS_TABLE(MVT,MBAND)  !stem transmittance: 1=vis, 2=nir
+
+    REAL :: MRP_TABLE(MVT)         !microbial respiration parameter (umol co2 /kg c/ s)
+    REAL :: CWPVT_TABLE(MVT)       !empirical canopy wind parameter
+
+    REAL :: WRRAT_TABLE(MVT)       !wood to non-wood ratio
+    REAL :: WDPOOL_TABLE(MVT)      !wood pool (switch 1 or 0) depending on woody or not [-]
+    REAL :: TDLEF_TABLE(MVT)       !characteristic T for leaf freezing [K]
+
+    REAL :: NROOT_TABLE(MVT)       !number of soil layers with root present
+    REAL :: RGL_TABLE(MVT)         !Parameter used in radiation stress function
+    REAL :: RS_TABLE(MVT)          !Minimum stomatal resistance [s m-1]
+    REAL :: HS_TABLE(MVT)          !Parameter used in vapor pressure deficit function
+    REAL :: TOPT_TABLE(MVT)        !Optimum transpiration air temperature [K]
+    REAL :: RSMAX_TABLE(MVT)       !Maximal stomatal resistance [s m-1]
+
+! SOILPARM.TBL parameters
+
+    INTEGER            :: SLCATS
+
+    REAL :: BEXP_TABLE(MAX_SOILTYP)          !maximum intercepted h2o per unit lai+sai (mm)
+    REAL :: SMCDRY_TABLE(MAX_SOILTYP)      !characteristic leaf dimension (m)
+    REAL :: F1_TABLE(MAX_SOILTYP)         !momentum roughness length (m)
+    REAL :: SMCMAX_TABLE(MAX_SOILTYP)      !top of canopy (m)
+    REAL :: SMCREF_TABLE(MAX_SOILTYP)      !bottom of canopy (m)
+    REAL :: PSISAT_TABLE(MAX_SOILTYP)      !tree density (no. of trunks per m2)
+    REAL :: DKSAT_TABLE(MAX_SOILTYP)       !tree crown radius (m)
+    REAL :: DWSAT_TABLE(MAX_SOILTYP)       !monthly stem area index, one-sided
+    REAL :: SMCWLT_TABLE(MAX_SOILTYP)      !monthly leaf area index, one-sided
+    REAL :: QUARTZ_TABLE(MAX_SOILTYP)         !single-side leaf area per Kg [m2/kg]
+
+! GENPARM.TBL parameters
+
+    REAL :: SLOPE_TABLE(9)    !slope factor for soil drainage
+    
+    REAL :: CSOIL_TABLE       !Soil heat capacity [J m-3 K-1]
+    REAL :: REFDK_TABLE       !Parameter in the surface runoff parameterization
+    REAL :: REFKDT_TABLE      !Parameter in the surface runoff parameterization
+    REAL :: FRZK_TABLE        !Frozen ground parameter
+    REAL :: ZBOT_TABLE        !Depth [m] of lower boundary soil temperature
+    REAL :: CZIL_TABLE        !Parameter used in the calculation of the roughness length for heat
+
+! MPTABLE.TBL radiation parameters
+
+    REAL :: ALBSAT_TABLE(MSC,MBAND)   !saturated soil albedos: 1=vis, 2=nir
+    REAL :: ALBDRY_TABLE(MSC,MBAND)   !dry soil albedos: 1=vis, 2=nir
+    REAL :: ALBICE_TABLE(MBAND)       !albedo land ice: 1=vis, 2=nir
+    REAL :: ALBLAK_TABLE(MBAND)       !albedo frozen lakes: 1=vis, 2=nir
+    REAL :: OMEGAS_TABLE(MBAND)       !two-stream parameter omega for snow
+    REAL :: BETADS_TABLE              !two-stream parameter betad for snow
+    REAL :: BETAIS_TABLE              !two-stream parameter betad for snow
+    REAL :: EG_TABLE(2)               !emissivity
+
+! MPTABLE.TBL global parameters
+
+    REAL :: CO2_TABLE      !co2 partial pressure
+    REAL :: O2_TABLE       !o2 partial pressure
+    REAL :: TIMEAN_TABLE   !gridcell mean topgraphic index (global mean)
+    REAL :: FSATMX_TABLE   !maximum surface saturated fraction (global mean)
+    REAL :: Z0SNO_TABLE    !snow surface roughness length (m) (0.002)
+    REAL :: SSI_TABLE      !liquid water holding capacity for snowpack (m3/m3) (0.03)
+    REAL :: SWEMX_TABLE    !new snow mass to fully cover old snow (mm)
+
+CONTAINS
+
+  subroutine read_mp_veg_parameters(DATASET_IDENTIFIER)
+    implicit none
+    character(len=*), intent(in) :: DATASET_IDENTIFIER
+    integer :: ierr
+    INTEGER :: IK,IM
+
+    integer :: NVEG
+    character(len=256) :: VEG_DATASET_DESCRIPTION
+
+    INTEGER :: ISURBAN
+    INTEGER :: ISWATER
+    INTEGER :: ISBARREN
+    INTEGER :: ISICE
+    INTEGER :: EBLFOREST
+
+    REAL, DIMENSION(MVT) :: SAI_JAN,SAI_FEB,SAI_MAR,SAI_APR,SAI_MAY,SAI_JUN, &
+                                     SAI_JUL,SAI_AUG,SAI_SEP,SAI_OCT,SAI_NOV,SAI_DEC
+    REAL, DIMENSION(MVT) :: LAI_JAN,LAI_FEB,LAI_MAR,LAI_APR,LAI_MAY,LAI_JUN, &
+                                     LAI_JUL,LAI_AUG,LAI_SEP,LAI_OCT,LAI_NOV,LAI_DEC
+    REAL, DIMENSION(MVT) :: RHOL_VIS, RHOL_NIR, RHOS_VIS, RHOS_NIR, &
+                                     TAUL_VIS, TAUL_NIR, TAUS_VIS, TAUS_NIR
+    REAL, DIMENSION(MVT) :: CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, &
+                     AVCMX, AQE, LTOVRC,  DILEFC,  DILEFW,  RMF25 ,  SLA   ,  FRAGR ,  TMIN  ,  VCMX25,  TDLEF ,  &
+                     BP, MP, QE25, RMS25, RMR25, ARM, FOLNMX, WDPOOL, WRRAT, MRP, NROOT, RGL, RS, HS, TOPT, RSMAX, &
+		     SLAREA, EPS1, EPS2, EPS3, EPS4, EPS5
+			     
+    NAMELIST / noahmp_usgs_veg_categories / VEG_DATASET_DESCRIPTION, NVEG
+    NAMELIST / noahmp_usgs_parameters / ISURBAN, ISWATER, ISBARREN, ISICE, EBLFOREST, &
+         CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, AVCMX, AQE, &
+         LTOVRC,  DILEFC,  DILEFW,  RMF25 ,  SLA   ,  FRAGR ,  TMIN  ,  VCMX25,  TDLEF ,  BP, MP, QE25, RMS25, RMR25, ARM, &
+         FOLNMX, WDPOOL, WRRAT, MRP, NROOT, RGL, RS, HS, TOPT, RSMAX, &
+         SAI_JAN, SAI_FEB, SAI_MAR, SAI_APR, SAI_MAY, SAI_JUN,SAI_JUL,SAI_AUG,SAI_SEP,SAI_OCT,SAI_NOV,SAI_DEC, &
+         LAI_JAN, LAI_FEB, LAI_MAR, LAI_APR, LAI_MAY, LAI_JUN,LAI_JUL,LAI_AUG,LAI_SEP,LAI_OCT,LAI_NOV,LAI_DEC, &
+         RHOL_VIS, RHOL_NIR, RHOS_VIS, RHOS_NIR, TAUL_VIS, TAUL_NIR, TAUS_VIS, TAUS_NIR, SLAREA, EPS1, EPS2, EPS3, EPS4, EPS5
+	 
+    NAMELIST / noahmp_modis_veg_categories / VEG_DATASET_DESCRIPTION, NVEG
+    NAMELIST / noahmp_modis_parameters / ISURBAN, ISWATER, ISBARREN, ISICE, EBLFOREST, &
+         CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, AVCMX, AQE, &
+         LTOVRC,  DILEFC,  DILEFW,  RMF25 ,  SLA   ,  FRAGR ,  TMIN  ,  VCMX25,  TDLEF ,  BP, MP, QE25, RMS25, RMR25, ARM, &
+         FOLNMX, WDPOOL, WRRAT, MRP, NROOT, RGL, RS, HS, TOPT, RSMAX, &
+         SAI_JAN, SAI_FEB, SAI_MAR, SAI_APR, SAI_MAY, SAI_JUN,SAI_JUL,SAI_AUG,SAI_SEP,SAI_OCT,SAI_NOV,SAI_DEC, &
+         LAI_JAN, LAI_FEB, LAI_MAR, LAI_APR, LAI_MAY, LAI_JUN,LAI_JUL,LAI_AUG,LAI_SEP,LAI_OCT,LAI_NOV,LAI_DEC, &
+         RHOL_VIS, RHOL_NIR, RHOS_VIS, RHOS_NIR, TAUL_VIS, TAUL_NIR, TAUS_VIS, TAUS_NIR, SLAREA, EPS1, EPS2, EPS3, EPS4, EPS5
+
+    ! Initialize our variables to bad values, so that if the namelist read fails, we come to a screeching halt as soon as we try to use anything.
+    CH2OP_TABLE  = -1.E36
+    DLEAF_TABLE  = -1.E36
+    Z0MVT_TABLE  = -1.E36
+    HVT_TABLE    = -1.E36
+    HVB_TABLE    = -1.E36
+    DEN_TABLE    = -1.E36
+    RC_TABLE     = -1.E36
+    MFSNO_TABLE  = -1.E36
+    RHOL_TABLE   = -1.E36
+    RHOS_TABLE   = -1.E36
+    TAUL_TABLE   = -1.E36
+    TAUS_TABLE   = -1.E36
+    XL_TABLE     = -1.E36
+    CWPVT_TABLE  = -1.E36
+    C3PSN_TABLE  = -1.E36
+    KC25_TABLE   = -1.E36
+    AKC_TABLE    = -1.E36
+    KO25_TABLE   = -1.E36
+    AKO_TABLE    = -1.E36
+    AVCMX_TABLE  = -1.E36
+    AQE_TABLE    = -1.E36
+    LTOVRC_TABLE = -1.E36
+    DILEFC_TABLE = -1.E36
+    DILEFW_TABLE = -1.E36
+    RMF25_TABLE  = -1.E36
+    SLA_TABLE    = -1.E36
+    FRAGR_TABLE  = -1.E36
+    TMIN_TABLE   = -1.E36
+    VCMX25_TABLE = -1.E36
+    TDLEF_TABLE  = -1.E36
+    BP_TABLE     = -1.E36
+    MP_TABLE     = -1.E36
+    QE25_TABLE   = -1.E36
+    RMS25_TABLE  = -1.E36
+    RMR25_TABLE  = -1.E36
+    ARM_TABLE    = -1.E36
+    FOLNMX_TABLE = -1.E36
+    WDPOOL_TABLE = -1.E36
+    WRRAT_TABLE  = -1.E36
+    MRP_TABLE    = -1.E36
+    SAIM_TABLE   = -1.E36
+    LAIM_TABLE   = -1.E36
+    NROOT_TABLE  = -1.E36
+    RGL_TABLE    = -1.E36
+    RS_TABLE     = -1.E36
+    HS_TABLE     = -1.E36
+    TOPT_TABLE   = -1.E36
+    RSMAX_TABLE  = -1.E36
+    ISURBAN_TABLE      = -99999
+    ISWATER_TABLE      = -99999
+    ISBARREN_TABLE     = -99999
+    ISICE_TABLE        = -99999
+    EBLFOREST_TABLE    = -99999
+
+    open(15, file="MPTABLE.TBL", status='old', form='formatted', action='read', iostat=ierr)
+    if (ierr /= 0) then
+       write(*,'("****** Error ******************************************************")')
+       write(*,'("Cannot find file MPTABLE.TBL")')
+       write(*,'("STOP")')
+       write(*,'("*******************************************************************")')
+       call wrf_error_fatal("STOP in Noah-MP read_mp_veg_parameters")
+    endif
+
+    if ( trim(DATASET_IDENTIFIER) == "USGS" ) then
+       read(15,noahmp_usgs_veg_categories)
+       read(15,noahmp_usgs_parameters)
+    else if ( trim(DATASET_IDENTIFIER) == "MODIFIED_IGBP_MODIS_NOAH" ) then
+       read(15,noahmp_modis_veg_categories)
+       read(15,noahmp_modis_parameters)
+    else
+       write(*,'("Unrecognized DATASET_IDENTIFIER in subroutine READ_MP_VEG_PARAMETERS")')
+       write(*,'("DATASET_IDENTIFIER = ''", A, "''")') trim(DATASET_IDENTIFIER)
+       call wrf_error_fatal("STOP in Noah-MP read_mp_veg_parameters")
+    endif
+    close(15)
+
+      ISURBAN_TABLE       = ISURBAN
+      ISWATER_TABLE       = ISWATER
+     ISBARREN_TABLE       = ISBARREN
+        ISICE_TABLE       = ISICE
+    EBLFOREST_TABLE       = EBLFOREST
+
+     CH2OP_TABLE(1:NVEG)  = CH2OP(1:NVEG)
+     DLEAF_TABLE(1:NVEG)  = DLEAF(1:NVEG)
+     Z0MVT_TABLE(1:NVEG)  = Z0MVT(1:NVEG)
+       HVT_TABLE(1:NVEG)  = HVT(1:NVEG)
+       HVB_TABLE(1:NVEG)  = HVB(1:NVEG)
+       DEN_TABLE(1:NVEG)  = DEN(1:NVEG)
+        RC_TABLE(1:NVEG)  = RC(1:NVEG)
+     MFSNO_TABLE(1:NVEG)  = MFSNO(1:NVEG)
+        XL_TABLE(1:NVEG)  = XL(1:NVEG)
+     CWPVT_TABLE(1:NVEG)  = CWPVT(1:NVEG)
+     C3PSN_TABLE(1:NVEG)  = C3PSN(1:NVEG)
+      KC25_TABLE(1:NVEG)  = KC25(1:NVEG)
+       AKC_TABLE(1:NVEG)  = AKC(1:NVEG)
+      KO25_TABLE(1:NVEG)  = KO25(1:NVEG)
+       AKO_TABLE(1:NVEG)  = AKO(1:NVEG)
+     AVCMX_TABLE(1:NVEG)  = AVCMX(1:NVEG)
+       AQE_TABLE(1:NVEG)  = AQE(1:NVEG)
+    LTOVRC_TABLE(1:NVEG)  = LTOVRC(1:NVEG)
+    DILEFC_TABLE(1:NVEG)  = DILEFC(1:NVEG)
+    DILEFW_TABLE(1:NVEG)  = DILEFW(1:NVEG)
+     RMF25_TABLE(1:NVEG)  = RMF25(1:NVEG)
+       SLA_TABLE(1:NVEG)  = SLA(1:NVEG)
+     FRAGR_TABLE(1:NVEG)  = FRAGR(1:NVEG)
+      TMIN_TABLE(1:NVEG)  = TMIN(1:NVEG)
+    VCMX25_TABLE(1:NVEG)  = VCMX25(1:NVEG)
+     TDLEF_TABLE(1:NVEG)  = TDLEF(1:NVEG)
+        BP_TABLE(1:NVEG)  = BP(1:NVEG)
+        MP_TABLE(1:NVEG)  = MP(1:NVEG)
+      QE25_TABLE(1:NVEG)  = QE25(1:NVEG)
+     RMS25_TABLE(1:NVEG)  = RMS25(1:NVEG)
+     RMR25_TABLE(1:NVEG)  = RMR25(1:NVEG)
+       ARM_TABLE(1:NVEG)  = ARM(1:NVEG)
+    FOLNMX_TABLE(1:NVEG)  = FOLNMX(1:NVEG)
+    WDPOOL_TABLE(1:NVEG)  = WDPOOL(1:NVEG)
+     WRRAT_TABLE(1:NVEG)  = WRRAT(1:NVEG)
+       MRP_TABLE(1:NVEG)  = MRP(1:NVEG)
+     NROOT_TABLE(1:NVEG)  = NROOT(1:NVEG)
+       RGL_TABLE(1:NVEG)  = RGL(1:NVEG)
+        RS_TABLE(1:NVEG)  = RS(1:NVEG)
+        HS_TABLE(1:NVEG)  = HS(1:NVEG)
+      TOPT_TABLE(1:NVEG)  = TOPT(1:NVEG)
+     RSMAX_TABLE(1:NVEG)  = RSMAX(1:NVEG)
+    
+    ! Put LAI and SAI into 2d array from monthly lines in table; same for canopy radiation properties
+
+    SAIM_TABLE(1:NVEG, 1) = SAI_JAN(1:NVEG)
+    SAIM_TABLE(1:NVEG, 2) = SAI_FEB(1:NVEG)
+    SAIM_TABLE(1:NVEG, 3) = SAI_MAR(1:NVEG)
+    SAIM_TABLE(1:NVEG, 4) = SAI_APR(1:NVEG)
+    SAIM_TABLE(1:NVEG, 5) = SAI_MAY(1:NVEG)
+    SAIM_TABLE(1:NVEG, 6) = SAI_JUN(1:NVEG)
+    SAIM_TABLE(1:NVEG, 7) = SAI_JUL(1:NVEG)
+    SAIM_TABLE(1:NVEG, 8) = SAI_AUG(1:NVEG)
+    SAIM_TABLE(1:NVEG, 9) = SAI_SEP(1:NVEG)
+    SAIM_TABLE(1:NVEG,10) = SAI_OCT(1:NVEG)
+    SAIM_TABLE(1:NVEG,11) = SAI_NOV(1:NVEG)
+    SAIM_TABLE(1:NVEG,12) = SAI_DEC(1:NVEG)
+
+    LAIM_TABLE(1:NVEG, 1) = LAI_JAN(1:NVEG)
+    LAIM_TABLE(1:NVEG, 2) = LAI_FEB(1:NVEG)
+    LAIM_TABLE(1:NVEG, 3) = LAI_MAR(1:NVEG)
+    LAIM_TABLE(1:NVEG, 4) = LAI_APR(1:NVEG)
+    LAIM_TABLE(1:NVEG, 5) = LAI_MAY(1:NVEG)
+    LAIM_TABLE(1:NVEG, 6) = LAI_JUN(1:NVEG)
+    LAIM_TABLE(1:NVEG, 7) = LAI_JUL(1:NVEG)
+    LAIM_TABLE(1:NVEG, 8) = LAI_AUG(1:NVEG)
+    LAIM_TABLE(1:NVEG, 9) = LAI_SEP(1:NVEG)
+    LAIM_TABLE(1:NVEG,10) = LAI_OCT(1:NVEG)
+    LAIM_TABLE(1:NVEG,11) = LAI_NOV(1:NVEG)
+    LAIM_TABLE(1:NVEG,12) = LAI_DEC(1:NVEG)
+
+    RHOL_TABLE(1:NVEG,1)  = RHOL_VIS(1:NVEG) !leaf reflectance: 1=vis, 2=nir
+    RHOL_TABLE(1:NVEG,2)  = RHOL_NIR(1:NVEG) !leaf reflectance: 1=vis, 2=nir
+    RHOS_TABLE(1:NVEG,1)  = RHOS_VIS(1:NVEG) !stem reflectance: 1=vis, 2=nir
+    RHOS_TABLE(1:NVEG,2)  = RHOS_NIR(1:NVEG) !stem reflectance: 1=vis, 2=nir
+    TAUL_TABLE(1:NVEG,1)  = TAUL_VIS(1:NVEG) !leaf transmittance: 1=vis, 2=nir
+    TAUL_TABLE(1:NVEG,2)  = TAUL_NIR(1:NVEG) !leaf transmittance: 1=vis, 2=nir
+    TAUS_TABLE(1:NVEG,1)  = TAUS_VIS(1:NVEG) !stem transmittance: 1=vis, 2=nir
+    TAUS_TABLE(1:NVEG,2)  = TAUS_NIR(1:NVEG) !stem transmittance: 1=vis, 2=nir
+
+  end subroutine read_mp_veg_parameters
+
+  subroutine read_mp_soil_parameters()
+    IMPLICIT NONE
+    INTEGER :: IERR
+    CHARACTER*4         :: SLTYPE
+    INTEGER             :: ITMP, NUM_SLOPE, LC
+    CHARACTER(len=256)  :: message
+    
+
+    ! Initialize our variables to bad values, so that if the namelist read fails, we come to a screeching halt as soon as we try to use anything.
+       BEXP_TABLE = -1.E36
+     SMCDRY_TABLE = -1.E36
+         F1_TABLE = -1.E36
+     SMCMAX_TABLE = -1.E36
+     SMCREF_TABLE = -1.E36
+     PSISAT_TABLE = -1.E36
+      DKSAT_TABLE = -1.E36
+      DWSAT_TABLE = -1.E36
+     SMCWLT_TABLE = -1.E36
+     QUARTZ_TABLE = -1.E36
+      SLOPE_TABLE = -1.E36
+      CSOIL_TABLE = -1.E36
+      REFDK_TABLE = -1.E36
+     REFKDT_TABLE = -1.E36
+       FRZK_TABLE = -1.E36
+       ZBOT_TABLE = -1.E36
+       CZIL_TABLE = -1.E36
+
+!
+!-----READ IN SOIL PROPERTIES FROM SOILPARM.TBL
+!
+    OPEN(19, FILE='SOILPARM.TBL',FORM='FORMATTED',STATUS='OLD',IOSTAT=ierr)
+    IF(ierr .NE. 0 ) THEN
+      WRITE(message,FMT='(A)') 'module_sf_noahmpdrv.F: read_mp_soil_parameters: failure opening SOILPARM.TBL'
+      CALL wrf_error_fatal ( message )
+    END IF
+
+    READ (19,*)
+    READ (19,*) SLTYPE
+    READ (19,*) SLCATS
+    WRITE( message , * ) 'SOIL TEXTURE CLASSIFICATION = ', TRIM ( SLTYPE ) , ' FOUND', &
+               SLCATS,' CATEGORIES'
+    CALL wrf_message ( message )
+
+    DO LC=1,SLCATS
+      READ (19,*) ITMP,BEXP_TABLE(LC),SMCDRY_TABLE(LC),F1_TABLE(LC),SMCMAX_TABLE(LC),    &
+                  SMCREF_TABLE(LC),PSISAT_TABLE(LC),DKSAT_TABLE(LC), DWSAT_TABLE(LC),   &
+                  SMCWLT_TABLE(LC), QUARTZ_TABLE(LC)
+    ENDDO
+
+    CLOSE (19)
+
+!
+!-----READ IN GENERAL PARAMETERS FROM GENPARM.TBL
+!
+    OPEN(19, FILE='GENPARM.TBL',FORM='FORMATTED',STATUS='OLD',IOSTAT=ierr)
+    IF(ierr .NE. 0 ) THEN
+      WRITE(message,FMT='(A)') 'module_sf_noahlsm.F: read_mp_soil_parameters: failure opening GENPARM.TBL'
+      CALL wrf_error_fatal ( message )
+    END IF
+
+    READ (19,*)
+    READ (19,*)
+    READ (19,*) NUM_SLOPE
+
+    DO LC=1,NUM_SLOPE
+        READ (19,*) SLOPE_TABLE(LC)
+    ENDDO
+
+    READ (19,*)
+    READ (19,*)
+    READ (19,*)
+    READ (19,*)
+    READ (19,*)
+    READ (19,*) CSOIL_TABLE
+    READ (19,*)
+    READ (19,*)
+    READ (19,*)
+    READ (19,*) REFDK_TABLE
+    READ (19,*)
+    READ (19,*) REFKDT_TABLE
+    READ (19,*)
+    READ (19,*) FRZK_TABLE
+    READ (19,*)
+    READ (19,*) ZBOT_TABLE
+    READ (19,*)
+    READ (19,*) CZIL_TABLE
+    READ (19,*)
+    READ (19,*)
+    READ (19,*)
+    READ (19,*)
+
+    CLOSE (19)
+
+  end subroutine read_mp_soil_parameters
+
+  subroutine read_mp_rad_parameters()
+    implicit none
+    integer :: ierr
+
+    REAL :: ALBICE(MBAND),ALBLAK(MBAND),OMEGAS(MBAND),BETADS,BETAIS,EG(2)
+    REAL :: ALBSAT_VIS(MSC)
+    REAL :: ALBSAT_NIR(MSC)
+    REAL :: ALBDRY_VIS(MSC)
+    REAL :: ALBDRY_NIR(MSC)
+
+    NAMELIST / noahmp_rad_parameters / ALBSAT_VIS,ALBSAT_NIR,ALBDRY_VIS,ALBDRY_NIR,ALBICE,ALBLAK,OMEGAS,BETADS,BETAIS,EG
+
+
+    ! Initialize our variables to bad values, so that if the namelist read fails, we come to a screeching halt as soon as we try to use anything.
+    ALBSAT_TABLE     = -1.E36
+    ALBDRY_TABLE     = -1.E36
+    ALBICE_TABLE     = -1.E36
+    ALBLAK_TABLE     = -1.E36
+    OMEGAS_TABLE     = -1.E36
+    BETADS_TABLE     = -1.E36
+    BETAIS_TABLE     = -1.E36
+    EG_TABLE         = -1.E36
+
+    open(15, file="MPTABLE.TBL", status='old', form='formatted', action='read', iostat=ierr)
+    if (ierr /= 0) then
+       write(*,'("****** Error ******************************************************")')
+       write(*,'("Cannot find file MPTABLE.TBL")')
+       write(*,'("STOP")')
+       write(*,'("*******************************************************************")')
+       call wrf_error_fatal("STOP in Noah-MP read_mp_rad_parameters")
+    endif
+
+    read(15,noahmp_rad_parameters)
+    close(15)
+
+    ALBSAT_TABLE(:,1) = ALBSAT_VIS ! saturated soil albedos: 1=vis, 2=nir
+    ALBSAT_TABLE(:,2) = ALBSAT_NIR ! saturated soil albedos: 1=vis, 2=nir
+    ALBDRY_TABLE(:,1) = ALBDRY_VIS ! dry soil albedos: 1=vis, 2=nir
+    ALBDRY_TABLE(:,2) = ALBDRY_NIR ! dry soil albedos: 1=vis, 2=nir
+    ALBICE_TABLE      = ALBICE
+    ALBLAK_TABLE      = ALBLAK
+    OMEGAS_TABLE      = OMEGAS
+    BETADS_TABLE      = BETADS
+    BETAIS_TABLE      = BETAIS
+    EG_TABLE          = EG
+
+  end subroutine read_mp_rad_parameters
+
+  subroutine read_mp_global_parameters()
+    implicit none
+    integer :: ierr
+
+    REAL :: CO2,O2,TIMEAN,FSATMX,Z0SNO,SSI,SWEMX
+
+    NAMELIST / noahmp_global_parameters / CO2,O2,TIMEAN,FSATMX,Z0SNO,SSI,SWEMX
+
+
+    ! Initialize our variables to bad values, so that if the namelist read fails, we come to a screeching halt as soon as we try to use anything.
+       CO2_TABLE     = -1.E36
+        O2_TABLE     = -1.E36
+    TIMEAN_TABLE     = -1.E36
+    FSATMX_TABLE     = -1.E36
+     Z0SNO_TABLE     = -1.E36
+       SSI_TABLE     = -1.E36
+     SWEMX_TABLE     = -1.E36
+
+    open(15, file="MPTABLE.TBL", status='old', form='formatted', action='read', iostat=ierr)
+    if (ierr /= 0) then
+       write(*,'("****** Error ******************************************************")')
+       write(*,'("Cannot find file MPTABLE.TBL")')
+       write(*,'("STOP")')
+       write(*,'("*******************************************************************")')
+       call wrf_error_fatal("STOP in Noah-MP read_mp_global_parameters")
+    endif
+
+    read(15,noahmp_global_parameters)
+    close(15)
+
+       CO2_TABLE     = CO2
+        O2_TABLE     = O2
+    TIMEAN_TABLE     = TIMEAN
+    FSATMX_TABLE     = FSATMX
+     Z0SNO_TABLE     = Z0SNO
+       SSI_TABLE     = SSI
+     SWEMX_TABLE     = SWEMX
+
+  end subroutine read_mp_global_parameters
+
+END MODULE NOAHMP_TABLES
+
