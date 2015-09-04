@@ -4846,7 +4846,7 @@ contains
        ERR_EST = ERR_EST + (STC(IZ)-TBEG(IZ)) * DZSNSO(IZ) * HCPCT(IZ) / DT
     ENDDO
 
-    if (OPT_STC == 1) THEN   ! semi-implicit
+    if (OPT_STC == 1 .OR. OPT_STC == 3) THEN   ! semi-implicit
        ERR_EST = ERR_EST - (SSOIL +EFLXB)
     ELSE                     ! full-implicit
        SSOIL2 = DF(ISNOW+1)*(TG-STC(ISNOW+1))/(0.5*DZSNSO(ISNOW+1))   !M. Barlage
@@ -4946,7 +4946,7 @@ contains
         IF (K == ISNOW+1) THEN
            AI(K)    =   0.0
            CI(K)    = - DF(K)   * DDZ(K) / DENOM(K)
-           IF (OPT_STC == 1) THEN
+           IF (OPT_STC == 1 .OR. OPT_STC == 3) THEN
               BI(K) = - CI(K)
            END IF                                        
            IF (OPT_STC == 2) THEN
