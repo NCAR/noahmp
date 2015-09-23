@@ -3648,7 +3648,7 @@ contains
 
      IF(OPT_STC == 1 .OR. OPT_STC == 3) THEN
      IF (SNOWH > 0.05 .AND. TG > TFRZ) THEN
-        TG  = TFRZ
+        IF(OPT_STC == 1) TG  = TFRZ
         IF(OPT_STC == 3) TG  = (1.-FSNO)*TG + FSNO*TFRZ   ! MB: allow TG>0C during melt v3.7
         IRG = CIR*TG**4 - EMG*(1.-EMV)*LWDN - EMG*EMV*SB*TV**4
         SHG = CSH * (TG         - TAH)
@@ -3966,7 +3966,7 @@ contains
 
      IF(OPT_STC == 1 .OR. OPT_STC == 3) THEN
      IF (SNOWH > 0.05 .AND. TGB > TFRZ) THEN
-          TGB = TFRZ
+          IF(OPT_STC == 1) TGB = TFRZ
           IF(OPT_STC == 3) TGB  = (1.-FSNO)*TGB + FSNO*TFRZ  ! MB: allow TG>0C during melt v3.7
           IRB = CIR * TGB**4 - EMG*LWDN
           SHB = CSH * (TGB        - SFCTMP)
