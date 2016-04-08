@@ -10,7 +10,7 @@
  HYDRO_LIB      =       
  LDFLAGS	=	
  CPP		=	cpp
- CPPFLAGS	=	-C -P -traditional # -D_HRLDAS_URBAN_
+ CPPFLAGS	=	-P -traditional # -D_HRLDAS_URBAN_
  LIBS		=	
  LIBJASPER      =       -ljpeg -L/usr/lib -ljasper
  INCJASPER      =       -I/usr/include
@@ -34,7 +34,7 @@
 # HYDRO_LIB      =       ../MPP/mpp_land.o ../MPP/CPL_WRF.o
 # LDFLAGS        =	
 # CPP            =	cpp
-# CPPFLAGS       =	-C -P -traditional -DMPP_LAND # -D_HRLDAS_URBAN_
+# CPPFLAGS       =	-P -traditional -DMPP_LAND # -D_HRLDAS_URBAN_
 # LIBS           =	
 # LIBJASPER      =      -ljpeg -L/usr/lib -ljasper
 # INCJASPER      =      -I/usr/include
@@ -56,7 +56,7 @@
 # MODFLAG        =      -I
 # LDFLAGS        =
 # CPP            =      cpp
-# CPPFLAGS       =      -C -P -traditional # -D_HRLDAS_URBAN_
+# CPPFLAGS       =      -P -traditional # -D_HRLDAS_URBAN_
 # LIBS           =
 # LIBJASPER      =      -ljpeg -ljasper
 # INCJASPER      =      -I/usr/include/jasper
@@ -80,7 +80,7 @@
 # HYDRO_LIB      =       ../MPP/mpp_land.o ../MPP/CPL_WRF.o
 # LDFLAGS        =
 # CPP            =       cpp
-# CPPFLAGS       =       -C -P -traditional -DMPP_LAND # -DSPATIAL_SOIL -D_HRLDAS_URBAN_
+# CPPFLAGS       =       -P -traditional -DMPP_LAND # -DSPATIAL_SOIL -D_HRLDAS_URBAN_
 # LIBS           =
 # LIBJASPER      =       -ljpeg -ljasper
 # INCJASPER      =       -I/usr/include/jasper
@@ -102,7 +102,7 @@
 # MODFLAG        =       -I
 # LDFLAGS        =       
 # CPP            =       /opt/local/bin/cpp-mp-4.8
-# CPPFLAGS       =       -C -P -traditional -D_GFORTRAN_ # -D_HRLDAS_URBAN_
+# CPPFLAGS       =       -P -traditional -D_GFORTRAN_ # -D_HRLDAS_URBAN_
 # LIBS           =       
 # LIBJASPER      =       -ljpeg -L/opt/local/lib -ljasper
 # INCJASPER      =       -I/opt/local/include/jasper
