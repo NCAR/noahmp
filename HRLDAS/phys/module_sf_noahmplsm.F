@@ -74,7 +74,6 @@ MODULE MODULE_SF_NOAHMPLSM
                       !   7 -> off (use input LAI; use FVEG = SHDFAC from input)
                       !   8 -> off (use input LAI; calculate FVEG)
                       !   9 -> off (use input LAI; use maximum vegetation fraction)
-                      !  10 -> crop model on (use maximum vegetation fraction)
 
   INTEGER :: OPT_CRS  ! options for canopy stomatal resistance
                       ! **1 -> Ball-Berry
