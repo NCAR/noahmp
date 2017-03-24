@@ -4468,6 +4468,8 @@ contains
        ELSE
           ZETALU = MIN (ZETALU,ZTMAX)
           ZETALT = MIN (ZETALT,ZTMAX)
+          ZETAU  = MIN (ZETAU,ZTMAX/(ZSLU/ZU))   ! Barlage: add limit on ZETAU/ZETAT
+          ZETAT  = MIN (ZETAT,ZTMAX/(ZSLT/ZT))   ! Barlage: prevent SIMM/SIMH < 0
           PSMZ = PSPMS (ZETAU)
           SIMM = PSPMS (ZETALU) - PSMZ + RLOGU
           PSHZ = PSPHS (ZETAT)
@@ -4504,10 +4506,12 @@ contains
 !-----------------------------------------------------------------------
        RLOGT = log (ZSLT / ZT)
        USTARK = USTAR * VKRM
+       IF(SIMM < 1.e-6) SIMM = 1.e-6        ! Limit stability function
        AKMS = MAX (USTARK / SIMM,CXCH)
 !-----------------------------------------------------------------------
 ! IF STATEMENTS TO AVOID TANGENT LINEAR PROBLEMS NEAR ZERO
 !-----------------------------------------------------------------------
+       IF(SIMH < 1.e-6) SIMH = 1.e-6        ! Limit stability function
        AKHS = MAX (USTARK / SIMH,CXCH)
 
        IF (BTGH * AKHS * DTHV .ne. 0.0) THEN
