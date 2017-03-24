@@ -8074,10 +8074,10 @@ END  SUBROUTINE SHALLOWWATERTABLE
 
 !  fraction of carbon into wood versus root
 
-     IF(WOOD.GT.0) THEN
+     IF(WOOD > 1.e-6) THEN
         WOODF = (1.-EXP(-BF*(parameters%WRRAT*RTMASS/WOOD))/BF)*parameters%WDPOOL
      ELSE
-        WOODF = 0.
+        WOODF = parameters%WDPOOL
      ENDIF
 
      ROOTPT = NONLEF*(1.-WOODF)
