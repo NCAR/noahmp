@@ -2282,7 +2282,8 @@ contains
     THKS = (THKQTZ ** parameters%QUARTZ(ISOIL))* (THKO ** (1. - parameters%QUARTZ(ISOIL)))
 
 ! UNFROZEN VOLUME FOR SATURATION (POROSITY*XUNFROZ)
-    XUNFROZ = SH2O / SMC
+    XUNFROZ = 1.0                       ! Prevent divide by zero (suggested by D. Mocko)
+    IF(SMC > 0.) XUNFROZ = SH2O / SMC
 ! SATURATED THERMAL CONDUCTIVITY
     XU = XUNFROZ * parameters%SMCMAX(ISOIL)
 
