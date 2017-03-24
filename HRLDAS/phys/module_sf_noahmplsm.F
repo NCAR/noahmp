@@ -779,7 +779,7 @@ contains
 ! urban - jref
     QFX = ETRAN + ECAN + EDIR
     IF ( parameters%urban_flag ) THEN
-       QSFC = (QFX/RHOAIR*CH) + QAIR
+       QSFC = QFX/(RHOAIR*CH) + QAIR
        Q2B = QSFC
     END IF
 
