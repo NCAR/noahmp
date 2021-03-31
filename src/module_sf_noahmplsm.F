@@ -217,6 +217,7 @@ MODULE MODULE_SF_NOAHMPLSM
     REAL :: DEN                !tree density (no. of trunks per m2)
     REAL :: RC                 !tree crown radius (m)
     REAL :: MFSNO              !snowmelt m parameter ()
+    REAL :: SCFFAC             !snow cover factor (m) (originally hard-coded 2.5*z0 in SCF formulation)
     REAL :: SAIM(12)           !monthly stem area index, one-sided
     REAL :: LAIM(12)           !monthly leaf area index, one-sided
     REAL :: SLA                !single-side leaf area per Kg [m2/kg]
@@ -290,6 +291,7 @@ MODULE MODULE_SF_NOAHMPLSM
      REAL :: Z0SNO        !snow surface roughness length (m) (0.002)
      REAL :: SSI          !liquid water holding capacity for snowpack (m3/m3)
      REAL :: SNOW_RET_FAC !snowpack water release timescale factor (1/s)
+     REAL :: SNOW_EMIS    !snow emissivity
      REAL :: SWEMX        !new snow mass to fully cover old snow (mm)
      REAL :: TAU0         !tau0 from Yang97 eqn. 10a
      REAL :: GRAIN_GROWTH !growth from vapor diffusion Yang97 eqn. 10b
@@ -1849,7 +1851,8 @@ ENDIF   ! CROPTYPE == 0
      IF(SNOWH.GT.0.)  THEN
          BDSNO    = SNEQV / SNOWH
          FMELT    = (BDSNO/100.)**parameters%MFSNO
-         FSNO     = TANH( SNOWH /(2.5* Z0 * FMELT))
+         !FSNO     = TANH( SNOWH /(2.5* Z0 * FMELT))
+         FSNO     = TANH( SNOWH /(parameters%SCFFAC * FMELT)) ! C.He: bring hard-coded 2.5*z0 to MPTABLE tunable parameter SCFFAC
      ENDIF
 
 ! ground roughness length
@@ -1918,9 +1921,9 @@ ENDIF   ! CROPTYPE == 0
 
      EMV = 1. - EXP(-(ELAI+ESAI)/1.0)
      IF (ICE == 1) THEN
-       EMG = 0.98*(1.-FSNO) + 1.0*FSNO
+       EMG = 0.98*(1.-FSNO) + parameters%SNOW_EMIS*FSNO  ! move hard-coded snow emissivity as a global parameter to MPTABLE
      ELSE
-       EMG = parameters%EG(IST)*(1.-FSNO) + 1.0*FSNO
+       EMG = parameters%EG(IST)*(1.-FSNO) + parameters%SNOW_EMIS*FSNO ! move hard-coded snow emissivity as a global parameter to MPTABLE
      END IF
 
 ! soil moisture factor controlling stomatal resistance
@@ -9106,6 +9109,7 @@ MODULE NOAHMP_TABLES
     REAL :: DEN_TABLE(MVT)         !tree density (no. of trunks per m2)
     REAL :: RC_TABLE(MVT)          !tree crown radius (m)
     REAL :: MFSNO_TABLE(MVT)       !snowmelt curve parameter ()
+    REAL :: SCFFAC_TABLE(MVT)      !snow cover factor (m) (replace original hard-coded 2.5*z0 in SCF formulation)
     REAL :: SAIM_TABLE(MVT,12)     !monthly stem area index, one-sided
     REAL :: LAIM_TABLE(MVT,12)     !monthly leaf area index, one-sided
     REAL :: SLA_TABLE(MVT)         !single-side leaf area per Kg [m2/kg]
@@ -9198,6 +9202,7 @@ MODULE NOAHMP_TABLES
     REAL :: Z0SNO_TABLE    !snow surface roughness length (m) (0.002)
     REAL :: SSI_TABLE      !liquid water holding capacity for snowpack (m3/m3) (0.03)
     REAL :: SNOW_RET_FAC_TABLE !snowpack water release timescale factor (1/s)
+    REAL :: SNOW_EMIS_TABLE!snow emissivity
     REAL :: SWEMX_TABLE    !new snow mass to fully cover old snow (mm)
     REAL :: TAU0_TABLE          !tau0 from Yang97 eqn. 10a
     REAL :: GRAIN_GROWTH_TABLE  !growth from vapor diffusion Yang97 eqn. 10b
@@ -9356,7 +9361,7 @@ CONTAINS
                                      LAI_JUL,LAI_AUG,LAI_SEP,LAI_OCT,LAI_NOV,LAI_DEC
     REAL, DIMENSION(MVT) :: RHOL_VIS, RHOL_NIR, RHOS_VIS, RHOS_NIR, &
                                      TAUL_VIS, TAUL_NIR, TAUS_VIS, TAUS_NIR
-    REAL, DIMENSION(MVT) :: CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, &
+    REAL, DIMENSION(MVT) :: CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, SCFFAC, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, &
                      AVCMX, AQE, LTOVRC,  DILEFC,  DILEFW,  RMF25 ,  SLA   ,  FRAGR ,  TMIN  ,  VCMX25,  TDLEF ,  &
                      BP, MP, QE25, RMS25, RMR25, ARM, FOLNMX, WDPOOL, WRRAT, MRP, NROOT, RGL, RS, HS, TOPT, RSMAX, &
 		     SLAREA, EPS1, EPS2, EPS3, EPS4, EPS5
@@ -9364,7 +9369,7 @@ CONTAINS
     NAMELIST / noahmp_usgs_veg_categories / VEG_DATASET_DESCRIPTION, NVEG
     NAMELIST / noahmp_usgs_parameters / ISURBAN, ISWATER, ISBARREN, ISICE, ISCROP, EBLFOREST, NATURAL, &
          LOW_DENSITY_RESIDENTIAL, HIGH_DENSITY_RESIDENTIAL, HIGH_INTENSITY_INDUSTRIAL, &
-         CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, AVCMX, AQE, &
+         CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, SCFFAC, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, AVCMX, AQE, &
          LTOVRC,  DILEFC,  DILEFW,  RMF25 ,  SLA   ,  FRAGR ,  TMIN  ,  VCMX25,  TDLEF ,  BP, MP, QE25, RMS25, RMR25, ARM, &
          FOLNMX, WDPOOL, WRRAT, MRP, NROOT, RGL, RS, HS, TOPT, RSMAX, &
          SAI_JAN, SAI_FEB, SAI_MAR, SAI_APR, SAI_MAY, SAI_JUN,SAI_JUL,SAI_AUG,SAI_SEP,SAI_OCT,SAI_NOV,SAI_DEC, &
@@ -9374,7 +9379,7 @@ CONTAINS
     NAMELIST / noahmp_modis_veg_categories / VEG_DATASET_DESCRIPTION, NVEG
     NAMELIST / noahmp_modis_parameters / ISURBAN, ISWATER, ISBARREN, ISICE, ISCROP, EBLFOREST, NATURAL, &
          LOW_DENSITY_RESIDENTIAL, HIGH_DENSITY_RESIDENTIAL, HIGH_INTENSITY_INDUSTRIAL, &
-         CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, AVCMX, AQE, &
+         CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, SCFFAC, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, AVCMX, AQE, &
          LTOVRC,  DILEFC,  DILEFW,  RMF25 ,  SLA   ,  FRAGR ,  TMIN  ,  VCMX25,  TDLEF ,  BP, MP, QE25, RMS25, RMR25, ARM, &
          FOLNMX, WDPOOL, WRRAT, MRP, NROOT, RGL, RS, HS, TOPT, RSMAX, &
          SAI_JAN, SAI_FEB, SAI_MAR, SAI_APR, SAI_MAY, SAI_JUN,SAI_JUL,SAI_AUG,SAI_SEP,SAI_OCT,SAI_NOV,SAI_DEC, &
@@ -9390,6 +9395,7 @@ CONTAINS
     DEN_TABLE    = -1.E36
     RC_TABLE     = -1.E36
     MFSNO_TABLE  = -1.E36
+    SCFFAC_TABLE = -1.E36
     RHOL_TABLE   = -1.E36
     RHOS_TABLE   = -1.E36
     TAUL_TABLE   = -1.E36
@@ -9485,6 +9491,7 @@ CONTAINS
        DEN_TABLE(1:NVEG)  = DEN(1:NVEG)
         RC_TABLE(1:NVEG)  = RC(1:NVEG)
      MFSNO_TABLE(1:NVEG)  = MFSNO(1:NVEG)
+    SCFFAC_TABLE(1:NVEG)  = SCFFAC(1:NVEG)
         XL_TABLE(1:NVEG)  = XL(1:NVEG)
      CWPVT_TABLE(1:NVEG)  = CWPVT(1:NVEG)
      C3PSN_TABLE(1:NVEG)  = C3PSN(1:NVEG)
@@ -9726,12 +9733,12 @@ CONTAINS
     integer :: ierr
     logical :: file_named 
 
-    REAL :: CO2,O2,TIMEAN,FSATMX,Z0SNO,SSI,SNOW_RET_FAC, &
+    REAL :: CO2,O2,TIMEAN,FSATMX,Z0SNO,SSI,SNOW_RET_FAC,SNOW_EMIS,&
             SWEMX,TAU0,GRAIN_GROWTH,EXTRA_GROWTH,DIRT_SOOT,&
 	    BATS_COSZ,BATS_VIS_NEW,BATS_NIR_NEW,BATS_VIS_AGE,BATS_NIR_AGE,BATS_VIS_DIR,BATS_NIR_DIR,&
 	    RSURF_SNOW,RSURF_EXP
 
-    NAMELIST / noahmp_global_parameters / CO2,O2,TIMEAN,FSATMX,Z0SNO,SSI,SNOW_RET_FAC, &
+    NAMELIST / noahmp_global_parameters / CO2,O2,TIMEAN,FSATMX,Z0SNO,SSI,SNOW_RET_FAC,SNOW_EMIS,&
             SWEMX,TAU0,GRAIN_GROWTH,EXTRA_GROWTH,DIRT_SOOT,&
 	    BATS_COSZ,BATS_VIS_NEW,BATS_NIR_NEW,BATS_VIS_AGE,BATS_NIR_AGE,BATS_VIS_DIR,BATS_NIR_DIR,&
 	    RSURF_SNOW,RSURF_EXP
@@ -9745,6 +9752,7 @@ CONTAINS
      Z0SNO_TABLE     = -1.E36
        SSI_TABLE     = -1.E36
 SNOW_RET_FAC_TABLE   = -1.E36
+   SNOW_EMIS_TABLE   = -1.E36
      SWEMX_TABLE     = -1.E36
         TAU0_TABLE   = -1.E36
 GRAIN_GROWTH_TABLE   = -1.E36
@@ -9782,6 +9790,7 @@ RSURF_SNOW_TABLE     = -1.E36
      Z0SNO_TABLE     = Z0SNO
        SSI_TABLE     = SSI
 SNOW_RET_FAC_TABLE   = SNOW_RET_FAC
+   SNOW_EMIS_TABLE   = SNOW_EMIS
      SWEMX_TABLE     = SWEMX
         TAU0_TABLE   = TAU0
 GRAIN_GROWTH_TABLE   = GRAIN_GROWTH
