@@ -2045,7 +2045,7 @@ ENDIF   ! CROPTYPE == 0
      IF (ICE == 1) THEN
        EMG = 0.98*(1.-FSNO) + parameters%SNOW_EMIS*FSNO  ! move hard-coded snow emissivity as a global parameter to MPTABLE
      ELSE
-       EMG = parameters%EG(IST)*(1.-FSNO) + parameters%SNOW_EMIS*FSNO ! move hard-coded snow emissivity as a global parameter to MPTABLE
+       EMG = parameters%EG(IST)*(1.-FSNO) + parameters%SNOW_EMIS*FSNO
      END IF
 
 ! soil moisture factor controlling stomatal resistance
@@ -7821,17 +7821,17 @@ ENDIF   ! CROPTYPE == 0
     INTEGER                                :: K
   !---------------------------------------------------------------------------------------------
     IRR_ACTIVE =  .TRUE.
-
+   
     ! check if irrigation is can be activated or not
     IF(OPT_IRR .EQ. 2)THEN
       ! activate irrigation if within crop season
       IF ((JULIAN .LT. parameters%PLTDAY).OR.&
           (JULIAN .GT. (parameters%HSDAY - parameters%IRR_HAR))) IRR_ACTIVE = .FALSE.
     ELSE IF (OPT_IRR .EQ. 3) THEN
-
+      
       ! activate if LAI > threshold LAI
       IF(LAI .LT. parameters%IRR_LAI) IRR_ACTIVE = .FALSE.
-
+      
     ELSE IF ( (OPT_IRR .GT. 3) .OR. (OPT_IRR .LT. 1)) THEN
       IRR_ACTIVE = .FALSE.
     END IF
@@ -7846,16 +7846,16 @@ ENDIF   ! CROPTYPE == 0
          SMCAVL = SMCAVL + (SH2O(K)-parameters%SMCWLT(K))*(ZSOIL(K-1) - ZSOIL(K))
          SMCLIM = SMCLIM + (parameters%SMCREF(K)-parameters%SMCWLT(K))*(ZSOIL(K-1) - ZSOIL(K))
       END DO
-
+    
       ! check if root zone soil moisture < MAD
-      IF((SMCAVL/SMCLIM) .LE. parameters%IRR_MAD) THEN
+      IF((SMCAVL/SMCLIM) .LE. parameters%IRR_MAD) THEN 
          ! parameters%IRR_MAD- calibratable
          ! amount of water need to be added to bring soil moisture back to 
          ! field capacity, i.e., irrigation water amount (m)
-         IRRWATAMT = (SMCLIM - SMCAVL)*IRRFRA*FVEG
+         IRRWATAMT = (SMCLIM - SMCAVL)*IRRFRA*FVEG  
          ! sprinkler irrigation amount (m) based on 2D SIFAC
          IF((IRAMTSI .EQ. 0.0) .AND. (SIFAC .GT. 0.0) .AND. (OPT_IRRM .EQ. 0)) THEN
-            IRAMTSI = SIFAC*IRRWATAMT
+            IRAMTSI = SIFAC*IRRWATAMT 
             IRCNTSI = IRCNTSI + 1
          ! sprinkler irrigation amount (m) based on namelist choice
          ELSE IF ((IRAMTSI .EQ. 0.0) .AND. (OPT_IRRM .EQ. 1)) THEN
@@ -7868,7 +7868,7 @@ ENDIF   ! CROPTYPE == 0
             IRCNTMI = IRCNTMI + 1
          ! micro irrigation amount (m) based on namelist choice
          ELSE IF ((IRAMTMI .EQ. 0.0) .AND. (OPT_IRRM .EQ. 2)) THEN
-            IRAMTMI = IRRWATAMT
+            IRAMTMI = IRRWATAMT 
             IRCNTMI = IRCNTMI + 1
          END IF
          ! flood irrigation amount (m): Assumed to saturate top two layers and 
@@ -7882,18 +7882,18 @@ ENDIF   ! CROPTYPE == 0
          ELSE IF((IRAMTFI .EQ. 0.0) .AND. (OPT_IRRM .EQ. 3)) THEN
             IRAMTFI = (IRRWATAMT)*(parameters%FILOSS+1)
             IRCNTFI = IRCNTFI + 1
-         END IF
+         END IF  
       ELSE
          IRRWATAMT = 0.0
          IRAMTSI   = 0.0
          IRAMTMI   = 0.0
          IRAMTFI   = 0.0
       END IF
-    END IF
+    END IF   
   END SUBROUTINE TRIGGER_IRRIGATION
-
+  
  !============================================================================================================
-
+ 
   SUBROUTINE SPRINKLER_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,SICE,& !in
                                   T2,WINDU,WINDV,EAIR,SIFAC,        & !in
                                   IRAMTSI,IREVPLOS,IRSIRATE)          !inout
@@ -7932,12 +7932,12 @@ ENDIF   ! CROPTYPE == 0
     REAL                                    :: ESAT1
     !-------------------------------------------------------------------------------------------    
     ! estimate infiltration rate based on Philips Eq.
-    CALL IRR_PHILIP_INFIL(parameters,SMC,SH2O,SICE,DT,NSOIL,FSUR)
+    CALL IRR_PHILIP_INFIL(parameters,SMC,SH2O,SICE,DT,NSOIL,FSUR)           
     ! irrigation rate of sprinkler
     TEMP_RATE = parameters%SPRIR_RATE*(1/1000.)*DT/3600.         !NRCS rate/time step - calibratable
     IRSIRATE  = MIN(FSUR*DT,IRAMTSI,TEMP_RATE)                   !Limit the application rate to minimum of infiltration rate
                                                                  !and to the NRCS recommended rate, (m)
-
+    
     ! evaporative loss from droplets: Based on Bavi et al., (2009). Evaporation 
     ! losses from sprinkler irrigation systems under various operating 
     ! conditions. Journal of Applied Sciences, 9(3), 597-600.
@@ -7949,21 +7949,19 @@ ENDIF   ! CROPTYPE == 0
        IRRLOSS   = 4.337*(EXP(0.077*WINDSPEED))*(((ESAT1-EAIR)*0.01)**(-0.098)) ! [%]
     END IF
     IF(ISNAN(IRRLOSS))IRRLOSS=4.0 ! In case if IRRLOSS is NaN
-
+    
     ! Sprinkler water (m) for sprinkler fraction 
     IRSIRATE  = IRSIRATE * SIFAC
     IF(IRSIRATE .GE. IRAMTSI)THEN
        IRSIRATE = IRAMTSI
        IRAMTSI  = 0.0
-    ELSE
+    ELSE 
        IRAMTSI = IRAMTSI - IRSIRATE
     END IF
-    IREVPLOS = IRSIRATE*IRRLOSS*(1./100.)
+    IREVPLOS = IRSIRATE*IRRLOSS*(1./100.) 
     IRSIRATE = IRSIRATE-IREVPLOS
   END SUBROUTINE SPRINKLER_IRRIGATION
-
   !============================================================================================================
-
   SUBROUTINE MICRO_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,SICE,MIFAC, & !in
                               IRAMTMI,IRMIRATE)                          !inout
   !---------------------------------------------------------------------------------------------
@@ -8002,13 +8000,12 @@ ENDIF   ! CROPTYPE == 0
     IF(IRMIRATE .GE. IRAMTMI)THEN
        IRMIRATE  = IRAMTMI
        IRAMTMI = 0.0
-    ELSE
+    ELSE 
        IRAMTMI = IRAMTMI - IRMIRATE
     END IF
   END SUBROUTINE MICRO_IRRIGATION
-
  !============================================================================================================
-
+ 
   SUBROUTINE FLOOD_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,SICE,FIFAC,& !in
                               IRAMTFI,IRFIRATE)                         !inout
   !---------------------------------------------------------------------------------------------
@@ -8048,14 +8045,13 @@ ENDIF   ! CROPTYPE == 0
     IF(IRFIRATE .GE. IRAMTFI)THEN
        IRFIRATE  = IRAMTFI
        IRAMTFI = 0.0
-    ELSE
+    ELSE 
        IRAMTFI = IRAMTFI - IRFIRATE
-    END IF
-
+    END IF                                                              
+   
   END SUBROUTINE FLOOD_IRRIGATION
-
+  
  !============================================================================================================
-
   SUBROUTINE IRR_PHILIP_INFIL(parameters,SMC,SH2O,SICE,DT,NSOIL, & ! in
                               FSUR)                                ! out
   !---------------------------------------------------------------------------------------------
@@ -8096,7 +8092,7 @@ ENDIF   ! CROPTYPE == 0
 
   ! sorptivity based on Eq. 10b from Kutilek, Miroslav, and Jana Valentova (1986) 
   ! sorptivity approximations. Transport in Porous Media 1.1, 57-62.
-   SP = SQRT(2.0 * (parameters%SMCMAX(ISOIL) - SMC(ISOIL)) * (parameters%DWSAT(ISOIL) - WDF))
+   SP = SQRT(2.0 * (parameters%SMCMAX(ISOIL) - SMC(ISOIL)) * (parameters%DWSAT(ISOIL) - WDF)) 
 
   ! parameter A in Eq. 9 of Valiantzas (2010) is given by
    AP = MIN(WCND,(2.0/3.0)*parameters%DKSAT(ISOIL))
@@ -9569,7 +9565,7 @@ END SUBROUTINE PSN_CROP
   opt_crop = iopt_crop
   opt_irr  = iopt_irr
   opt_irrm = iopt_irrm
- 
+  
   end subroutine noahmp_options
  
 END MODULE MODULE_SF_NOAHMPLSM
@@ -10123,9 +10119,7 @@ CONTAINS
     READ (21,*) SLCATS
     WRITE( message , * ) 'SOIL TEXTURE CLASSIFICATION = ', TRIM ( SLTYPE ) , ' FOUND', &
                SLCATS,' CATEGORIES'
-#ifdef HYDRO_D
     CALL wrf_message ( message )
-#endif
 
     DO LC=1,SLCATS
       READ (21,*) ITMP,BEXP_TABLE(LC),SMCDRY_TABLE(LC),F1_TABLE(LC),SMCMAX_TABLE(LC),    &
