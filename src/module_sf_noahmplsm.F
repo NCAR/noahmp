@@ -7948,8 +7948,8 @@ ENDIF   ! CROPTYPE == 0
     ELSE ! Equation (4)
        IRRLOSS   = 4.337*(EXP(0.077*WINDSPEED))*(((ESAT1-EAIR)*0.01)**(-0.098)) ! [%]
     END IF
-    ! PGI Fortran compiler does not support ISNAN
-    !IF(ISNAN(IRRLOSS))IRRLOSS=4.0 ! In case if IRRLOSS is NaN
+    ! Old PGI Fortran compiler does not support ISNAN
+    IF ( isnan_lsm(IRRLOSS) ) IRRLOSS=4.0 ! In case if IRRLOSS is NaN
     IF ( (IRRLOSS .GT. 1000.0) .OR. (IRRLOSS .LT. 0.0) ) IRRLOSS=4.0 ! In case if IRRLOSS is out of range
  
     ! Sprinkler water (m) for sprinkler fraction 
@@ -7962,8 +7962,11 @@ ENDIF   ! CROPTYPE == 0
     END IF
     IREVPLOS = IRSIRATE*IRRLOSS*(1./100.) 
     IRSIRATE = IRSIRATE-IREVPLOS
+
   END SUBROUTINE SPRINKLER_IRRIGATION
+
   !============================================================================================================
+
   SUBROUTINE MICRO_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,SICE,MIFAC, & !in
                               IRAMTMI,IRMIRATE)                          !inout
   !---------------------------------------------------------------------------------------------
@@ -10737,6 +10740,12 @@ RSURF_SNOW_TABLE     = RSURF_SNOW
 
 
   end subroutine read_mp_optional_parameters
+
+ logical function isnan_lsm(arg1)
+       real,intent(in) :: arg1
+       isnan_lsm = (arg1 .ne. arg1)
+       return
+ end function isnan_lsm
 
 END MODULE NOAHMP_TABLES
 
