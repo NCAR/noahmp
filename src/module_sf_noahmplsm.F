@@ -397,6 +397,9 @@ MODULE MODULE_SF_NOAHMPLSM
      REAL :: QUARTZ(NSOIL) !soil quartz content
      REAL :: F1            !soil thermal diffusivity/conductivity coef (not used MB: 20140718)
      REAL :: BVIC          !VIC model infiltration parameter for opt_run=6
+     REAL :: AXAJ          !Xinanjiang: Tension water distribution inflection parameter [-] for opt_run=7
+     REAL :: BXAJ          !Xinanjiang: Tension water distribution shape parameter [-] for opt_run=7
+     REAL :: XXAJ          !Xinanjiang: Free water distribution shape parameter [-] for opt_run=7
 
 !------------------------------------------------------------------------------------------!
 ! From the GENPARM.TBL file
@@ -6104,7 +6107,7 @@ ENDIF   ! CROPTYPE == 0
           RUNSUB       = QDIS          !mm/s
        END IF
 
-       IF(OPT_RUN == 3 .or. OPT_RUN == 4 .or. OPT_RUN == 6) THEN 
+       IF(OPT_RUN == 3 .or. OPT_RUN == 4 .or. OPT_RUN == 6 .or. OPT_RUN == 7) THEN 
           RUNSUB       = RUNSUB + QDRAIN        !mm/s
        END IF
 
@@ -7263,6 +7266,9 @@ ENDIF   ! CROPTYPE == 0
        CALL COMPUTE_VIC_SURFRUNOFF(parameters,DT,NSOIL,SMC,ZSOIL,QINSUR,FSAT,RUNSRF,PDDUM)
     END IF
 
+    IF (OPT_RUN == 7) THEN
+       CALL COMPUTE_XAJ_SURFRUNOFF(parameters,DT,FCR,NSOIL,SMC,ZSOIL,QINSUR,RUNSRF,PDDUM)
+    END IF
 
 ! determine iteration times and finer time step
 
@@ -7293,6 +7299,10 @@ ENDIF   ! CROPTYPE == 0
                                       FSAT,RUNSRF,PDDUM)                         !out
        END IF
 
+       IF (QINSUR > 0. .AND. OPT_RUN == 7) THEN
+          CALL COMPUTE_XAJ_SURFRUNOFF(parameters,DTFINE,FCR,NSOIL,SMC,ZSOIL,QINSUR,& ! in
+                                      RUNSRF,PDDUM)                                  ! out
+       END IF
 
        CALL SRT   (parameters,NSOIL  ,ZSOIL  ,DTFINE ,PDDUM  ,ETRANI , & !in
                    QSEVA  ,SH2O   ,SMC    ,ZWT    ,FCR    , & !in
@@ -7617,7 +7627,7 @@ ENDIF   ! CROPTYPE == 0
           IF(OPT_RUN == 1 .or. OPT_RUN == 2) THEN
              QDRAIN   = 0.
           END IF
-          IF(OPT_RUN == 3 .OR. OPT_RUN == 6) THEN
+          IF(OPT_RUN == 3 .OR. OPT_RUN == 6 .OR. OPT_RUN == 7) THEN
              QDRAIN   = parameters%SLOPE*WCND(K)
           END IF
           IF(OPT_RUN == 4) THEN
@@ -7861,6 +7871,86 @@ ENDIF   ! CROPTYPE == 0
  END SUBROUTINE COMPUTE_VIC_SURFRUNOFF
 
 ! End VIC subroutines
+
+!== begin xinanjiag=================================================================================
+
+  SUBROUTINE COMPUTE_XAJ_SURFRUNOFF(parameters,DT,FCR,NSOIL,SMC,ZSOIL,QINSUR,RUNSRF,PDDUM)
+
+! ----------------------------------------------------------------------
+! Calculate the saturated area and runoff based on Xinanjiag runoff scheme.
+! Reference: Knoben, W. J., Freer, J. E., Fowler, K. J., Peel, M. C., & Woods, R. A. (2019). 
+! Modular Assessment of Rainfall-Runoff Models Toolbox (MARRMoT) v1. 2: 
+! an open-source, extendable framework providing implementations of 46 conceptual 
+! hydrologic models as continuous state-space formulations.
+! ----------------------------------------------------------------------
+! Author: Prasanth Valayamkunnath <prasanth@ucar.edu>
+! Date: August 03, 2020
+! ----------------------------------------------------------------------
+
+    IMPLICIT NONE
+! ----------------------------------------------------------------------
+! Inputs
+    TYPE (noahmp_parameters), INTENT(IN)   :: parameters
+    INTEGER,                  INTENT(IN)   :: NSOIL
+    REAL, DIMENSION(1:NSOIL), INTENT(IN)   :: SMC
+    REAL, DIMENSION(1:NSOIL), INTENT(IN)   :: ZSOIL
+    REAL, DIMENSION(1:NSOIL), INTENT(IN)   :: FCR      !fraction of imperviousness (-) = IMP
+    REAL                    , INTENT(IN)   :: QINSUR
+    REAL                    , INTENT(IN)   :: DT
+! Output
+    REAL                    , INTENT(INOUT):: RUNSRF
+    REAL                    , INTENT(INOUT):: PDDUM
+! local
+    REAL    :: WM,WM_MAX,SM,SM_MAX,IRUNOFF,PRUNOFF
+    INTEGER :: IZ
+!------------------------------------------------------------------------
+
+!initialize  
+    WM      = 0.0
+    WM_MAX  = 0.0
+    SM      = 0.0 
+    SM_MAX  = 0.0
+    IRUNOFF = 0.0
+    PRUNOFF = 0.0
+    RUNSRF  = 0.0
+
+    DO IZ=1,NSOIL-2
+       IF ((SMC(IZ)-parameters%SMCREF(IZ)) .GT. 0.) THEN ! soil moisture greater than field capacity
+          SM     = SM + (SMC(IZ) - parameters%SMCREF(IZ) )*-1*ZSOIL(IZ) !m
+          WM     = WM + (parameters%SMCREF(IZ)*-1*ZSOIL(IZ))            !m  
+       ELSE
+          WM     = WM + (SMC(IZ)*-1*ZSOIL(IZ))
+       END IF
+       WM_MAX = WM_MAX + (parameters%SMCREF(IZ)*-1*ZSOIL(IZ))
+       SM_MAX = SM_MAX + (parameters%SMCMAX(IZ) - parameters%SMCREF(IZ))*-1*ZSOIL(IZ)
+    END DO
+    WM = MIN(WM,WM_MAX) ! tension water (m) 
+    SM = MIN(SM,SM_MAX) ! free water (m)
+
+! impervious surface runoff R_IMP    
+    IRUNOFF = FCR(1)*QINSUR*DT
+
+! solve pervious surface runoff (m) based on Eq. (310)
+    IF ((WM/WM_MAX) .LE. (0.5-parameters%AXAJ))THEN
+       PRUNOFF = (1-FCR(1))*QINSUR*DT*((0.5-parameters%AXAJ)**(1-parameters%BXAJ))*((WM/WM_MAX)**parameters%BXAJ)
+    ELSE
+       PRUNOFF = (1-FCR(1))*QINSUR*DT*(1-(((0.5+parameters%AXAJ)**(1-parameters%BXAJ))*((1-(WM/WM_MAX))**parameters%BXAJ)))
+    END IF
+
+! estimate surface runoff based on Eq. (313)
+    IF(QINSUR .EQ. 0.0) THEN
+      RUNSRF  = 0.0
+    ELSE
+      RUNSRF = PRUNOFF*(1-((1-(SM/SM_MAX))**parameters%XXAJ))+IRUNOFF
+    END IF
+    RUNSRF = RUNSRF/DT !m/s
+    RUNSRF = MAX(0.0,    RUNSRF)
+    RUNSRF = MIN(QINSUR, RUNSRF)
+    PDDUM  = QINSUR - RUNSRF
+
+  END SUBROUTINE COMPUTE_XAJ_SURFRUNOFF
+
+!== end xinanjiag ==================================================================================
 
 !== begin wdfcnd1 ==================================================================================
 
@@ -9893,6 +9983,9 @@ MODULE NOAHMP_TABLES
     REAL :: SMCWLT_TABLE(MAX_SOILTYP)      !monthly leaf area index, one-sided
     REAL :: QUARTZ_TABLE(MAX_SOILTYP)      !single-side leaf area per Kg [m2/kg]
     REAL :: BVIC_TABLE(MAX_SOILTYP)        !VIC model infiltration parameter (-) for opt_run=6
+    REAL :: AXAJ_TABLE(MAX_SOILTYP)        !Xinanjiang: Tension water distribution inflection parameter [-] for opt_run=7
+    REAL :: BXAJ_TABLE(MAX_SOILTYP)        !Xinanjiang: Tension water distribution shape parameter [-] for opt_run=7
+    REAL :: XXAJ_TABLE(MAX_SOILTYP)        !Xinanjiang: Free water distribution shape parameter [-] for opt_run=7
 
 ! GENPARM.TBL parameters
 
@@ -10353,6 +10446,9 @@ CONTAINS
        ZBOT_TABLE = -1.E36
        CZIL_TABLE = -1.E36
        BVIC_TABLE = -1.E36
+       AXAJ_TABLE = -1.E36
+       BXAJ_TABLE = -1.E36
+       XXAJ_TABLE = -1.E36
 
 !
 !-----READ IN SOIL PROPERTIES FROM SOILPARM.TBL
@@ -10377,9 +10473,10 @@ CONTAINS
     CALL wrf_message ( message )
 
     DO LC=1,SLCATS
-      READ (21,*) ITMP,BEXP_TABLE(LC),SMCDRY_TABLE(LC),F1_TABLE(LC),SMCMAX_TABLE(LC),    &
+      READ (21,*) ITMP,BEXP_TABLE(LC),SMCDRY_TABLE(LC),F1_TABLE(LC),SMCMAX_TABLE(LC),   &
                   SMCREF_TABLE(LC),PSISAT_TABLE(LC),DKSAT_TABLE(LC), DWSAT_TABLE(LC),   &
-                  SMCWLT_TABLE(LC), QUARTZ_TABLE(LC),BVIC_TABLE(LC)
+                  SMCWLT_TABLE(LC), QUARTZ_TABLE(LC),BVIC_TABLE(LC), AXAJ_TABLE (LC),   &
+                  BXAJ_TABLE (LC),XXAJ_TABLE(LC)
     ENDDO
 
     CLOSE (21)
