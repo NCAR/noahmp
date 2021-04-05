@@ -114,6 +114,7 @@ MODULE MODULE_SF_NOAHMPLSM
                       !   4 -> BATS surface and subsurface runoff (free drainage)
                       !   5 -> Miguez-Macho&Fan groundwater scheme (Miguez-Macho et al. 2007 JGR; Fan et al. 2007 JGR)
 		      !          (needs further testing for public use)
+                      !   6 -> Variable Infiltration Capacity Model surface runoff scheme (Wood et al., 1992, JGR) 
 
   INTEGER :: OPT_SFC  ! options for surface layer drag coeff (CH & CM)
                       ! **1 -> M-O
@@ -395,6 +396,8 @@ MODULE MODULE_SF_NOAHMPLSM
      REAL :: DWSAT(NSOIL)  !saturated soil hydraulic diffusivity
      REAL :: QUARTZ(NSOIL) !soil quartz content
      REAL :: F1            !soil thermal diffusivity/conductivity coef (not used MB: 20140718)
+     REAL :: BVIC          !VIC model infiltration parameter for opt_run=6
+
 !------------------------------------------------------------------------------------------!
 ! From the GENPARM.TBL file
 !------------------------------------------------------------------------------------------!
@@ -6101,7 +6104,7 @@ ENDIF   ! CROPTYPE == 0
           RUNSUB       = QDIS          !mm/s
        END IF
 
-       IF(OPT_RUN == 3 .or. OPT_RUN == 4) THEN 
+       IF(OPT_RUN == 3 .or. OPT_RUN == 4 .or. OPT_RUN == 6) THEN 
           RUNSUB       = RUNSUB + QDRAIN        !mm/s
        END IF
 
@@ -7256,6 +7259,11 @@ ENDIF   ! CROPTYPE == 0
        END IF
     END IF
 
+    IF (OPT_RUN == 6) THEN
+       CALL COMPUTE_VIC_SURFRUNOFF(parameters,DT,NSOIL,SMC,ZSOIL,QINSUR,FSAT,RUNSRF,PDDUM)
+    END IF
+
+
 ! determine iteration times and finer time step
 
     NITER = 1
@@ -7279,6 +7287,12 @@ ENDIF   ! CROPTYPE == 0
                       SICEMAX,QINSUR ,                         & !in
                       PDDUM  ,RUNSRF )                           !out
        END IF
+
+       IF(QINSUR > 0. .and. OPT_RUN == 6) THEN
+          CALL COMPUTE_VIC_SURFRUNOFF(parameters,DTFINE,NSOIL,SMC,ZSOIL,QINSUR,& !in
+                                      FSAT,RUNSRF,PDDUM)                         !out
+       END IF
+
 
        CALL SRT   (parameters,NSOIL  ,ZSOIL  ,DTFINE ,PDDUM  ,ETRANI , & !in
                    QSEVA  ,SH2O   ,SMC    ,ZWT    ,FCR    , & !in
@@ -7603,7 +7617,7 @@ ENDIF   ! CROPTYPE == 0
           IF(OPT_RUN == 1 .or. OPT_RUN == 2) THEN
              QDRAIN   = 0.
           END IF
-          IF(OPT_RUN == 3) THEN
+          IF(OPT_RUN == 3 .OR. OPT_RUN == 6) THEN
              QDRAIN   = parameters%SLOPE*WCND(K)
           END IF
           IF(OPT_RUN == 4) THEN
@@ -7619,7 +7633,8 @@ ENDIF   ! CROPTYPE == 0
              ENDIF
              DSMDZ(K) = 2.0 * (SMX(K) - SMXBOT) / TEMP1
              QDRAIN   = WDF(K  ) * DSMDZ(K  ) + WCND(K  )
-          END IF   
+          END IF  
+ 
           WFLUX(K) = -(WDF(K-1)*DSMDZ(K-1))-WCND(K-1)+ETRANI(K) + QDRAIN
        END IF
     END DO
@@ -7770,6 +7785,82 @@ ENDIF   ! CROPTYPE == 0
     SMC = SH2O + SICE
 
   END SUBROUTINE SSTEP
+
+!==begin VIC subroutines ========================================================================== 
+
+  SUBROUTINE COMPUTE_VIC_SURFRUNOFF(parameters,DT,NSOIL,SMC,ZSOIL,QINSUR,ASAT,RUNSRF,PDDUM)
+
+! ----------------------------------------------------------------------
+! Calculate the saturated area and runoff based on VIC runoff scheme.
+! This scheme adopted from VIC model
+! Author: Prasanth Valayamkunnath <prasanth@ucar.edu>
+! ----------------------------------------------------------------------
+    IMPLICIT NONE
+! ----------------------------------------------------------------------
+
+! Inputs
+  TYPE (noahmp_parameters), INTENT(IN)   :: parameters
+  INTEGER,                  INTENT(IN)   :: NSOIL
+  REAL, DIMENSION(1:NSOIL), INTENT(IN)   :: SMC
+  REAL, DIMENSION(1:NSOIL), INTENT(IN)   :: ZSOIL
+  REAL                    , INTENT(IN)   :: QINSUR
+  REAL                    , INTENT(IN)   :: DT
+  REAL                    , INTENT(OUT)  :: ASAT
+! Output
+  REAL                    , INTENT(INOUT):: RUNSRF
+  REAL                    , INTENT(INOUT):: PDDUM
+!------------------------------------------------------------------------
+!local 
+  REAL    :: EX, I_0, I_MAX, BASIS, TOP_MOIST, TOP_MAX_MOIST
+  INTEGER :: IZ  
+
+! Initialize Variables  
+  EX    = 0.0
+  ASAT  = 0.0
+  I_MAX = 0.0
+  I_0   = 0.0
+  BASIS = 0.0
+  TOP_MOIST     = 0.0
+  TOP_MAX_MOIST = 0.0
+  RUNSRF = 0.0
+  
+  DO IZ=1,NSOIL-2
+    TOP_MOIST     = TOP_MOIST + (SMC(IZ)*-1*ZSOIL(IZ)) ! m
+    TOP_MAX_MOIST = TOP_MAX_MOIST + (parameters%SMCMAX(IZ)*-1*ZSOIL(IZ)) ! m  
+  END DO
+
+  ! Saturated area from soil moisture
+  EX    = parameters%BVIC/(1+parameters%BVIC)
+  ASAT  = 1.0 - (( 1.0 - (TOP_MOIST/TOP_MAX_MOIST))**EX)  ! 
+  ASAT  = MAX(0.0, ASAT)
+  ASAT  = MIN(1.0, ASAT)
+ 
+  ! Infiltration for the previous time-step soil moisture based on ASAT
+  I_MAX = (1.0 + parameters%BVIC)*TOP_MAX_MOIST ! m
+  I_0   = I_MAX*(1.0 - (1.0 - ASAT)**(1.0/parameters%BVIC)) !m
+ 
+  ! Solve for surface runoff
+  IF(QINSUR .EQ. 0.0) THEN
+     RUNSRF = 0.0
+  ELSE IF(I_MAX .EQ. 0.0) THEN
+     RUNSRF = QINSUR*DT
+  ELSE IF( (I_0 + (QINSUR*DT)) .GT. I_MAX ) THEN
+     RUNSRF = (QINSUR*DT) - TOP_MAX_MOIST + TOP_MOIST
+  ELSE
+     BASIS  = 1.0 - ((I_0 + (QINSUR*DT))/I_MAX)
+     RUNSRF = (QINSUR*DT) - TOP_MAX_MOIST + TOP_MOIST + &
+              TOP_MAX_MOIST*(basis**(1.0+parameters%BVIC))
+  END IF
+  
+  RUNSRF = RUNSRF/(DT) ! m/s
+  IF (RUNSRF .LT. 0.0) RUNSRF = 0.0
+  IF (RUNSRF .GT. QINSUR)RUNSRF = QINSUR
+
+  PDDUM = QINSUR - RUNSRF    ! m/s
+
+ END SUBROUTINE COMPUTE_VIC_SURFRUNOFF
+
+! End VIC subroutines
 
 !== begin wdfcnd1 ==================================================================================
 
@@ -9791,16 +9882,17 @@ MODULE NOAHMP_TABLES
 
     INTEGER            :: SLCATS
 
-    REAL :: BEXP_TABLE(MAX_SOILTYP)          !maximum intercepted h2o per unit lai+sai (mm)
+    REAL :: BEXP_TABLE(MAX_SOILTYP)        !maximum intercepted h2o per unit lai+sai (mm)
     REAL :: SMCDRY_TABLE(MAX_SOILTYP)      !characteristic leaf dimension (m)
-    REAL :: F1_TABLE(MAX_SOILTYP)         !momentum roughness length (m)
+    REAL :: F1_TABLE(MAX_SOILTYP)          !momentum roughness length (m)
     REAL :: SMCMAX_TABLE(MAX_SOILTYP)      !top of canopy (m)
     REAL :: SMCREF_TABLE(MAX_SOILTYP)      !bottom of canopy (m)
     REAL :: PSISAT_TABLE(MAX_SOILTYP)      !tree density (no. of trunks per m2)
     REAL :: DKSAT_TABLE(MAX_SOILTYP)       !tree crown radius (m)
     REAL :: DWSAT_TABLE(MAX_SOILTYP)       !monthly stem area index, one-sided
     REAL :: SMCWLT_TABLE(MAX_SOILTYP)      !monthly leaf area index, one-sided
-    REAL :: QUARTZ_TABLE(MAX_SOILTYP)         !single-side leaf area per Kg [m2/kg]
+    REAL :: QUARTZ_TABLE(MAX_SOILTYP)      !single-side leaf area per Kg [m2/kg]
+    REAL :: BVIC_TABLE(MAX_SOILTYP)        !VIC model infiltration parameter (-) for opt_run=6
 
 ! GENPARM.TBL parameters
 
@@ -10260,6 +10352,7 @@ CONTAINS
        FRZK_TABLE = -1.E36
        ZBOT_TABLE = -1.E36
        CZIL_TABLE = -1.E36
+       BVIC_TABLE = -1.E36
 
 !
 !-----READ IN SOIL PROPERTIES FROM SOILPARM.TBL
@@ -10286,7 +10379,7 @@ CONTAINS
     DO LC=1,SLCATS
       READ (21,*) ITMP,BEXP_TABLE(LC),SMCDRY_TABLE(LC),F1_TABLE(LC),SMCMAX_TABLE(LC),    &
                   SMCREF_TABLE(LC),PSISAT_TABLE(LC),DKSAT_TABLE(LC), DWSAT_TABLE(LC),   &
-                  SMCWLT_TABLE(LC), QUARTZ_TABLE(LC)
+                  SMCWLT_TABLE(LC), QUARTZ_TABLE(LC),BVIC_TABLE(LC)
     ENDDO
 
     CLOSE (21)
