@@ -7965,6 +7965,12 @@ ENDIF   ! CROPTYPE == 0
 
   END SUBROUTINE SPRINKLER_IRRIGATION
 
+  logical function isnan_lsm(arg1)
+       real,intent(in) :: arg1
+       isnan_lsm = (arg1 .ne. arg1)
+       return
+  end function isnan_lsm
+
   !============================================================================================================
 
   SUBROUTINE MICRO_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,SICE,MIFAC, & !in
@@ -10741,11 +10747,6 @@ RSURF_SNOW_TABLE     = RSURF_SNOW
 
   end subroutine read_mp_optional_parameters
 
- logical function isnan_lsm(arg1)
-       real,intent(in) :: arg1
-       isnan_lsm = (arg1 .ne. arg1)
-       return
- end function isnan_lsm
 
 END MODULE NOAHMP_TABLES
 
