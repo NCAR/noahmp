@@ -8783,7 +8783,7 @@ END SUBROUTINE RR2
     END IF
     ! Old PGI Fortran compiler does not support ISNAN
     IF ( isnan_lsm(IRRLOSS) ) IRRLOSS=4.0 ! In case if IRRLOSS is NaN
-    IF ( (IRRLOSS .GT. 1000.0) .OR. (IRRLOSS .LT. 0.0) ) IRRLOSS=4.0 ! In case if IRRLOSS is out of range
+    IF ( (IRRLOSS .GT. 100.0) .OR. (IRRLOSS .LT. 0.0) ) IRRLOSS=4.0 ! In case if IRRLOSS is out of range
  
     ! Sprinkler water (m) for sprinkler fraction 
     IRSIRATE  = IRSIRATE * SIFAC
