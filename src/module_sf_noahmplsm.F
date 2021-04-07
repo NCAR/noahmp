@@ -8781,8 +8781,8 @@ END SUBROUTINE RR2
     ELSE ! Equation (4)
        IRRLOSS   = 4.337*(EXP(0.077*WINDSPEED))*(((ESAT1-EAIR)*0.01)**(-0.098)) ! [%]
     END IF
-    ! PGI Fortran compiler does not support ISNAN
-    !IF(ISNAN(IRRLOSS))IRRLOSS=4.0 ! In case if IRRLOSS is NaN
+    ! Old PGI Fortran compiler does not support ISNAN
+    IF ( isnan_lsm(IRRLOSS) ) IRRLOSS=4.0 ! In case if IRRLOSS is NaN
     IF ( (IRRLOSS .GT. 1000.0) .OR. (IRRLOSS .LT. 0.0) ) IRRLOSS=4.0 ! In case if IRRLOSS is out of range
  
     ! Sprinkler water (m) for sprinkler fraction 
@@ -8796,7 +8796,15 @@ END SUBROUTINE RR2
     IREVPLOS = IRSIRATE*IRRLOSS*(1./100.) 
     IRSIRATE = IRSIRATE-IREVPLOS
   END SUBROUTINE SPRINKLER_IRRIGATION
+
+  logical function isnan_lsm(arg1)
+       real,intent(in) :: arg1
+       isnan_lsm = (arg1 .ne. arg1)
+       return
+  end function isnan_lsm
+
   !============================================================================================================
+
   SUBROUTINE MICRO_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,SICE,MIFAC, & !in
                               IRAMTMI,IRMIRATE)                          !inout
   !---------------------------------------------------------------------------------------------
