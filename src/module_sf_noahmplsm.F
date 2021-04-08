@@ -1694,10 +1694,10 @@ ENDIF   ! CROPTYPE == 0
            write(message, *) 'ERRWAT =',ERRWAT, "kg m{-2} timestep{-1}"
            call wrf_message(trim(message))
            WRITE(message, &
-           '("    I      J     END_WB     BEG_WB       PRCP       ECAN       EDIR      ETRAN      RUNSRF     RUNSUB")')
+           '("  I    J   END_WB   BEG_WB     PRCP     ECAN     EDIR    ETRAN   RUNSRF   RUNSUB   ZWT   QTLDRN")')
            call wrf_message(trim(message))
            WRITE(message,'(i6,1x,i6,1x,2f15.3,9f11.5)')ILOC,JLOC,END_WB,BEG_WB,PRCP*DT,ECAN*DT,&
-                EDIR*DT,ETRAN*DT,RUNSRF*DT,RUNSUB*DT,ZWT
+                EDIR*DT,ETRAN*DT,RUNSRF*DT,RUNSUB*DT,ZWT,QTLDRN*DT
            call wrf_message(trim(message))
            call wrf_error_fatal("Water budget problem in NOAHMP LSM")
         END IF
@@ -5994,7 +5994,7 @@ ENDIF   ! CROPTYPE == 0
   REAL,                            INTENT(INOUT) :: SMCWTD !soil water content between bottom of the soil and water table [m3/m3]
   REAL,                            INTENT(INOUT) :: DEEPRECH !recharge to or from the water table when deep [m]
   REAL,                            INTENT(INOUT) :: RECH !recharge to or from the water table when shallow [m] (diagnostic)
-  REAL,                            INTENT(INOUT) :: QTLDRN   !tile drainage (mm)
+  REAL,                            INTENT(INOUT) :: QTLDRN   !tile drainage (mm/s)
   REAL,                            INTENT(IN)    :: DX
   REAL,                            INTENT(IN)    :: TDFRACMP !tile drain fraction map
 
@@ -7184,7 +7184,7 @@ ENDIF   ! CROPTYPE == 0
   REAL, INTENT(INOUT)                     :: ZWT    !water table depth [m]
   REAL,                     INTENT(INOUT) :: SMCWTD !soil moisture between bottom of the soil and the water table [m3/m3]
   REAL                    , INTENT(INOUT) :: DEEPRECH
-  REAL                    , INTENT(INOUT) :: QTLDRN ! tile drainage (mm)
+  REAL                    , INTENT(INOUT) :: QTLDRN ! tile drainage (mm/s)
 #ifdef WRF_HYDRO
   REAL                    , INTENT(INOUT) :: WATBLED!in for tile drainage
 #endif
@@ -8767,7 +8767,7 @@ END SUBROUTINE RR2
          END IF
       END IF
 
-    QTLDRN = TDRVOL
+    QTLDRN = TDRVOL / DT
     !print*,"QTLDRN =",QTLDRN
 
   END SUBROUTINE TILE_DRAIN
@@ -8818,7 +8818,7 @@ END SUBROUTINE RR2
 
     REAL, DIMENSION(1:NSOIL), INTENT(INOUT)     :: SH2O
     REAL, DIMENSION(1:NSOIL), INTENT(INOUT)     :: SMC
-    REAL, INTENT(INOUT)                         :: QTLDRN  ! tile drain discharge
+    REAL, INTENT(INOUT)                         :: QTLDRN  ! tile drain discharge mm/s
     REAL, INTENT(INOUT)                         :: ZWT     ! water table depth
 
 ! local 
