@@ -8866,8 +8866,8 @@ END SUBROUTINE RR2
 ! Depth to water table, m
     YY = WATBLED
 #else
-    !CALL TD_FINDZWAT(parameters,NSOIL,SMC,SH2O,SICE,ZSOIL,ZLAYER,WATBLED)
-    CALL ZWTEQ (parameters,NSOIL, NSNOW, ZSOIL, DZSNSO, SH2O, ZWT)
+    CALL TD_FINDZWAT(parameters,NSOIL,SMC,SH2O,SICE,ZSOIL,ZLAYER,ZWT)
+    !CALL ZWTEQ (parameters,NSOIL, NSNOW, ZSOIL, DZSNSO, SH2O, ZWT)
 ! Depth to water table, m
     YY = ZWT
 #endif
