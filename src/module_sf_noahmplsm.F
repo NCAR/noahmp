@@ -9346,9 +9346,9 @@ END SUBROUTINE RR2
   END SUBROUTINE SPRINKLER_IRRIGATION
 
   logical function isnan_lsm(arg1)
-       real,intent(in) :: arg1
-       isnan_lsm = (arg1 .ne. arg1)
-       return
+      real,intent(in) :: arg1
+      isnan_lsm = (arg1 .ne. arg1)
+      return
   end function isnan_lsm
 
   !============================================================================================================
