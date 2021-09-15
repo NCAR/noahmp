@@ -1,7 +1,7 @@
 # noahmp
 Noah-MP Community Repository
 
-This is the offical Noah-MP unified Github repository for code downloading and contribution.
+This is the offical Noah-MP unified Github repository for code downloading and contribution. Note that Noah-MP is a community model contributed by the whole Noah-MP scientific community. For maintenance and release of this GitHub, please contact: Cenlin He (cenlinhe@ucar.edu) and Fei Chen (feichen@ucar.edu).
 
 Some changes have been made to the structure of archiving the stand-alone version of Noah-MP/HRLDAS code in the Github repository. Now, it separately archives the core Noah-MP source code and parameter table (module_sf_noahmplsm.F & MPTABLE.TBL) in this unified Noah-MP Github repository and the rest of the driver and related files (e.g., module_sf_noahmpdrv.F, etc.) in another unified HRLDAS Github repository (https://github.com/NCAR/hrldas). The HRLDAS Github repo is already linked to this unified core Noah-MP code repository. This new archiving structure will allow different host model platforms/systems (e.g., HRLDAS, WRF, UFS, NWM, LIS, etc.) to connect to the core Noah-MP source code and develop their own host model drivers. 
 
