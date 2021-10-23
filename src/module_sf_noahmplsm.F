@@ -8406,7 +8406,12 @@ END SUBROUTINE RR2
 
       ! Maximum infiltrability based on the Eq. 6.25. (m/s)
       JJ   = parameters%GDVIC * (parameters%SMCMAX(ISOIL) - parameters%SMCWLT(ISOIL)) * -1 * ZSOIL(ISOIL)
-      FSUR = parameters%DKSAT(ISOIL) + (GAM * (parameters%DKSAT(ISOIL) - WCND) / (EXP(GAM * 1E-05 / JJ) -1))
+
+      IF(JJ == 0.0)THEN ! infiltration at surface == saturated hydraulic conductivity
+        FSUR = WCND
+      ELSE
+        FSUR = parameters%DKSAT(ISOIL) + (GAM * (parameters%DKSAT(ISOIL) - WCND) / (EXP(GAM * FACC / JJ) -1))
+      END IF
 
       ! infiltration rate at surface
       IF(parameters%DKSAT(ISOIL) .LT. QINSUR)THEN
