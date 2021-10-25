@@ -7871,7 +7871,7 @@ ENDIF   ! CROPTYPE == 0
 
   ! Saturated area from soil moisture
   EX    = parameters%BVIC/(1.0+parameters%BVIC)
-  ASAT  = 1.0 - (( 1.0 - (TOP_MOIST/TOP_MAX_MOIST))**EX)  ! 
+  ASAT  = 1.0 - (( max(0.0,(1.0 - (TOP_MOIST/TOP_MAX_MOIST))))**EX)  ! 
   ASAT  = MAX(0.0, ASAT)
   ASAT  = MIN(1.0, ASAT)
  
@@ -8357,7 +8357,7 @@ END SUBROUTINE RR2
       ELSE
         FSUR = QINSUR
       END IF
-      IF(FSUR .LT. 0.0) FSUR = 0.0
+      IF(FSUR .LT. 0.0) FSUR = WCND
 
    ELSE
 
@@ -8365,7 +8365,7 @@ END SUBROUTINE RR2
       CALL WDFCND2 (parameters,WDF,WCND,SMC(ISOIL),SICE(ISOIL),ISOIL)
 
       ! Maximum infiltrability based on the Eq. 6.25. (m/s)
-      JJ   = parameters%GDVIC * (parameters%SMCMAX(ISOIL) - SMC(ISOIL)) * -1.0 * ZSOIL(ISOIL)
+      JJ   = parameters%GDVIC * max(0.0,(parameters%SMCMAX(ISOIL) - SMC(ISOIL))) * -1.0 * ZSOIL(ISOIL)
 
       IF(JJ == 0.0)THEN ! infiltration at surface == saturated hydraulic conductivity
         FSUR = WCND
@@ -8430,7 +8430,7 @@ END SUBROUTINE RR2
      FSUR = parameters%DKSAT(ISOIL) + ((JJ/1E-05) * (parameters%DKSAT(ISOIL) - WCND))
 
      !maximum infiltration rate at surface
-     IF(FSUR .LT. 0.0) FSUR = 0.0
+     IF(FSUR .LT. 0.0) FSUR = WCND
 
    ELSE 
 
@@ -8438,7 +8438,7 @@ END SUBROUTINE RR2
      CALL WDFCND2 (parameters,WDF,WCND,SMC(ISOIL),SICE(ISOIL),ISOIL)
 
      ! Maximum infiltrability based on the Eq. 6.25. (m/s)
-     JJ   = parameters%GDVIC * (parameters%SMCMAX(ISOIL) - SMC(ISOIL)) * -1.0 * ZSOIL(ISOIL)
+     JJ   = parameters%GDVIC * max(0.0,(parameters%SMCMAX(ISOIL) - SMC(ISOIL))) * -1.0 * ZSOIL(ISOIL)
      FSUR = parameters%DKSAT(ISOIL) + ((JJ/FACC) * (parameters%DKSAT(ISOIL) - WCND))
 
      ! infiltration rate at surface
@@ -8504,7 +8504,7 @@ END SUBROUTINE RR2
 
      ! Maximun infiltration rate, m
      FSUR = (1.0/2.0)*SP*(DT**(-1.0/2.0))+AP ! m/s
-     IF(FSUR .LT. 0.0) FSUR = 0.0
+     IF(FSUR .LT. 0.0) FSUR = WCND
 
    ELSE 
 
@@ -8513,7 +8513,7 @@ END SUBROUTINE RR2
 
      ! Sorptivity based on Eq. 10b from Kutílek, Miroslav, and Jana Valentová (1986) 
      ! Sorptivity approximations. Transport in Porous Media 1.1, 57-62.
-     SP = SQRT(2.0 * (parameters%SMCMAX(ISOIL) - SMC(ISOIL)) * (parameters%DWSAT(ISOIL) - WDF)) 
+     SP = SQRT(2.0 * max(0.0,(parameters%SMCMAX(ISOIL) - SMC(ISOIL))) * (parameters%DWSAT(ISOIL) - WDF)) 
 
      ! Parameter A in Eq. 9 of Valiantzas (2010) is given by
      AP = MIN(WCND, (2.0/3.0)*parameters%DKSAT(ISOIL))
@@ -9412,7 +9412,7 @@ END SUBROUTINE RR2
 
   ! sorptivity based on Eq. 10b from Kutilek, Miroslav, and Jana Valentova (1986) 
   ! sorptivity approximations. Transport in Porous Media 1.1, 57-62.
-   SP = SQRT(2.0 * (parameters%SMCMAX(ISOIL) - SMC(ISOIL)) * (parameters%DWSAT(ISOIL) - WDF)) 
+   SP = SQRT(2.0 * max(0.0,(parameters%SMCMAX(ISOIL) - SMC(ISOIL))) * (parameters%DWSAT(ISOIL) - WDF)) 
 
   ! parameter A in Eq. 9 of Valiantzas (2010) is given by
    AP = MIN(WCND,(2.0/3.0)*parameters%DKSAT(ISOIL))
