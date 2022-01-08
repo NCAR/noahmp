@@ -12078,8 +12078,8 @@ RSURF_SNOW_TABLE     = RSURF_SNOW
     read(15,noahmp_irrigation_parameters)
     close(15)
 
-    if (FILOSS == 1.0) then
-       write(*,'("WARNING: FILOSS should be < 1.0")')
+    if (FILOSS < 0.0 .or. FILOSS > 0.99 ) then
+       write(*,'("WARNING: FILOSS should be >0.0 and <0.99")')
        call wrf_error_fatal("STOP in NoahMP_irrigation_parameters")
     endif
 
