@@ -9186,11 +9186,11 @@ END SUBROUTINE RR2
          ! another, surface layers will be saturated. 
          ! flood irrigation amount (m) based on 2D FIFAC
          IF((IRAMTFI .EQ. 0.0) .AND. (FIFAC .GT. 0.0) .AND. (OPT_IRRM .EQ. 0)) THEN
-            IRAMTFI = FIFAC*(IRRWATAMT)*(parameters%FILOSS+1)
+            IRAMTFI = FIFAC*(IRRWATAMT)*(1.0/(1.0-parameters%FILOSS))
             IRCNTFI = IRCNTFI + 1
          !flood irrigation amount (m) based on namelist choice
          ELSE IF((IRAMTFI .EQ. 0.0) .AND. (OPT_IRRM .EQ. 3)) THEN
-            IRAMTFI = (IRRWATAMT)*(parameters%FILOSS+1)
+            IRAMTFI = (IRRWATAMT)*(1.0/(1.0-parameters%FILOSS))
             IRCNTFI = IRCNTFI + 1
          END IF  
       ELSE
@@ -12077,6 +12077,11 @@ RSURF_SNOW_TABLE     = RSURF_SNOW
 
     read(15,noahmp_irrigation_parameters)
     close(15)
+
+    if (FILOSS == 1.0) then
+       write(*,'("WARNING: FILOSS should be < 1.0")')
+       call wrf_error_fatal("STOP in NoahMP_irrigation_parameters")
+    endif
 
     IRR_FRAC_TABLE   = IRR_FRAC    ! irrigation Fraction
     IRR_HAR_TABLE    = IRR_HAR     ! number of days before harvest date to stop irrigation 
