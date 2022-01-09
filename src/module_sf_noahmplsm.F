@@ -6396,6 +6396,14 @@ ENDIF   ! CROPTYPE == 0
        DZSNSO(IZ) = -DZSNSO(IZ)
    END DO
 
+! C.He: update SNOWH for multi-layer snow
+   IF ( ISNOW < 0 ) THEN
+       SNOWH = 0.0
+       DO IZ = ISNOW+1, 0
+          SNOWH = SNOWH + DZSNSO(IZ)
+       ENDDO
+   END IF
+
   END SUBROUTINE SNOWWATER
 
 !== begin snowfall =================================================================================
