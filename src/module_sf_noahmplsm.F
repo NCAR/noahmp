@@ -1452,6 +1452,7 @@ ENDIF   ! CROPTYPE == 0
          FV = SQRT(UU*UU + VV*VV) / 1.56E5
 	 ! MB: changed below to reflect the rain assumption that all precip gets intercepted 
 	 ICEDRIP = MAX(0.0,CANICE) * (FV+FT)    !MB: removed /DT
+         ICEDRIP = MIN(CANICE/DT + QINTS, ICEDRIP)      !C.He: add constraint to keep water balance
          QDRIPS = (FVEG * SNOW - QINTS) + ICEDRIP
          QTHROS = (1.0-FVEG) * SNOW
          CANICE= MAX(0.0,CANICE + (QINTS - ICEDRIP)*DT)
