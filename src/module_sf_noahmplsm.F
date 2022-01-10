@@ -769,7 +769,10 @@ contains
   LOGICAL                             :: crop_active ! flag to run crop model
   LOGICAL                             :: CROPLU      ! flag to identify croplands
   REAL                                :: SIFCUK      ! Sprinkler fraction for unknown irrigation methods
-  
+
+! add canopy heat storage (C.He added based on GY Niu's communication)
+  REAL                                           :: CANHS ! canopy heat storage change w/m2
+ 
   ! INTENT (OUT) variables need to be assigned a value.  These normally get assigned values
   ! only if DVEG == 2.
   nee = 0.0
@@ -780,6 +783,7 @@ contains
   PAHB  = 0.0
   PAH  = 0.0
   CROPLU = .FALSE.
+  CANHS  = 0.0
   
 ! --------------------------------------------------------------------------------------------------
 ! re-process atmospheric forcing
@@ -932,7 +936,7 @@ contains
                  T2MV   ,T2MB  ,FSRV   , &
                  FSRG   ,RSSUN   ,RSSHA ,ALBSND  ,ALBSNI, BGAP   ,WGAP,TGV,TGB,&
                  Q1     ,Q2V    ,Q2B    ,Q2E    ,CHV   ,CHB     , & !out
-                 EMISSI ,PAH    ,                                 &
+                 EMISSI ,PAH    ,CANHS  ,                         &
 		 SHG,SHC,SHB,EVG,EVB,GHV,GHB,IRG,IRC,IRB,TR,EVC,CHLEAF,CHUC,CHV2,CHB2 ) !out
 !jref:end
 
@@ -1012,7 +1016,7 @@ END IF
                  QTLDRN ,                                         &
                  NSNOW  ,IST    ,ERRWAT ,ILOC   , JLOC  ,FVEG   , &
                  SAV    ,SAG    ,FSRV   ,FSRG   ,ZWT    ,PAH    , &
-                 PAHV   ,PAHG   ,PAHB   ,FIRR)   !in ( Except ERRWAT, which is out )
+                 PAHV   ,PAHG   ,PAHB   ,FIRR   ,CANHS )   !in ( Except ERRWAT, which is out )
 
 ! urban - jref
     QFX = ETRAN + ECAN + EDIR
@@ -1521,7 +1525,7 @@ ENDIF   ! CROPTYPE == 0
                     QTLDRN ,                                         &
                     NSNOW  ,IST    ,ERRWAT, ILOC   ,JLOC   ,FVEG   , &
                     SAV    ,SAG    ,FSRV   ,FSRG   ,ZWT    ,PAH    , &
-                    PAHV   ,PAHG   ,PAHB   ,FIRR)
+                    PAHV   ,PAHG   ,PAHB   ,FIRR   ,CANHS )
 ! --------------------------------------------------------------------------------------------------
 ! check surface energy balance and water balance
 ! --------------------------------------------------------------------------------------------------
@@ -1571,7 +1575,9 @@ ENDIF   ! CROPTYPE == 0
   REAL, INTENT(IN)   :: PAHG    !precipitation advected heat - total (W/m2)
   REAL, INTENT(IN)   :: PAHB    !precipitation advected heat - total (W/m2)
   REAL                           , INTENT(IN) :: FIRR           ! latent heating due to sprinkler evaporation (w/m2) [+ to atm]
+  REAL                           , INTENT(IN) :: CANHS  !canopy heat storage change (w/m2) C.He added based on GY Niu's communication
 
+! local
   INTEGER                                     :: IZ     !do-loop index
   REAL                                        :: END_WB !water storage at end of a timestep [mm]
   !KWM REAL                                        :: ERRWAT !error in water balance [mm/timestep]
@@ -1604,7 +1610,7 @@ ENDIF   ! CROPTYPE == 0
       call wrf_error_fatal("Stop in Noah-MP")
    END IF
 
-   ERRENG = SAV+SAG-(FIRA+FSH+FCEV+FGEV+FCTR+SSOIL+FIRR) +PAH
+   ERRENG = SAV+SAG-(FIRA+FSH+FCEV+FGEV+FCTR+SSOIL+FIRRi+CANHS) +PAH
 !   ERRENG = FVEG*SAV+SAG-(FIRA+FSH+FCEV+FGEV+FCTR+SSOIL)
    IF(ABS(ERRENG) > 0.01) THEN
       write(message,*) 'ERRENG =',ERRENG,' at i,j: ',ILOC,JLOC
@@ -1624,6 +1630,8 @@ ENDIF   ! CROPTYPE == 0
       WRITE(message,'(a17,F10.4)') "Total ground:    ",SSOIL
       call wrf_message(trim(message))
       WRITE(message,'(a17,F10.4)') "Sprinkler:       ",FIRR
+      call wrf_message(trim(message))
+      WRITE(message,'(a17,F10.4)') "Canopy Heat Storage: ",CANHS
       call wrf_message(trim(message))
       WRITE(message,'(a17,4F10.4)') "Precip advected: ",PAH,PAHV,PAHG,PAHB
       call wrf_message(trim(message))
@@ -1688,8 +1696,8 @@ ENDIF   ! CROPTYPE == 0
 !jref:start
                      QC     ,QSFC   ,PSFC   , & !in 
                      T2MV   ,T2MB   ,FSRV   , &
-                     FSRG   ,RSSUN  ,RSSHA  ,ALBSND  ,ALBSNI,BGAP   ,WGAP,TGV,TGB,&
-                     Q1     ,Q2V    ,Q2B    ,Q2E    ,CHV  ,CHB, EMISSI,PAH  ,&
+                     FSRG   ,RSSUN  ,RSSHA  ,ALBSND  ,ALBSNI, BGAP, WGAP, TGV, TGB, &
+                     Q1     ,Q2V    ,Q2B    ,Q2E    ,CHV  ,CHB, EMISSI, PAH, CANHS, &
 		     SHG,SHC,SHB,EVG,EVB,GHV,GHB,IRG,IRC,IRB,TR,EVC,CHLEAF,CHUC,CHV2,CHB2 )   !out 
 !jref:end                            
 
@@ -1830,6 +1838,8 @@ ENDIF   ! CROPTYPE == 0
   REAL, DIMENSION(1:2)              , INTENT(OUT)   :: ALBSND   !snow albedo (direct)
   REAL, DIMENSION(1:2)              , INTENT(OUT)   :: ALBSNI   !snow albedo (diffuse)
 !jref:end
+
+  REAL                              , INTENT(OUT)   :: CANHS  ! canopy heat storage change (w/m2) C.He added based on GY Niu's communication
 
 ! input & output
   REAL                              , INTENT(INOUT) :: TS     !surface temperature (k)
@@ -2170,7 +2180,7 @@ ENDIF   ! CROPTYPE == 0
                     CHV     ,DX      ,DZ8W    ,                   & !inout
                     TAUXV   ,TAUYV   ,IRG     ,IRC     ,SHG     , & !out
                     SHC     ,EVG     ,EVC     ,TR      ,GHV     , & !out
-                    T2MV    ,PSNSUN  ,PSNSHA  ,                   & !out
+                    T2MV    ,PSNSUN  ,PSNSHA  ,CANHS   ,          & !out
 !jref:start
                     QC      ,QSFC    ,PSFC    , & !in
                     Q2V     ,CHV2, CHLEAF, CHUC)               !inout 
@@ -3496,7 +3506,7 @@ ENDIF   ! CROPTYPE == 0
                        CH      ,DX      ,DZ8W    ,                   & !
                        TAUXV   ,TAUYV   ,IRG     ,IRC     ,SHG     , & !out
                        SHC     ,EVG     ,EVC     ,TR      ,GH      , & !out
-                       T2MV    ,PSNSUN  ,PSNSHA  ,                   & !out
+                       T2MV    ,PSNSUN  ,PSNSHA  ,CANHS   ,          & !out
                        QC      ,QSFC    ,PSFC    ,                   & !in
                        Q2V     ,CAH2    ,CHLEAF  ,CHUC    )            !inout 
 
@@ -3505,7 +3515,7 @@ ENDIF   ! CROPTYPE == 0
 ! ground (tg) temperatures that balance the surface energy budgets
 
 ! vegetated:
-! -SAV + IRC[TV] + SHC[TV] + EVC[TV] + TR[TV] = 0
+! -SAV + IRC[TV] + SHC[TV] + EVC[TV] + TR[TV] + CANHS[TV] = 0
 ! -SAG + IRG[TG] + SHG[TG] + EVG[TG] + GH[TG] = 0
 ! --------------------------------------------------------------------------------------------------
   IMPLICIT NONE
@@ -3588,7 +3598,7 @@ ENDIF   ! CROPTYPE == 0
   REAL,                         INTENT(INOUT) :: CH     !sensible heat exchange coefficient
 
 ! output
-! -FSA + FIRA + FSH + (FCEV + FCTR + FGEV) + FCST + SSOIL = 0
+! -FSA + FIRA + FSH + (FCEV + FCTR + FGEV) + FCST + SSOIL + CANHS = 0
   REAL,                           INTENT(OUT) :: TAUXV  !wind stress: e-w (n/m2)
   REAL,                           INTENT(OUT) :: TAUYV  !wind stress: n-s (n/m2)
   REAL,                           INTENT(OUT) :: IRC    !net longwave radiation (w/m2) [+= to atm]
@@ -3604,7 +3614,7 @@ ENDIF   ! CROPTYPE == 0
   REAL,                           INTENT(OUT) :: PSNSHA !shaded leaf photosynthesis (umolco2/m2/s)
   REAL,                           INTENT(OUT) :: CHLEAF !leaf exchange coefficient
   REAL,                           INTENT(OUT) :: CHUC   !under canopy exchange coefficient
-
+  REAL,                           INTENT(OUT) :: CANHS  ! canopy heat storage change (w/m2) C.He added based on GY Niu's communication
   REAL,                           INTENT(OUT) :: Q2V
   REAL :: CAH    !sensible heat conductance, canopy air to ZLVL air (m/s)
   REAL :: U10V    !10 m wind speed in eastward dir (m/s) 
@@ -3684,7 +3694,7 @@ ENDIF   ! CROPTYPE == 0
   REAL :: EAH2         !2m vapor pressure over canopy
   REAL :: QFX        !moisture flux
   REAL :: E1           
-
+  REAL :: HCV          !canopy heat capacity j/m2/k, C.He added
 
   REAL :: VAIE         !total leaf area index + stem area index,effective
   REAL :: LAISUNE      !sunlit leaf area index, one-sided (m2/m2),effective
@@ -3887,15 +3897,19 @@ ENDIF   ! CROPTYPE == 0
 	ELSE
           EVC = MIN(CANICE*LATHEAV/DT,EVC)
 	END IF
+        ! canopy heat capacity
+        HCV = 0.02*VAIE*CWAT + CANLIQ*CWAT/DENH2O + CANICE*CICE/DENICE    !j/m2/k
 
         B   = SAV-IRC-SHC-EVC-TR+PAHV                          !additional w/m2
-        A   = FVEG*(4.0*CIR*TV**3 + CSH + (CEV+CTR)*DESTV) !volumetric heat capacity
+!        A   = FVEG*(4.0*CIR*TV**3 + CSH + (CEV+CTR)*DESTV) !volumetric heat capacity
+        A   = FVEG*(4.0*CIR*TV**3 + CSH + (CEV+CTR)*DESTV) + HCV/DT  ! total volumetric heat capacity, add canopy heat capacity, more stable
         DTV = B/A
 
         IRC = IRC + FVEG*4.0*CIR*TV**3*DTV
         SHC = SHC + FVEG*CSH*DTV
         EVC = EVC + FVEG*CEV*DESTV*DTV
         TR  = TR  + FVEG*CTR*DESTV*DTV                               
+        CANHS = DTV * HCV/DT    ! w/m2 canopy heat storage change
 
 ! update vegetation surface temperature
         TV  = TV + DTV
