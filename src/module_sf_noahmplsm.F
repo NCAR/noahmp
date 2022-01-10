@@ -7174,8 +7174,10 @@ ENDIF   ! CROPTYPE == 0
     IF ( parameters%urban_flag ) FCR(1)= 0.95
 
     IF(OPT_RUN == 1) THEN
-       FFF = 6.0
-       FSAT   = parameters%FSATMX*EXP(-0.5*FFF*(ZWT-2.0))
+!       FFF = 6.0
+       FFF   = parameters%BEXP(1) / 3.0    ! calibratable, C.He changed based on GY Niu's update
+!       FSAT   = parameters%FSATMX*EXP(-0.5*FFF*(ZWT-2.0))
+       FSAT   = parameters%FSATMX*EXP(-0.5*FFF*ZWT)  ! C.He changed based on GY Niu's update
        IF(QINSUR > 0.0) THEN
          RUNSRF = QINSUR * ( (1.0-FCR(1))*FSAT + FCR(1) )
          PDDUM  = QINSUR - RUNSRF                          ! m/s 
@@ -9412,8 +9414,9 @@ END SUBROUTINE RR2
   REAL                                        :: WATMIN!minimum soil vol soil moisture [m3/m3]
   REAL                                        :: XS    !excessive water above saturation [mm]
   REAL, PARAMETER                             :: ROUS = 0.2    !specific yield [-]
-  REAL, PARAMETER                             :: CMIC = 0.20   !microprore content (0.0-1.0)
+!  REAL, PARAMETER                             :: CMIC = 0.20   !microprore content (0.0-1.0)
                                                                !0.0-close to free drainage
+  REAL, PARAMETER                             :: CMIC = 0.80 ! calibratable, C.He changed based on GY Niu's update
 ! -------------------------------------------------------------
       QDIS      = 0.0
       QIN       = 0.0
@@ -9455,10 +9458,13 @@ END SUBROUTINE RR2
 
 ! Groundwater discharge [mm/s]
 
-      FFF   = 6.0
-      RSBMX = 5.0
+!      FFF   = 6.0
+!      RSBMX = 5.0
+      FFF   = parameters%BEXP(IWT) / 3.0 ! calibratable, C.He changed based on GY Niu's update
+      RSBMX = HK(IWT) * 1.0e3 * EXP(3.0) ! mm/s, calibratable, C.He changed based on GY Niu's update
 
-      QDIS = (1.0-FCRMAX)*RSBMX*EXP(-parameters%TIMEAN)*EXP(-FFF*(ZWT-2.0))
+!      QDIS = (1.0-FCRMAX)*RSBMX*EXP(-parameters%TIMEAN)*EXP(-FFF*(ZWT-2.0))
+      QDIS = (1.0-FCRMAX)*RSBMX*EXP(-parameters%TIMEAN)*EXP(-FFF*ZWT) ! C.He changed based on GY Niu's update
 
 ! Matric potential at the layer above the water table
 
@@ -9469,7 +9475,8 @@ END SUBROUTINE RR2
 
 ! Recharge rate qin to groundwater
 
-      KA  = HK(IWT)
+!      KA  = HK(IWT)
+      KA  = 2.0*(HK(IWT)*parameters%DKSAT(IWT)*1.0e3) / (HK(IWT)+parameters%DKSAT(IWT)*1.0e3) ! harmonic average, C.He changed based on GY Niu's update
 
       WH_ZWT  = - ZWT * 1.0E3                          !(mm)
       WH      = SMPFZ  - ZNODE(IWT)*1.0E3              !(mm)
