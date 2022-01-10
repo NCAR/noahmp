@@ -5522,8 +5522,10 @@ ENDIF   ! CROPTYPE == 0
             END IF
          END IF
          IF (OPT_FRZ == 2) THEN
+            IF(STC(J) < TFRZ) THEN
                CALL FRH2O (parameters,J,SUPERCOOL(J),STC(J),SMC(J),SH2O(J))
                SUPERCOOL(J) = SUPERCOOL(J)*DZSNSO(J)*1000.0        !(mm)
+            END IF
          END IF
       ENDDO
     end if
