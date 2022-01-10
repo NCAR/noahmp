@@ -6372,8 +6372,9 @@ ENDIF   ! CROPTYPE == 0
 
 ! creating a new layer
  
-    IF(ISNOW == 0  .AND. QSNOW>0.0 .AND. SNOWH >= 0.025) THEN !MB: change limit
 !    IF(ISNOW == 0  .AND. QSNOW>0. .AND. SNOWH >= 0.05) THEN
+!    IF(ISNOW == 0  .AND. QSNOW>0.0 .AND. SNOWH >= 0.025) THEN !MB: change limit
+    IF(ISNOW == 0 .AND. SNOWH >= 0.025) THEN ! C.He: remove QSNOW>0 to allow adjusting ISNOW based on SNOWH when no snowfall.
       ISNOW    = -1
       NEWNODE  =  1
       DZSNSO(0)= SNOWH
