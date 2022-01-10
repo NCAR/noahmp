@@ -6854,6 +6854,10 @@ ENDIF   ! CROPTYPE == 0
 
            DZSNSO(J) = DZSNSO(J)*(1.0+PDZDTC)
            DZSNSO(J) = max(DZSNSO(J),SNICE(J)/DENICE + SNLIQ(J)/DENH2O)
+
+           ! C.He: constrain snow density to a reasonable range (50~500 kg/m3)
+           DZSNSO(J) = MIN(MAX(DZSNSO(J),(SNICE(J)+SNLIQ(J))/500.0),(SNICE(J)+SNLIQ(J))/50.0)
+
         END IF
 
         ! Pressure of overlying snow
