@@ -6799,8 +6799,9 @@ ENDIF   ! CROPTYPE == 0
    REAL, PARAMETER     :: C4 = 0.04     ![1/k]
    REAL, PARAMETER     :: C5 = 2.0      !
    REAL, PARAMETER     :: DM = 100.0    !upper Limit on destructive metamorphism compaction [kg/m3]
-   REAL, PARAMETER     :: ETA0 = 0.8e+6 !viscosity coefficient [kg-s/m2] 
+!   REAL, PARAMETER     :: ETA0 = 0.8e+6 !viscosity coefficient [kg-s/m2] 
                                         !according to Anderson, it is between 0.52e6~1.38e6
+   REAL, PARAMETER     :: ETA0 = 1.33e+6 ! C.He: optimized based on SNOTEL obs (He et al. 2021 JGR)
    REAL :: BURDEN !pressure of overlying snow [kg/m2]
    REAL :: DDZ1   !rate of settling of snow pack due to destructive metamorphism.
    REAL :: DDZ2   !rate of compaction of snow pack due to overburden.
