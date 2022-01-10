@@ -373,12 +373,12 @@
 &noahmp_irrigation_parameters
 IRR_FRAC   = 0.10       ! irrigation Fraction
 IRR_HAR    = 20         ! number of days before harvest date to stop irrigation 
-IRR_LAI    = 0.50       ! Minimum lai to trigger irrigation
-IRR_MAD    = 0.60       ! management allowable deficit (0-1)
-FILOSS     = 0.10       ! fraction of flood irrigation loss (0-1) 
+IRR_LAI    = 0.10       ! Minimum lai to trigger irrigation
+IRR_MAD    = 0.60       ! management allowable deficit (0.0-1.0)
+FILOSS     = 0.50       ! fraction of flood irrigation loss (0.0-0.99) 
 SPRIR_RATE = 6.40       ! mm/h, sprinkler irrigation rate
 MICIR_RATE = 1.38       ! mm/h, micro irrigation rate
-FIRTFAC    = 1.00       ! flood application rate factor
+FIRTFAC    = 1.20       ! flood application rate factor
 IR_RAIN    = 1.00       ! maximum precipitation to stop irrigation trigger
 /
 
