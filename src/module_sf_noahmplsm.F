@@ -220,6 +220,10 @@ MODULE MODULE_SF_NOAHMPLSM
   INTEGER, PRIVATE, PARAMETER :: NSOIL = 4
   INTEGER, PRIVATE, PARAMETER :: NSTAGE = 8
 
+! add control for a different soil timestep capability
+  logical :: calculate_soil
+  integer :: soil_update_steps
+
   TYPE noahmp_parameters ! define a NoahMP parameters type
 
 !------------------------------------------------------------------------------------------!
@@ -469,7 +473,7 @@ contains
                    GRAIN   , GDD     , PGS     ,                               & ! IN/OUT 
                    SMCWTD  ,DEEPRECH , RECH    ,                               & ! IN/OUT :
                    QTLDRN  , TDFRACMP,                                         & ! IN/OUT :
-		   Z0WRF   ,                                                   &
+		   Z0WRF   ,                                                   & ! OUT :
                    IRCNTSI , IRCNTMI , IRCNTFI , IRAMTSI , IRAMTMI , IRAMTFI , & ! IN/OUT : Irrigation: vars
                    IRSIRATE, IRMIRATE, IRFIRATE, FIRR    , EIRR    ,           & ! IN/OUT : Irrigation: vars
                    FSA     , FSR     , FIRA    , FSH     , SSOIL   , FCEV    , & ! OUT : 
@@ -482,8 +486,14 @@ contains
                    BGAP    , WGAP    , CHV     , CHB     , EMISSI  ,           & ! OUT :
 		   SHG     , SHC     , SHB     , EVG     , EVB     , GHV     , & ! OUT :
 		   GHB     , IRG     , IRC     , IRB     , TR      , EVC     , & ! OUT :
-		   CHLEAF  , CHUC    , CHV2    , CHB2    , FPICE   , PAHV    , &
-                   PAHG    , PAHB    , PAH     , LAISUN  , LAISHA  , RB        & ! OUT
+		   CHLEAF  , CHUC    , CHV2    , CHB2    , FPICE   , PAHV    , & ! OUT :
+                   PAHG    , PAHB    , PAH     , LAISUN  , LAISHA  , RB      , & ! OUT
+                   QINTS   , QINTR   , QDRIPS  , QDRIPR  , QTHROS  , QTHROR  , & ! OUT :
+                   QSNSUB  , QSNFRO  , QSUBC   , QFROC   , QFRZC   , QMELTC  , & ! OUT :
+                   QEVAC   , QDEWC   ,                                         & ! OUT
+                   RAIN    , SNOW    , ACC_SSOIL, ACC_QINSUR, ACC_QSEVA      , & ! OUT
+                   ACC_ETRANI, HCPCT , EFLXB   , CANHS   ,                     & ! OUT :
+                   ACC_DWATER, ACC_PRCP, ACC_ECAN, ACC_ETRAN, ACC_EDIR         & ! INOUT
 #ifdef WRF_HYDRO
                    ,SFCHEADRT, WATBLED                                         & ! IN/OUT :
 #endif
@@ -534,7 +544,7 @@ contains
 
 !jref:start; in 
   REAL                           , INTENT(IN)    :: QC     !cloud water mixing ratio
-  REAL                           , INTENT(INOUT)    :: QSFC   !mixing ratio at lowest model layer
+  REAL                           , INTENT(INOUT) :: QSFC   !mixing ratio at lowest model layer
   REAL                           , INTENT(IN)    :: PSFC   !pressure at lowest model layer
   REAL                           , INTENT(IN)    :: DZ8W   !thickness of lowest layer
   REAL                           , INTENT(IN)    :: DX
@@ -542,7 +552,7 @@ contains
 !jref:end
 
 #ifdef WRF_HYDRO
-  REAL                           , INTENT(INOUT)    :: sfcheadrt, WATBLED
+  REAL                           , INTENT(INOUT) :: sfcheadrt, WATBLED
 #endif
 
 ! input/output : need arbitary intial values
@@ -558,26 +568,37 @@ contains
   REAL                           , INTENT(INOUT) :: TAUSS  !non-dimensional snow age
 
 ! prognostic variables
-  INTEGER                        , INTENT(INOUT) :: ISNOW  !actual no. of snow layers [-]
-  REAL                           , INTENT(INOUT) :: CANLIQ !intercepted liquid water (mm)
-  REAL                           , INTENT(INOUT) :: CANICE !intercepted ice mass (mm)
-  REAL                           , INTENT(INOUT) :: SNEQV  !snow water eqv. [mm]
-  REAL, DIMENSION(       1:NSOIL), INTENT(INOUT) :: SMC    !soil moisture (ice + liq.) [m3/m3]
-  REAL, DIMENSION(-NSNOW+1:NSOIL), INTENT(INOUT) :: ZSNSO  !layer-bottom depth from snow surf [m]
-  REAL                           , INTENT(INOUT) :: SNOWH  !snow height [m]
-  REAL, DIMENSION(-NSNOW+1:    0), INTENT(INOUT) :: SNICE  !snow layer ice [mm]
-  REAL, DIMENSION(-NSNOW+1:    0), INTENT(INOUT) :: SNLIQ  !snow layer liquid water [mm]
-  REAL                           , INTENT(INOUT) :: TV     !vegetation temperature (k)
-  REAL                           , INTENT(INOUT) :: TG     !ground temperature (k)
-  REAL, DIMENSION(-NSNOW+1:NSOIL), INTENT(INOUT) :: STC    !snow/soil temperature [k]
-  REAL, DIMENSION(       1:NSOIL), INTENT(INOUT) :: SH2O   !liquid soil moisture [m3/m3]
-  REAL                           , INTENT(INOUT) :: ZWT    !depth to water table [m]
-  REAL                           , INTENT(INOUT) :: WA     !water storage in aquifer [mm]
-  REAL                           , INTENT(INOUT) :: WT     !water in aquifer&saturated soil [mm]
-  REAL                           , INTENT(INOUT) :: WSLAKE !lake water storage (can be neg.) (mm)
-  REAL,                            INTENT(INOUT) :: SMCWTD !soil water content between bottom of the soil and water table [m3/m3]
-  REAL,                            INTENT(INOUT) :: DEEPRECH !recharge to or from the water table when deep [m]
-  REAL,                            INTENT(INOUT) :: RECH !recharge to or from the water table when shallow [m] (diagnostic)
+  INTEGER                        , INTENT(INOUT) :: ISNOW       !actual no. of snow layers [-]
+  REAL                           , INTENT(INOUT) :: CANLIQ      !intercepted liquid water (mm)
+  REAL                           , INTENT(INOUT) :: CANICE      !intercepted ice mass (mm)
+  REAL                           , INTENT(INOUT) :: SNEQV       !snow water eqv. [mm]
+  REAL, DIMENSION(       1:NSOIL), INTENT(INOUT) :: SMC         !soil moisture (ice + liq.) [m3/m3]
+  REAL, DIMENSION(-NSNOW+1:NSOIL), INTENT(INOUT) :: ZSNSO       !layer-bottom depth from snow surf [m]
+  REAL                           , INTENT(INOUT) :: SNOWH       !snow height [m]
+  REAL, DIMENSION(-NSNOW+1:    0), INTENT(INOUT) :: SNICE       !snow layer ice [mm]
+  REAL, DIMENSION(-NSNOW+1:    0), INTENT(INOUT) :: SNLIQ       !snow layer liquid water [mm]
+  REAL                           , INTENT(INOUT) :: TV          !vegetation temperature (k)
+  REAL                           , INTENT(INOUT) :: TG          !ground temperature (k)
+  REAL, DIMENSION(-NSNOW+1:NSOIL), INTENT(INOUT) :: STC         !snow/soil temperature [k]
+  REAL, DIMENSION(       1:NSOIL), INTENT(INOUT) :: SH2O        !liquid soil moisture [m3/m3]
+  REAL                           , INTENT(INOUT) :: ZWT         !depth to water table [m]
+  REAL                           , INTENT(INOUT) :: WA          !water storage in aquifer [mm]
+  REAL                           , INTENT(INOUT) :: WT          !water in aquifer&saturated soil [mm]
+  REAL                           , INTENT(INOUT) :: WSLAKE      !lake water storage (can be neg.) (mm)
+  REAL,                            INTENT(INOUT) :: SMCWTD      !soil water content between bottom of the soil and water table [m3/m3]
+  REAL,                            INTENT(INOUT) :: DEEPRECH    !recharge to or from the water table when deep [m]
+  REAL,                            INTENT(INOUT) :: RECH        !recharge to or from the water table when shallow [m] (diagnostic)
+  REAL                           , INTENT(INOUT) :: ACC_SSOIL   !ground heat flux (w/m2)   [+ to soil]
+  REAL                           , INTENT(INOUT) :: ACC_QINSUR  !water input on soil surface [m/s]
+  REAL                           , INTENT(INOUT) :: ACC_QSEVA   !soil surface evap rate [mm/s]
+  REAL, DIMENSION(       1:NSOIL), INTENT(INOUT) :: ACC_ETRANI  !transpiration rate (mm/s) [+]
+  REAL, DIMENSION(-NSNOW+1:NSOIL), INTENT(  OUT) :: HCPCT       !heat capacity [j/m3/k]
+  REAL                           , INTENT(  OUT) :: EFLXB       !energy influx from soil bottom (w/m2)
+  REAL                           , INTENT(INOUT) :: ACC_DWATER  !accumulated water change for canopy, snow, soil mm/timestep(soil)
+  REAL                           , INTENT(INOUT) :: ACC_PRCP    !accumulated precip mm/timestep(soil) 
+  REAL                           , INTENT(INOUT) :: ACC_ECAN    !accumulated net canopy evapo mm/timestep(soil)
+  REAL                           , INTENT(INOUT) :: ACC_ETRAN   !accumulated transpiration mm/timestep(soil)
+  REAL                           , INTENT(INOUT) :: ACC_EDIR    !accumulated net soil/snow evapo mm/timestep(soil)
 
 ! output
   REAL                           , INTENT(OUT)   :: Z0WRF  !combined z0 sent to coupled model
@@ -594,8 +615,8 @@ contains
   REAL                           , INTENT(OUT)   :: ECAN   !evaporation of intercepted water (mm/s)
   REAL                           , INTENT(OUT)   :: ETRAN  !transpiration rate (mm/s)
   REAL                           , INTENT(OUT)   :: EDIR   !soil surface evaporation rate (mm/s]
-  REAL                           , INTENT(OUT)   :: RUNSRF !surface runoff [mm/s] 
-  REAL                           , INTENT(OUT)   :: RUNSUB !baseflow (saturation excess) [mm/s]
+  REAL                           , INTENT(OUT)   :: RUNSRF !surface runoff [mm] per soil timestep 
+  REAL                           , INTENT(OUT)   :: RUNSUB !baseflow (saturation excess) [mm] per soil timestep
   REAL                           , INTENT(OUT)   :: PSN    !total photosynthesis (umol co2/m2/s) [+]
   REAL                           , INTENT(OUT)   :: APAR   !photosyn active energy by canopy (w/m2)
   REAL                           , INTENT(OUT)   :: SAV    !solar rad absorbed by veg. (w/m2)
@@ -681,6 +702,14 @@ contains
   REAL, INTENT(OUT)   :: PAHG    !precipitation advected heat - under canopy net (W/m2)
   REAL, INTENT(OUT)   :: PAHB    !precipitation advected heat - bare ground net (W/m2)
   REAL, INTENT(OUT)                                           :: PAH     !precipitation advected heat - total (W/m2)
+  REAL, INTENT(OUT)   :: QSNSUB
+  REAL, INTENT(OUT)   :: QSNFRO
+  REAL, INTENT(OUT)   :: QSUBC
+  REAL, INTENT(OUT)   :: QFROC
+  REAL, INTENT(OUT)   :: QFRZC
+  REAL, INTENT(OUT)   :: QMELTC
+  REAL, INTENT(OUT)   :: QEVAC
+  REAL, INTENT(OUT)   :: QDEWC
 
 !jref:start 
   REAL                                           :: FSRV
@@ -716,7 +745,7 @@ contains
   INTEGER                     , INTENT(INOUT)    :: PGS    !plant growing stage [-]
 
 ! Tile drainage
-  REAL                        , INTENT(INOUT)    :: QTLDRN   !tile drainage [mm/s]
+  REAL                        , INTENT(INOUT)    :: QTLDRN   !tile drainage [mm] per soil timestep
   REAL                        , INTENT(IN)       :: TDFRACMP !tile drain fraction map
 
 ! irrigation variables 
@@ -754,12 +783,12 @@ contains
   REAL                                           :: FP                                            ! MB/AN: v3.7
   REAL                                           :: PRCP                                          ! MB/AN: v3.7
 !more local variables for precip heat MB
-  REAL                                           :: QINTR   !interception rate for rain (mm/s)
-  REAL                                           :: QDRIPR  !drip rate for rain (mm/s)
-  REAL                                           :: QTHROR  !throughfall for rain (mm/s)
-  REAL                                           :: QINTS   !interception (loading) rate for snowfall (mm/s)
-  REAL                                           :: QDRIPS  !drip (unloading) rate for intercepted snow (mm/s)
-  REAL                                           :: QTHROS  !throughfall of snowfall (mm/s)
+  REAL                          , INTENT(OUT)    :: QINTR   !interception rate for rain (mm/s)
+  REAL                          , INTENT(OUT)    :: QDRIPR  !drip rate for rain (mm/s)
+  REAL                          , INTENT(OUT)    :: QTHROR  !throughfall for rain (mm/s)
+  REAL                          , INTENT(OUT)    :: QINTS   !interception (loading) rate for snowfall (mm/s)
+  REAL                          , INTENT(OUT)    :: QDRIPS  !drip (unloading) rate for intercepted snow (mm/s)
+  REAL                          , INTENT(OUT)    :: QTHROS  !throughfall of snowfall (mm/s)
   REAL                                           :: SNOWHIN !snow depth increasing rate (m/s)
   REAL                                 :: LATHEAV !latent heat vap./sublimation (j/kg)
   REAL                                 :: LATHEAG !latent heat vap./sublimation (j/kg)
@@ -771,7 +800,7 @@ contains
   REAL                                :: SIFCUK      ! Sprinkler fraction for unknown irrigation methods
 
 ! add canopy heat storage (C.He added based on GY Niu's communication)
-  REAL                                           :: CANHS ! canopy heat storage change w/m2
+  REAL                          , INTENT(OUT)    :: CANHS ! canopy heat storage change w/m2
  
   ! INTENT (OUT) variables need to be assigned a value.  These normally get assigned values
   ! only if DVEG == 2.
@@ -814,10 +843,10 @@ contains
 ! total water storage for water balance check
     
      IF(IST == 1) THEN
-     BEG_WB = CANLIQ + CANICE + SNEQV + WA
-     DO IZ = 1,NSOIL
-        BEG_WB = BEG_WB + SMC(IZ) * DZSNSO(IZ) * 1000.0
-     END DO
+        BEG_WB = CANLIQ + CANICE + SNEQV + WA
+        DO IZ = 1,NSOIL
+           BEG_WB = BEG_WB + SMC(IZ) * DZSNSO(IZ) * 1000.0
+        END DO
      END IF
 
 ! vegetation phenology
@@ -876,20 +905,25 @@ contains
         MIFAC = 0.0
         FIFAC = 1.0
      END IF
-! Call triggering function
-     IF((CROPLU .EQV. .TRUE.) .AND. (IRRFRA .GE. parameters%IRR_FRAC) .AND. &
-       (RAIN .LT. (parameters%IR_RAIN/3600.0)) .AND. ((IRAMTSI+IRAMTMI+IRAMTFI) .EQ. 0.0) )THEN
-        CALL TRIGGER_IRRIGATION(parameters,NSOIL,ZSOIL,SH2O,FVEG,JULIAN,IRRFRA,LAI, & !in
+
+! trigger irrigation only at soil timestep to be consistent for solving soil water
+    if (calculate_soil) then
+       ! Call triggering function
+       IF((CROPLU .EQV. .TRUE.) .AND. (IRRFRA .GE. parameters%IRR_FRAC) .AND. &
+          (RAIN .LT. (parameters%IR_RAIN/3600.0)) .AND. ((IRAMTSI+IRAMTMI+IRAMTFI) .EQ. 0.0) )THEN
+          CALL TRIGGER_IRRIGATION(parameters,NSOIL,ZSOIL,SH2O,FVEG,JULIAN,IRRFRA,LAI, & !in
                                   SIFAC,MIFAC,FIFAC,                                & !in
                                   IRCNTSI,IRCNTMI,IRCNTFI,                          & !inout
                                   IRAMTSI,IRAMTMI,IRAMTFI)                            !inout
-     END IF
-! set irrigation off if parameters%IR_RAIN mm/h for this time step and irr triggered last time step
-     IF((RAIN .GE. (parameters%IR_RAIN/3600.0)) .OR. (IRRFRA .LT. parameters%IRR_FRAC))THEN
-        IRAMTSI = 0.0
-        IRAMTMI = 0.0
-        IRAMTFI = 0.0
-     END IF
+       END IF
+       ! set irrigation off if parameters%IR_RAIN mm/h for this time step and irr triggered last time step
+       IF((RAIN .GE. (parameters%IR_RAIN/3600.0)) .OR. (IRRFRA .LT. parameters%IRR_FRAC))THEN
+          IRAMTSI = 0.0
+          IRAMTMI = 0.0
+          IRAMTFI = 0.0
+       END IF
+    endif
+
 ! call sprinkler irrigation before CANWAT/PRECIP_HEAT to have canopy interception
      IF((CROPLU .EQV. .TRUE.) .AND. (IRAMTSI .GT. 0.0)) THEN
         CALL SPRINKLER_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,SICE,& !in
@@ -937,7 +971,8 @@ contains
                  FSRG   ,RSSUN   ,RSSHA ,ALBSND  ,ALBSNI, BGAP   ,WGAP,TGV,TGB,&
                  Q1     ,Q2V    ,Q2B    ,Q2E    ,CHV   ,CHB     , & !out
                  EMISSI ,PAH    ,CANHS  ,                         &
-		 SHG,SHC,SHB,EVG,EVB,GHV,GHB,IRG,IRC,IRB,TR,EVC,CHLEAF,CHUC,CHV2,CHB2 ) !out
+		 SHG,SHC,SHB,EVG,EVB,GHV,GHB,IRG,IRC,IRB,TR,EVC,CHLEAF,CHUC,CHV2,CHB2,&
+                 EFLXB, HCPCT, ACC_SSOIL ) !out
 !jref:end
 
     SICE(:) = MAX(0.0, SMC(:) - SH2O(:))   
@@ -964,13 +999,13 @@ contains
                  IRAMTFI,IRAMTMI ,IRFIRATE ,IRMIRATE,             & !inout
                  CMC    ,ECAN   ,ETRAN  ,FWET   ,RUNSRF ,RUNSUB , & !out
                  QIN    ,QDIS   ,PONDING1       ,PONDING2,        &
-                 QSNBOT ,QTLDRN                                   &
+                 QSNBOT ,QTLDRN ,                                 &
+                 QSNSUB ,QSNFRO ,QSUBC  ,QFROC  ,QFRZC  ,QMELTC , &
+                 QEVAC  ,QDEWC  ,ACC_QINSUR ,ACC_QSEVA,ACC_ETRANI &
 #ifdef WRF_HYDRO
                         ,sfcheadrt, WATBLED                       &
 #endif
                  )  !out
-
-!     write(*,'(a20,10F15.5)') 'SFLX:RUNOFF=',RUNSRF*DT,RUNSUB*DT,EDIR*DT
 
 ! compute carbon budgets (carbon storages and co2 & bvoc fluxes)
 
@@ -1002,10 +1037,10 @@ contains
    END IF
    
 ! before waterbalance check add irrigation water to precipitation
-IF((CROPLU .EQV. .TRUE.) .AND. (IRRFRA .GE. parameters%IRR_FRAC))THEN
-   PRCP = PRCP + ((IRSIRATE+IRMIRATE+IRFIRATE)*1000.0/DT)  ! irrigation
-   FSH  = FSH - FIRR                                      ! (W/m2)
-END IF
+   IF((CROPLU .EQV. .TRUE.) .AND. (IRRFRA .GE. parameters%IRR_FRAC))THEN
+      PRCP = PRCP + (IRSIRATE*1000.0/DT)  ! irrigation
+      FSH  = FSH - FIRR                   ! (W/m2)
+   END IF
 
 ! water and energy balance check
 
@@ -1016,7 +1051,9 @@ END IF
                  QTLDRN ,                                         &
                  NSNOW  ,IST    ,ERRWAT ,ILOC   , JLOC  ,FVEG   , &
                  SAV    ,SAG    ,FSRV   ,FSRG   ,ZWT    ,PAH    , &
-                 PAHV   ,PAHG   ,PAHB   ,FIRR   ,CANHS )   !in ( Except ERRWAT, which is out )
+                 PAHV   ,PAHG   ,PAHB   ,FIRR   ,CANHS  ,         &
+                 IRMIRATE, IRFIRATE, ACC_DWATER, ACC_PRCP, ACC_ECAN, &
+                 ACC_ETRAN, ACC_EDIR  )   !in ( Except ERRWAT, which is out )
 
 ! urban - jref
     QFX = ETRAN + ECAN + EDIR
@@ -1025,7 +1062,7 @@ END IF
        Q2B = QSFC
     END IF
 
-    IF(SNOWH <= 1.0E-6 .OR. SNEQV <= 1.0E-3) THEN
+    IF(SNOWH <= 1.0E-6 .OR. SNEQV <= 1.0E-6) THEN
      SNOWH = 0.0
      SNEQV = 0.0
     END IF
@@ -1526,7 +1563,9 @@ ENDIF   ! CROPTYPE == 0
                     QTLDRN ,                                         &
                     NSNOW  ,IST    ,ERRWAT, ILOC   ,JLOC   ,FVEG   , &
                     SAV    ,SAG    ,FSRV   ,FSRG   ,ZWT    ,PAH    , &
-                    PAHV   ,PAHG   ,PAHB   ,FIRR   ,CANHS )
+                    PAHV   ,PAHG   ,PAHB   ,FIRR   ,CANHS  ,         &
+                    IRMIRATE, IRFIRATE, ACC_DWATER, ACC_PRCP, ACC_ECAN, &
+                    ACC_ETRAN, ACC_EDIR )
 ! --------------------------------------------------------------------------------------------------
 ! check surface energy balance and water balance
 ! --------------------------------------------------------------------------------------------------
@@ -1559,9 +1598,9 @@ ENDIF   ! CROPTYPE == 0
   REAL                           , INTENT(IN) :: ECAN   !evaporation of intercepted water (mm/s)
   REAL                           , INTENT(IN) :: ETRAN  !transpiration rate (mm/s)
   REAL                           , INTENT(IN) :: EDIR   !soil surface evaporation rate[mm/s]
-  REAL                           , INTENT(IN) :: RUNSRF !surface runoff [mm/s] 
-  REAL                           , INTENT(IN) :: RUNSUB !baseflow (saturation excess) [mm/s]
-  REAL                           , INTENT(IN) :: QTLDRN !tile drainage [mm/s]
+  REAL                           , INTENT(IN) :: RUNSRF !surface runoff [mm] per soil timestep 
+  REAL                           , INTENT(IN) :: RUNSUB !baseflow (saturation excess) [mm] per soil timestep
+  REAL                           , INTENT(IN) :: QTLDRN !tile drainage [mm] per soil timestep
   REAL                           , INTENT(IN) :: CANLIQ !intercepted liquid water (mm)
   REAL                           , INTENT(IN) :: CANICE !intercepted ice mass (mm)
   REAL                           , INTENT(IN) :: SNEQV  !snow water eqv. [mm]
@@ -1577,6 +1616,13 @@ ENDIF   ! CROPTYPE == 0
   REAL, INTENT(IN)   :: PAHB    !precipitation advected heat - total (W/m2)
   REAL                           , INTENT(IN) :: FIRR           ! latent heating due to sprinkler evaporation (w/m2) [+ to atm]
   REAL                           , INTENT(IN) :: CANHS  !canopy heat storage change (w/m2) C.He added based on GY Niu's communication
+  REAL                           , INTENT(IN) :: IRMIRATE  ! micro irrigation amount m/timestep(soil)
+  REAL                           , INTENT(IN) :: IRFIRATE  ! flood irrigation amount m/timestep(soil)
+  REAL                           , INTENT(INOUT) :: ACC_DWATER ! accumulated water change for canopy, snow, soil mm/timestep(soil)
+  REAL                           , INTENT(INOUT) :: ACC_PRCP   ! accumulated precip mm/timestep(soil) 
+  REAL                           , INTENT(INOUT) :: ACC_ECAN   ! accumulated net canopy evapo mm/timestep(soil)
+  REAL                           , INTENT(INOUT) :: ACC_ETRAN  ! accumulated transpiration mm/timestep(soil)
+  REAL                           , INTENT(INOUT) :: ACC_EDIR   ! accumulated net soil/snow evapo mm/timestep(soil)
 
 ! local
   INTEGER                                     :: IZ     !do-loop index
@@ -1643,12 +1689,22 @@ ENDIF   ! CROPTYPE == 0
       call wrf_error_fatal("Energy budget problem in NOAHMP LSM")
    END IF
 
-   IF (IST == 1) THEN                                       !soil
-        END_WB = CANLIQ + CANICE + SNEQV + WA
-        DO IZ = 1,NSOIL
-          END_WB = END_WB + SMC(IZ) * DZSNSO(IZ) * 1000.0
-        END DO
-        ERRWAT = END_WB-BEG_WB-(PRCP-ECAN-ETRAN-EDIR-RUNSRF-RUNSUB-QTLDRN)*DT
+! only water balance check for soil timestep
+   IF (IST == 1) THEN       !soil
+      END_WB = CANLIQ + CANICE + SNEQV + WA
+      DO IZ = 1,NSOIL
+         END_WB = END_WB + SMC(IZ) * DZSNSO(IZ) * 1000.0
+      END DO
+      ! accumualted water change (only for canopy and snow during non-soil timestep)
+      ACC_DWATER = ACC_DWATER + (END_WB - BEG_WB)  ! snow, canopy, and soil water change
+      ACC_PRCP   = ACC_PRCP   + PRCP * DT        ! accumulated precip 
+      ACC_ECAN   = ACC_ECAN   + ECAN * DT        ! accumulated canopy evapo
+      ACC_ETRAN  = ACC_ETRAN  + ETRAN * DT       ! accumulated transpiration
+      ACC_EDIR   = ACC_EDIR   + EDIR * DT        ! accumulated soil evapo
+
+      if (calculate_soil) then
+         ERRWAT = ACC_DWATER - (ACC_PRCP + IRFIRATE*1000.0 + IRMIRATE*1000.0 - ACC_ECAN - &
+                                ACC_ETRAN - ACC_EDIR - RUNSRF - RUNSUB - QTLDRN)
 
 #ifndef WRF_HYDRO
         IF(ABS(ERRWAT) > 0.1) THEN
@@ -1660,14 +1716,17 @@ ENDIF   ! CROPTYPE == 0
            write(message, *) 'ERRWAT =',ERRWAT, "kg m{-2} timestep{-1}"
            call wrf_message(trim(message))
            WRITE(message, &
-           '("  I    J   END_WB   BEG_WB     PRCP     ECAN     EDIR    ETRAN   RUNSRF   RUNSUB   ZWT   QTLDRN")')
+           '("     I      J     END-BEG     PRCP     IRMIRATE     IRFIRATE      ECAN     EDIR    ETRAN   RUNSRF   RUNSUB   ZWT   QTLDRN")')
            call wrf_message(trim(message))
-           WRITE(message,'(i6,1x,i6,1x,2f15.3,9f11.5)')ILOC,JLOC,END_WB,BEG_WB,PRCP*DT,ECAN*DT,&
-                EDIR*DT,ETRAN*DT,RUNSRF*DT,RUNSUB*DT,ZWT,QTLDRN*DT
+           WRITE(message,'(i6,i6,f10.3,10f10.5)')ILOC,JLOC,ACC_DWATER,ACC_PRCP,IRMIRATE*1000.0,&
+                IRFIRATE*1000.0,ACC_ECAN,ACC_EDIR,ACC_ETRAN,RUNSRF,RUNSUB,ZWT,QTLDRN
            call wrf_message(trim(message))
            call wrf_error_fatal("Water budget problem in NOAHMP LSM")
         END IF
 #endif
+
+      endif ! calculate_soil
+
    ELSE                 !KWM
       ERRWAT = 0.0      !KWM
    ENDIF
@@ -1699,7 +1758,8 @@ ENDIF   ! CROPTYPE == 0
                      T2MV   ,T2MB   ,FSRV   , &
                      FSRG   ,RSSUN  ,RSSHA  ,ALBSND  ,ALBSNI, BGAP, WGAP, TGV, TGB, &
                      Q1     ,Q2V    ,Q2B    ,Q2E    ,CHV  ,CHB, EMISSI, PAH, CANHS, &
-		     SHG,SHC,SHB,EVG,EVB,GHV,GHB,IRG,IRC,IRB,TR,EVC,CHLEAF,CHUC,CHV2,CHB2 )   !out 
+		     SHG,SHC,SHB,EVG,EVB,GHV,GHB,IRG,IRC,IRB,TR,EVC,CHLEAF,CHUC,CHV2,CHB2, &
+                     EFLXB  ,HCPCT  ,ACC_SSOIL )   !out 
 !jref:end                            
 
 ! --------------------------------------------------------------------------------------------------
@@ -1823,6 +1883,8 @@ ENDIF   ! CROPTYPE == 0
   REAL                              , INTENT(OUT)   :: LATHEAG !latent heat vap./sublimation (j/kg)
   LOGICAL                           , INTENT(OUT)   :: FROZEN_GROUND ! used to define latent heat pathway
   LOGICAL                           , INTENT(OUT)   :: FROZEN_CANOPY ! used to define latent heat pathway
+  REAL                              , INTENT(OUT)   :: EFLXB  !energy influx from soil bottom (w/m2)
+  REAL                              , INTENT(INOUT) :: ACC_SSOIL  !energy influx from soil bottom (w/m2)
 
 !jref:start  
   REAL                              , INTENT(OUT)   :: FSRV    !veg. reflected solar radiation (w/m2)
@@ -1901,7 +1963,7 @@ ENDIF   ! CROPTYPE == 0
 
   REAL, DIMENSION(-NSNOW+1:NSOIL)                   :: FACT   !temporary used in phase change
   REAL, DIMENSION(-NSNOW+1:NSOIL)                   :: DF     !thermal conductivity [w/m/k]
-  REAL, DIMENSION(-NSNOW+1:NSOIL)                   :: HCPCT  !heat capacity [j/m3/k]
+  REAL, DIMENSION(-NSNOW+1:NSOIL)   , INTENT(OUT)   :: HCPCT  !heat capacity [j/m3/k]
   REAL                                              :: BDSNO  !bulk density of snow (kg/m3)
   REAL                                              :: FMELT  !melting factor for snow cover frac
   REAL                                              :: GX     !temporary variable
@@ -1950,6 +2012,9 @@ ENDIF   ! CROPTYPE == 0
   REAL,INTENT(OUT)                                  :: CHV2    !sensible heat conductance, canopy air to ZLVL air (m/s)
   REAL,INTENT(OUT)                                  :: CHB2    !sensible heat conductance, canopy air to ZLVL air (m/s)
   REAL                                  :: noahmpres
+
+  real :: dt_soil
+  real :: ssoil_avg
 
 !jref:end  
 
@@ -2278,12 +2343,21 @@ ENDIF   ! CROPTYPE == 0
     PSN  = PSNSUN*LAISUN + PSNSHA*LAISHA
 
 ! 3L snow & 4L soil temperatures
+! added soil timestep capability
+    EFLXB = 0.0
+    ACC_SSOIL = ACC_SSOIL + SSOIL
+! starting the soil timestep
+    if(calculate_soil) then
+      SSOIL_avg = ACC_SSOIL / soil_update_steps
+      DT_soil   = DT * soil_update_steps
 
-    CALL TSNOSOI (parameters,ICE     ,NSOIL   ,NSNOW   ,ISNOW   ,IST     , & !in
-                  TBOT    ,ZSNSO   ,SSOIL   ,DF      ,HCPCT   , & !in
-                  SAG     ,DT      ,SNOWH   ,DZSNSO  , & !in
-                  TG      ,ILOC    ,JLOC    ,                   & !in
-                  STC     )                                       !inout
+      CALL TSNOSOI (parameters,ICE     ,NSOIL     ,NSNOW   ,ISNOW   ,IST     , & !in
+                    TBOT      ,ZSNSO   ,SSOIL_avg ,DF      ,HCPCT   , & !in
+                    SAG       ,DT_soil ,SNOWH     ,DZSNSO  , & !in
+                    TG        ,ILOC    ,JLOC      ,                   & !in
+                    STC       ,EFLXB   )                             !inout
+      EFLXB = EFLXB * DT_soil
+    end if
 
 ! adjusting snow surface temperature
      IF(OPT_STC == 2) THEN
@@ -2358,6 +2432,9 @@ ENDIF   ! CROPTYPE == 0
   REAL, DIMENSION(-NSNOW+1:    0)              :: TKSNO   !snow thermal conductivity (j/m3/k)
   REAL, DIMENSION(       1:NSOIL)              :: SICE    !soil ice content
 ! --------------------------------------------------------------------------------------------------
+
+    HCPCT = 0.0
+    DF = 0.0
 
 ! compute snow thermal conductivity and heat capacity
 
@@ -5106,7 +5183,7 @@ ENDIF   ! CROPTYPE == 0
                       TBOT    ,ZSNSO   ,SSOIL   ,DF      ,HCPCT   , & !in
                       SAG     ,DT      ,SNOWH   ,DZSNSO  , & !in
                       TG      ,ILOC    ,JLOC    ,                   & !in
-                      STC     )                                       !inout
+                      STC     ,EFLXB   )                                       !inout
 ! --------------------------------------------------------------------------------------------------
 ! Compute snow (up to 3L) and soil (4L) temperature. Note that snow temperatures
 ! during melting season may exceed melting point (TFRZ) but later in PHASECHANGE
@@ -5135,17 +5212,15 @@ ENDIF   ! CROPTYPE == 0
     REAL, DIMENSION(-NSNOW+1:NSOIL), INTENT(IN)  :: DZSNSO !snow/soil layer thickness (m)
     REAL, DIMENSION(-NSNOW+1:NSOIL), INTENT(IN)  :: DF     !thermal conductivity
     REAL, DIMENSION(-NSNOW+1:NSOIL), INTENT(IN)  :: HCPCT  !heat capacity (J/m3/k)
+    REAL,                            INTENT(OUT) :: EFLXB !energy influx from soil bottom (w/m2)
 
 !input and output
-
     REAL, DIMENSION(-NSNOW+1:NSOIL), INTENT(INOUT) :: STC
 
 !local
-
     INTEGER                                      :: IZ
     REAL                                         :: ZBOTSNO   !ZBOT from snow surface
     REAL, DIMENSION(-NSNOW+1:NSOIL)              :: AI, BI, CI, RHSTS
-    REAL                                         :: EFLXB !energy influx from soil bottom (w/m2)
     REAL, DIMENSION(-NSNOW+1:NSOIL)              :: PHI   !light through water (w/m2)
 
     REAL, DIMENSION(-NSNOW+1:NSOIL) :: TBEG
@@ -5815,7 +5890,9 @@ ENDIF   ! CROPTYPE == 0
                     IRAMTFI,IRAMTMI ,IRFIRATE ,IRMIRATE,             & !inout
                     CMC    ,ECAN   ,ETRAN  ,FWET   ,RUNSRF ,RUNSUB , & !out
                     QIN    ,QDIS   ,PONDING1       ,PONDING2,        &
-                    QSNBOT ,QTLDRN                                   &
+                    QSNBOT ,QTLDRN ,                                 &
+                    QSNSUB ,QSNFRO ,QSUBC  ,QFROC  ,QFRZC  ,QMELTC , &
+                    QEVAC  ,QDEWC  ,ACC_QINSUR,ACC_QSEVA ,ACC_ETRANI &
 #ifdef WRF_HYDRO
                         ,sfcheadrt,WATBLED                           &
 #endif
@@ -5850,7 +5927,6 @@ ENDIF   ! CROPTYPE == 0
   REAL, DIMENSION(       1:NSOIL), INTENT(IN)    :: ZSOIL   !depth of layer-bottom from soil surface
   REAL, DIMENSION(       1:NSOIL), INTENT(IN)    :: BTRANI  !soil water stress factor (0 to 1)
   REAL, DIMENSION(-NSNOW+1:    0), INTENT(IN)    :: FICEOLD !ice fraction at last timestep
-!  REAL                           , INTENT(IN)    :: PONDING ![mm]
   REAL                           , INTENT(IN)    :: TG      !ground temperature (k)
   REAL                           , INTENT(IN)    :: FVEG    !greeness vegetation fraction (-)
   REAL                           , INTENT(IN)    :: BDFALL   !bulk density of snowfall (kg/m3) ! MB/AN: v3.7
@@ -5886,7 +5962,7 @@ ENDIF   ! CROPTYPE == 0
   REAL,                            INTENT(INOUT) :: SMCWTD !soil water content between bottom of the soil and water table [m3/m3]
   REAL,                            INTENT(INOUT) :: DEEPRECH !recharge to or from the water table when deep [m]
   REAL,                            INTENT(INOUT) :: RECH !recharge to or from the water table when shallow [m] (diagnostic)
-  REAL,                            INTENT(INOUT) :: QTLDRN   !tile drainage (mm/s)
+  REAL,                            INTENT(INOUT) :: QTLDRN   !tile drainage (mm) per soil timestep
   REAL,                            INTENT(IN)    :: DX
   REAL,                            INTENT(IN)    :: TDFRACMP !tile drain fraction map
 
@@ -5895,8 +5971,8 @@ ENDIF   ! CROPTYPE == 0
   REAL,                            INTENT(OUT)   :: ECAN    !evap of intercepted water (mm/s) [+]
   REAL,                            INTENT(OUT)   :: ETRAN   !transpiration rate (mm/s) [+]
   REAL,                            INTENT(OUT)   :: FWET    !wetted/snowed fraction of canopy (-)
-  REAL,                            INTENT(OUT)   :: RUNSRF  !surface runoff [mm/s] 
-  REAL,                            INTENT(OUT)   :: RUNSUB  !baseflow (sturation excess) [mm/s]
+  REAL,                            INTENT(OUT)   :: RUNSRF  !surface runoff [mm] per soil timestep 
+  REAL,                            INTENT(OUT)   :: RUNSUB  !baseflow (sturation excess) [mm] per soil timestep 
   REAL,                            INTENT(OUT)   :: QIN     !groundwater recharge [mm/s]
   REAL,                            INTENT(OUT)   :: QDIS    !groundwater discharge [mm/s]
   REAL,                            INTENT(OUT)   :: PONDING1
@@ -5906,6 +5982,15 @@ ENDIF   ! CROPTYPE == 0
   REAL                              , INTENT(IN)   :: LATHEAG !latent heat vap./sublimation (j/kg)
   LOGICAL                           , INTENT(IN)   :: FROZEN_GROUND ! used to define latent heat pathway
   LOGICAL                           , INTENT(IN)   :: FROZEN_CANOPY ! used to define latent heat pathway
+  REAL, INTENT(OUT)                :: QEVAC   !evaporation rate (mm/s)
+  REAL, INTENT(OUT)                :: QDEWC   !dew rate (mm/s)
+  REAL, INTENT(OUT)                :: QFROC   !frost rate (mm/s)
+  REAL, INTENT(OUT)                :: QSUBC   !sublimation rate (mm/s)
+  REAL, INTENT(OUT)                :: QMELTC  !melting rate of canopy snow (mm/s)
+  REAL, INTENT(OUT)                :: QFRZC   !refreezing rate of canopy liquid water (mm/s)
+  REAL, INTENT(INOUT)                            :: ACC_QINSUR  !water input on soil surface [m/s]
+  REAL, INTENT(INOUT)                            :: ACC_QSEVA   !soil surface evap rate [mm/s]
+  REAL, DIMENSION(       1:NSOIL) , INTENT(INOUT):: ACC_ETRANI  !transpiration rate (mm/s) [+]
 
 ! irrigation 
   REAL,                              INTENT(IN)   :: IRRFRA   ! irrigation fraction
@@ -5929,6 +6014,10 @@ ENDIF   ! CROPTYPE == 0
   REAL                                           :: QDRAIN  !soil-bottom free drainage [mm/s] 
   REAL                                           :: SNOFLOW !glacier flow [mm/s]
   REAL                                           :: FCRMAX !maximum of FCR (-)
+  real                                           :: dt_soil
+  real                                           :: qinsur_avg
+  real                                           :: qseva_avg
+  real, dimension(1:nsoil)                       :: etrani_avg
 
   REAL, PARAMETER ::  WSLMAX = 5000.0      !maximum lake water storage (mm)
 
@@ -5942,7 +6031,9 @@ ENDIF   ! CROPTYPE == 0
    ETRANI(1:NSOIL) = 0.0
    SNOFLOW         = 0.0
    RUNSUB          = 0.0
+   RUNSRF          = 0.0
    QINSUR          = 0.0
+   QTLDRN          = 0.0
 
 ! canopy-intercepted snowfall/rainfall, drips, and throughfall
 
@@ -5952,7 +6043,7 @@ ENDIF   ! CROPTYPE == 0
                   BDFALL ,FROZEN_CANOPY  , & !in     
                   CANLIQ ,CANICE ,TV     ,                 & !inout
                   CMC    ,ECAN   ,ETRAN  , & !out
-                  FWET      )                           !out
+                  FWET   , QSUBC, QFROC, QFRZC, QMELTC, QEVAC, QDEWC )                           !out
 
 ! sublimation, frost, evaporation, and dew
 
@@ -5983,6 +6074,7 @@ ENDIF   ! CROPTYPE == 0
          SH2O(1) = SH2O(1) + SICE(1)
          SICE(1) = 0.0
       END IF
+      SMC(1) = SH2O(1) + SICE(1)
    END IF
 
 ! convert units (mm/s -> m/s)
@@ -6006,31 +6098,45 @@ ENDIF   ! CROPTYPE == 0
        QINSUR = QINSUR+sfcheadrt/DT*0.001  !sfcheadrt units (m)
 #endif
 
-! irrigation: call flood irrigation-pvk
-    IF((CROPLU .EQV. .TRUE.) .AND. (IRAMTFI .GT. 0.0))THEN
-       ! call flood irrigation and add to QINSUR
-       CALL FLOOD_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,SICE,FIFAC,& !in
-                             IRAMTFI,IRFIRATE)                         !inout
-       QINSUR = QINSUR + (IRFIRATE/DT)                                ![m/s]
-    END IF
-! irrigation: call micro irrigation-pvk
-    IF((CROPLU .EQV. .TRUE.) .AND. (IRAMTMI .GT. 0.0))THEN
-       ! call micro irrigation, assuming we implement drip in first layer 
-       ! of the Noah-MP. Change layer 1 moisture wrt to MI rate-pvk
-       CALL MICRO_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,SICE,MIFAC, & !in
-                             IRAMTMI,IRMIRATE)                          !inout
-       SH2O(1) = SH2O(1) + (IRMIRATE/(-1*ZSOIL(1)))
-    END IF
+! added soil timestep capability
+    ACC_QINSUR = ACC_QINSUR + QINSUR
+    ACC_QSEVA  = ACC_QSEVA  + QSEVA
+    ACC_ETRANI = ACC_ETRANI + ETRANI
 
-! lake/soil water balances
+    ! start soil calculation timestep
+    if(calculate_soil) then
 
-    IF (IST == 2) THEN                                        ! lake
-       RUNSRF = 0.0
-       IF(WSLAKE >= WSLMAX) RUNSRF = QINSUR*1000.0             !mm/s
-       WSLAKE = WSLAKE + (QINSUR-QSEVA)*1000.0*DT -RUNSRF*DT   !mm
-    ELSE                                                      ! soil
-       CALL      SOILWATER (parameters,NSOIL  ,NSNOW  ,DT     ,ZSOIL  ,DZSNSO , & !in
-                            QINSUR ,QSEVA  ,ETRANI ,SICE   ,ILOC   , JLOC ,     & !in
+       DT_soil    = DT * soil_update_steps
+
+       ! irrigation: call flood irrigation-pvk
+       IF((CROPLU .EQV. .TRUE.) .AND. (IRAMTFI .GT. 0.0))THEN
+          ! call flood irrigation and add to QINSUR
+          CALL FLOOD_IRRIGATION(parameters,NSOIL,DT_soil,SH2O,SMC,SICE,FIFAC,& !in
+                                IRAMTFI,IRFIRATE)                         !inout
+          ACC_QINSUR = ACC_QINSUR + IRFIRATE/Dt_soil * soil_update_steps
+       END IF
+
+       ! irrigation: call micro irrigation-pvk
+       IF((CROPLU .EQV. .TRUE.) .AND. (IRAMTMI .GT. 0.0))THEN
+          ! call micro irrigation, assuming we implement drip in first layer 
+          ! of the Noah-MP. Change layer 1 moisture wrt to MI rate-pvk
+          CALL MICRO_IRRIGATION(parameters,NSOIL,DT_soil,SH2O,SMC,SICE,MIFAC, & !in
+                                IRAMTMI,IRMIRATE)                          !inout
+          SH2O(1) = SH2O(1) + (IRMIRATE/(-1*ZSOIL(1)))
+       END IF
+
+       QSEVA_avg  = ACC_QSEVA  / soil_update_steps
+       QINSUR_avg = ACC_QINSUR / soil_update_steps 
+       ETRANI_avg = ACC_ETRANI / soil_update_steps
+
+       ! lake/soil water balances
+       IF (IST == 2) THEN                                          ! lake
+          RUNSRF = 0.0
+          IF(WSLAKE >= WSLMAX) RUNSRF = QINSUR_avg*1000.0*Dt_soil  ! mm per soil timestep
+           WSLAKE = WSLAKE + (QINSUR_avg-QSEVA_avg)*1000.0*Dt_soil - RUNSRF   !mm per soil timestep
+       ELSE                                                      ! soil
+           CALL  SOILWATER (parameters,NSOIL  ,NSNOW  ,DT_soil ,ZSOIL  ,DZSNSO , & !in
+                            QINSUR_avg,QSEVA_avg,ETRANI_avg,SICE   ,ILOC   , JLOC ,     & !in
                             TDFRACMP,DX    ,                                    & !in
                             SH2O   ,SMC    ,ZWT    ,VEGTYP ,                    & !inout
                             SMCWTD, DEEPRECH,                                   & !inout
@@ -6040,34 +6146,40 @@ ENDIF   ! CROPTYPE == 0
 #endif
                             )
  
-       IF(OPT_RUN == 1) THEN 
-          CALL GROUNDWATER (parameters,NSNOW  ,NSOIL  ,DT     ,SICE   ,ZSOIL  , & !in
-                            STC    ,WCND   ,FCRMAX ,ILOC   ,JLOC   , & !in
-                            SH2O   ,ZWT    ,WA     ,WT     ,         & !inout
-                            QIN    ,QDIS   )                           !out
-          RUNSUB       = QDIS          !mm/s
-       END IF
+          IF(OPT_RUN == 1) THEN 
+             CALL GROUNDWATER (parameters,NSNOW  ,NSOIL  ,DT_soil  ,SICE   ,ZSOIL  , & !in
+                               STC    ,WCND   ,FCRMAX ,ILOC   ,JLOC   , & !in
+                               SH2O   ,ZWT    ,WA     ,WT     ,         & !inout
+                               QIN    ,QDIS   )                           !out
+             RUNSUB       = QDIS          !mm/s
+          END IF
 
-       IF(OPT_RUN == 3 .or. OPT_RUN == 4 .or. &
-          OPT_RUN == 6 .or. OPT_RUN == 7 .or. OPT_RUN == 8) THEN 
-          RUNSUB       = RUNSUB + QDRAIN        !mm/s
-       END IF
+          IF(OPT_RUN == 3 .or. OPT_RUN == 4 .or. &
+             OPT_RUN == 6 .or. OPT_RUN == 7 .or. OPT_RUN == 8) THEN 
+             RUNSUB       = RUNSUB + QDRAIN        !mm/s
+          END IF
 
-       DO IZ = 1,NSOIL
-           SMC(IZ) = SH2O(IZ) + SICE(IZ)
-       ENDDO
+          DO IZ = 1,NSOIL
+             SMC(IZ) = SH2O(IZ) + SICE(IZ)
+          ENDDO
  
-       IF(OPT_RUN == 5) THEN
-          CALL SHALLOWWATERTABLE (parameters,NSNOW  ,NSOIL, ZSOIL, DT       , & !in
-                         DZSNSO ,SMCEQ   ,ILOC , JLOC        , & !in
-                         SMC    ,ZWT    ,SMCWTD ,RECH, QDRAIN  ) !inout
+          IF(OPT_RUN == 5) THEN
+             CALL SHALLOWWATERTABLE (parameters,NSNOW  ,NSOIL, ZSOIL, DT_soil   , & !in
+                            DZSNSO ,SMCEQ   ,ILOC , JLOC        , & !in
+                            SMC    ,ZWT    ,SMCWTD ,RECH, QDRAIN  ) !inout
 
-          SH2O(NSOIL) = SMC(NSOIL) - SICE(NSOIL)
-          RUNSUB = RUNSUB + QDRAIN !it really comes from subroutine watertable, which is not called with the same frequency as the soil routines here
-          WA = 0.0
+             SH2O(NSOIL) = SMC(NSOIL) - SICE(NSOIL)
+             RUNSUB = RUNSUB + QDRAIN !it really comes from subroutine watertable, which is not called with the same frequency as the soil routines here
+             WA = 0.0
+          ENDIF
+
+          RUNSRF = RUNSRF * dt_soil
+          RUNSUB = RUNSUB * dt_soil
+          QTLDRN = QTLDRN * dt_soil
+
        ENDIF
 
-    ENDIF
+    endif ! soil calculation timestep
 
     RUNSUB       = RUNSUB + SNOFLOW         !mm/s
 
@@ -6081,7 +6193,7 @@ ENDIF   ! CROPTYPE == 0
                        BDFALL ,FROZEN_CANOPY  ,  & !in      
                        CANLIQ ,CANICE ,TV     ,                 & !inout
                        CMC    ,ECAN   ,ETRAN  , & !out
-                       FWET      )                           !out
+                       FWET   , QSUBC, QFROC, QFRZC, QMELTC, QEVAC, QDEWC )                           !out
 
 ! ------------------------ code history ------------------------------
 ! canopy hydrology
@@ -6113,17 +6225,18 @@ ENDIF   ! CROPTYPE == 0
   REAL, INTENT(OUT)   :: ECAN    !evaporation of intercepted water (mm/s) [+]
   REAL, INTENT(OUT)   :: ETRAN   !transpiration rate (mm/s) [+]
   REAL, INTENT(OUT)   :: FWET    !wetted or snowed fraction of the canopy (-)
+  REAL, INTENT(OUT)   :: QEVAC   !evaporation rate (mm/s)
+  REAL, INTENT(OUT)   :: QDEWC   !dew rate (mm/s)
+  REAL, INTENT(OUT)   :: QFROC   !frost rate (mm/s)
+  REAL, INTENT(OUT)   :: QSUBC   !sublimation rate (mm/s)
+  REAL, INTENT(OUT)   :: QMELTC  !melting rate of canopy snow (mm/s)
+  REAL, INTENT(OUT)   :: QFRZC   !refreezing rate of canopy liquid water (mm/s)
+
 ! --------------------------------------------------------------------
 
 ! ------------------------ local variables ---------------------------
   REAL                :: MAXSNO  !canopy capacity for snow interception (mm)
   REAL                :: MAXLIQ  !canopy capacity for rain interception (mm)
-  REAL                :: QEVAC   !evaporation rate (mm/s)
-  REAL                :: QDEWC   !dew rate (mm/s)
-  REAL                :: QFROC   !frost rate (mm/s)
-  REAL                :: QSUBC   !sublimation rate (mm/s)
-  REAL                :: QMELTC  !melting rate of canopy snow (mm/s)
-  REAL                :: QFRZC   !refreezing rate of canopy liquid water (mm/s)
   REAL                :: CANMAS  !total canopy mass (kg/m2)
 ! --------------------------------------------------------------------
 ! initialization
@@ -6169,7 +6282,7 @@ ENDIF   ! CROPTYPE == 0
      
 ! wetted fraction of canopy
 
-      IF(CANICE .GT. 0.0) THEN
+      IF( (CANICE .GT. 0.0) .AND. (CANICE .GE. CANLIQ) ) THEN
            FWET = MAX(0.0,CANICE) / MAX(MAXSNO,1.0E-06)
       ELSE
            FWET = MAX(0.0,CANLIQ) / MAX(MAXLIQ,1.0E-06)
@@ -6180,18 +6293,19 @@ ENDIF   ! CROPTYPE == 0
 
       QMELTC = 0.0
       QFRZC = 0.0
+      CMC = CANLIQ + CANICE
 
       IF(CANICE .GT. 1.0E-6 .AND. TV .GT. TFRZ) THEN
          QMELTC = MIN(CANICE/DT,(TV-TFRZ)*CICE*CANICE/DENICE/(DT*HFUS))
-         CANICE = MAX(0.0,CANICE - QMELTC*DT)
-         CANLIQ = MAX(0.0,CANLIQ + QMELTC*DT)
+         CANICE = MAX(0.0, CANICE - QMELTC*DT)
+         CANLIQ = MAX(0.0, CMC - CANICE)
          TV     = FWET*TFRZ + (1.0-FWET)*TV
       ENDIF
 
       IF(CANLIQ .GT. 1.0E-6 .AND. TV .LT. TFRZ) THEN
          QFRZC  = MIN(CANLIQ/DT,(TFRZ-TV)*CWAT*CANLIQ/DENH2O/(DT*HFUS))
-         CANLIQ = MAX(0.0,CANLIQ - QFRZC*DT)
-         CANICE = MAX(0.0,CANICE + QFRZC*DT)
+         CANLIQ = MAX(0.0, CANLIQ - QFRZC*DT)
+         CANICE = MAX(0.0, CMC - CANLIQ)
          TV     = FWET*TFRZ + (1.0-FWET)*TV
       ENDIF
 
@@ -7083,15 +7197,15 @@ ENDIF   ! CROPTYPE == 0
   REAL, INTENT(INOUT)                     :: ZWT    !water table depth [m]
   REAL,                     INTENT(INOUT) :: SMCWTD !soil moisture between bottom of the soil and the water table [m3/m3]
   REAL                    , INTENT(INOUT) :: DEEPRECH
-  REAL                    , INTENT(INOUT) :: QTLDRN ! tile drainage (mm/s)
+  REAL                    , INTENT(INOUT) :: QTLDRN ! tile drainage (mm) per soil timestep
 #ifdef WRF_HYDRO
   REAL                    , INTENT(INOUT) :: WATBLED!in for tile drainage
 #endif
 
 ! output
   REAL, INTENT(OUT)                       :: QDRAIN !soil-bottom free drainage [mm/s] 
-  REAL, INTENT(OUT)                       :: RUNSRF !surface runoff [mm/s] 
-  REAL, INTENT(OUT)                       :: RUNSUB !subsurface runoff [mm/s] 
+  REAL, INTENT(OUT)                       :: RUNSRF !surface runoff [mm] per soil timestep 
+  REAL, INTENT(OUT)                       :: RUNSUB !subsurface runoff [mm] per soil timestep 
   REAL, INTENT(OUT)                       :: FCRMAX !maximum of FCR (-)
   REAL, DIMENSION(1:NSOIL), INTENT(OUT)   :: WCND   !hydraulic conductivity (m/s)
 
