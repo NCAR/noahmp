@@ -8010,8 +8010,8 @@ ENDIF   ! CROPTYPE == 0
   RUNSRF = 0.0
   
   DO IZ=1,NSOIL-2
-    TOP_MOIST     = TOP_MOIST + (SMC(IZ)*-1.0*ZSOIL(IZ)) ! m
-    TOP_MAX_MOIST = TOP_MAX_MOIST + (parameters%SMCMAX(IZ)*-1.0*ZSOIL(IZ)) ! m  
+    TOP_MOIST     = TOP_MOIST + (SMC(IZ)*(-1.0)*ZSOIL(IZ)) ! m
+    TOP_MAX_MOIST = TOP_MAX_MOIST + (parameters%SMCMAX(IZ)*(-1.0)*ZSOIL(IZ)) ! m  
   END DO
 
   ! Saturated area from soil moisture
@@ -8091,13 +8091,13 @@ ENDIF   ! CROPTYPE == 0
 
     DO IZ=1,NSOIL-2
        IF ((SMC(IZ)-parameters%SMCREF(IZ)) .GT. 0.0) THEN ! soil moisture greater than field capacity
-          SM     = SM + (SMC(IZ) - parameters%SMCREF(IZ) )*-1.0*ZSOIL(IZ) !m
-          WM     = WM + (parameters%SMCREF(IZ)*-1.0*ZSOIL(IZ))            !m  
+          SM     = SM + (SMC(IZ) - parameters%SMCREF(IZ) )*(-1.0)*ZSOIL(IZ) !m
+          WM     = WM + (parameters%SMCREF(IZ)*(-1.0)*ZSOIL(IZ))            !m  
        ELSE
-          WM     = WM + (SMC(IZ)*-1.0*ZSOIL(IZ))
+          WM     = WM + (SMC(IZ)*(-1.0)*ZSOIL(IZ))
        END IF
-       WM_MAX = WM_MAX + (parameters%SMCREF(IZ)*-1.0*ZSOIL(IZ))
-       SM_MAX = SM_MAX + (parameters%SMCMAX(IZ) - parameters%SMCREF(IZ))*-1.0*ZSOIL(IZ)
+       WM_MAX = WM_MAX + (parameters%SMCREF(IZ)*(-1.0)*ZSOIL(IZ))
+       SM_MAX = SM_MAX + (parameters%SMCMAX(IZ) - parameters%SMCREF(IZ))*(-1.0)*ZSOIL(IZ)
     END DO
     WM = MIN(WM,WM_MAX) ! tension water (m) 
     SM = MIN(SM,SM_MAX) ! free water (m)
@@ -8194,8 +8194,8 @@ ENDIF   ! CROPTYPE == 0
   BB = parameters%BBVIC
 
   DO IZ=1,NSOIL-2
-    TOP_MOIST     = TOP_MOIST + (SMC(IZ)*-1.0*ZSOIL(IZ))                                   ! actual moisture in top layers, [m]
-    TOP_MAX_MOIST = TOP_MAX_MOIST + (parameters%SMCMAX(IZ)*-1.0*ZSOIL(IZ))                 ! maximum moisture in top layers, [m]  
+    TOP_MOIST     = TOP_MOIST + (SMC(IZ)*(-1.0)*ZSOIL(IZ))                                   ! actual moisture in top layers, [m]
+    TOP_MAX_MOIST = TOP_MAX_MOIST + (parameters%SMCMAX(IZ)*(-1.0)*ZSOIL(IZ))                 ! maximum moisture in top layers, [m]  
   END DO
 
   IF(TOP_MOIST .GT. TOP_MAX_MOIST) TOP_MOIST = TOP_MAX_MOIST  
@@ -9295,8 +9295,8 @@ END SUBROUTINE RR2
       SMCAVL = 0.0
       SMCLIM = 0.0
       ! estimate available water and field capacity for the root zone
-      SMCAVL = (SH2O(1)-parameters%SMCWLT(1))*-1.0*ZSOIL(1)              ! current soil water (m) 
-      SMCLIM = (parameters%SMCREF(1)-parameters%SMCWLT(1))*-1.0*ZSOIL(1) ! available water (m)
+      SMCAVL = (SH2O(1)-parameters%SMCWLT(1))*(-1.0)*ZSOIL(1)              ! current soil water (m) 
+      SMCLIM = (parameters%SMCREF(1)-parameters%SMCWLT(1))*(-1.0)*ZSOIL(1) ! available water (m)
       DO K = 2, parameters%NROOT
          SMCAVL = SMCAVL + (SH2O(K)-parameters%SMCWLT(K))*(ZSOIL(K-1) - ZSOIL(K))
          SMCLIM = SMCLIM + (parameters%SMCREF(K)-parameters%SMCWLT(K))*(ZSOIL(K-1) - ZSOIL(K))
