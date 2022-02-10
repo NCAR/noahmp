@@ -646,8 +646,7 @@ CONTAINS
     calculate_soil = .false.
     soil_update_steps = nint(soiltstep/DT)  ! 3600 = 1 hour
     soil_update_steps = max(soil_update_steps,1)
-    if( soil_update_steps == 1 .or. &
-        (soil_update_steps > 1 .and. mod(itimestep,soil_update_steps) == 1) ) then
+    if ( soil_update_steps == 1 ) then
       ACC_SSOILXY  = 0.0
       ACC_QINSURXY = 0.0
       ACC_QSEVAXY  = 0.0
@@ -657,6 +656,19 @@ CONTAINS
       ACC_ECANXY   = 0.0
       ACC_ETRANXY  = 0.0
       ACC_EDIRXY   = 0.0
+    end if
+    if ( soil_update_steps > 1 ) then
+     if ( mod(itimestep,soil_update_steps) == 1 ) then
+      ACC_SSOILXY  = 0.0
+      ACC_QINSURXY = 0.0
+      ACC_QSEVAXY  = 0.0
+      ACC_ETRANIXY = 0.0
+      ACC_DWATERXY = 0.0
+      ACC_PRCPXY   = 0.0
+      ACC_ECANXY   = 0.0
+      ACC_ETRANXY  = 0.0
+      ACC_EDIRXY   = 0.0
+     end if
     end if
 
     if (mod(itimestep,soil_update_steps) == 0) calculate_soil = .true.
