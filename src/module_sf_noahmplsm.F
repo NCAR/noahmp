@@ -4468,7 +4468,7 @@ ENDIF   ! CROPTYPE == 0
        IF(ITER > 1) THEN
         TMP1 = VKC * (GRAV/TAH) * HG/(RHOAIR*CPAIR)
         IF (ABS(TMP1) .LE. MPE) TMP1 = MPE
-        MOLG = -1.0 * FV**3 / TMP1
+        MOLG = (-1.0) * FV**3 / TMP1
         MOZG = MIN( (ZPD-Z0MG)/MOLG, 1.0)
        END IF
 
@@ -4591,7 +4591,7 @@ ENDIF   ! CROPTYPE == 0
        TVIR = (1.0 + 0.61*QAIR) * SFCTMP
        TMP1 = VKC * (GRAV/TVIR) * H/(RHOAIR*CPAIR)
        IF (ABS(TMP1) .LE. MPE) TMP1 = MPE
-       MOL  = -1.0 * FV**3 / TMP1
+       MOL  = (-1.0) * FV**3 / TMP1
        MOZ  = MIN( (ZLVL-ZPD)/MOL, 1.0)
        MOZ2  = MIN( (2.0 + Z0H)/MOL, 1.0)
     ENDIF
@@ -5607,7 +5607,7 @@ ENDIF   ! CROPTYPE == 0
          IF (OPT_FRZ == 1) THEN
             IF(STC(J) < TFRZ) THEN
                SMP = HFUS*(TFRZ-STC(J))/(GRAV*STC(J))             !(m)
-               SUPERCOOL(J) = parameters%SMCMAX(J)*(SMP/parameters%PSISAT(J))**(-1.0/parameters%BEXP(J))
+               SUPERCOOL(J) = parameters%SMCMAX(J)*(SMP/parameters%PSISAT(J))**((-1.0)/parameters%BEXP(J))
                SUPERCOOL(J) = SUPERCOOL(J)*DZSNSO(J)*1000.0        !(mm)
             END IF
          END IF
@@ -5858,7 +5858,7 @@ ENDIF   ! CROPTYPE == 0
           write(message, '("Flerchinger used in NEW version. Iterations=", I6)') NLOG
           call wrf_message(trim(message))
           FK = ( ( (HFUS / (GRAV * ( - parameters%PSISAT(ISOIL))))*                    &
-               ( (TKELV - TFRZ)/ TKELV))** ( -1.0/ BX))* parameters%SMCMAX(ISOIL)
+               ( (TKELV - TFRZ)/ TKELV))** ( (-1.0)/ BX))* parameters%SMCMAX(ISOIL)
           IF (FK < 0.02) FK = 0.02
           FREE = MIN (FK, SMC)
 ! ----------------------------------------------------------------------
@@ -6122,7 +6122,7 @@ ENDIF   ! CROPTYPE == 0
           ! of the Noah-MP. Change layer 1 moisture wrt to MI rate-pvk
           CALL MICRO_IRRIGATION(parameters,NSOIL,DT_soil,SH2O,SMC,SICE,MIFAC, & !in
                                 IRAMTMI,IRMIRATE)                          !inout
-          SH2O(1) = SH2O(1) + (IRMIRATE/(-1*ZSOIL(1)))
+          SH2O(1) = SH2O(1) + (IRMIRATE/((-1)*ZSOIL(1)))
        END IF
 
        QSEVA_avg  = ACC_QSEVA  / soil_update_steps
@@ -7528,7 +7528,7 @@ ENDIF   ! CROPTYPE == 0
    WD2 = 0.0
    DO K = 1,NFINE
      TEMP  = 1.0 + (ZWT-ZFINE(K))/parameters%PSISAT(1)
-     WD2   = WD2 + parameters%SMCMAX(1)*(1.0-TEMP**(-1.0/parameters%BEXP(1)))*DZFINE
+     WD2   = WD2 + parameters%SMCMAX(1)*(1.0-TEMP**((-1.0)/parameters%BEXP(1)))*DZFINE
      IF(ABS(WD2-WD1).LE.0.01) THEN
         ZWT = ZFINE(K)
         EXIT
@@ -7937,8 +7937,8 @@ ENDIF   ! CROPTYPE == 0
   RUNSRF = 0.0
 
   DO IZ=1,NSOIL-2
-    TOP_MOIST     = TOP_MOIST + (SMC(IZ)*-1.0*ZSOIL(IZ)) ! m
-    TOP_MAX_MOIST = TOP_MAX_MOIST + (parameters%SMCMAX(IZ)*-1.0*ZSOIL(IZ)) ! m  
+    TOP_MOIST     = TOP_MOIST + (SMC(IZ)*(-1.0)*ZSOIL(IZ)) ! m
+    TOP_MAX_MOIST = TOP_MAX_MOIST + (parameters%SMCMAX(IZ)*(-1.0)*ZSOIL(IZ)) ! m  
   END DO
 
   ! Saturated area from soil moisture
@@ -8018,13 +8018,13 @@ ENDIF   ! CROPTYPE == 0
 
     DO IZ=1,NSOIL-2
        IF ((SMC(IZ)-parameters%SMCREF(IZ)) .GT. 0.) THEN ! soil moisture greater than field capacity
-          SM     = SM + (SMC(IZ) - parameters%SMCREF(IZ) )*-1.0*ZSOIL(IZ) !m
-          WM     = WM + (parameters%SMCREF(IZ)*-1.0*ZSOIL(IZ))            !m  
+          SM     = SM + (SMC(IZ) - parameters%SMCREF(IZ) )*(-1.0)*ZSOIL(IZ) !m
+          WM     = WM + (parameters%SMCREF(IZ)*(-1.0)*ZSOIL(IZ))            !m  
        ELSE
-          WM     = WM + (SMC(IZ)*-1.0*ZSOIL(IZ))
+          WM     = WM + (SMC(IZ)*(-1.0)*ZSOIL(IZ))
        END IF
-       WM_MAX = WM_MAX + (parameters%SMCREF(IZ)*-1.0*ZSOIL(IZ))
-       SM_MAX = SM_MAX + (parameters%SMCMAX(IZ) - parameters%SMCREF(IZ))*-1.0*ZSOIL(IZ)
+       WM_MAX = WM_MAX + (parameters%SMCREF(IZ)*(-1.0)*ZSOIL(IZ))
+       SM_MAX = SM_MAX + (parameters%SMCMAX(IZ) - parameters%SMCREF(IZ))*(-1.0)*ZSOIL(IZ)
     END DO
     WM = MIN(WM,WM_MAX) ! tension water (m) 
     SM = MIN(SM,SM_MAX) ! free water (m)
@@ -8121,8 +8121,8 @@ ENDIF   ! CROPTYPE == 0
   BB = parameters%BBVIC
 
   DO IZ=1,NSOIL-2
-    TOP_MOIST     = TOP_MOIST + (SMC(IZ)*-1.0*ZSOIL(IZ))                                   ! actual moisture in top layers, [m]
-    TOP_MAX_MOIST = TOP_MAX_MOIST + (parameters%SMCMAX(IZ)*-1.0*ZSOIL(IZ))                 ! maximum moisture in top layers, [m]  
+    TOP_MOIST     = TOP_MOIST + (SMC(IZ)*(-1.0)*ZSOIL(IZ))                                   ! actual moisture in top layers, [m]
+    TOP_MAX_MOIST = TOP_MAX_MOIST + (parameters%SMCMAX(IZ)*(-1.0)*ZSOIL(IZ))                 ! maximum moisture in top layers, [m]  
   END DO
 
   IF(TOP_MOIST .GT. TOP_MAX_MOIST) TOP_MOIST = TOP_MAX_MOIST  
@@ -8419,7 +8419,7 @@ END SUBROUTINE RR2
       CALL WDFCND2 (parameters,WDF,WCND,parameters%SMCWLT(ISOIL),0.0,ISOIL) 
 
       ! Maximum infiltrability based on the Eq. 6.25. (m/s)
-      JJ   = parameters%GDVIC * (parameters%SMCMAX(ISOIL) - parameters%SMCWLT(ISOIL)) * -1.0 * ZSOIL(ISOIL)
+      JJ   = parameters%GDVIC * (parameters%SMCMAX(ISOIL) - parameters%SMCWLT(ISOIL)) * (-1.0) * ZSOIL(ISOIL)
       FSUR = parameters%DKSAT(ISOIL) + (GAM * (parameters%DKSAT(ISOIL) - WCND) / (EXP(GAM * 1E-05 / JJ) -1.0))
 
       ! infiltration rate at surface
@@ -8436,7 +8436,7 @@ END SUBROUTINE RR2
       CALL WDFCND2 (parameters,WDF,WCND,SMC(ISOIL),SICE(ISOIL),ISOIL)
 
       ! Maximum infiltrability based on the Eq. 6.25. (m/s)
-      JJ   = parameters%GDVIC * max(0.0,(parameters%SMCMAX(ISOIL) - SMC(ISOIL))) * -1.0 * ZSOIL(ISOIL)
+      JJ   = parameters%GDVIC * max(0.0,(parameters%SMCMAX(ISOIL) - SMC(ISOIL))) * (-1.0) * ZSOIL(ISOIL)
       IF(JJ .eq. 0.0) THEN ! infiltration at surface == saturated hydraulic conductivity
         FSUR = WCND
       ELSE
@@ -8496,7 +8496,7 @@ END SUBROUTINE RR2
      CALL WDFCND2 (parameters,WDF,WCND,parameters%SMCWLT(ISOIL),0.0,ISOIL)
 
      ! Maximum infiltrability based on the Eq. 6.25. (m/s)
-     JJ   = parameters%GDVIC * (parameters%SMCMAX(ISOIL) - parameters%SMCWLT(ISOIL)) * -1.0 * ZSOIL(ISOIL)
+     JJ   = parameters%GDVIC * (parameters%SMCMAX(ISOIL) - parameters%SMCWLT(ISOIL)) * (-1.0) * ZSOIL(ISOIL)
      FSUR = parameters%DKSAT(ISOIL) + ((JJ/1E-05) * (parameters%DKSAT(ISOIL) - WCND))
 
      !maximum infiltration rate at surface
@@ -8508,7 +8508,7 @@ END SUBROUTINE RR2
      CALL WDFCND2 (parameters,WDF,WCND,SMC(ISOIL),SICE(ISOIL),ISOIL)
 
      ! Maximum infiltrability based on the Eq. 6.25. (m/s)
-     JJ   = parameters%GDVIC * max(0.0,(parameters%SMCMAX(ISOIL) - SMC(ISOIL))) * -1.0 * ZSOIL(ISOIL)
+     JJ   = parameters%GDVIC * max(0.0,(parameters%SMCMAX(ISOIL) - SMC(ISOIL))) * (-1.0) * ZSOIL(ISOIL)
      FSUR = parameters%DKSAT(ISOIL) + ((JJ/FACC) * (parameters%DKSAT(ISOIL) - WCND))
 
      ! infiltration rate at surface
@@ -8573,7 +8573,7 @@ END SUBROUTINE RR2
      AP = MAX(AP,   (1.0/3.0)*parameters%DKSAT(ISOIL))
 
      ! Maximun infiltration rate, m
-     FSUR = (1.0/2.0)*SP*(DT**(-1.0/2.0))+AP ! m/s
+     FSUR = (1.0/2.0)*SP*(DT**((-1.0)/2.0))+AP ! m/s
      IF(FSUR .LT. 0.0) FSUR = WCND
 
    ELSE 
@@ -8590,7 +8590,7 @@ END SUBROUTINE RR2
      AP = MAX(AP,   (1.0/3.0)*parameters%DKSAT(ISOIL))
 
      ! Maximun infiltration rate, m
-     FSUR = (1.0/2.0)*SP*(DT**(-1.0/2.0))+AP ! m/s
+     FSUR = (1.0/2.0)*SP*(DT**((-1.0)/2.0))+AP ! m/s
 
      ! infiltration rate at surface
      IF(parameters%DKSAT(ISOIL) .LT. QINSUR)THEN
@@ -8648,7 +8648,7 @@ END SUBROUTINE RR2
 
     DO K = 1, NSOIL
       IF (K == 1) THEN
-         ZLAYER(K) = -1.0 * ZSOIL(K)
+         ZLAYER(K) = (-1.0) * ZSOIL(K)
       ELSE
          ZLAYER(K) = (ZSOIL(K-1)-ZSOIL(K))
       END IF
@@ -8870,7 +8870,7 @@ END SUBROUTINE RR2
 ! Thickness of soil layers    
     DO K = 1, NSOIL
       IF (K == 1) THEN
-         ZLAYER(K) = -1.0 * ZSOIL(K)
+         ZLAYER(K) = (-1.0) * ZSOIL(K)
       ELSE
          ZLAYER(K) = (ZSOIL(K-1)-ZSOIL(K))
       END IF
@@ -8889,14 +8889,14 @@ END SUBROUTINE RR2
 
 ! Depth of saturated zone
     DO K=1, NSOIL
-       IF (YY .GT. (-1.0*ZSOIL(K))) THEN
+       IF (YY .GT. ((-1.0)*ZSOIL(K))) THEN
           TD_SATZ(K) = 0.0
        ELSE
-          TD_SATZ(K) = (-1.0*ZSOIL(K)) - YY
-          XX =  (-1.0*ZSOIL(K)) - DTOPL
+          TD_SATZ(K) = ((-1.0)*ZSOIL(K)) - YY
+          XX =  ((-1.0)*ZSOIL(K)) - DTOPL
           IF(TD_SATZ(K) .GT. XX) TD_SATZ(K) = XX
        END IF
-       DTOPL = -1.0*ZSOIL(K)
+       DTOPL = (-1.0)*ZSOIL(K)
     END DO
 
 ! amount of water over field capacity
@@ -9196,8 +9196,8 @@ END SUBROUTINE RR2
       SMCAVL = 0.0
       SMCLIM = 0.0
       ! estimate available water and field capacity for the root zone
-      SMCAVL = (SH2O(1)-parameters%SMCWLT(1))*-1.0*ZSOIL(1)              ! current soil water (m) 
-      SMCLIM = (parameters%SMCREF(1)-parameters%SMCWLT(1))*-1.0*ZSOIL(1) ! available water (m)
+      SMCAVL = (SH2O(1)-parameters%SMCWLT(1))*(-1.0)*ZSOIL(1)              ! current soil water (m) 
+      SMCLIM = (parameters%SMCREF(1)-parameters%SMCWLT(1))*(-1.0)*ZSOIL(1) ! available water (m)
       DO K = 2, parameters%NROOT
          SMCAVL = SMCAVL + (SH2O(K)-parameters%SMCWLT(K))*(ZSOIL(K-1) - ZSOIL(K))
          SMCLIM = SMCLIM + (parameters%SMCREF(K)-parameters%SMCWLT(K))*(ZSOIL(K-1) - ZSOIL(K))
