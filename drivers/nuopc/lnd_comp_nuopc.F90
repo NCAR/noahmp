@@ -300,6 +300,26 @@ contains
     end if
 
     ! ---------------------
+    ! Option to handle initial conditions, *.initial.* or sfc_data.*
+    ! ---------------------
+
+    call NUOPC_CompAttributeGet(gcomp, name='ic_type', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    if (isPresent .and. isSet) then
+       noahmp%nmlist%ic_type = trim(cvalue)
+       if (trim(noahmp%nmlist%ic_type) /= 'sfc' .and. trim(noahmp%nmlist%ic_type) /= 'custom') then
+          call ESMF_LogWrite(trim(subname)//' : '//trim(noahmp%nmlist%ic_type)//' is not a valid! It must be [sfc|custom].', ESMF_LOGMSG_INFO)
+          rc = ESMF_FAILURE
+          return
+       end if
+    else
+       noahmp%nmlist%ic_type = 'sfc'
+    end if
+
+    call ESMF_LogWrite(trim(subname)//': ic_type = '//trim(noahmp%nmlist%ic_type), ESMF_LOGMSG_INFO)
+
+    ! ---------------------
     ! Create mosaic grid and convert it to mesh 
     ! ---------------------
 

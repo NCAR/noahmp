@@ -232,6 +232,7 @@ module lnd_comp_types
      character*255              :: input_dir                         ! input directory for tiled files
      character*255              :: restart_dir                       ! restart directory
      character*255              :: restart_file                      ! restart file name
+     character*255              :: ic_type                           ! source of initial conditions, custom vs. sfc
      logical                    :: restart_run                       ! flag for restart run
      integer                    :: num_soil_levels                   ! number of soil levels
      real(kind=kp), allocatable :: soil_level_thickness(:)           ! soil level thicknesses (m)

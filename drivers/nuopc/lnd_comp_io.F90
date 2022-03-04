@@ -82,103 +82,203 @@ contains
 
     rc = ESMF_SUCCESS
 
-    !----------------------
-    ! Set file name for initial conditions
-    !----------------------
+    if (noahmp%nmlist%ic_type == 'sfc') then
+       !----------------------
+       ! Set file name for initial conditions
+       !----------------------
 
-    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', maxval(noahmp%domain%nit), '.initial.tile'
-    call ESMF_LogWrite(subname//' called for '//trim(filename), ESMF_LOGMSG_INFO)
+       filename = trim(noahmp%nmlist%input_dir)//'sfc_data.tile'
+       call ESMF_LogWrite(subname//' called for '//trim(filename), ESMF_LOGMSG_INFO)
 
-    !----------------------
-    ! Read snow water equivalent
-    !----------------------
+       !----------------------
+       ! Read snow water equivalent
+       !----------------------
 
-    call read_tiled_file(filename, 'snow_water_equivalent', noahmp, field, numrec=1, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    noahmp%init%snow_water_equivalent(:) = ptr(:,1,1)
-    nullify(ptr)
-    call ESMF_FieldDestroy(field, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call read_tiled_file(filename, 'sheleg', noahmp, field, numrec=1, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%init%snow_water_equivalent(:) = ptr(:,1,1)
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    !----------------------
-    ! Read snow depth
-    !----------------------
+       !----------------------
+       ! Read snow depth
+       !----------------------
 
-    call read_tiled_file(filename, 'snow_depth', noahmp, field, numrec=1, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    noahmp%init%snow_depth(:) = ptr(:,1,1)
-    nullify(ptr)
-    call ESMF_FieldDestroy(field, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call read_tiled_file(filename, 'snwdph', noahmp, field, numrec=1, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%init%snow_depth(:) = ptr(:,1,1)
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    !----------------------
-    ! Read canopy surface water
-    !----------------------
+       !----------------------
+       ! Read canopy surface water
+       !----------------------
 
-    call read_tiled_file(filename, 'canopy_water', noahmp, field, numrec=1, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    noahmp%init%canopy_water(:) = ptr(:,1,1)
-    nullify(ptr)
-    call ESMF_FieldDestroy(field, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call read_tiled_file(filename, 'canopy', noahmp, field, numrec=1, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%init%canopy_water(:) = ptr(:,1,1)
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    !----------------------
-    ! Read surface skin temperature
-    !----------------------
+       !----------------------
+       ! Read surface skin temperature
+       !----------------------
 
-    call read_tiled_file(filename, 'skin_temperature', noahmp, field, numrec=1, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    noahmp%init%skin_temperature(:) = ptr(:,1,1)
-    nullify(ptr)
-    call ESMF_FieldDestroy(field, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call read_tiled_file(filename, 'tsea', noahmp, field, numrec=1, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%init%skin_temperature(:) = ptr(:,1,1)
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    !----------------------
-    ! Read surface soil temperature
-    !----------------------
+       !----------------------
+       ! Read surface soil temperature
+       !----------------------
 
-    call read_tiled_file(filename, 'soil_temperature', noahmp, field, numrec=1, numlev=noahmp%nmlist%num_soil_levels, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    noahmp%init%soil_temperature(:,:) = ptr(:,:,1)
-    nullify(ptr)
-    call ESMF_FieldDestroy(field, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call read_tiled_file(filename, 'stc', noahmp, field, numrec=1, numlev=noahmp%nmlist%num_soil_levels, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%init%soil_temperature(:,:) = ptr(:,:,1)
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    !----------------------
-    ! Read surface soil moisture
-    !----------------------
+       !----------------------
+       ! Read surface soil moisture
+       !----------------------
 
-    call read_tiled_file(filename, 'soil_moisture', noahmp, field, numrec=1, numlev=noahmp%nmlist%num_soil_levels, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    noahmp%init%soil_moisture(:,:) = ptr(:,:,1)
-    nullify(ptr)
-    call ESMF_FieldDestroy(field, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call read_tiled_file(filename, 'smc', noahmp, field, numrec=1, numlev=noahmp%nmlist%num_soil_levels, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%init%soil_moisture(:,:) = ptr(:,:,1)
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    !----------------------
-    ! Read surface soil liquid
-    !----------------------
+       !----------------------
+       ! Read surface soil liquid
+       !----------------------
 
-    call read_tiled_file(filename, 'soil_liquid', noahmp, field, numrec=1, numlev=noahmp%nmlist%num_soil_levels, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    noahmp%init%soil_liquid(:,:) = ptr(:,:,1)
-    nullify(ptr)
-    call ESMF_FieldDestroy(field, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call read_tiled_file(filename, 'slc', noahmp, field, numrec=1, numlev=noahmp%nmlist%num_soil_levels, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%init%soil_liquid(:,:) = ptr(:,:,1)
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       !----------------------
+       ! Set file name for initial conditions
+       !----------------------
+
+       write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', maxval(noahmp%domain%nit), '.initial.tile'
+       call ESMF_LogWrite(subname//' called for '//trim(filename), ESMF_LOGMSG_INFO)
+
+       !----------------------
+       ! Read snow water equivalent
+       !----------------------
+
+       call read_tiled_file(filename, 'snow_water_equivalent', noahmp, field, numrec=1, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%init%snow_water_equivalent(:) = ptr(:,1,1)
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       !----------------------
+       ! Read snow depth
+       !----------------------
+
+       call read_tiled_file(filename, 'snow_depth', noahmp, field, numrec=1, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%init%snow_depth(:) = ptr(:,1,1)
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       !----------------------
+       ! Read canopy surface water
+       !----------------------
+
+       call read_tiled_file(filename, 'canopy_water', noahmp, field, numrec=1, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%init%canopy_water(:) = ptr(:,1,1)
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       !----------------------
+       ! Read surface skin temperature
+       !----------------------
+
+       call read_tiled_file(filename, 'skin_temperature', noahmp, field, numrec=1, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%init%skin_temperature(:) = ptr(:,1,1)
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       !----------------------
+       ! Read surface soil temperature
+       !----------------------
+
+       call read_tiled_file(filename, 'soil_temperature', noahmp, field, numrec=1, numlev=noahmp%nmlist%num_soil_levels, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%init%soil_temperature(:,:) = ptr(:,:,1)
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       !----------------------
+       ! Read surface soil moisture
+       !----------------------
+
+       call read_tiled_file(filename, 'soil_moisture', noahmp, field, numrec=1, numlev=noahmp%nmlist%num_soil_levels, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%init%soil_moisture(:,:) = ptr(:,:,1)
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       !----------------------
+       ! Read surface soil liquid
+       !----------------------
+
+       call read_tiled_file(filename, 'soil_liquid', noahmp, field, numrec=1, numlev=noahmp%nmlist%num_soil_levels, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%init%soil_liquid(:,:) = ptr(:,:,1)
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
 
     call ESMF_LogWrite(subname//' done for '//trim(filename), ESMF_LOGMSG_INFO)
 
