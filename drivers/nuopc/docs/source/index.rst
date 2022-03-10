@@ -11,3 +11,4 @@ Welcome to the NoahMP Land Model User's Guide
    :maxdepth: 3
 
    DriverAndCoupling
+   BuildingAndRunning

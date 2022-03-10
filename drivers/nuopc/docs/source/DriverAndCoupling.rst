@@ -10,7 +10,7 @@ This section describes the NoahMP land model National Unified Operation Predicti
 Supported Drivers
 =================
 
-The driver and coupling layer is found under **drivers/** directory. The current implementation only supports NUOPC driver but the standalone driver (`UFS Land Driver <https://github.com/barlage/ufs-land-driver>`_) can be also moved to here. 
+The driver and coupling layer is found under **drivers/** directory. 
 
 Within the **drivers/nuopc/** directory, the following files are found,
 
@@ -49,12 +49,14 @@ The NUOPC "cap" uses set of namelist options provided as ESMF Config file format
 
    * - Option
      - Short Description
-   * - mosaic_lnd
-     - Points the path and name of the mosaic grid file (i.e. INPUT/C96_mosaic.nc)
-   * - mosaic_tile_dir
-     - Directory that stores tiled grid files (i.e. C96_grid.tile*.nc)
+   * - mosaic_file
+     - The path and name of the mosaic grid file (i.e. INPUT/C96_mosaic.nc)
+   * - input_dir
+     - The directory that stores initial conditions, static information and grid related files 
+   * - ic_type
+     - Indicates the source of the initial conditions. Two options are supported 'custom' (i.e. C96.initial.tile[1-6].nc) and 'sfc' (default, sfc_data.tile[1-6].nc).
    * - layout
-     - Defines decompositions in each direction on each tile (i.e. 3:8 for C96)
+     - Defines decompositions in each direction on each tile (i.e. 3:8 for C96). This needs to be consistent with resolution.
    * - num_soil_levels
      - Number of soil levels used by NoahMP Land Model (i.e. 4)
    * - forcing_height
@@ -95,7 +97,7 @@ The NUOPC "cap" uses set of namelist options provided as ESMF Config file format
      - Options for output frequency in hours
 
 .. note::
-   : symbol is used as a seperator for namelist options with multiple values such as `layout`, `soil_level_thickness`.
+   ``:`` symbol is used as a seperator for namelist options with multiple values such as `layout`, `soil_level_thickness`.
 
 ===========================
 Underlying Model Interfaces
@@ -105,7 +107,7 @@ Underlying Model Interfaces
 Domain Creation
 ---------------
 
-The current version of the NUOPC "cap" is able to create ESMF grid by reading mosaic grid file. Then, NOUPC "cap" converts created ESMF multi-tile grid to ESMF Mesh to standardize interface and allow running same NUOPC "cap" also reading in ESMF Mesh file. In this design, only ESMF Mesh is exposed to coupler or mediator via defining fields in import and export states using ESMF Mesh. The land fraction information (`land_frac`) is provided by reading `*oro_data.tile*` files and it is also used to define the land-sea mask (if land_frac is greater than 0 then it is assumed as land, otherwise it is water). The orography data is also defined using `orog_raw` variable in the same files.
+The current version of the NUOPC "cap" is able to create ESMF grid by reading mosaic grid file. Then, NOUPC "cap" converts created ESMF multi-tile grid to ESMF Mesh to standardize interface and allow running same NUOPC "cap" also reading domain information in ESMF Mesh format (not implemented yet). In this design, only ESMF Mesh is exposed to coupler or mediator via defining fields in import and export states using ESMF Mesh. The land fraction information (`land_frac`) is provided by reading `*oro_data.tile*` files and it is also used to define the land-sea mask (if land_frac is greater than 0 then it is assumed as land, otherwise it is water). The orography data is also defined using `orog_raw` variable in the same files.
 
 --------------
 Initialization
@@ -120,7 +122,7 @@ Run
 During the `ModelAdvance` phase, the `cap` updates the import state and calls NoahMP driver routine (`drv_run`, which is found in `drivers/nuopc/lnd_comp_driver.F90`) to run the model and updates the export state with the information calculated by model. The `drv_run` call mainly read in static information as well as initial conditions when it is first called and interpolate monthly data provided by the static information such as fractional coverage of green vegetation and surface albedo to the date of the simulation. Then calculates solar zenith angle based on the time information extracted from `cap` and calls `noahmpdrv_run` subroutine provided by the NoahMP. This phase also responsible to write NoahMP model output in tiled format by taking advantage of FMS and ESMF routines. 
 
 .. note::
-   : the restart capability is not implemented yet in the current version of the NoahMP NUOPC `cap`.
+   : the restart capability is only tested with DATM+NOAHMP configuration.
 
 --------
 Finalize
