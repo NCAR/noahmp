@@ -925,7 +925,7 @@ contains
 
     ! call sprinkler irrigation before CANWAT/PRECIP_HEAT to have canopy interception
     IF((CROPLU .EQV. .TRUE.) .AND. (IRAMTSI .GT. 0.0)) THEN
-        CALL SPRINKLER_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,SICE,& !in
+        CALL SPRINKLER_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,     & !in
                                   SFCTMP,UU,VV,EAIR,SIFAC,          & !in
                                   IRAMTSI,IREVPLOS,IRSIRATE)          !inout
         RAIN = RAIN + (IRSIRATE*1000.0/DT) ![mm/s]
@@ -8493,7 +8493,7 @@ END SUBROUTINE RR2
       CALL WDFCND2 (parameters,WDF,WCND,parameters%SMCWLT(ISOIL),0.0,ISOIL) 
 
       ! Maximum infiltrability based on the Eq. 6.25. (m/s)
-      JJ   = parameters%GDVIC * (parameters%SMCMAX(ISOIL) - parameters%SMCWLT(ISOIL)) * -1.0 * ZSOIL(ISOIL)
+      JJ   = parameters%GDVIC * (parameters%SMCMAX(ISOIL) - parameters%SMCWLT(ISOIL)) * (-1.0) * ZSOIL(ISOIL)
       FSUR = parameters%DKSAT(ISOIL) + (GAM * (parameters%DKSAT(ISOIL) - WCND) / (EXP(GAM * FACC / JJ) -1.0))
 
       ! infiltration rate at surface
@@ -8510,7 +8510,7 @@ END SUBROUTINE RR2
       CALL WDFCND2 (parameters,WDF,WCND,SMC(ISOIL),SICE(ISOIL),ISOIL)
 
       ! Maximum infiltrability based on the Eq. 6.25. (m/s)
-      JJ   = parameters%GDVIC * max(0.0,(parameters%SMCMAX(ISOIL) - SMC(ISOIL))) * -1.0 * ZSOIL(ISOIL)
+      JJ   = parameters%GDVIC * max(0.0,(parameters%SMCMAX(ISOIL) - SMC(ISOIL))) * (-1.0) * ZSOIL(ISOIL)
 
       IF(JJ == 0.0)THEN ! infiltration at surface == saturated hydraulic conductivity
         FSUR = WCND
@@ -8571,7 +8571,7 @@ END SUBROUTINE RR2
      CALL WDFCND2 (parameters,WDF,WCND,parameters%SMCWLT(ISOIL),0.0,ISOIL)
 
      ! Maximum infiltrability based on the Eq. 6.25. (m/s)
-     JJ   = parameters%GDVIC * (parameters%SMCMAX(ISOIL) - parameters%SMCWLT(ISOIL)) * -1.0 * ZSOIL(ISOIL)
+     JJ   = parameters%GDVIC * (parameters%SMCMAX(ISOIL) - parameters%SMCWLT(ISOIL)) * (-1.0) * ZSOIL(ISOIL)
      FSUR = parameters%DKSAT(ISOIL) + ((JJ/1E-05) * (parameters%DKSAT(ISOIL) - WCND))
 
      !maximum infiltration rate at surface
@@ -8583,7 +8583,7 @@ END SUBROUTINE RR2
      CALL WDFCND2 (parameters,WDF,WCND,SMC(ISOIL),SICE(ISOIL),ISOIL)
 
      ! Maximum infiltrability based on the Eq. 6.25. (m/s)
-     JJ   = parameters%GDVIC * max(0.0,(parameters%SMCMAX(ISOIL) - SMC(ISOIL))) * -1.0 * ZSOIL(ISOIL)
+     JJ   = parameters%GDVIC * max(0.0,(parameters%SMCMAX(ISOIL) - SMC(ISOIL))) * (-1.0) * ZSOIL(ISOIL)
      FSUR = parameters%DKSAT(ISOIL) + ((JJ/FACC) * (parameters%DKSAT(ISOIL) - WCND))
 
      ! infiltration rate at surface
@@ -9349,7 +9349,7 @@ END SUBROUTINE RR2
   
  !============================================================================================================
  
-  SUBROUTINE SPRINKLER_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,SICE,& !in
+  SUBROUTINE SPRINKLER_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,     & !in
                                   T2,WINDU,WINDV,EAIR,SIFAC,        & !in
                                   IRAMTSI,IREVPLOS,IRSIRATE)          !inout
   !---------------------------------------------------------------------------------------------
@@ -9369,7 +9369,6 @@ END SUBROUTINE RR2
     REAL,                     INTENT(IN)    :: DT
     REAL, DIMENSION(1:NSOIL), INTENT(IN)    :: SH2O
     REAL, DIMENSION(1:NSOIL), INTENT(IN)    :: SMC
-    REAL, DIMENSION(1:NSOIL), INTENT(IN)    :: SICE
     REAL,                     INTENT(IN)    :: T2
     REAL,                     INTENT(IN)    :: WINDU
     REAL,                     INTENT(IN)    :: WINDV
@@ -9380,12 +9379,17 @@ END SUBROUTINE RR2
     REAL,                     INTENT(INOUT) :: IREVPLOS    !loss of irrigation water to evaporation,sprinkler [m/timestep]
     REAL,                     INTENT(INOUT) :: IRSIRATE    !rate of irrigation by sprinkler [m/timestep]
     ! local
+    REAL, DIMENSION(1:NSOIL)                :: SICE
     REAL                                    :: FSUR        !infiltration rate [m/s]
     REAL                                    :: TEMP_RATE
     REAL                                    :: WINDSPEED
     REAL                                    :: IRRLOSS     !temporary var for irr loss [%]
     REAL                                    :: ESAT1
     !-------------------------------------------------------------------------------------------    
+
+    ! compute soil ice content
+    SICE(:) = MAX(0.0, SMC(:) - SH2O(:))
+
     ! estimate infiltration rate based on Philips Eq.
     CALL IRR_PHILIP_INFIL(parameters,SMC,SH2O,SICE,DT,NSOIL,FSUR)           
     ! irrigation rate of sprinkler
