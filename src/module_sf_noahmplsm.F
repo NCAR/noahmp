@@ -926,7 +926,7 @@ contains
 
 ! call sprinkler irrigation before CANWAT/PRECIP_HEAT to have canopy interception
      IF((CROPLU .EQV. .TRUE.) .AND. (IRAMTSI .GT. 0.0)) THEN
-        CALL SPRINKLER_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,SICE,& !in
+        CALL SPRINKLER_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,     & !in
                                   SFCTMP,UU,VV,EAIR,SIFAC,          & !in
                                   IRAMTSI,IREVPLOS,IRSIRATE)          !inout
         RAIN = RAIN + (IRSIRATE*1000.0/DT) ![mm/s]
@@ -9250,7 +9250,7 @@ END SUBROUTINE RR2
   
  !============================================================================================================
  
-  SUBROUTINE SPRINKLER_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,SICE,& !in
+  SUBROUTINE SPRINKLER_IRRIGATION(parameters,NSOIL,DT,SH2O,SMC,     & !in
                                   T2,WINDU,WINDV,EAIR,SIFAC,        & !in
                                   IRAMTSI,IREVPLOS,IRSIRATE)          !inout
   !---------------------------------------------------------------------------------------------
@@ -9270,7 +9270,6 @@ END SUBROUTINE RR2
     REAL,                     INTENT(IN)    :: DT
     REAL, DIMENSION(1:NSOIL), INTENT(IN)    :: SH2O
     REAL, DIMENSION(1:NSOIL), INTENT(IN)    :: SMC
-    REAL, DIMENSION(1:NSOIL), INTENT(IN)    :: SICE
     REAL,                     INTENT(IN)    :: T2
     REAL,                     INTENT(IN)    :: WINDU
     REAL,                     INTENT(IN)    :: WINDV
@@ -9281,12 +9280,17 @@ END SUBROUTINE RR2
     REAL,                     INTENT(INOUT) :: IREVPLOS    !loss of irrigation water to evaporation,sprinkler [m/timestep]
     REAL,                     INTENT(INOUT) :: IRSIRATE    !rate of irrigation by sprinkler [m/timestep]
     ! local
+    REAL, DIMENSION(1:NSOIL)                :: SICE
     REAL                                    :: FSUR        !infiltration rate [m/s]
     REAL                                    :: TEMP_RATE
     REAL                                    :: WINDSPEED
     REAL                                    :: IRRLOSS     !temporary var for irr loss [%]
     REAL                                    :: ESAT1
     !-------------------------------------------------------------------------------------------    
+
+    ! compuate soil ice content
+    SICE(:) = MAX(0.0, SMC(:) - SH2O(:))
+
     ! estimate infiltration rate based on Philips Eq.
     CALL IRR_PHILIP_INFIL(parameters,SMC,SH2O,SICE,DT,NSOIL,FSUR)           
     ! irrigation rate of sprinkler
