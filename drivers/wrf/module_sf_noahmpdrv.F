@@ -50,7 +50,7 @@ CONTAINS
                QDRIPRXY  ,QTHROSXY  ,QTHRORXY   ,&
                QSNSUBXY  ,QSNFROXY  ,QSUBCXY    ,&
                QFROCXY   ,QEVACXY   ,QDEWCXY    ,QFRZCXY   ,QMELTCXY   ,&
-               QSNBOTXY  ,PONDINGXY ,PAHXY      ,PAHGXY, PAHVXY, PAHBXY,&
+               QSNBOTXY  ,QMELTXY   ,PONDINGXY ,PAHXY      ,PAHGXY, PAHVXY, PAHBXY,&
                FPICEXY,RAINLSM,SNOWLSM,FORCTLSM ,FORCQLSM,FORCPLSM,FORCZLSM,FORCWLSM,&
                ACC_SSOILXY, ACC_QINSURXY, ACC_QSEVAXY, ACC_ETRANIXY, EFLXBXY, &
                SOILENERGY, SNOWENERGY, CANHSXY, &
@@ -338,6 +338,7 @@ CONTAINS
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(OUT  ) ::  QFRZCXY
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(OUT  ) ::  QMELTCXY
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(OUT  ) ::  QSNBOTXY
+    REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(OUT  ) ::  QMELTXY
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(OUT  ) ::  PONDINGXY
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(OUT  ) ::  FPICEXY    !fraction of ice in precip
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(OUT  ) ::  RAINLSM     !rain rate                   (mm/s)  AJN
@@ -585,7 +586,8 @@ CONTAINS
     REAL                                :: FCEV         ! canopy evaporation heat (w/m2) [+ to atm]
     REAL                                :: FGEV         ! ground evaporation heat (w/m2) [+ to atm]
     REAL                                :: FCTR         ! transpiration heat flux (w/m2) [+ to atm]
-    REAL                                :: QSNBOT       ! snowmelt out bottom of pack [mm/s]
+    REAL                                :: QSNBOT       ! total liquid water (snowmelt + rain through pack)out of snowpack bottom [mm/s]
+    REAL                                :: QMELT        ! snowmelt due to phase change (mm/s)
     REAL                                :: PONDING      ! snowmelt with no pack [mm]
     REAL                                :: PONDING1     ! snowmelt with no pack [mm]
     REAL                                :: PONDING2     ! snowmelt with no pack [mm]
@@ -1019,7 +1021,7 @@ CONTAINS
                                 FSA,     FSR,    FIRA,     FSH,    FGEV,   SSOIL, & ! OUT : 
                                TRAD,   ESOIL,   RUNSF,   RUNSB,     SAG,    SALB, & ! OUT :
                               QSNBOT,PONDING,PONDING1,PONDING2,    T2MB,    Q2MB, & ! OUT :
-			      EMISSI,  FPICE,    CHB2 &                             ! OUT :
+			      EMISSI,  FPICE,    CHB2,   QMELT                    & ! OUT :
 #ifdef WRF_HYDRO
                               , sfcheadrt(i,j)                                      &
 #endif
@@ -1156,7 +1158,7 @@ CONTAINS
             PAHG    , PAHB    , PAH     , LAISUN  , LAISHA  , RB      , &
             QINTS   , QINTR   , QDRIPS  , QDRIPR  , QTHROS  , QTHROR  , & ! OUT :
             QSNSUB  , QSNFRO  , QSUBC   , QFROC   , QFRZC   , QMELTC  , & ! OUT :
-            QEVAC   , QDEWC   ,                                         & ! OUT :
+            QEVAC   , QDEWC   , QMELT   ,                               & ! OUT :
             RAININ  , SNOWIN  , ACC_SSOIL, ACC_QINSUR, ACC_QSEVA      , & ! OUT :
             ACC_ETRANI, HCPCT , EFLXB   , CANHS   ,                     & ! OUT :
             ACC_DWATER, ACC_PRCP, ACC_ECAN, ACC_ETRAN, ACC_EDIR         & ! INOUT
@@ -1201,7 +1203,8 @@ CONTAINS
              SNOWH    (I,J)                = SNDPTH
              CANWAT   (I,J)                = CANLIQ + CANICE
              ACSNOW   (I,J)                = ACSNOW(I,J) +  PRECIP_IN(I,J) * FPICE
-             ACSNOM   (I,J)                = ACSNOM(I,J) + QSNBOT*DT + PONDING + PONDING1 + PONDING2
+!             ACSNOM   (I,J)                = ACSNOM(I,J) + QSNBOT*DT + PONDING + PONDING1 + PONDING2
+             ACSNOM   (I,J)                = ACSNOM(I,J) + QMELT*DT + PONDING + PONDING1 + PONDING2
              EMISS    (I,J)                = EMISSI
              QSFC     (I,J)                = QSFC1D
 
@@ -1316,6 +1319,7 @@ CONTAINS
              QFRZCXY  (I,J)                = QFRZC
              QMELTCXY (I,J)                = QMELTC
              QSNBOTXY (I,J)                = QSNBOT
+             QMELTXY  (I,J)                = QMELT
              PONDINGXY (I,J)               = PONDING + PONDING1 + PONDING2
              FPICEXY  (I,J)                = FPICE
              RAINLSM  (I,J)                = RAININ

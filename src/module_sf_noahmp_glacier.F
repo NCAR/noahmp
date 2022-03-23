@@ -112,7 +112,7 @@ contains
                    FSA     ,FSR     ,FIRA    ,FSH     ,FGEV    ,SSOIL   , & ! OUT : 
                    TRAD    ,EDIR    ,RUNSRF  ,RUNSUB  ,SAG     ,ALBEDO  , & ! OUT :
                    QSNBOT  ,PONDING ,PONDING1,PONDING2,T2M     ,Q2E     , & ! OUT :
-                   EMISSI,  FPICE,    CH2B                                & ! OUT :
+                   EMISSI,  FPICE,    CH2B   ,QMELT                       & ! OUT :
 #ifdef WRF_HYDRO
                    , sfcheadrt                                            &
 #endif
@@ -182,7 +182,7 @@ contains
   REAL                           , INTENT(OUT)   :: RUNSUB !baseflow (saturation excess) [mm/s]
   REAL                           , INTENT(OUT)   :: SAG    !solar rad absorbed by ground (w/m2)
   REAL                           , INTENT(OUT)   :: ALBEDO !surface albedo [-]
-  REAL                           , INTENT(OUT)   :: QSNBOT !snowmelt [mm/s]
+  REAL                           , INTENT(OUT)   :: QSNBOT !total liquid water (snowmelt + rain through pack)out of snowpack bottom [mm/s]
   REAL                           , INTENT(OUT)   :: PONDING!surface ponding [mm]
   REAL                           , INTENT(OUT)   :: PONDING1!surface ponding [mm]
   REAL                           , INTENT(OUT)   :: PONDING2!surface ponding [mm]
@@ -209,7 +209,7 @@ contains
   REAL                                           :: QDEW   !ground surface dew rate [mm/s]
   REAL                                           :: QVAP   !ground surface evap. rate [mm/s]
   REAL                                           :: LATHEA !latent heat [j/kg]
-  REAL                                           :: QMELT  !internal pack melt
+  REAL, INTENT(OUT)                              :: QMELT  !internal pack melt
   REAL                                           :: SWDOWN !downward solar [w/m2]
   REAL                                           :: BEG_WB !beginning water for error check
   REAL                                           :: ZBOT = -8.0 
@@ -2036,7 +2036,7 @@ END IF   ! OPT_GLA == 1
   REAL,                            INTENT(OUT)   :: QSNOW   !snow at ground srf (mm/s) [+]
   REAL,                            INTENT(OUT)   :: PONDING1
   REAL,                            INTENT(OUT)   :: PONDING2
-  REAL,                            INTENT(OUT)   :: QSNBOT  !melting water out of snow bottom [mm/s]
+  REAL,                            INTENT(OUT)   :: QSNBOT  !total liquid water (snowmelt + rain through pack)out of snowpack bottom [mm/s]
   REAL,                            INTENT(OUT)   :: FPICE   !precipitation frozen fraction
 
 ! local
@@ -2204,7 +2204,7 @@ END IF   ! OPT_GLA == 1
   REAL                           , INTENT(INOUT) :: FSH     !total sensible heat (w/m2) [+ to atm]
 
 ! output
-  REAL,                              INTENT(OUT) :: QSNBOT !melting water out of snow bottom [mm/s]
+  REAL,                              INTENT(OUT) :: QSNBOT !total liquid water (snowmelt + rain through pack)out of snowpack bottom [mm/s]
   REAL,                              INTENT(OUT) :: SNOFLOW!glacier flow [mm]
   REAL,                              INTENT(OUT) :: PONDING1
   REAL,                              INTENT(OUT) :: PONDING2
@@ -2829,7 +2829,7 @@ END IF   ! OPT_GLA == 1
 
 ! output
 
-   REAL,                            INTENT(OUT)   :: QSNBOT !melting water out of snow bottom [mm/s]
+   REAL,                            INTENT(OUT)   :: QSNBOT !total liquid water (snowmelt + rain through pack)out of snowpack bottom [mm/s]
 
 ! input and output
 

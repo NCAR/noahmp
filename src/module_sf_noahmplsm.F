@@ -490,7 +490,7 @@ contains
                    PAHG    , PAHB    , PAH     , LAISUN  , LAISHA  , RB      , & ! OUT
                    QINTS   , QINTR   , QDRIPS  , QDRIPR  , QTHROS  , QTHROR  , & ! OUT :
                    QSNSUB  , QSNFRO  , QSUBC   , QFROC   , QFRZC   , QMELTC  , & ! OUT :
-                   QEVAC   , QDEWC   ,                                         & ! OUT
+                   QEVAC   , QDEWC   , QMELT   ,                               & ! OUT
                    RAIN    , SNOW    , ACC_SSOIL, ACC_QINSUR, ACC_QSEVA      , & ! OUT
                    ACC_ETRANI, HCPCT , EFLXB   , CANHS   ,                     & ! OUT :
                    ACC_DWATER, ACC_PRCP, ACC_ECAN, ACC_ETRAN, ACC_EDIR         & ! INOUT
@@ -625,7 +625,7 @@ contains
   REAL                           , INTENT(OUT)   :: FVEG   !green vegetation fraction [0.0-1.0]
   REAL                           , INTENT(OUT)   :: ALBEDO !surface albedo [-]
   REAL                                           :: ERRWAT !water error [kg m{-2}]
-  REAL                           , INTENT(OUT)   :: QSNBOT !snowmelt out bottom of pack [mm/s]
+  REAL                           , INTENT(OUT)   :: QSNBOT !total liquid water (snowmelt + rain through pack)out of snowpack bottom [mm/s]
   REAL                           , INTENT(OUT)   :: PONDING!surface ponding [mm]
   REAL                           , INTENT(OUT)   :: PONDING1!surface ponding [mm]
   REAL                           , INTENT(OUT)   :: PONDING2!surface ponding [mm]
@@ -683,7 +683,7 @@ contains
   REAL                                           :: QVAP   !ground surface evap. rate [mm/s]
   REAL                                           :: LATHEA !latent heat [j/kg]
   REAL                                           :: SWDOWN !downward solar [w/m2]
-  REAL                                           :: QMELT  !snowmelt [mm/s]
+  REAL,INTENT(OUT)                               :: QMELT  !snowmelt [mm/s]
   REAL                                           :: BEG_WB !water storage at begin of a step [mm]
   REAL,INTENT(OUT)                                              :: IRC    !canopy net LW rad. [w/m2] [+ to atm]
   REAL,INTENT(OUT)                                              :: IRG    !ground net LW rad. [w/m2] [+ to atm]
@@ -5977,7 +5977,7 @@ ENDIF   ! CROPTYPE == 0
   REAL,                            INTENT(OUT)   :: QDIS    !groundwater discharge [mm/s]
   REAL,                            INTENT(OUT)   :: PONDING1
   REAL,                            INTENT(OUT)   :: PONDING2
-  REAL,                            INTENT(OUT)   :: QSNBOT  !melting water out of snow bottom [mm/s]
+  REAL,                            INTENT(OUT)   :: QSNBOT  !total liquid water (snowmelt + rain through pack)out of snowpack bottom [mm/s]
   REAL                              , INTENT(IN)   :: LATHEAV !latent heat vap./sublimation (j/kg)
   REAL                              , INTENT(IN)   :: LATHEAG !latent heat vap./sublimation (j/kg)
   LOGICAL                           , INTENT(IN)   :: FROZEN_GROUND ! used to define latent heat pathway
@@ -6360,7 +6360,7 @@ ENDIF   ! CROPTYPE == 0
   REAL, DIMENSION(-NSNOW+1:NSOIL), INTENT(INOUT) :: DZSNSO !snow/soil layer thickness [m]
 
 ! output
-  REAL,                              INTENT(OUT) :: QSNBOT !melting water out of snow bottom [mm/s]
+  REAL,                              INTENT(OUT) :: QSNBOT !total liquid water (snowmelt + rain through pack)out of snowpack bottom [mm/s]
   REAL,                              INTENT(OUT) :: SNOFLOW!glacier flow [mm]
   REAL,                              INTENT(OUT) :: PONDING1
   REAL,                              INTENT(OUT) :: PONDING2
@@ -7033,7 +7033,7 @@ ENDIF   ! CROPTYPE == 0
 
 ! output
 
-   REAL,                            INTENT(OUT)   :: QSNBOT !melting water out of snow bottom [mm/s]
+   REAL,                            INTENT(OUT)   :: QSNBOT !total liquid water (snowmelt + rain through pack)out of snowpack bottom [mm/s]
 
 ! input and output
 
