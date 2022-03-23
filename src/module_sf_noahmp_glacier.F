@@ -112,7 +112,7 @@ contains
                    FSA     ,FSR     ,FIRA    ,FSH     ,FGEV    ,SSOIL   , & ! OUT : 
                    TRAD    ,EDIR    ,RUNSRF  ,RUNSUB  ,SAG     ,ALBEDO  , & ! OUT :
                    QSNBOT  ,PONDING ,PONDING1,PONDING2,T2M     ,Q2E     , & ! OUT :
-                   EMISSI,  FPICE,    CH2B   ,QMELT   ,                   & ! OUT :
+                   EMISSI,  FPICE,    CH2B   ,QMELT                       & ! OUT :
 #ifdef WRF_HYDRO
                    , sfcheadrt                                            &
 #endif
