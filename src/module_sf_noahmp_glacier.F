@@ -708,18 +708,23 @@ contains
   ALBICE(1) = 0.80    !albedo land ice: 1=vis, 2=nir
   ALBICE(2) = 0.55
 
-! snow age
+! compute snow albedo only if cosz >0
+! to be consistent with the main NoahMP code, currently do not include snow aging when sun is not present
+! this needs more future work
+  if (COSZ > 0.0) then
 
-  CALL SNOW_AGE_GLACIER (DT,TG,SNEQVO,SNEQV,TAUSS,FAGE)
+     ! snow age
 
-! snow albedos: age even when sun is not present
+     CALL SNOW_AGE_GLACIER (DT,TG,SNEQVO,SNEQV,TAUSS,FAGE)
 
-  IF(OPT_ALB == 1) &
-     CALL SNOWALB_BATS_GLACIER (NBAND,COSZ,FAGE,ALBSND,ALBSNI)
-  IF(OPT_ALB == 2) THEN
-     CALL SNOWALB_CLASS_GLACIER(NBAND,QSNOW,DT,ALB,ALBOLD,ALBSND,ALBSNI)
-     ALBOLD = ALB
-  END IF
+     IF(OPT_ALB == 1) &
+        CALL SNOWALB_BATS_GLACIER (NBAND,COSZ,FAGE,ALBSND,ALBSNI)
+     IF(OPT_ALB == 2) THEN
+        CALL SNOWALB_CLASS_GLACIER(NBAND,QSNOW,DT,ALB,ALBOLD,ALBSND,ALBSNI)
+        ALBOLD = ALB
+     END IF
+
+  endif
 
 ! zero summed solar fluxes
 
