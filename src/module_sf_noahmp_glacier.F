@@ -709,13 +709,13 @@ contains
   ALBICE(2) = 0.55
 
 ! compute snow albedo only if cosz >0
+! to be consistent with the main NoahMP code, currently do not include snow aging when sun is not present
+! this needs more future work
   if (COSZ > 0.0) then
 
      ! snow age
 
      CALL SNOW_AGE_GLACIER (DT,TG,SNEQVO,SNEQV,TAUSS,FAGE)
-
-     ! snow albedos: age even when sun is not present
 
      IF(OPT_ALB == 1) &
         CALL SNOWALB_BATS_GLACIER (NBAND,COSZ,FAGE,ALBSND,ALBSNI)
