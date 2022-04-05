@@ -1413,7 +1413,7 @@ CONTAINS
 
                !*** Check for harvest
                if ((gecros1d(1) >= gecros_ds1).and.(gecros1d(42) < 0)) then   
-                 if (checkIfHarvest(gecros_state, DT, gecros_ds1, gecros_ds2, gecros_ds1x, &
+                 if (checkIfHarvest(gecros1d, DT, gecros_ds1, gecros_ds2, gecros_ds1x, &
                      gecros_ds2x) == 1) then
            
                    call gecros_reinit(gecros1d)
