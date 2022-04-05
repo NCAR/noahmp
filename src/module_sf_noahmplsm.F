@@ -850,7 +850,7 @@ contains
 ! vegetation phenology
 
      CALL PHENOLOGY (parameters,VEGTYP ,croptype, SNOWH  , TV     , LAT   , YEARLEN , JULIAN , & !in
-                     LAI    , SAI    , TROOT  , ELAI    , ESAI   ,IGS, PGS)
+                     LAI    , SAI    , TROOT  , ELAI    , ESAI   ,IGS, PGS, FB)
 
 !input GVF should be consistent with LAI
      IF(DVEG == 1 .or. DVEG == 6 .or. DVEG == 7) THEN
@@ -1252,7 +1252,7 @@ contains
 !== begin phenology ================================================================================
 
   SUBROUTINE PHENOLOGY (parameters,VEGTYP ,croptype, SNOWH  , TV     , LAT   , YEARLEN , JULIAN , & !in
-                        LAI    , SAI    , TROOT  , ELAI    , ESAI   , IGS, PGS)
+                        LAI    , SAI    , TROOT  , ELAI    , ESAI   , IGS, PGS, FB)
 
 ! --------------------------------------------------------------------------------------------------
 ! vegetation phenology considering vegeation canopy being buries by snow and evolution in time
@@ -1277,11 +1277,10 @@ contains
   REAL                   , INTENT(OUT  ) :: ESAI   !stem area index, after burying by snow
   REAL                   , INTENT(OUT  ) :: IGS    !growing season index (0=off, 1=on)
   INTEGER                , INTENT(IN   ) :: PGS    !plant growing stage
-
+  REAL                   , INTENT(OUT  ) :: FB     !fraction of canopy buried by snow
 ! locals
 
   REAL                                   :: DB     !thickness of canopy buried by snow (m)
-  REAL                                   :: FB     !fraction of canopy buried by snow
   REAL                                   :: SNOWHC !critical snow depth at which short vege
                                                    !is fully covered by snow
 
