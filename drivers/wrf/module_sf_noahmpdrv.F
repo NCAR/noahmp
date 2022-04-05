@@ -422,14 +422,14 @@ CONTAINS
     REAL                                :: LWDN         ! longwave down at surface [W m-2]
     REAL                                :: P_ML         ! pressure, valid at interface [Pa]
     REAL                                :: PSFC         ! surface pressure [Pa]
-    REAL                                :: PRCP         ! total precipitation entering  [mm]         ! MB/AN : v3.7
-    REAL                                :: PRCPCONV     ! convective precipitation entering  [mm]    ! MB/AN : v3.7
-    REAL                                :: PRCPNONC     ! non-convective precipitation entering [mm] ! MB/AN : v3.7
-    REAL                                :: PRCPSHCV     ! shallow convective precip entering  [mm]   ! MB/AN : v3.7
-    REAL                                :: PRCPSNOW     ! snow entering land model [mm]              ! MB/AN : v3.7
-    REAL                                :: PRCPGRPL     ! graupel entering land model [mm]           ! MB/AN : v3.7
-    REAL                                :: PRCPHAIL     ! hail entering land model [mm]              ! MB/AN : v3.7
-    REAL                                :: PRCPOTHR     ! other precip, e.g. fog [mm]                ! MB/AN : v3.7
+    REAL                                :: PRCP         ! total precipitation entering  [mm/s]         ! MB/AN : v3.7
+    REAL                                :: PRCPCONV     ! convective precipitation entering  [mm/s]    ! MB/AN : v3.7
+    REAL                                :: PRCPNONC     ! non-convective precipitation entering [mm/s] ! MB/AN : v3.7
+    REAL                                :: PRCPSHCV     ! shallow convective precip entering  [mm/s]   ! MB/AN : v3.7
+    REAL                                :: PRCPSNOW     ! snow entering land model [mm/s]              ! MB/AN : v3.7
+    REAL                                :: PRCPGRPL     ! graupel entering land model [mm/s]           ! MB/AN : v3.7
+    REAL                                :: PRCPHAIL     ! hail entering land model [mm/s]              ! MB/AN : v3.7
+    REAL                                :: PRCPOTHR     ! other precip, e.g. fog [mm/s]                ! MB/AN : v3.7
 
 ! INOUT (with generic LSM equivalent)
 
@@ -3096,7 +3096,7 @@ ILOOP : DO I = its, ite
     SSGD_URB  = 0.8*SWDOWN(I,J)                           ! [W/m/m]     
     SSGQ_URB  = SSG_URB-SSGD_URB                          ! [W/m/m]
     LLG_URB   = GLW(I,J)                                  ! [W/m/m]
-    RAIN_URB  = RAINBL(I,J)                               ! [mm]       
+    RAIN_URB  = RAINBL(I,J) / DT * 3600.0                 ! [mm/hr]       
     RHOO_URB  = (P8W3D(I,KTS+1,J)+P8W3D(I,KTS,J))*0.5 / (287.04 * TA_URB * (1.0+ 0.61 * QA_URB)) ![kg/m/m/m] 
     ZA_URB    = 0.5*DZ8W(I,1,J)                           ! [m]         
     DELT_URB  = DT                                        ! [sec]
