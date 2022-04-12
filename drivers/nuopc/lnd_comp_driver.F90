@@ -284,6 +284,7 @@ contains
     !---------------------- 
 
     call noahmpdrv_run( &
+    !  ---  inputs:
          noahmp%static%im      , noahmp%static%km       , noahmp%static%lsnowl   , &
          noahmp%static%itime   , &
          noahmp%forc%ps        , noahmp%model%u1        , noahmp%model%v1        , &
@@ -309,6 +310,7 @@ contains
          rhoh2o                , con_eps                , con_epsm1              , &
          con_fvirt             , con_rd                 , con_hfus               , &
          noahmp%model%thsfc_loc, & 
+    !  ---  in/outs:
          noahmp%model%weasd    , noahmp%model%snwdph    , noahmp%model%tskin     , &
          noahmp%forc%tprcp     , noahmp%model%srflag    , noahmp%model%smc       , &
          noahmp%model%stc      , noahmp%model%slc       , noahmp%model%canopy    , &
@@ -316,6 +318,7 @@ contains
          noahmp%model%rb1      , noahmp%model%fm1       , noahmp%model%fh1       , &
          noahmp%model%ustar1   , noahmp%model%stress1   , noahmp%model%fm101     , &
          noahmp%model%fh21     , &
+    ! --- Noah MP specific
          noahmp%model%snowxy   , noahmp%model%tvxy      , noahmp%model%tgxy      , &
          noahmp%model%canicexy , noahmp%model%canliqxy  , noahmp%model%eahxy     , &
          noahmp%model%tahxy    , noahmp%model%cmxy      , noahmp%model%chxy      , &
@@ -329,6 +332,7 @@ contains
          noahmp%model%smoiseq  , noahmp%model%smcwtdxy  , noahmp%model%deeprechxy, &
          noahmp%model%rechxy   , noahmp%model%albdvis   , noahmp%model%albdnir   , &
          noahmp%model%albivis  , noahmp%model%albinir   , noahmp%model%emiss     , &
+     !  ---  outputs:
          noahmp%model%sncovr1  , noahmp%model%qsurf     , noahmp%model%gflux     , &
          noahmp%model%drain    , noahmp%model%evap      , noahmp%model%hflx      , &
          noahmp%model%ep       , noahmp%model%runoff    , noahmp%model%cmm       , &
