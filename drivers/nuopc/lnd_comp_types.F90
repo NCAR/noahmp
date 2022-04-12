@@ -57,8 +57,9 @@ module lnd_comp_types
     integer                     :: iopt_snf       ! option for partitioning  precipitation into rainfall & snowfall
     integer                     :: iopt_tbot      ! option for lower boundary condition of soil temperature
     integer                     :: iopt_stc       ! option for snow/soil temperature time scheme (only layer 1)
-    integer                     :: iopt_rsf       ! options for surface resistent to evaporation/sublimation
+    integer                     :: iopt_rsf       ! option for surface resistent to evaporation/sublimation
     integer                     :: iopt_gla       ! option for glacier treatment
+    integer                     :: iopt_trs       ! option for surface thermal roughness option
     character(len=128)          :: errmsg         ! error message
     integer                     :: errflg         ! error flag 
   end type static_type
@@ -251,6 +252,7 @@ module lnd_comp_types
      integer                    :: soil_temp_time_scheme_option
      integer                    :: surface_evap_resistance_option
      integer                    :: glacier_option
+     integer                    :: surface_thermal_roughness_option
      integer                    :: output_freq                       ! model output interval
   end type namelist_type
 

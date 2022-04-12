@@ -300,6 +300,7 @@ contains
          noahmp%static%iopt_run, noahmp%static%iopt_sfc , noahmp%static%iopt_frz , &
          noahmp%static%iopt_inf, noahmp%static%iopt_rad , noahmp%static%iopt_alb , &
          noahmp%static%iopt_snf, noahmp%static%iopt_tbot, noahmp%static%iopt_stc , &
+         noahmp%static%iopt_trs, &
          noahmp%model%xlatin   , noahmp%model%xcoszin   , noahmp%model%iyrlen    , &
          noahmp%model%julian   , noahmp%domain%garea    , & 
          noahmp%model%rainn_mp , noahmp%model%rainc_mp  , &

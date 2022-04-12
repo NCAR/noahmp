@@ -62,6 +62,7 @@ module noahmp_glacier_globals
   INTEGER :: OPT_GLA != 1    !(suggested 1)
 
   INTEGER :: OPT_SFC != 1    !(suggested 1)
+  INTEGER :: OPT_TRS != 1    !(suggested 2)
 
 ! adjustable parameters for snow processes
 
@@ -1129,8 +1130,10 @@ contains
   real (kind=kind_phys)    :: b       !< temporary calculation
   real (kind=kind_phys)    :: t, tdc  !< kelvin to degree celsius with limit -50 to +50
   real (kind=kind_phys), dimension(       1:nsoil) :: sice   !< soil ice
+  real (kind=kind_phys) :: czil        !< calculate roughness length of heat
 
   tdc(t)   = min( 50., max(-50.,(t-tfrz)) )
+        czil=0.1
 
 ! -----------------------------------------------------------------
 ! initialization variables that do not depend on stability iteration
@@ -1155,10 +1158,18 @@ contains
         fv     = ur*vkc/log(zlvli/z0m)
         reyni  = fv*z0m/(1.5e-05)                         !introduction of fv dependent z0h for the iter 
 
-        if (reyni .gt. 2.0) then 
-            z0h = z0m/exp(2.46*(reyni)**0.25 - log(7.4))  !Brutsaert 1982 
-         else 
-            z0h = z0m/exp(-log(0.397))                    !Brusaert 1982, table 4
+        if (opt_trs == 1) then
+           z0h  = z0m
+        elseif (opt_trs == 2) then
+           z0h = z0m*exp(-czil*0.4*258.2*sqrt(fv*z0m))
+        elseif (opt_trs == 3) then
+           z0h = z0m*0.1
+        elseif (opt_trs == 4) then
+         if (reyni .gt. 2.0) then 
+             z0h = z0m/exp(2.46*(reyni)**0.25 - log(7.4))  !Brutsaert 1982 
+          else 
+             z0h = z0m/exp(-log(0.397))                    !Brusaert 1982, table 4
+         endif
         endif
 
         z0h_total = z0h
@@ -3328,7 +3339,8 @@ end if   ! opt_gla == 1
 ! ==================================================================================================
 
 !>\ingroup NoahMP_LSM
-  subroutine noahmp_options_glacier(iopt_alb  ,iopt_snf  ,iopt_tbot, iopt_stc, iopt_gla, iopt_sfc)
+  subroutine noahmp_options_glacier(iopt_alb  ,iopt_snf  ,iopt_tbot, iopt_stc, iopt_gla,&
+                                    iopt_sfc, iopt_trs)
 
   implicit none
 
@@ -3339,6 +3351,7 @@ end if   ! opt_gla == 1
                                     !! 1 -> semi-implicit; 2 -> full implicit (original noah)
   integer,  intent(in) :: iopt_gla  !< glacier option (1->phase change; 2->simple)
   integer,  intent(in) :: iopt_sfc  !< sfc scheme option
+  integer,  intent(in) :: iopt_trs  !< thermal roughness option
 
 ! -------------------------------------------------------------------------------------------------
 
@@ -3348,6 +3361,7 @@ end if   ! opt_gla == 1
   opt_stc  = iopt_stc
   opt_gla  = iopt_gla
   opt_sfc  = iopt_sfc
+  opt_trs  = iopt_trs
   
   end subroutine noahmp_options_glacier
  

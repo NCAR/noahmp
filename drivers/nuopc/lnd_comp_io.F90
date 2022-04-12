@@ -2039,6 +2039,7 @@ contains
     call mpp_write_meta(fid, 'iopt_snf' , ival=noahmp%static%iopt_snf)
     call mpp_write_meta(fid, 'iopt_tbot', ival=noahmp%static%iopt_tbot)
     call mpp_write_meta(fid, 'iopt_stc' , ival=noahmp%static%iopt_stc)
+    call mpp_write_meta(fid, 'iopt_trs' , ival=noahmp%static%iopt_trs)
 
     !----------------------
     ! define dimensions

@@ -111,7 +111,7 @@
       shdmin, shdmax, snoalb, sfalb, flag_iter,con_g,            &
       idveg, iopt_crs, iopt_btr, iopt_run, iopt_sfc, iopt_frz,   &
       iopt_inf, iopt_rad, iopt_alb, iopt_snf, iopt_tbot,         &
-      iopt_stc, xlatin, xcoszin, iyrlen, julian, garea,          &
+      iopt_stc, iopt_trs,xlatin, xcoszin, iyrlen, julian, garea, &
       rainn_mp, rainc_mp, snow_mp, graupel_mp, ice_mp,           &
       con_hvap, con_cp, con_jcal, rhoh2o, con_eps, con_epsm1,    &
       con_fvirt, con_rd, con_hfus, thsfc_loc,                    &
@@ -213,6 +213,7 @@
   integer                                , intent(in)    :: iopt_snf   ! option for partitioning  precipitation into rainfall & snowfall
   integer                                , intent(in)    :: iopt_tbot  ! option for lower boundary condition of soil temperature
   integer                                , intent(in)    :: iopt_stc   ! option for snow/soil temperature time scheme (only layer 1)
+  integer                                , intent(in)    :: iopt_trs   ! option for thermal roughness scheme
   real(kind=kind_phys), dimension(:)     , intent(in)    :: xlatin     ! latitude
   real(kind=kind_phys), dimension(:)     , intent(in)    :: xcoszin    ! cosine of zenith angle
   integer                                , intent(in)    :: iyrlen     ! year length [days]
@@ -700,8 +701,8 @@ do i = 1, im
 
       call noahmp_options(idveg ,iopt_crs, iopt_btr , iopt_run, iopt_sfc,  &
                                  iopt_frz, iopt_inf , iopt_rad, iopt_alb,  &
-                                 iopt_snf, iopt_tbot, iopt_stc,            &
-			         iopt_rsf, iopt_soil, iopt_pedo, iopt_crop )
+                                 iopt_snf, iopt_tbot, iopt_stc, iopt_rsf,  &
+			         iopt_soil,iopt_pedo, iopt_crop,iopt_trs )
 
       if ( vegetation_category == isice_table )  then
 
@@ -714,7 +715,8 @@ do i = 1, im
         ice_flag = -1
         temperature_soil_bot = min(temperature_soil_bot,263.15)
 
-        call noahmp_options_glacier(iopt_alb, iopt_snf, iopt_tbot, iopt_stc, iopt_gla, iopt_sfc )
+        call noahmp_options_glacier(iopt_alb, iopt_snf, iopt_tbot, iopt_stc, iopt_gla, &
+                                    iopt_sfc ,iopt_trs)
 
         call noahmp_glacier (                                                                      &
           i_location           ,1                    ,cosine_zenith        ,nsnow                , &
@@ -921,7 +923,7 @@ do i = 1, im
       snowc     (i)   = snow_cover_fraction
       sncovr1   (i)   = snow_cover_fraction
 
-!     qsurf     (i)   = spec_humidity_surface
+      qsurf     (i)   = spec_humidity_surface
       tsurf     (i)   = tskin(i)
 
       tvxy      (i)   = temperature_leaf
@@ -996,7 +998,7 @@ do i = 1, im
       cmm       (i)   = cmxy(i)  * wind(i)
 
       snwdph    (i)   = snow_depth * 1000.0       ! convert from m to mm; wait after the stability call
-      qsurf     (i)   = q1(i) + evap(i)/(con_hvap*density*ch(i)*wind(i))
+!     qsurf     (i)   = q1(i) + evap(i)/(con_hvap*density*ch(i)*wind(i))
 
 !      
 !  --- change units for output
