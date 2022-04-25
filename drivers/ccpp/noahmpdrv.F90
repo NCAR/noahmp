@@ -1,5 +1,5 @@
 #define CCPP
-!>  \file sfc_noahmp_drv.F90
+!>  \file noahmpdrv.F90
 !!  This file contains the NoahMP land surface scheme driver.
 
 !>\defgroup NoahMP_LSM NoahMP LSM Model
