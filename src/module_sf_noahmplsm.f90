@@ -681,7 +681,7 @@ contains
   logical                             :: dveg_active !< flag to run dynamic vegetation
   logical                             :: crop_active !< flag to run crop model
 ! add canopy heat storage (C.He added based on GY Niu's communication)
-  real                                :: canhs ! canopy heat storage change w/m2
+  real (kind=kind_phys)               :: canhs ! canopy heat storage change w/m2
 ! maximum lai/sai used for some parameterizations based on plant growthi  
 
   
@@ -4494,7 +4494,7 @@ endif   ! croptype == 0
         if(opt_sfc == 3) then
           call sfcdif3(parameters,iloc    ,jloc    ,iter    ,sfctmp  ,qair    ,ur      , & !in 
                          zlvl    ,tgb     ,thsfc_loc,prslkix,prsik1x ,prslk1x ,z0m     , & !in 
-                         zpd  ,snowh,shdfac ,garea1  ,.false. ,0.0,ivgtyp ,      & !in 
+                         zpd  ,snowh,shdfac ,garea1  ,.false. ,0.0_kind_phys,ivgtyp ,    & !in
                          ustarx  ,fm      ,fh      ,fm2     ,fh2     ,                   & !inout 
                          z0h     ,fv      ,csigmaf0,cm      ,ch       )                    !out 
 

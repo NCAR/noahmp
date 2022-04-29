@@ -1874,7 +1874,7 @@ contains
           end do
 
           ! set missing values to zero
-          where (rdata == MPP_FILL_DOUBLE)
+          where (rdata == 1.0e20)
              rdata(:,:,:,:) = 0.0_r8
           end where
        end if
@@ -2026,7 +2026,7 @@ contains
     ! add global attributes to file, provenance information
     !----------------------
 
-    call mpp_write_meta(fid, 'delt'     , rval=noahmp%static%delt)
+    call mpp_write_meta(fid, 'delt'     , rval=real(noahmp%static%delt))
     call mpp_write_meta(fid, 'idveg'    , ival=noahmp%static%idveg)
     call mpp_write_meta(fid, 'iopt_crs' , ival=noahmp%static%iopt_crs)
     call mpp_write_meta(fid, 'iopt_btr' , ival=noahmp%static%iopt_btr)
@@ -2050,16 +2050,16 @@ contains
 
     ! x-axis
     nx = noahmp%domain%nit(my_tile)
-    call mpp_write_meta(fid, x, 'xc', 'unitless', 'x-coordinate', cartesian='X', domain=xdom, data=(/(dble(i),i=1,nx)/))
+    call mpp_write_meta(fid, x, 'xc', 'unitless', 'x-coordinate', cartesian='X', domain=xdom, data=(/(i*1.0,i=1,nx)/))
 
     ! y-axis
     ny = noahmp%domain%njt(my_tile)
-    call mpp_write_meta(fid, y, 'yc', 'unitless', 'y-coordinate', cartesian='Y', domain=ydom, data=(/(dble(i),i=1,ny)/))
+    call mpp_write_meta(fid, y, 'yc', 'unitless', 'y-coordinate', cartesian='Y', domain=ydom, data=(/(i*1.0,i=1,ny)/))
 
     ! z-axises, soil and snow layers
-    call mpp_write_meta(fid, z, 'soil_levels', 'meters', 'soil levels', data=noahmp%nmlist%soil_level_nodes)
-    call mpp_write_meta(fid, z1,'snow_levels', 'unitless', 'snow_levels', data=(/(dble(i),i=noahmp%static%lsnowl,0)/))
-    call mpp_write_meta(fid, z2,'snso_levels', 'unitless', 'snso_levels', data=(/(dble(i),i=noahmp%static%lsnowl,noahmp%nmlist%num_soil_levels)/))
+    call mpp_write_meta(fid, z, 'soil_levels', 'meters', 'soil levels', data=real(noahmp%nmlist%soil_level_nodes))
+    call mpp_write_meta(fid, z1,'snow_levels', 'unitless', 'snow_levels', data=(/(i*1.0,i=noahmp%static%lsnowl,0)/))
+    call mpp_write_meta(fid, z2,'snso_levels', 'unitless', 'snso_levels', data=(/(i*1.0,i=noahmp%static%lsnowl,noahmp%nmlist%num_soil_levels)/))
 
     ! time axis
     call mpp_write_meta(fid, t, 'time', "seconds since "//noahmp%model%reference_date, 'time', cartesian='T')
@@ -2235,7 +2235,7 @@ contains
     !----------------------
 
     do i = 1, max_indx
-       where(noahmp%domain%mask < 1) ptr2d(:,i) = MPP_FILL_DOUBLE
+       where(noahmp%domain%mask < 1) ptr2d(:,i) = 1.0e20
     end do
     nullify(ptr2d)
 
@@ -2267,7 +2267,7 @@ contains
        if (flds(i)%nlev == 0) then
           ! define variable
           ! TODO: pack = 1 writes double. without pack is writes float by default. make it configurable.
-          call mpp_write_meta(fid, f1, (/y,x,t/), trim(flds(i)%short_name), trim(flds(i)%units), trim(flds(i)%long_name), missing=MPP_FILL_DOUBLE, pack=1)
+          call mpp_write_meta(fid, f1, (/y,x,t/), trim(flds(i)%short_name), trim(flds(i)%units), trim(flds(i)%long_name), missing=1.0e20, pack=1)
           ! put data to temporary variable
           data3d(:,:,1) = ptr3d(:,:,i)
           ! write to file
@@ -2278,11 +2278,11 @@ contains
           if (trim(prevar) /= trim(flds(i)%short_name)) then
              ! define variable
              if (trim(flds(i)%zaxis) == "z") then
-                call mpp_write_meta(fid, f2, (/y,x,z,t/), trim(flds(i)%short_name), trim(flds(i)%units), trim(flds(i)%long_name), missing=MPP_FILL_DOUBLE, pack=1)
+                call mpp_write_meta(fid, f2, (/y,x,z,t/), trim(flds(i)%short_name), trim(flds(i)%units), trim(flds(i)%long_name), missing=1.0e20, pack=1)
              else if (trim(flds(i)%zaxis) == "z1") then
-                call mpp_write_meta(fid, f2, (/y,x,z1,t/), trim(flds(i)%short_name), trim(flds(i)%units), trim(flds(i)%long_name), missing=MPP_FILL_DOUBLE, pack=1)
+                call mpp_write_meta(fid, f2, (/y,x,z1,t/), trim(flds(i)%short_name), trim(flds(i)%units), trim(flds(i)%long_name), missing=1.0e20, pack=1)
              else if (trim(flds(i)%zaxis) == "z2") then
-                call mpp_write_meta(fid, f2, (/y,x,z2,t/), trim(flds(i)%short_name), trim(flds(i)%units), trim(flds(i)%long_name), missing=MPP_FILL_DOUBLE, pack=1)
+                call mpp_write_meta(fid, f2, (/y,x,z2,t/), trim(flds(i)%short_name), trim(flds(i)%units), trim(flds(i)%long_name), missing=1.0e20, pack=1)
              else
                 call mpp_error(FATAL, 'zaxis can be z, z1 or z2. '//trim(flds(i)%zaxis)//' not recognized for '//trim(flds(i)%short_name))
              end if

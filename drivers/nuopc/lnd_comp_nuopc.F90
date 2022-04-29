@@ -289,7 +289,7 @@ contains
           call ESMF_ClockGet(clock, currTime=currTime, timeStep=timeStep, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          call ESMF_TimeGet(currTime-timeStep, yy=year, mm=month, dd=day, h=hour, m=minute, s=second, rc=rc)
+          call ESMF_TimeGet(currTime, yy=year, mm=month, dd=day, h=hour, m=minute, s=second, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
     
           write(noahmp%nmlist%restart_file, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5,a)') &
