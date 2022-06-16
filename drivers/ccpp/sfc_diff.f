@@ -513,7 +513,7 @@
 
           dtv     = thv1 - tvs
           adtv    = max(abs(dtv),0.001_kp)
-          dtv     = sign(1.,dtv) * adtv
+          dtv     = sign(1.0_kp,dtv) * adtv
 
           if(thsfc_loc) then ! Use local potential temperature
             rb      = max(-5000.0_kp, (grav+grav) * dtv * z1

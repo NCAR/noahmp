@@ -142,7 +142,7 @@ contains
     integer            , intent(out)   :: rc
 
     ! local variables
-    integer, save               :: first_time = .true.
+    logical, save               :: first_time = .true.
     integer                     :: i, step
     integer                     :: year, month, day, hour, minute, second
     real(r8)                    :: now_time
