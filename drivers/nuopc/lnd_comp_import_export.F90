@@ -9,6 +9,7 @@ module lnd_comp_import_export
   use ESMF          , only : ESMF_FIELDSTATUS_COMPLETE, ESMF_GEOMTYPE_GRID
   use ESMF          , only : ESMF_FieldWriteVTK, ESMF_MeshGet, ESMF_GEOMTYPE_MESH
   use ESMF          , only : operator(==), operator(/=)
+  use ESMF          , only : ESMF_StateItem_Flag, ESMF_STATEITEM_FIELD
   use NUOPC         , only : NUOPC_Advertise, NUOPC_IsConnected
   use NUOPC_Model   , only : NUOPC_ModelGet
   use lnd_comp_shr  , only : ChkErr
@@ -250,6 +251,7 @@ contains
 
     ! local variables
     type(ESMF_State)            :: importState
+    type(ESMF_StateItem_Flag)   :: itemType
     character(len=*), parameter :: subname=trim(modName)//':(import_fields)'
     ! ----------------------------------------------
 
@@ -282,7 +284,10 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     noahmp%forc%wind(:) = sqrt(noahmp%forc%u1(:)**2+noahmp%forc%v1(:)**2)
 
-    if (NUOPC_IsConnected(importState, fieldName='Faxa_rain')) then
+    call ESMF_StateGet(importState, itemName='Faxa_rain', itemType=itemType, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    if (itemType == ESMF_STATEITEM_FIELD) then
        call state_getimport_1d(importState, 'Faxa_rain', noahmp%forc%tprcp, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
