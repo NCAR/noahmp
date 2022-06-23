@@ -1,4 +1,6 @@
+#ifndef CCPP
 #define CCPP
+#endif
 !>  \file module_sf_noahmplsm.f90
 !!  This file contains the NoahMP land surface model.
 
@@ -3564,7 +3566,7 @@ endif   ! croptype == 0
      tmp1 = b*b - c*c
      h = sqrt(tmp1) / avmu
      sigma = tmp0*tmp0 - tmp1
-     if ( abs (sigma) < 1.e-6 ) sigma = sign(1.e-6,sigma)
+     if ( abs (sigma) < 1.e-6 ) sigma = sign(1.e-6_kind_phys,sigma)
      p1 = b + avmu*h
      p2 = b - avmu*h
      p3 = b + tmp0

@@ -484,7 +484,11 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    noahmp%model%dry(:) = ptr(:,1,1)
+    where(ptr(:,1,1) > 0.0)
+       noahmp%model%dry(:) = .true.
+    elsewhere
+       noahmp%model%dry(:) = .false.
+    end where
     nullify(ptr)
     call ESMF_FieldDestroy(field, rc=rc)
 
@@ -1874,7 +1878,7 @@ contains
           end do
 
           ! set missing values to zero
-          where (rdata == 1.0e20)
+          where (rdata == 1.0d20)
              rdata(:,:,:,:) = 0.0_r8
           end where
        end if
@@ -1974,7 +1978,7 @@ contains
     integer           , intent(inout) :: rc
 
     ! local variables
-    integer, save                   :: first_time = .true. 
+    logical, save                   :: first_time = .true. 
     integer                         :: i, j, id, fid, my_tile
     integer                         :: nx, ny, nz, max_level
     logical                         :: fopen, is_root_pe
@@ -2026,7 +2030,7 @@ contains
     ! add global attributes to file, provenance information
     !----------------------
 
-    call mpp_write_meta(fid, 'delt'     , rval=real(noahmp%static%delt))
+    call mpp_write_meta(fid, 'delt'     , noahmp%static%delt)
     call mpp_write_meta(fid, 'idveg'    , ival=noahmp%static%idveg)
     call mpp_write_meta(fid, 'iopt_crs' , ival=noahmp%static%iopt_crs)
     call mpp_write_meta(fid, 'iopt_btr' , ival=noahmp%static%iopt_btr)
@@ -2050,16 +2054,16 @@ contains
 
     ! x-axis
     nx = noahmp%domain%nit(my_tile)
-    call mpp_write_meta(fid, x, 'xc', 'unitless', 'x-coordinate', cartesian='X', domain=xdom, data=(/(i*1.0,i=1,nx)/))
+    call mpp_write_meta(fid, x, 'xc', 'unitless', 'x-coordinate', cartesian='X', domain=xdom, data=(/(i*1.0d0,i=1,nx)/))
 
     ! y-axis
     ny = noahmp%domain%njt(my_tile)
-    call mpp_write_meta(fid, y, 'yc', 'unitless', 'y-coordinate', cartesian='Y', domain=ydom, data=(/(i*1.0,i=1,ny)/))
+    call mpp_write_meta(fid, y, 'yc', 'unitless', 'y-coordinate', cartesian='Y', domain=ydom, data=(/(i*1.0d0,i=1,ny)/))
 
     ! z-axises, soil and snow layers
-    call mpp_write_meta(fid, z, 'soil_levels', 'meters', 'soil levels', data=real(noahmp%nmlist%soil_level_nodes))
-    call mpp_write_meta(fid, z1,'snow_levels', 'unitless', 'snow_levels', data=(/(i*1.0,i=noahmp%static%lsnowl,0)/))
-    call mpp_write_meta(fid, z2,'snso_levels', 'unitless', 'snso_levels', data=(/(i*1.0,i=noahmp%static%lsnowl,noahmp%nmlist%num_soil_levels)/))
+    call mpp_write_meta(fid, z, 'soil_levels', 'meters', 'soil levels', data=noahmp%nmlist%soil_level_nodes*1.0d0)
+    call mpp_write_meta(fid, z1,'snow_levels', 'unitless', 'snow_levels', data=(/(i*1.0d0,i=noahmp%static%lsnowl,0)/))
+    call mpp_write_meta(fid, z2,'snso_levels', 'unitless', 'snso_levels', data=(/(i*1.0d0,i=noahmp%static%lsnowl,noahmp%nmlist%num_soil_levels)/))
 
     ! time axis
     call mpp_write_meta(fid, t, 'time', "seconds since "//noahmp%model%reference_date, 'time', cartesian='T')
@@ -2235,7 +2239,7 @@ contains
     !----------------------
 
     do i = 1, max_indx
-       where(noahmp%domain%mask < 1) ptr2d(:,i) = 1.0e20
+       where(noahmp%domain%mask < 1) ptr2d(:,i) = 1.0d20
     end do
     nullify(ptr2d)
 
@@ -2267,7 +2271,7 @@ contains
        if (flds(i)%nlev == 0) then
           ! define variable
           ! TODO: pack = 1 writes double. without pack is writes float by default. make it configurable.
-          call mpp_write_meta(fid, f1, (/y,x,t/), trim(flds(i)%short_name), trim(flds(i)%units), trim(flds(i)%long_name), missing=1.0e20, pack=1)
+          call mpp_write_meta(fid, f1, (/y,x,t/), trim(flds(i)%short_name), trim(flds(i)%units), trim(flds(i)%long_name), missing=1.0d20, pack=1)
           ! put data to temporary variable
           data3d(:,:,1) = ptr3d(:,:,i)
           ! write to file
@@ -2278,11 +2282,11 @@ contains
           if (trim(prevar) /= trim(flds(i)%short_name)) then
              ! define variable
              if (trim(flds(i)%zaxis) == "z") then
-                call mpp_write_meta(fid, f2, (/y,x,z,t/), trim(flds(i)%short_name), trim(flds(i)%units), trim(flds(i)%long_name), missing=1.0e20, pack=1)
+                call mpp_write_meta(fid, f2, (/y,x,z,t/), trim(flds(i)%short_name), trim(flds(i)%units), trim(flds(i)%long_name), missing=1.0d20, pack=1)
              else if (trim(flds(i)%zaxis) == "z1") then
-                call mpp_write_meta(fid, f2, (/y,x,z1,t/), trim(flds(i)%short_name), trim(flds(i)%units), trim(flds(i)%long_name), missing=1.0e20, pack=1)
+                call mpp_write_meta(fid, f2, (/y,x,z1,t/), trim(flds(i)%short_name), trim(flds(i)%units), trim(flds(i)%long_name), missing=1.0d20, pack=1)
              else if (trim(flds(i)%zaxis) == "z2") then
-                call mpp_write_meta(fid, f2, (/y,x,z2,t/), trim(flds(i)%short_name), trim(flds(i)%units), trim(flds(i)%long_name), missing=1.0e20, pack=1)
+                call mpp_write_meta(fid, f2, (/y,x,z2,t/), trim(flds(i)%short_name), trim(flds(i)%units), trim(flds(i)%long_name), missing=1.0d20, pack=1)
              else
                 call mpp_error(FATAL, 'zaxis can be z, z1 or z2. '//trim(flds(i)%zaxis)//' not recognized for '//trim(flds(i)%short_name))
              end if
@@ -2364,9 +2368,13 @@ contains
        if (present(v1r8)) then
           ptr2d(:,indx) = v1r8(:)    
        else if (present(v1i4)) then
-          ptr2d(:,indx) = v1i4(:)
+          ptr2d(:,indx) = dble(v1i4(:))
        else if (present(v1l)) then
-          ptr2d(:,indx) = v1l(:)
+          where(v1l(:))
+             ptr2d(:,indx) = 1.0
+          elsewhere
+             ptr2d(:,indx) = 0.0
+          end where
        end if
     ! 3d variables
     else if (present(v2r8)) then
