@@ -52,20 +52,6 @@ add_library(fms ALIAS FMS::fms_r8)
 add_definitions(-DCCPP)
 
 #------------------------------------------------------------------------------
-# Add sub directories
-#add_subdirectory(drivers/ccpp)
-#list(APPEND EXTRA_LIBS noahmp_ccpp)
-#list(APPEND EXTRA_INCLUDES "${CMAKE_BINARY_DIR}/drivers/ccpp")
-#add_subdirectory(drivers/nuopc)
-#list(APPEND EXTRA_LIBS noahmp_nuopc_cap)
-#list(APPEND EXTRA_INCLUDES "${CMAKE_BINARY_DIR}/drivers/nuopc")
-#add_subdirectory(src)
-#list(APPEND EXTRA_LIBS noahmp_src)
-#list(APPEND EXTRA_INCLUDES "${CMAKE_BINARY_DIR}/src")
-#target_include_directories(noahmp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src>
-#                                         $<INSTALL_INTERFACE:mod>)
-
-#------------------------------------------------------------------------------
 # NOAHMP
 add_library(noahmp STATIC ${_noahmp_cap_files} ${_noahmp_ccpp_files} ${_noahmp_files})
 set_target_properties(noahmp PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
@@ -82,7 +68,7 @@ install(
   ARCHIVE DESTINATION lib
   COMPONENT Library)
 
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod DESTINATION ${CMAKE_INSTALL_PREFIX}/NOAHMP)
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 install(EXPORT      noahmp-config
         DESTINATION lib/cmake)

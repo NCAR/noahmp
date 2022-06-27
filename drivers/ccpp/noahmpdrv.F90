@@ -1,4 +1,6 @@
+#ifndef CCPP
 #define CCPP
+#endif
 !>  \file noahmpdrv.F90
 !!  This file contains the NoahMP land surface scheme driver.
 
