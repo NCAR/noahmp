@@ -44,6 +44,7 @@ else()
   endif()
 endif()
 
+find_package(MPI REQUIRED)
 find_package(FMS REQUIRED COMPONENTS R4 R8)
 add_library(fms ALIAS FMS::fms_r8)
 
