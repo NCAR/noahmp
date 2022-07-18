@@ -31,19 +31,27 @@ list(APPEND _noahmp_files src/module_sf_noahmplsm.f90
                           src/module_sf_noahmp_glacier.f90)
 
 #------------------------------------------------------------------------------
-# Find dependencies
-if (TARGET esmf)
-  message("Target esmf is already found. Skip find_package ...")
-else()
-  set(USE_ESMF_STATIC_LIBS TRUE)
-  find_package(ESMF REQUIRED)
-  if (ESMF_FOUND)
-    set(CMAKE_Fortran_COMPILER "${ESMF_F90COMPILER}")
-    set(CMAKE_Fortran_FLAGS "${ESMF_F90COMPILEOPTS} ${ESMF_F90COMPILEPATHS}")
-    set(CMAKE_Fortran_LINK_FLAGS "${ESMF_F90LINKOPTS} ${ESMF_F90LINKPATHS} ${ESMF_F90LINKRPATHS} ${ESMF_F90ESMFLINKLIBS}") 
+# Customization for compilers
+if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
+  set(CMAKE_Fortran_FLAGS "-g -fbacktrace -ffree-line-length-none")
+  if(${CMAKE_Fortran_COMPILER_VERSION} VERSION_GREATER_EQUAL 10)
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch -fallow-invalid-boz")
   endif()
+  set(CMAKE_Fortran_FLAGS_RELEASE "-O2")
+  set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -fcheck=bounds -ffpe-trap=invalid,zero,overflow,underflow" )
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
+  set(CMAKE_Fortran_FLAGS "-g -traceback")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O -assume realloc_lhs")
+  set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -fp-model precise")
+  set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -check -check noarg_temp_created -check nopointer -fpe0 -ftrapuv -init=snan,arrays")
+else()
+  message(WARNING "Fortran compiler with ID ${CMAKE_Fortran_COMPILER_ID} will be used with CMake default options")
 endif()
 
+#------------------------------------------------------------------------------
+# Find dependencies
+set(USE_ESMF_STATIC_LIBS TRUE)
+find_package(ESMF REQUIRED)
 find_package(MPI REQUIRED)
 find_package(FMS REQUIRED COMPONENTS R4 R8)
 add_library(fms ALIAS FMS::fms_r8)
