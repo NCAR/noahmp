@@ -31,8 +31,15 @@ list(APPEND _noahmp_files src/module_sf_noahmplsm.f90
                           src/module_sf_noahmp_glacier.f90)
 
 #------------------------------------------------------------------------------
+# Build options 
+set(OPENMP OFF CACHE BOOL "Enable OpenMP threading")
+
+#------------------------------------------------------------------------------
 # Find dependencies
 find_package(MPI REQUIRED)
+if(OPENMP)
+  find_package(OpenMP REQUIRED)
+endif()
 find_package(NetCDF REQUIRED)
 if (TARGET esmf)
   message("Target esmf is already found. Skip find_package ...")
