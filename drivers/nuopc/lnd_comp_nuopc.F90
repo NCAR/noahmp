@@ -259,6 +259,8 @@ contains
           write(msg, fmt='(A,I1,A)') trim(subname)//' : layout(',n,') = '//trim(cname)
           call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
        end do
+    else
+       noahmp%domain%layout(:) = -1
     end if
 
     ! ---------------------
@@ -277,7 +279,8 @@ contains
     else
        noahmp%nmlist%restart_run = .false. 
     end if
-    call ESMF_LogWrite(trim(subname)//' : restart_run = '//trim(cvalue), ESMF_LOGMSG_INFO)
+    write(msg, fmt='(A,L)') trim(subname)//' : restart_run = ', noahmp%nmlist%restart_run
+    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 
     if (noahmp%nmlist%restart_run) then
        call NUOPC_CompAttributeGet(gcomp, name='restart_file', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
@@ -320,6 +323,21 @@ contains
     call ESMF_LogWrite(trim(subname)//': ic_type = '//trim(noahmp%nmlist%ic_type), ESMF_LOGMSG_INFO)
 
     ! ---------------------
+    ! Option to disable export fields
+    ! ---------------------
+
+    call NUOPC_CompAttributeGet(gcomp, name='has_export', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    noahmp%nmlist%has_export = .true.
+    if (isPresent .and. isSet) then
+       if (trim(cvalue) .eq. '.false.' .or. trim(cvalue) .eq. 'false') noahmp%nmlist%has_export = .false.
+    end if
+
+    write(msg, fmt='(A,L)') trim(subname)//' : has_export = ', noahmp%nmlist%has_export
+    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
+
+    ! ---------------------
     ! Create mosaic grid and convert it to mesh 
     ! ---------------------
 
@@ -350,8 +368,10 @@ contains
     ! Create land export state
     ! ---------------------
 
-    call export_fields(gcomp, noahmp, rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (noahmp%nmlist%has_export) then
+       call export_fields(gcomp, noahmp, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
 
     ! ---------------------
     ! Diagnostics
@@ -421,8 +441,10 @@ contains
     ! export state
     !----------------------
 
-    call export_fields(gcomp, noahmp, rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (noahmp%nmlist%has_export) then
+       call export_fields(gcomp, noahmp, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
 
     !----------------------
     ! diagnostics

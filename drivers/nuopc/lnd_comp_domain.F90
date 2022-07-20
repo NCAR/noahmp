@@ -36,6 +36,7 @@ module lnd_comp_domain
   use mosaic2_mod    , only : get_mosaic_contact, get_mosaic_ncontacts
   use mpp_mod        , only : mpp_root_pe
   use mpp_domains_mod, only : mpp_define_mosaic, mpp_domains_init
+  use mpp_domains_mod, only : mpp_define_layout
 
   implicit none
   private
@@ -138,7 +139,8 @@ contains
     ! Create FMS domain 
     ! ---------------------
 
-    call lnd_domain_create(noahmp)
+    call lnd_domain_create(gcomp, noahmp, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! ---------------------
     ! Create ESMF grid 
@@ -334,27 +336,77 @@ contains
   end subroutine lnd_set_decomp_and_domain_from_mosaic
 
   !===============================================================================
-  subroutine lnd_domain_create(noahmp)
+  subroutine lnd_domain_create(gcomp, noahmp, rc)
 
     ! input/output variables
+    type(ESMF_GridComp), intent(in)  :: gcomp
     type(noahmp_type), intent(inout) :: noahmp
+    integer, intent(inout)           :: rc
 
     ! local variables
-    integer                     :: n
+    type(ESMF_VM)               :: vm
+    integer                     :: n, npet, npes_per_tile
     integer                     :: halo = 0
     integer                     :: global_indices(4,6)
     integer                     :: layout2d(2,6)
     integer, allocatable        :: pe_start(:), pe_end(:)
+    character(len=cl)           :: msg
     character(len=*), parameter :: subname=trim(modName)//':(lnd_domain_create) '
     !-------------------------------------------------------------------------------
 
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
+
+    ! ---------------------
+    ! Query components 
+    ! ---------------------
+
+    call ESMF_GridCompGet(gcomp, vm=vm, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_VMGet(vm=vm, petCount=npet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------
     ! Initialize domain 
     !----------------------
 
     call mpp_domains_init()
+
+    !----------------------
+    ! Create domain 
+    !----------------------
+
+    ! setup global indices
+    do n = 1, noahmp%domain%ntiles
+       global_indices(1,n) = 1
+       global_indices(2,n) = noahmp%domain%nit(n)
+       global_indices(3,n) = 1
+       global_indices(4,n) = noahmp%domain%njt(n)
+    enddo
+
+    ! check total number of PETs
+    if (mod(npet, noahmp%domain%ntiles) /= 0) then
+       write(msg, fmt='(A,I5)') trim(subname)//' : nPet should be multiple of 6 to read initial conditions but it is ', npet 
+       call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_ERROR)
+       rc = ESMF_FAILURE
+       return
+    end if
+
+    ! calculate layout if it is not provided as configuration option
+    if (noahmp%domain%layout(1) < 0 .and. noahmp%domain%layout(2) < 0) then
+       npes_per_tile = npet/noahmp%domain%ntiles
+       call mpp_define_layout(global_indices(:,1), npes_per_tile, noahmp%domain%layout)
+    end if
+
+    ! set layout and print out debug information
+    do n = 1, noahmp%domain%ntiles
+       layout2d(:,n) = noahmp%domain%layout(:)
+       write(msg, fmt='(A,I2,A,2I5)') trim(subname)//' layout (', n ,') = ', layout2d(1,n), layout2d(2,n)
+       call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
+       write(msg, fmt='(A,I2,A,4I5)') trim(subname)//' global_indices (', n,') = ', &
+         global_indices(1,n), global_indices(2,n), global_indices(3,n), global_indices(4,n)
+       call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
+    enddo
 
     !----------------------
     ! Set pe_start, pe_end 
@@ -365,18 +417,8 @@ contains
     do n = 1, noahmp%domain%ntiles
        pe_start(n) = mpp_root_pe()+(n-1)*noahmp%domain%layout(1)*noahmp%domain%layout(2)
        pe_end(n) = mpp_root_pe()+n*noahmp%domain%layout(1)*noahmp%domain%layout(2)-1
-    enddo
-
-    !----------------------
-    ! Create domain 
-    !----------------------
-
-    do n = 1, noahmp%domain%ntiles
-       layout2d(:,n) = noahmp%domain%layout(:)
-       global_indices(1,n) = 1
-       global_indices(2,n) = noahmp%domain%nit(n)
-       global_indices(3,n) = 1
-       global_indices(4,n) = noahmp%domain%njt(n)
+       write(msg, fmt='(A,I2,A,2I5)') trim(subname)//' pe_start, pe_end (', n ,') = ', pe_start(n), pe_end(n)
+       call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
     enddo
 
     call mpp_define_mosaic(global_indices, layout2d, noahmp%domain%mosaic_domain, &

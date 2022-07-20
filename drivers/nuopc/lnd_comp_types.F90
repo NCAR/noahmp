@@ -254,6 +254,7 @@ module lnd_comp_types
      integer                    :: glacier_option
      integer                    :: surface_thermal_roughness_option
      integer                    :: output_freq                       ! model output interval
+     logical                    :: has_export                        ! enable/disable export fields
   end type namelist_type
 
   type noahmp_type
