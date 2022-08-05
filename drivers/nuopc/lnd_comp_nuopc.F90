@@ -220,7 +220,7 @@ contains
       noahmp%nmlist%mosaic_file = trim(cvalue)
       call ESMF_LogWrite(trim(subname)//': mosaic file = '//trim(noahmp%nmlist%mosaic_file), ESMF_LOGMSG_INFO)
     else
-      call ESMF_LogWrite(trim(subname)//' : mosaic_file is required! Exiting ....', ESMF_LOGMSG_INFO)
+      call ESMF_LogWrite(trim(subname)//': mosaic_file is required! Exiting ....', ESMF_LOGMSG_INFO)
       rc = ESMF_FAILURE
       return
     end if
@@ -256,7 +256,7 @@ contains
           call shr_string_listGetName(cvalue, n, cname, rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
           read(cname,*) noahmp%domain%layout(n)
-          write(msg, fmt='(A,I1,A)') trim(subname)//' : layout(',n,') = '//trim(cname)
+          write(msg, fmt='(A,I1,A)') trim(subname)//': layout(',n,') = '//trim(cname)
           call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
        end do
     else
@@ -279,7 +279,7 @@ contains
     else
        noahmp%nmlist%restart_run = .false. 
     end if
-    write(msg, fmt='(A,L)') trim(subname)//' : restart_run = ', noahmp%nmlist%restart_run
+    write(msg, fmt='(A,L)') trim(subname)//': restart_run = ', noahmp%nmlist%restart_run
     call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 
     if (noahmp%nmlist%restart_run) then
@@ -312,7 +312,7 @@ contains
     if (isPresent .and. isSet) then
        noahmp%nmlist%ic_type = trim(cvalue)
        if (trim(noahmp%nmlist%ic_type) /= 'sfc' .and. trim(noahmp%nmlist%ic_type) /= 'custom') then
-          call ESMF_LogWrite(trim(subname)//' : '//trim(noahmp%nmlist%ic_type)//' is not a valid! It must be [sfc|custom].', ESMF_LOGMSG_INFO)
+          call ESMF_LogWrite(trim(subname)//': '//trim(noahmp%nmlist%ic_type)//' is not a valid! It must be [sfc|custom].', ESMF_LOGMSG_INFO)
           rc = ESMF_FAILURE
           return
        end if
@@ -334,7 +334,7 @@ contains
        if (trim(cvalue) .eq. '.false.' .or. trim(cvalue) .eq. 'false') noahmp%nmlist%has_export = .false.
     end if
 
-    write(msg, fmt='(A,L)') trim(subname)//' : has_export = ', noahmp%nmlist%has_export
+    write(msg, fmt='(A,L)') trim(subname)//': has_export = ', noahmp%nmlist%has_export
     call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 
     ! ---------------------
