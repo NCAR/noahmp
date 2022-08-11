@@ -217,6 +217,8 @@ contains
     ! There could be option in nems.configure to overwrite Sa_z
     noahmp%model%zf = 10.0_r8
 
+    noahmp%model%do_mynnsfclay = .false.
+
     !----------------------
     ! allocate required temporary variable
     !----------------------
@@ -293,7 +295,7 @@ contains
          noahmp%forc%dswsfc    , noahmp%model%snet      , noahmp%static%delt     , &
          noahmp%model%tg3      , noahmp%model%cm        , noahmp%model%ch        , &
          noahmp%model%prsl1    , noahmp%model%prslk1    , noahmp%model%prslki    , &
-         noahmp%model%prsik1   , noahmp%model%zf        , &
+         noahmp%model%prsik1   , noahmp%model%zf        , noahmp%model%pblh      , &
          noahmp%model%dry      , noahmp%forc%wind       , noahmp%model%slopetyp  , &
          noahmp%model%shdmin   , noahmp%model%shdmax    , noahmp%model%snoalb    , &
          noahmp%model%sfalb    , noahmp%model%flag_iter , con_g                  , &
@@ -318,6 +320,8 @@ contains
          noahmp%model%rb1      , noahmp%model%fm1       , noahmp%model%fh1       , &
          noahmp%model%ustar1   , noahmp%model%stress1   , noahmp%model%fm101     , &
          noahmp%model%fh21     , &
+         noahmp%model%rmol1    , noahmp%model%flhc1     , noahmp%model%flqc1     , &
+         noahmp%model%do_mynnsfclay, &
     ! --- Noah MP specific
          noahmp%model%snowxy   , noahmp%model%tvxy      , noahmp%model%tgxy      , &
          noahmp%model%canicexy , noahmp%model%canliqxy  , noahmp%model%eahxy     , &
@@ -367,7 +371,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! check the output frequency before calling write method
-    if (mod(hour, noahmp%nmlist%output_freq) == 0) then
+    if (mod(int(now_time), noahmp%nmlist%output_freq) == 0) then
        write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5)') &
           trim(noahmp%nmlist%case_name)//'.lnd.out.', &
           year, '-', month, '-', day, '-', hour*60*60+minute*60+second 

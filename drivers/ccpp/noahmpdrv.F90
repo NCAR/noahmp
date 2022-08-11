@@ -1,6 +1,4 @@
-#ifndef CCPP
 #define CCPP
-#endif
 !>  \file noahmpdrv.F90
 !!  This file contains the NoahMP land surface scheme driver.
 
@@ -13,7 +11,11 @@
 !> This module contains the CCPP-compliant NoahMP land surface model driver.
       module noahmpdrv
 
+      use module_sf_noahmplsm
+
       implicit none
+
+      integer, parameter :: psi_opt = 0 ! 0: MYNN or 1:GFS
 
       private
 
@@ -29,6 +31,7 @@
 !!
       subroutine noahmpdrv_init(lsm, lsm_noahmp, me, isot, ivegsrc, &
                                 nlunit, pores, resid,               &
+                                do_mynnsfclay,do_mynnedmf,          &
                                 errmsg, errflg)
 
         use machine,          only: kind_phys
@@ -41,6 +44,10 @@
         integer,              intent(in)  :: me, isot, ivegsrc, nlunit
 
         real (kind=kind_phys), dimension(:), intent(out) :: pores, resid
+
+        logical,              intent(in) :: do_mynnsfclay
+        logical,              intent(in) :: do_mynnedmf
+
 
         character(len=*),     intent(out) :: errmsg
         integer,              intent(out) :: errflg
@@ -70,8 +77,30 @@
           return
         end if
 
+        if (.not. do_mynnsfclay .and. do_mynnedmf) then
+          errmsg = 'Problem : do_mynnsfclay = .false.' // &
+                   'but mynnpbl is .true.. Exiting ...'
+          errflg = 1
+          return
+        end if
+
+        if ( do_mynnsfclay .and. .not. do_mynnedmf) then
+          errmsg = 'Problem : do_mynnsfclay = .true.' // &
+                   'but mynnpbl is .false.. Exiting ...'
+          errflg = 1
+          return
+        end if
+
+
         !--- initialize soil vegetation
         call set_soilveg(me, isot, ivegsrc, nlunit)
+
+
+        ! initialize psih and psim 
+
+        if ( do_mynnsfclay ) then
+        call psi_init(psi_opt,errmsg,errflg)
+        endif
 
         pores (:) = maxsmc (:)
         resid (:) = drysmc (:)
@@ -109,7 +138,7 @@
 !  ---  inputs:
     ( im, km, lsnowl, itime, ps, u1, v1, t1, q1, soiltyp,        &
       vegtype, sigmaf, dlwflx, dswsfc, snet, delt, tg3, cm, ch,  &
-      prsl1, prslk1, prslki, prsik1, zf, dry, wind, slopetyp,    &
+      prsl1, prslk1, prslki, prsik1, zf,pblh, dry, wind, slopetyp,    &
       shdmin, shdmax, snoalb, sfalb, flag_iter,con_g,            &
       idveg, iopt_crs, iopt_btr, iopt_run, iopt_sfc, iopt_frz,   &
       iopt_inf, iopt_rad, iopt_alb, iopt_snf, iopt_tbot,         &
@@ -122,6 +151,7 @@
       weasd, snwdph, tskin, tprcp, srflag, smc, stc, slc,        &
       canopy, trans, tsurf, zorl,                                &
       rb1, fm1, fh1, ustar1, stress1, fm101, fh21,               &
+      rmol1,flhc1,flqc1,do_mynnsfclay,                           &
 
 ! --- Noah MP specific
 
@@ -142,7 +172,7 @@
   use funcphys,   only : fpvs
 
   use sfc_diff,   only : stability
-  use module_sf_noahmplsm
+! use module_sf_noahmplsm
   use module_sf_noahmp_glacier
   use noahmp_tables, only : isice_table, co2_table, o2_table,            &
                             isurban_table, smcref_table, smcdry_table,   &
@@ -161,6 +191,8 @@
 
   integer, parameter               :: nsoil   = 4   ! hardwired to Noah
   integer, parameter               :: nsnow   = 3   ! max. snow layers
+
+  integer, parameter               :: iz0tlnd = 0   ! z0t treatment option
 
   real(kind=kind_phys), save  :: zsoil(nsoil)
   data zsoil  / -0.1, -0.4, -1.0, -2.0 /
@@ -195,6 +227,15 @@
   real(kind=kind_phys), dimension(:)     , intent(in)    :: prsik1     ! Exner function at the ground surfac
 
   real(kind=kind_phys), dimension(:)     , intent(in)    :: zf         ! height of bottom layer [m]
+
+  logical                                , intent(in)    :: do_mynnsfclay !flag for MYNN sfc layer scheme
+
+  real(kind=kind_phys), dimension(:)     , intent(in)    :: pblh       ! height of pbl
+  real(kind=kind_phys), dimension(:)     , intent(inout) :: rmol1      !
+  real(kind=kind_phys), dimension(:)     , intent(inout) :: flhc1      !
+  real(kind=kind_phys), dimension(:)     , intent(inout) :: flqc1      !
+
+
   logical             , dimension(:)     , intent(in)    :: dry        ! = T if a point with any land
   real(kind=kind_phys), dimension(:)     , intent(in)    :: wind       ! wind speed [m/s]
   integer             , dimension(:)     , intent(in)    :: slopetyp   ! surface slope classification
@@ -507,6 +548,17 @@
   real (kind=kind_phys)                            :: prsik1x               !  in exner function
   real (kind=kind_phys)                            :: prslk1x               !  in exner function
 
+  real (kind=kind_phys)                            :: ch2
+  real (kind=kind_phys)                            :: cq2
+  real (kind=kind_phys)                            :: qfx
+  real (kind=kind_phys)                            :: wspd1                 !  wind speed with all components
+  real (kind=kind_phys)                            :: pblhx                 !  height of pbl
+   integer                                         :: mnice
+
+  real (kind=kind_phys)                            :: rah_total             !
+  real (kind=kind_phys)                            :: cah_total             !
+
+
 !
 !  ---  local variable
 !
@@ -596,6 +648,8 @@ do i = 1, im
       vwind_forcing         = v1(i)
       area_grid             = garea(i)
 
+      pblhx                 = pblh(i)
+
       prslkix               = prslki(i)
       prsik1x               = prsik1(i)
       prslk1x               = prslk1(i)
@@ -684,6 +738,13 @@ do i = 1, im
           snow_ice_frac_old(k) = snow_level_ice(k) /(snow_level_ice(k)+snow_level_liquid(k)) 
       end do
 
+
+       if (snow_depth .gt. 0.1 .or. vegetation_category  == isice_table ) then
+         mnice = 1
+       else    
+         mnice = 0
+       endif   
+
 !
 !  --- some outputs for atm model?
 !
@@ -719,7 +780,7 @@ do i = 1, im
 
         call noahmp_options_glacier(iopt_alb, iopt_snf, iopt_tbot, iopt_stc, iopt_gla, &
                                     iopt_sfc ,iopt_trs)
-
+        vegetation_frac = 0.0
         call noahmp_glacier (                                                                      &
           i_location           ,1                    ,cosine_zenith        ,nsnow                , &
           nsoil                ,timestep             ,                                             &
@@ -727,7 +788,9 @@ do i = 1, im
           spec_humidity_forcing,sw_radiation_forcing ,precipitation_forcing,radiation_lw_forcing , &
           temperature_soil_bot ,forcing_height       ,snow_ice_frac_old    ,zsoil                , &
           thsfc_loc            ,prslkix              ,prsik1x              ,prslk1x              , &
-	  vegetation_frac      ,area_grid            ,                                             &
+          air_pressure_surface ,pblhx                ,iz0tlnd              ,itime                , &
+	  vegetation_frac      ,area_grid            ,psi_opt                                    , &
+          con_fvirt            ,con_eps              ,con_cp                                     , &
           snowfall             ,snow_water_equiv_old ,snow_albedo_old      ,                       &
           cm_noahmp            ,ch_noahmp            ,snow_levels          ,snow_water_equiv     , &
           soil_moisture_vol    ,interface_depth      ,snow_depth           ,snow_level_ice       , &
@@ -788,7 +851,10 @@ do i = 1, im
         q2mp(i)                = spec_humidity_bare_2m
 
         tskin(i)               = temperature_ground
+        surface_temperature    = temperature_ground
         vegetation_fraction    = vegetation_frac
+        ch_vegetated           = 0.0
+        ch_bare_ground         = ch_noahmp
 
       else  ! not glacier
 
@@ -806,12 +872,15 @@ do i = 1, im
           spec_humidity_forcing ,area_grid             ,cloud_water_forcing   , &
           sw_radiation_forcing  ,radiation_lw_forcing  ,thsfc_loc             , &
           prslkix               ,prsik1x               ,prslk1x               , &
+          pblhx                 ,iz0tlnd               ,itime                 , &
+          psi_opt                                                             , &
           precip_convective                                                   , &
           precip_non_convective ,precip_sh_convective  ,precip_snow           , &
           precip_graupel        ,precip_hail           ,temperature_soil_bot  , &
           co2_air               ,o2_air                ,foliage_nitrogen      , &
-          snow_ice_frac_old                                                   , &
-          forcing_height        ,snow_albedo_old       ,snow_water_equiv_old  , &
+          snow_ice_frac_old     ,forcing_height                               , &
+          con_fvirt             ,con_eps               ,con_cp                , &
+          snow_albedo_old       ,snow_water_equiv_old                         , &
           temperature_snow_soil ,soil_liquid_vol       ,soil_moisture_vol     , &
           temperature_canopy_air,vapor_pres_canopy_air ,canopy_wet_fraction   , &
           canopy_liquid         ,canopy_ice            ,temperature_leaf      , &
@@ -988,10 +1057,50 @@ do i = 1, im
             zvfun(i) = sqrt(tem1 * tem2)
             gdx=sqrt(garea(i))
 
+!      if ( .not. do_mynnsfclay) then   !GFS sfcdiff
+       if ( iopt_sfc .ne. 4 ) then   !GFS sfcdiff
+
       call       stability                                                               &
         (zf(i), zvfun(i), gdx, virtual_temperature, vptemp,wind(i), z0_total, z0h_total, & 
          tvs1, con_g, thsfc_loc,                                                         &
          rb1(i), fm1(i), fh1(i), fm101(i), fh21(i), cm(i), ch(i), stress1(i), ustar1(i))
+
+       rmol1(i) = undefined  !not used in GFS sfcdif -> to satsify output
+       flhc1(i) = undefined
+       flqc1(i) = undefined
+
+        rah_total = max(1.0,1.0/( ch(i)*wind(i)) )
+        cah_total = density * con_cp /rah_total
+!       tskin(i) = sensible_heat_total/cah_total + temperature_forcing ! test to use combined ch and SH to backout Ts
+
+!        ch(i) = ch_vegetated * vegetation_frac + ch_bare_ground*(1.0-vegetation_frac)
+
+      else    ! MYNN - note the GFS option is the same as sfcdif3; so removed.
+
+             qfx = evap(i) / con_hvap         ! use flux from output
+
+           call sfcdif4(i_location  ,j_location  ,uwind_forcing ,vwind_forcing ,           &
+                        temperature_forcing, air_pressure_forcing ,air_pressure_surface  , &
+                        pblhx,gdx,z0_total,con_fvirt,con_eps,con_cp,itime,snwdph(i),mnice, &
+                        psi_opt,surface_temperature,                                       &
+                        spec_humidity_forcing,forcing_height,iz0tlnd,spec_humidity_surface,&
+                        sensible_heat_total,qfx,cm(i),ch(i),ch2,cq2,rmol1(i),ustar1(i),    &
+                        rb1(i),fm1(i),fh1(i),stress1(i),fm101(i),fh21(i),wspd1,flhc1(i),   &
+                        flqc1(i) )
+
+              ch(i)=ch(i)/wspd1
+              cm(i)=cm(i)/wspd1
+
+              ch(i) = ch_vegetated * vegetation_fraction + ch_bare_ground*(1.0-vegetation_fraction)
+
+          rah_total = max(1.0,1.0/( ch(i)*wind(i)) )
+          cah_total = density * con_cp /rah_total
+
+!          tskin(i) = sensible_heat_total/cah_total + temperature_forcing !
+
+       endif
+
+
 
       cmxy(i) = cm(i)
       chxy(i) = ch(i)

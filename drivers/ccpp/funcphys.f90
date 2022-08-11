@@ -260,7 +260,7 @@ module funcphys
 !   Language: Fortran 90
 !
 !$$$
-  use machine,only:kind_phys
+  use machine,only:kind_phys,r8=>kind_dbl_prec,r4=>kind_sngl_prec
   use physcons
   implicit none
   private
@@ -308,6 +308,13 @@ module funcphys
   public grkap,frkap,frkapq,frkapx
   public gtlcl,ftlcl,ftlclq,ftlclo,ftlclx
   public gfuncphys
+
+  interface fpvsl
+     module procedure fpvsl_r4, fpvsl_r8 
+  end interface fpvsl
+  interface fpvsi
+     module procedure fpvsi_r4, fpvsi_r8 
+  end interface fpvsi
 contains
 !-------------------------------------------------------------------------------
 !> This subroutine computes saturation vapor pressure table as a function of
@@ -364,7 +371,8 @@ contains
 !! in gpvsl(). See documentation for fpvslx() for details. Input values
 !! outside table range are reset to table extrema. 
 !>\author N phillips
-  elemental function fpvsl(t)
+
+  elemental function fpvsl_r4(t)
 !$$$     Subprogram Documentation Block
 !
 ! Subprogram: fpvsl        Compute saturation vapor pressure over liquid
@@ -396,16 +404,62 @@ contains
 !
 !$$$
     implicit none
-    real(krealfp) fpvsl
-    real(krealfp),intent(in):: t
+    real(r4) fpvsl_r4
+    real(r4),intent(in):: t
     integer jx
-    real(krealfp) xj
+    real(r4) xj
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    xj=min(max(c1xpvsl+c2xpvsl*t,1._krealfp),real(nxpvsl,krealfp))
-    jx=min(xj,nxpvsl-1._krealfp)
-    fpvsl=tbpvsl(jx)+(xj-jx)*(tbpvsl(jx+1)-tbpvsl(jx))
+    xj=min(max(c1xpvsl+c2xpvsl*t,1._r4),real(nxpvsl,r4))
+    jx=min(xj,nxpvsl-1._r4)
+    fpvsl_r4=tbpvsl(jx)+(xj-jx)*(tbpvsl(jx+1)-tbpvsl(jx))
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  end function
+  end function fpvsl_r4
+
+  elemental function fpvsl_r8(t)
+!$$$     Subprogram Documentation Block
+!
+! Subprogram: fpvsl        Compute saturation vapor pressure over liquid
+!   Author: N Phillips            w/NMC2X2   Date: 30 dec 82
+!
+! Abstract: Compute saturation vapor pressure from the temperature.
+!   A linear interpolation is done between values in a lookup table
+!   computed in gpvsl. See documentation for fpvslx for details.
+!   Input values outside table range are reset to table extrema.
+!   The interpolation accuracy is almost 6 decimal places.
+!   On the Cray, fpvsl is about 4 times faster than exact calculation.
+!   This function should be expanded inline in the calling routine.
+!
+! Program History Log:
+!   91-05-07  Iredell             made into inlinable function
+!   94-12-30  Iredell             expand table
+! 1999-03-01  Iredell             f90 module
+!
+! Usage:   pvsl=fpvsl(t)
+!
+!   Input argument list:
+!     t          Real(krealfp) temperature in Kelvin
+!
+!   Output argument list:
+!     fpvsl      Real(krealfp) saturation vapor pressure in Pascals
+!
+! Attributes:
+!   Language: Fortran 90.
+!
+!$$$
+    implicit none
+    real(r8) fpvsl_r8
+    real(r8),intent(in):: t
+    integer jx
+    real(r8) xj
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    xj=min(max(c1xpvsl+c2xpvsl*t,1._r8),real(nxpvsl,r8))
+    jx=min(xj,nxpvsl-1._r8)
+    fpvsl_r8=tbpvsl(jx)+(xj-jx)*(tbpvsl(jx+1)-tbpvsl(jx))
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  end function fpvsl_r8
+
+
+
 !-------------------------------------------------------------------------------
 !> This function computes saturation vapor pressure from the temperature. 
 !! A quadratic interpolation is done between values in a lookup table 
@@ -576,7 +630,8 @@ contains
 !! computed in gpvsi(). See documentation for fpvsix() for details.
 !! Input values outside table range are reset to table extrema.
 !>\author N Phillips
-  elemental function fpvsi(t)
+
+  elemental function fpvsi_r4(t)
 !$$$     Subprogram Documentation Block
 !
 ! Subprogram: fpvsi        Compute saturation vapor pressure over ice
@@ -609,16 +664,61 @@ contains
 !
 !$$$
     implicit none
-    real(krealfp) fpvsi
-    real(krealfp),intent(in):: t
+    real(r4) fpvsi_r4
+    real(r4),intent(in):: t
     integer jx
-    real(krealfp) xj
+    real(r4) xj
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    xj=min(max(c1xpvsi+c2xpvsi*t,1._krealfp),real(nxpvsi,krealfp))
-    jx=min(xj,nxpvsi-1._krealfp)
-    fpvsi=tbpvsi(jx)+(xj-jx)*(tbpvsi(jx+1)-tbpvsi(jx))
+    xj=min(max(c1xpvsi+c2xpvsi*t,1._r4),real(nxpvsi,r4))
+    jx=min(xj,nxpvsi-1._r4)
+    fpvsi_r4=tbpvsi(jx)+(xj-jx)*(tbpvsi(jx+1)-tbpvsi(jx))
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  end function
+  end function fpvsi_r4
+
+  elemental function fpvsi_r8(t)
+!$$$     Subprogram Documentation Block
+!
+! Subprogram: fpvsi        Compute saturation vapor pressure over ice
+!   Author: N Phillips            w/NMC2X2   Date: 30 dec 82
+!
+! Abstract: Compute saturation vapor pressure from the temperature.
+!   A linear interpolation is done between values in a lookup table
+!   computed in gpvsi. See documentation for fpvsix for details.
+!   Input values outside table range are reset to table extrema.
+!   The interpolation accuracy is almost 6 decimal places.
+!   On the Cray, fpvsi is about 4 times faster than exact calculation.
+!   This function should be expanded inline in the calling routine.
+!
+! Program History Log:
+!   91-05-07  Iredell             made into inlinable function
+!   94-12-30  Iredell             expand table
+! 1999-03-01  Iredell             f90 module
+! 2001-02-26  Iredell             ice phase
+!
+! Usage:   pvsi=fpvsi(t)
+!
+!   Input argument list:
+!     t          Real(krealfp) temperature in Kelvin
+!
+!   Output argument list:
+!     fpvsi      Real(krealfp) saturation vapor pressure in Pascals
+!
+! Attributes:
+!   Language: Fortran 90.
+!
+!$$$
+    implicit none
+    real(r8) fpvsi_r8
+    real(r8),intent(in):: t
+    integer jx
+    real(r8) xj
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    xj=min(max(c1xpvsi+c2xpvsi*t,1._r8),real(nxpvsi,r8))
+    jx=min(xj,nxpvsi-1._r8)
+    fpvsi_r8=tbpvsi(jx)+(xj-jx)*(tbpvsi(jx+1)-tbpvsi(jx))
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  end function fpvsi_r8
+
 !-------------------------------------------------------------------------------
 !> This function computes saturation vapor pressure from the temperature.
 !! A quadratic interpolation is done between values in a lookup table
@@ -2375,7 +2475,7 @@ contains
 !>\param[in]  pk    real, pressure over 1e5 Pa to the kappa power
 !>\param[out] tma   real, parcel temperature in Kelvin
 !>\param[out] qma   real, parcel specific humidity in kg/kg
-  elemental subroutine stmax(the,pk,tma,qma)
+  subroutine stmax(the,pk,tma,qma)
 !$$$     Subprogram Documentation Block
 !
 ! Subprogram: stmax        Compute moist adiabat temperature
@@ -2443,7 +2543,7 @@ contains
 !>\param[in]  pk   real, pressure over 1e5 Pa to the kappa power
 !>\param[out] tma  real, parcel temperature in Kelvin 
 !>\param[out] qma  real, parcel specific humidity in kg/kg
-  elemental subroutine stmaxg(tg,the,pk,tma,qma)
+  subroutine stmaxg(tg,the,pk,tma,qma)
 !$$$     Subprogram Documentation Block
 !
 ! Subprogram: stmaxg       Compute moist adiabat temperature
