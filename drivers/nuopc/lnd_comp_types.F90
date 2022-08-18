@@ -182,6 +182,7 @@ module lnd_comp_types
      real(kind=kp), allocatable :: t2mmp      (:)   ! combined T2m from tiles
      real(kind=kp), allocatable :: q2mp       (:)   ! combined q2m from tiles
      real(kind=kp), allocatable :: zvfun      (:)   ! some function of vegetation used for gfs stability
+     real(kind=kp), allocatable :: rho        (:)   ! air density
      ! variables in dimensions im and km
      real(kind=kp), allocatable :: smc      (:,:)   ! total soil moisture content (fractional)
      real(kind=kp), allocatable :: stc      (:,:)   ! soil temp (K)
@@ -426,6 +427,7 @@ contains
     allocate(this%model%t2mmp      (begl:endl))
     allocate(this%model%q2mp       (begl:endl))
     allocate(this%model%zvfun      (begl:endl))
+    allocate(this%model%rho        (begl:endl))
 
     allocate(this%model%smc        (begl:endl,km))
     allocate(this%model%stc        (begl:endl,km))
@@ -575,6 +577,7 @@ contains
     this%model%t2mmp       = 0.0_kp
     this%model%q2mp        = 0.0_kp
     this%model%zvfun       = 0.0_kp
+    this%model%rho         = 0.0_kp
     this%model%smc         = 0.0_kp
     this%model%stc         = 0.0_kp
     this%model%slc         = 0.0_kp

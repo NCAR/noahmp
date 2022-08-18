@@ -91,7 +91,7 @@ contains
     ! import from atm
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_z')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_tbot')
-    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_pbot')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_pslv')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_shum')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_u')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_v')
@@ -270,7 +270,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, 'Sa_tbot'  , noahmp%forc%t1, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, 'Sa_pbot'  , noahmp%forc%ps, rc=rc)
+    call state_getimport_1d(importState, 'Sa_pslv'  , noahmp%forc%ps, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, 'Sa_shum'  , noahmp%forc%q1, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return

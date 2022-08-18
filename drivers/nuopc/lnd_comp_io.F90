@@ -2233,6 +2233,8 @@ contains
     call fld_add("t2mmp"     ,"combined T2m from tiles"                                           ,"K"      ,ptr2d=ptr2d, v1r8=noahmp%model%t2mmp)
     call fld_add("q2mp"      ,"combined q2m from tiles"                                           ,"kg/kg"  ,ptr2d=ptr2d, v1r8=noahmp%model%q2mp)
     call fld_add("zvfun"     ,"function of surface roughness length and green vegetation fraction","1"      ,ptr2d=ptr2d, v1r8=noahmp%model%zvfun)
+    call fld_add("rho"       ,"density"                                                           ,"kg/m3"  ,ptr2d=ptr2d, v1r8=noahmp%model%rho)
+    call fld_add("hgt"       ,"forcing height"                                                    ,"m"      ,ptr2d=ptr2d, v1r8=noahmp%forc%hgt)
 
     !----------------------
     ! masked out data over ocean/inland water/lake

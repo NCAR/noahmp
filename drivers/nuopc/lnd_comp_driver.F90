@@ -146,7 +146,6 @@ contains
     integer                     :: i, step
     integer                     :: year, month, day, hour, minute, second
     real(r8)                    :: now_time
-    real(r8), save, allocatable :: rho(:)
     character(len=cl)           :: filename
     logical                     :: restart_write
     type(ESMF_VM)               :: vm
@@ -213,17 +212,9 @@ contains
        end do
     end if
 
-    ! TODO: CDEPS data atmosphere Sa_z (noahmp%forc%hgt) is 30 meters but UFS land driver uses 10 meters?
-    ! There could be option in nems.configure to overwrite Sa_z
-    noahmp%model%zf = 10.0_r8
+    noahmp%model%zf = noahmp%forc%hgt
 
     noahmp%model%do_mynnsfclay = .false.
-
-    !----------------------
-    ! allocate required temporary variable
-    !----------------------
-
-    if (.not. allocated(rho)) allocate(rho(noahmp%domain%begl:noahmp%domain%endl))
 
     !----------------------
     ! interpolate monthly data, vegetation fraction and mean sfc diffuse sw albedo (NOT used)
@@ -251,9 +242,8 @@ contains
     ! set variables from forcing  
     !----------------------
 
-    ! since wind direction is not important for NoahMP, just provide speed
-    noahmp%model%u1 = noahmp%forc%wind
-    noahmp%model%v1 = 0.0_r8
+    noahmp%model%u1 = noahmp%forc%u1
+    noahmp%model%v1 = noahmp%forc%v1
 
     noahmp%model%snet = noahmp%forc%dswsfc*(1.0_r8-noahmp%model%sfalb)
     noahmp%model%srflag = 0.0_r8
@@ -352,9 +342,9 @@ contains
     ! unit conversions
     !----------------------
 
-    rho = noahmp%model%prsl1/(con_rd*noahmp%forc%t1*(1.0_r8+con_fvirt*noahmp%forc%q1)) 
-    noahmp%model%hflx = noahmp%model%hflx*rho*con_cp
-    noahmp%model%evap = noahmp%model%evap*rho*con_hvap
+    noahmp%model%rho = noahmp%model%prsl1/(con_rd*noahmp%forc%t1*(1.0_r8+con_fvirt*noahmp%forc%q1)) 
+    noahmp%model%hflx = noahmp%model%hflx*noahmp%model%rho*con_cp
+    noahmp%model%evap = noahmp%model%evap*noahmp%model%rho*con_hvap
     where(noahmp%forc%dswsfc>0.0_r8 .and. noahmp%model%sfalb<0.0_r8) noahmp%forc%dswsfc = 0.0_r8
 
     !----------------------
