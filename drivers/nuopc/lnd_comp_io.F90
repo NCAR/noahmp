@@ -2295,7 +2295,7 @@ contains
              ! put data to temporary variable
              data4d(:,:,1:flds(i)%nlev,1) = ptr3d(:,:,i:i+flds(i)%nlev-1)
              ! write to file
-             call mpp_write(fid, f2, noahmp%domain%mosaic_domain, data4d(:,:,1:flds(i)%nlev,:), now_time)
+             call mpp_write(fid, f2, noahmp%domain%mosaic_domain, data4d(:,:,1:flds(i)%nlev,1), now_time)
           end if
        end if
        prevar = trim(flds(i)%short_name)
@@ -2303,10 +2303,11 @@ contains
     nullify(ptr3d)
 
     !----------------------
-    ! close file
+    ! close file and sync
     !----------------------
 
     call mpp_close(fid)
+    call mpp_sync()
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
