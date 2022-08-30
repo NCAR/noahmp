@@ -129,7 +129,7 @@ CONTAINS
     REAL,                                            INTENT(IN   ) ::  soiltstep ! soil timestep (s), default:0->same as main model timestep
     INTEGER,                                         INTENT(IN   ) ::  IZ0TLND   ! option of Chen adjustment of Czil (not used)
     INTEGER,                                         INTENT(IN   ) ::  sf_urban_physics   ! urban physics option
-    REAL,    DIMENSION( ims:ime,       8, jms:jme ), INTENT(IN   ) ::  SOILCOMP  ! soil sand and clay percentage
+    REAL,    DIMENSION( ims:ime, nsoil*2, jms:jme ), INTENT(IN   ) ::  SOILCOMP  ! soil sand and clay percentage
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(IN   ) ::  SOILCL1   ! soil texture in layer 1
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(IN   ) ::  SOILCL2   ! soil texture in layer 2
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(IN   ) ::  SOILCL3   ! soil texture in layer 3
@@ -972,12 +972,12 @@ CONTAINS
 !       parameters%td_spac   = TD_SPAC  (I,J)      ! tile spacing
 
 
-       CALL TRANSFER_MP_PARAMETERS(VEGTYP,SOILTYP,SLOPETYP,SOILCOLOR,CROPTYPE,parameters)
+       CALL TRANSFER_MP_PARAMETERS(NSOIL,VEGTYP,SOILTYP,SLOPETYP,SOILCOLOR,CROPTYPE,parameters)
        
        if(iopt_soil == 3 .and. .not. parameters%urban_flag) then
          
-	sand = 0.01 * soilcomp(i,1:4,j)
-	clay = 0.01 * soilcomp(i,5:8,j)
+	sand = 0.01 * soilcomp(i,1:nsoil,j)
+	clay = 0.01 * soilcomp(i,(nsoil+1):(nsoil*2),j)
         orgm = 0.0
 
         if(opt_pedo == 1) call pedotransfer_sr2006(nsoil,sand,clay,orgm,parameters)
@@ -1432,15 +1432,16 @@ CONTAINS
   END SUBROUTINE noahmplsm
 !------------------------------------------------------
 
-SUBROUTINE TRANSFER_MP_PARAMETERS(VEGTYPE,SOILTYPE,SLOPETYPE,SOILCOLOR,CROPTYPE,parameters)
+SUBROUTINE TRANSFER_MP_PARAMETERS(NSOIL,VEGTYPE,SOILTYPE,SLOPETYPE,SOILCOLOR,CROPTYPE,parameters)
 
   USE NOAHMP_TABLES
   USE MODULE_SF_NOAHMPLSM
 
   implicit none
 
+  INTEGER, INTENT(IN)    :: NSOIL
   INTEGER, INTENT(IN)    :: VEGTYPE
-  INTEGER, INTENT(IN)    :: SOILTYPE(4)
+  INTEGER, INTENT(IN)    :: SOILTYPE(NSOIL)
   INTEGER, INTENT(IN)    :: SLOPETYPE
   INTEGER, INTENT(IN)    :: SOILCOLOR
   INTEGER, INTENT(IN)    :: CROPTYPE
