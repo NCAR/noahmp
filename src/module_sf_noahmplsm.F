@@ -584,9 +584,9 @@ contains
   REAL,                            INTENT(INOUT) :: DEEPRECH    !recharge to or from the water table when deep [m]
   REAL,                            INTENT(INOUT) :: RECH        !recharge to or from the water table when shallow [m] (diagnostic)
   REAL                           , INTENT(INOUT) :: ACC_SSOIL   !ground heat flux (w/m2)   [+ to soil]
-  REAL                           , INTENT(INOUT) :: ACC_QINSUR  !water input on soil surface [m/s]
-  REAL                           , INTENT(INOUT) :: ACC_QSEVA   !soil surface evap rate [mm/s]
-  REAL, DIMENSION(       1:NSOIL), INTENT(INOUT) :: ACC_ETRANI  !transpiration rate (mm/s) [+]
+  REAL                           , INTENT(INOUT) :: ACC_QINSUR  !water input on soil surface [m/s * soil_dt/main_dt]
+  REAL                           , INTENT(INOUT) :: ACC_QSEVA   !soil surface evap rate [m/s * soil_dt/main_dt]
+  REAL, DIMENSION(       1:NSOIL), INTENT(INOUT) :: ACC_ETRANI  !transpiration rate (m/s * soil_dt/main_dt) [+]
   REAL, DIMENSION(-NSNOW+1:NSOIL), INTENT(  OUT) :: HCPCT       !heat capacity [j/m3/k]
   REAL                           , INTENT(  OUT) :: EFLXB       !energy influx from soil bottom (w/m2)
   REAL                           , INTENT(INOUT) :: ACC_DWATER  !accumulated water change for canopy, snow, soil mm/timestep(soil)
@@ -3370,13 +3370,15 @@ ENDIF   ! CROPTYPE == 0
 
 ! output
 
-   REAL, DIMENSION(1:2), INTENT(OUT) :: FAB     !flux abs by veg layer (per unit incoming flux)
-   REAL, DIMENSION(1:2), INTENT(OUT) :: FRE     !flux refl above veg layer (per unit incoming flux)
-   REAL, DIMENSION(1:2), INTENT(OUT) :: FTD     !down dir flux below veg layer (per unit in flux)
-   REAL, DIMENSION(1:2), INTENT(OUT) :: FTI     !down dif flux below veg layer (per unit in flux)
-   REAL,                 INTENT(OUT) :: GDIR    !projected leaf+stem area in solar direction
-   REAL, DIMENSION(1:2), INTENT(OUT) :: FREV    !flux reflected by veg layer   (per unit incoming flux) 
-   REAL, DIMENSION(1:2), INTENT(OUT) :: FREG    !flux reflected by ground (per unit incoming flux)
+   REAL, DIMENSION(1:2), INTENT(INOUT) :: FAB     !flux abs by veg layer (per unit incoming flux)
+   REAL, DIMENSION(1:2), INTENT(INOUT) :: FRE     !flux refl above veg layer (per unit incoming flux)
+   REAL, DIMENSION(1:2), INTENT(INOUT) :: FTD     !down dir flux below veg layer (per unit in flux)
+   REAL, DIMENSION(1:2), INTENT(INOUT) :: FTI     !down dif flux below veg layer (per unit in flux)
+   REAL,                 INTENT(INOUT) :: GDIR    !projected leaf+stem area in solar direction
+   REAL, DIMENSION(1:2), INTENT(INOUT) :: FREV    !flux reflected by veg layer   (per unit incoming flux) 
+   REAL, DIMENSION(1:2), INTENT(INOUT) :: FREG    !flux reflected by ground (per unit incoming flux)
+   REAL,                 INTENT(INOUT) :: BGAP    !between canopy gap fraction for beam (-)
+   REAL,                 INTENT(INOUT) :: WGAP    !within canopy gap fraction for beam (-)
 
 ! local
    REAL                              :: OMEGA   !fraction of intercepted radiation that is scattered
@@ -3387,7 +3389,6 @@ ENDIF   ! CROPTYPE == 0
    REAL                              :: BETADL  !betad for leaves
    REAL                              :: EXT     !optical depth of direct beam per unit leaf area
    REAL                              :: AVMU    !average diffuse optical depth
-
    REAL                              :: COSZI   !0.001 <= cosz <= 1.000
    REAL                              :: ASU     !single scattering albedo
    REAL                              :: CHIL    ! -0.4 <= xl <= 0.6
@@ -3406,17 +3407,12 @@ ENDIF   ! CROPTYPE == 0
 
 !  variables for the modified two-stream scheme
 !  Niu and Yang (2004), JGR
-
    REAL, PARAMETER :: PAI = 3.14159265 
    REAL :: HD       !crown depth (m)
    REAL :: BB       !vertical crown radius (m)
    REAL :: THETAP   !angle conversion from SZA 
    REAL :: FA       !foliage volume density (m-1)
    REAL :: NEWVAI   !effective LSAI (-)
-
-   REAL,INTENT(INOUT) :: BGAP     !between canopy gap fraction for beam (-)
-   REAL,INTENT(INOUT) :: WGAP     !within canopy gap fraction for beam (-)
-
    REAL :: KOPEN    !gap fraction for diffue light (-)
    REAL :: GAP      !total gap fraction for beam ( <=1-shafac )
 
@@ -6062,9 +6058,9 @@ ENDIF   ! CROPTYPE == 0
   REAL, INTENT(OUT)                :: QSUBC   !sublimation rate (mm/s)
   REAL, INTENT(OUT)                :: QMELTC  !melting rate of canopy snow (mm/s)
   REAL, INTENT(OUT)                :: QFRZC   !refreezing rate of canopy liquid water (mm/s)
-  REAL, INTENT(INOUT)                            :: ACC_QINSUR  !water input on soil surface [m/s]
-  REAL, INTENT(INOUT)                            :: ACC_QSEVA   !soil surface evap rate [mm/s]
-  REAL, DIMENSION(       1:NSOIL) , INTENT(INOUT):: ACC_ETRANI  !transpiration rate (mm/s) [+]
+  REAL, INTENT(INOUT)                            :: ACC_QINSUR  !water input on soil surface [m/s * soil_dt/main_dt]
+  REAL, INTENT(INOUT)                            :: ACC_QSEVA   !soil surface evap rate [m/s * soil_dt/main_dt]
+  REAL, DIMENSION(       1:NSOIL) , INTENT(INOUT):: ACC_ETRANI  !transpiration rate (m/s * soil_dt/main_dt) [+]
 
 ! irrigation 
   REAL,                              INTENT(IN)   :: IRRFRA   ! irrigation fraction
@@ -6079,11 +6075,11 @@ ENDIF   ! CROPTYPE == 0
 ! local
   INTEGER                                        :: IZ
   REAL                                           :: QINSUR  !water input on soil surface [m/s]
-  REAL                                           :: QSEVA   !soil surface evap rate [mm/s]
+  REAL                                           :: QSEVA   !soil surface evap rate [m/s]
   REAL                                           :: QSDEW   !soil surface dew rate [mm/s]
   REAL                                           :: QSNFRO  !snow surface frost rate[mm/s]
   REAL                                           :: QSNSUB  !snow surface sublimation rate [mm/s]
-  REAL, DIMENSION(       1:NSOIL)                :: ETRANI  !transpiration rate (mm/s) [+]
+  REAL, DIMENSION(       1:NSOIL)                :: ETRANI  !transpiration rate (m/s) [+]
   REAL, DIMENSION(       1:NSOIL)                :: WCND   !hydraulic conductivity (m/s)
   REAL                                           :: QDRAIN  !soil-bottom free drainage [mm/s] 
   REAL                                           :: SNOFLOW !glacier flow [mm/s]
@@ -6669,7 +6665,7 @@ ENDIF   ! CROPTYPE == 0
 		 ELSE   ! SNICE OVER-SUBLIMATED EARLIER
 		  PONDING1 = SNLIQ(J) + SNICE(J)
 		  IF(PONDING1 < 0.0) THEN  ! IF SNICE AND SNLIQ SUBLIMATES REMOVE FROM SOIL
-		   SICE(1) = MAX(0.0,SICE(1)+PONDING1/(DZSNSO(1)*1000.0))
+		   SICE(1) = SICE(1)+PONDING1/(DZSNSO(1)*1000.0)  ! negative SICE due to oversublimation is adjusted below
                    PONDING1 = 0.0
 		  END IF
                   SNEQV = 0.0
@@ -7253,10 +7249,10 @@ ENDIF   ! CROPTYPE == 0
   INTEGER,                     INTENT(IN) :: NSOIL  !no. of soil layers
   INTEGER,                     INTENT(IN) :: NSNOW  !maximum no. of snow layers
   REAL,                        INTENT(IN) :: DT     !time step (sec)
-  REAL, INTENT(IN)                        :: QINSUR !water input on soil surface [mm/s]
-  REAL, INTENT(IN)                        :: QSEVA  !evap from soil surface [mm/s]
+  REAL, INTENT(IN)                        :: QINSUR !water input on soil surface [m/s]
+  REAL, INTENT(IN)                        :: QSEVA  !evap from soil surface [m/s]
   REAL, DIMENSION(1:NSOIL),    INTENT(IN) :: ZSOIL  !depth of soil layer-bottom [m]
-  REAL, DIMENSION(1:NSOIL),    INTENT(IN) :: ETRANI !evapotranspiration from soil layers [mm/s]
+  REAL, DIMENSION(1:NSOIL),    INTENT(IN) :: ETRANI !evapotranspiration from soil layers [m/s]
   REAL, DIMENSION(-NSNOW+1:NSOIL), INTENT(IN) :: DZSNSO !snow/soil layer depth [m]
   REAL, DIMENSION(1:NSOIL), INTENT(IN)    :: SICE   !soil ice content [m3/m3]
   REAL,                     INTENT(IN)    :: DX
@@ -7731,9 +7727,9 @@ ENDIF   ! CROPTYPE == 0
     INTEGER,                  INTENT(IN)  :: NSOIL
     REAL, DIMENSION(1:NSOIL), INTENT(IN)  :: ZSOIL
     REAL,                     INTENT(IN)  :: DT
-    REAL,                     INTENT(IN)  :: PDDUM
-    REAL,                     INTENT(IN)  :: QSEVA
-    REAL, DIMENSION(1:NSOIL), INTENT(IN)  :: ETRANI
+    REAL,                     INTENT(IN)  :: PDDUM  !m/s
+    REAL,                     INTENT(IN)  :: QSEVA  !m/s
+    REAL, DIMENSION(1:NSOIL), INTENT(IN)  :: ETRANI !m/s
     REAL, DIMENSION(1:NSOIL), INTENT(IN)  :: SH2O
     REAL, DIMENSION(1:NSOIL), INTENT(IN)  :: SMC
     REAL,                     INTENT(IN)  :: ZWT    ! water table depth [m]
