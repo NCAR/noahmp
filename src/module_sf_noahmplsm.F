@@ -3370,13 +3370,15 @@ ENDIF   ! CROPTYPE == 0
 
 ! output
 
-   REAL, DIMENSION(1:2), INTENT(OUT) :: FAB     !flux abs by veg layer (per unit incoming flux)
-   REAL, DIMENSION(1:2), INTENT(OUT) :: FRE     !flux refl above veg layer (per unit incoming flux)
-   REAL, DIMENSION(1:2), INTENT(OUT) :: FTD     !down dir flux below veg layer (per unit in flux)
-   REAL, DIMENSION(1:2), INTENT(OUT) :: FTI     !down dif flux below veg layer (per unit in flux)
-   REAL,                 INTENT(OUT) :: GDIR    !projected leaf+stem area in solar direction
-   REAL, DIMENSION(1:2), INTENT(OUT) :: FREV    !flux reflected by veg layer   (per unit incoming flux) 
-   REAL, DIMENSION(1:2), INTENT(OUT) :: FREG    !flux reflected by ground (per unit incoming flux)
+   REAL, DIMENSION(1:2), INTENT(INOUT) :: FAB     !flux abs by veg layer (per unit incoming flux)
+   REAL, DIMENSION(1:2), INTENT(INOUT) :: FRE     !flux refl above veg layer (per unit incoming flux)
+   REAL, DIMENSION(1:2), INTENT(INOUT) :: FTD     !down dir flux below veg layer (per unit in flux)
+   REAL, DIMENSION(1:2), INTENT(INOUT) :: FTI     !down dif flux below veg layer (per unit in flux)
+   REAL,                 INTENT(INOUT) :: GDIR    !projected leaf+stem area in solar direction
+   REAL, DIMENSION(1:2), INTENT(INOUT) :: FREV    !flux reflected by veg layer   (per unit incoming flux) 
+   REAL, DIMENSION(1:2), INTENT(INOUT) :: FREG    !flux reflected by ground (per unit incoming flux)
+   REAL,                 INTENT(INOUT) :: BGAP    !between canopy gap fraction for beam (-)
+   REAL,                 INTENT(INOUT) :: WGAP    !within canopy gap fraction for beam (-)
 
 ! local
    REAL                              :: OMEGA   !fraction of intercepted radiation that is scattered
@@ -3387,7 +3389,6 @@ ENDIF   ! CROPTYPE == 0
    REAL                              :: BETADL  !betad for leaves
    REAL                              :: EXT     !optical depth of direct beam per unit leaf area
    REAL                              :: AVMU    !average diffuse optical depth
-
    REAL                              :: COSZI   !0.001 <= cosz <= 1.000
    REAL                              :: ASU     !single scattering albedo
    REAL                              :: CHIL    ! -0.4 <= xl <= 0.6
@@ -3406,17 +3407,12 @@ ENDIF   ! CROPTYPE == 0
 
 !  variables for the modified two-stream scheme
 !  Niu and Yang (2004), JGR
-
    REAL, PARAMETER :: PAI = 3.14159265 
    REAL :: HD       !crown depth (m)
    REAL :: BB       !vertical crown radius (m)
    REAL :: THETAP   !angle conversion from SZA 
    REAL :: FA       !foliage volume density (m-1)
    REAL :: NEWVAI   !effective LSAI (-)
-
-   REAL,INTENT(INOUT) :: BGAP     !between canopy gap fraction for beam (-)
-   REAL,INTENT(INOUT) :: WGAP     !within canopy gap fraction for beam (-)
-
    REAL :: KOPEN    !gap fraction for diffue light (-)
    REAL :: GAP      !total gap fraction for beam ( <=1-shafac )
 
