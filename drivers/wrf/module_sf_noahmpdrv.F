@@ -353,9 +353,9 @@ CONTAINS
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(OUT  ) ::  FORCZLSM
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(OUT  ) ::  FORCWLSM
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(INOUT) ::  ACC_SSOILXY
-    REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(INOUT) ::  ACC_QINSURXY
-    REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(INOUT) ::  ACC_QSEVAXY
-    REAL,    DIMENSION( ims:ime, 1:NSOIL, jms:jme ), INTENT(INOUT) ::  ACC_ETRANIXY
+    REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(INOUT) ::  ACC_QINSURXY  ! m/s * soil_dt/main_dt
+    REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(INOUT) ::  ACC_QSEVAXY   ! m/s * soil_dt/main_dt
+    REAL,    DIMENSION( ims:ime, 1:NSOIL, jms:jme ), INTENT(INOUT) ::  ACC_ETRANIXY  ! m/s * soil_dt/main_dt
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(OUT  ) ::  EFLXBXY
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(OUT  ) ::  SOILENERGY
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(OUT  ) ::  SNOWENERGY
@@ -570,9 +570,9 @@ CONTAINS
     REAL                                :: RAININ  !rain rate                   (mm/s) 
     REAL                                :: SNOWIN  !liquid equivalent snow rate (mm/s) 
     REAL                                :: ACC_SSOIL
-    REAL                                :: ACC_QINSUR
-    REAL                                :: ACC_QSEVA
-    REAL, DIMENSION( 1:NSOIL)           :: ACC_ETRANI       !transpiration rate (mm/s) [+]
+    REAL                                :: ACC_QINSUR   !m/s * soil_dt/main_dt
+    REAL                                :: ACC_QSEVA    !m/s * soil_dt/main_dt
+    REAL, DIMENSION( 1:NSOIL)           :: ACC_ETRANI   !transpiration rate (m/s * soil_dt/main_dt) [+]
     REAL                                :: EFLXB
     REAL                                :: XMF
     REAL, DIMENSION( -2:NSOIL )         :: HCPCT

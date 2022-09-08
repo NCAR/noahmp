@@ -584,9 +584,9 @@ contains
   REAL,                            INTENT(INOUT) :: DEEPRECH    !recharge to or from the water table when deep [m]
   REAL,                            INTENT(INOUT) :: RECH        !recharge to or from the water table when shallow [m] (diagnostic)
   REAL                           , INTENT(INOUT) :: ACC_SSOIL   !ground heat flux (w/m2)   [+ to soil]
-  REAL                           , INTENT(INOUT) :: ACC_QINSUR  !water input on soil surface [m/s]
-  REAL                           , INTENT(INOUT) :: ACC_QSEVA   !soil surface evap rate [mm/s]
-  REAL, DIMENSION(       1:NSOIL), INTENT(INOUT) :: ACC_ETRANI  !transpiration rate (mm/s) [+]
+  REAL                           , INTENT(INOUT) :: ACC_QINSUR  !water input on soil surface [m/s * soil_dt/main_dt]
+  REAL                           , INTENT(INOUT) :: ACC_QSEVA   !soil surface evap rate [m/s * soil_dt/main_dt]
+  REAL, DIMENSION(       1:NSOIL), INTENT(INOUT) :: ACC_ETRANI  !transpiration rate (m/s * soil_dt/main_dt) [+]
   REAL, DIMENSION(-NSNOW+1:NSOIL), INTENT(  OUT) :: HCPCT       !heat capacity [j/m3/k]
   REAL                           , INTENT(  OUT) :: EFLXB       !energy influx from soil bottom (w/m2)
   REAL                           , INTENT(INOUT) :: ACC_DWATER  !accumulated water change for canopy, snow, soil mm/timestep(soil)
@@ -6062,9 +6062,9 @@ ENDIF   ! CROPTYPE == 0
   REAL, INTENT(OUT)                :: QSUBC   !sublimation rate (mm/s)
   REAL, INTENT(OUT)                :: QMELTC  !melting rate of canopy snow (mm/s)
   REAL, INTENT(OUT)                :: QFRZC   !refreezing rate of canopy liquid water (mm/s)
-  REAL, INTENT(INOUT)                            :: ACC_QINSUR  !water input on soil surface [m/s]
-  REAL, INTENT(INOUT)                            :: ACC_QSEVA   !soil surface evap rate [mm/s]
-  REAL, DIMENSION(       1:NSOIL) , INTENT(INOUT):: ACC_ETRANI  !transpiration rate (mm/s) [+]
+  REAL, INTENT(INOUT)                            :: ACC_QINSUR  !water input on soil surface [m/s * soil_dt/main_dt]
+  REAL, INTENT(INOUT)                            :: ACC_QSEVA   !soil surface evap rate [m/s * soil_dt/main_dt]
+  REAL, DIMENSION(       1:NSOIL) , INTENT(INOUT):: ACC_ETRANI  !transpiration rate (m/s * soil_dt/main_dt) [+]
 
 ! irrigation 
   REAL,                              INTENT(IN)   :: IRRFRA   ! irrigation fraction
@@ -6079,11 +6079,11 @@ ENDIF   ! CROPTYPE == 0
 ! local
   INTEGER                                        :: IZ
   REAL                                           :: QINSUR  !water input on soil surface [m/s]
-  REAL                                           :: QSEVA   !soil surface evap rate [mm/s]
+  REAL                                           :: QSEVA   !soil surface evap rate [m/s]
   REAL                                           :: QSDEW   !soil surface dew rate [mm/s]
   REAL                                           :: QSNFRO  !snow surface frost rate[mm/s]
   REAL                                           :: QSNSUB  !snow surface sublimation rate [mm/s]
-  REAL, DIMENSION(       1:NSOIL)                :: ETRANI  !transpiration rate (mm/s) [+]
+  REAL, DIMENSION(       1:NSOIL)                :: ETRANI  !transpiration rate (m/s) [+]
   REAL, DIMENSION(       1:NSOIL)                :: WCND   !hydraulic conductivity (m/s)
   REAL                                           :: QDRAIN  !soil-bottom free drainage [mm/s] 
   REAL                                           :: SNOFLOW !glacier flow [mm/s]
@@ -7253,10 +7253,10 @@ ENDIF   ! CROPTYPE == 0
   INTEGER,                     INTENT(IN) :: NSOIL  !no. of soil layers
   INTEGER,                     INTENT(IN) :: NSNOW  !maximum no. of snow layers
   REAL,                        INTENT(IN) :: DT     !time step (sec)
-  REAL, INTENT(IN)                        :: QINSUR !water input on soil surface [mm/s]
-  REAL, INTENT(IN)                        :: QSEVA  !evap from soil surface [mm/s]
+  REAL, INTENT(IN)                        :: QINSUR !water input on soil surface [m/s]
+  REAL, INTENT(IN)                        :: QSEVA  !evap from soil surface [m/s]
   REAL, DIMENSION(1:NSOIL),    INTENT(IN) :: ZSOIL  !depth of soil layer-bottom [m]
-  REAL, DIMENSION(1:NSOIL),    INTENT(IN) :: ETRANI !evapotranspiration from soil layers [mm/s]
+  REAL, DIMENSION(1:NSOIL),    INTENT(IN) :: ETRANI !evapotranspiration from soil layers [m/s]
   REAL, DIMENSION(-NSNOW+1:NSOIL), INTENT(IN) :: DZSNSO !snow/soil layer depth [m]
   REAL, DIMENSION(1:NSOIL), INTENT(IN)    :: SICE   !soil ice content [m3/m3]
   REAL,                     INTENT(IN)    :: DX
@@ -7731,9 +7731,9 @@ ENDIF   ! CROPTYPE == 0
     INTEGER,                  INTENT(IN)  :: NSOIL
     REAL, DIMENSION(1:NSOIL), INTENT(IN)  :: ZSOIL
     REAL,                     INTENT(IN)  :: DT
-    REAL,                     INTENT(IN)  :: PDDUM
-    REAL,                     INTENT(IN)  :: QSEVA
-    REAL, DIMENSION(1:NSOIL), INTENT(IN)  :: ETRANI
+    REAL,                     INTENT(IN)  :: PDDUM  !m/s
+    REAL,                     INTENT(IN)  :: QSEVA  !m/s
+    REAL, DIMENSION(1:NSOIL), INTENT(IN)  :: ETRANI !m/s
     REAL, DIMENSION(1:NSOIL), INTENT(IN)  :: SH2O
     REAL, DIMENSION(1:NSOIL), INTENT(IN)  :: SMC
     REAL,                     INTENT(IN)  :: ZWT    ! water table depth [m]
