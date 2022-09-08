@@ -6669,7 +6669,7 @@ ENDIF   ! CROPTYPE == 0
 		 ELSE   ! SNICE OVER-SUBLIMATED EARLIER
 		  PONDING1 = SNLIQ(J) + SNICE(J)
 		  IF(PONDING1 < 0.0) THEN  ! IF SNICE AND SNLIQ SUBLIMATES REMOVE FROM SOIL
-		   SICE(1) = MAX(0.0,SICE(1)+PONDING1/(DZSNSO(1)*1000.0))
+		   SICE(1) = SICE(1)+PONDING1/(DZSNSO(1)*1000.0)  ! negative SICE due to oversublimation is adjusted below
                    PONDING1 = 0.0
 		  END IF
                   SNEQV = 0.0
