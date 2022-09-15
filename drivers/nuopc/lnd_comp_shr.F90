@@ -767,6 +767,69 @@ contains
     end if
     call ESMF_LogWrite(trim(subname)//' : output_freq = '//trim(cvalue), ESMF_LOGMSG_INFO)
 
+    ! MYNN-EDMF
+    call NUOPC_CompAttributeGet(gcomp, name='do_mynnedmf', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    noahmp%static%do_mynnedmf = .false.
+    if (isPresent .and. isSet) then
+       if (trim(cvalue) .eq. '.true.' .or. trim(cvalue) .eq. 'true') noahmp%static%do_mynnedmf = .true.
+    end if
+    write(msg, fmt='(A,L)') trim(subname)//': do_mynnedmf = ', noahmp%static%do_mynnedmf
+    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
+
+    ! MYNN Surface Layer Scheme
+    call NUOPC_CompAttributeGet(gcomp, name='do_mynnsfclay', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    noahmp%static%do_mynnsfclay = .false.
+    if (isPresent .and. isSet) then
+       if (trim(cvalue) .eq. '.true.' .or. trim(cvalue) .eq. 'true') noahmp%model%do_mynnsfclay = .true.
+    end if
+    noahmp%model%do_mynnsfclay = noahmp%static%do_mynnsfclay
+    write(msg, fmt='(A,L)') trim(subname)//': do_mynnsfclay = ', noahmp%static%do_mynnsfclay
+    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
+
+    ! Option for soil type category
+    call NUOPC_CompAttributeGet(gcomp, name='soil_type_category', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) noahmp%nmlist%soil_type_category
+    else
+       noahmp%nmlist%soil_type_category = 1
+    end if
+    call ESMF_LogWrite(trim(subname)//' : soil_type_category or isot = '//trim(cvalue), ESMF_LOGMSG_INFO)
+    noahmp%static%isot = noahmp%nmlist%soil_type_category
+
+    ! Option for vegetation type category
+    call NUOPC_CompAttributeGet(gcomp, name='veg_type_category', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) noahmp%nmlist%veg_type_category
+    else
+       noahmp%nmlist%veg_type_category = 1
+    end if
+    call ESMF_LogWrite(trim(subname)//' : veg_type_category or ivegsrc = '//trim(cvalue), ESMF_LOGMSG_INFO)
+    noahmp%static%ivegsrc = noahmp%nmlist%veg_type_category
+
+    ! Initial value of emissivity (constant in everywhere)
+    call NUOPC_CompAttributeGet(gcomp, name='initial_emiss', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) noahmp%nmlist%initial_emiss
+    else
+       noahmp%nmlist%initial_emiss = 0.95
+    end if
+    call ESMF_LogWrite(trim(subname)//' : initial_emiss = '//trim(cvalue), ESMF_LOGMSG_INFO)
+
+    ! Initial value of monthly albedo (constant in everywhere)
+    call NUOPC_CompAttributeGet(gcomp, name='initial_albedo', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) noahmp%nmlist%initial_albedo
+    else
+       noahmp%nmlist%initial_albedo = 0.2
+    end if
+    call ESMF_LogWrite(trim(subname)//' : initial_albedo = '//trim(cvalue), ESMF_LOGMSG_INFO)
+
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
   end subroutine read_namelist

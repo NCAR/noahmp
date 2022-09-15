@@ -5,7 +5,7 @@ module lnd_comp_driver
   use ESMF            , only: operator(+), operator(-), operator(/)
   use ESMF            , only: ESMF_LogWrite, ESMF_SUCCESS, ESMF_LOGMSG_INFO
   use ESMF            , only: ESMF_Finalize, ESMF_END_ABORT
-  use ESMF            , only: ESMF_VM, ESMF_VMCommWaitAll
+  use ESMF            , only: ESMF_VM, ESMF_VMCommWaitAll, ESMF_VMGet
   use ESMF            , only: ESMF_GridComp, ESMF_GridCompGet
   use ESMF            , only: ESMF_Clock, ESMF_ClockGet, ESMF_TimeIsLeapYear
   use ESMF            , only: ESMF_Time, ESMF_TimeGet, ESMF_TimeSet
@@ -16,11 +16,14 @@ module lnd_comp_driver
   use lnd_comp_kind   , only: r8 => shr_kind_r8
   use lnd_comp_kind   , only: cl => shr_kind_cl
   use lnd_comp_types  , only: noahmp_type
+  use lnd_comp_types  , only: fldsToLnd, fldsToLnd_num
   use lnd_comp_shr    , only: chkerr
   use lnd_comp_io     , only: read_static, read_initial, read_restart
   use lnd_comp_io     , only: write_mosaic_output
+  use lnd_comp_import_export, only: check_for_connected
 
-  use noahmpdrv       , only: noahmpdrv_run
+  use sfc_diff        , only: stability
+  use noahmpdrv       , only: noahmpdrv_init, noahmpdrv_run
   use namelist_soilveg, only: z0_data
   use set_soilveg_mod , only: set_soilveg
   use funcphys        , only: gpvs
@@ -31,6 +34,7 @@ module lnd_comp_driver
   use physcons        , only: p0 => con_p0
   use physcons        , only: cappa => con_rocp
   use physcons        , only: con_g
+  use physcons        , only: karman
 
   implicit none
   private
@@ -61,11 +65,28 @@ contains
     integer            , intent(out)   :: rc
 
     ! local variables
+    integer            :: me
+    integer, parameter :: nlunit = 9999
+    integer, parameter :: lsm = 2
+    integer, parameter :: lsm_noahmp = 2
+    real(r8), pointer  :: pores(:) => null() !< max soil moisture for a given soil type for land surface model
+    real(r8), pointer  :: resid(:) => null() !< min soil moisture for a given soil type for land surface model
+    type(ESMF_VM)      :: vm
     character(len=*), parameter :: subname=trim(modName)//':(drv_init) '
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
+
+    ! ----------------------
+    ! Query component
+    ! ----------------------
+
+    call ESMF_GridCompGet(gcomp, vm=vm, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_VMGet(vm, localPet=me, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------
     ! Set epoc as 1970-01-01 00:00:00
@@ -109,25 +130,18 @@ contains
 
     noahmp%model%dry = .false.
     where(noahmp%domain%mask == 1) noahmp%model%dry = .true.
-    noahmp%model%flag_iter  = .true.
-    noahmp%model%thsfc_loc  = .true.
+    noahmp%model%flag_iter = .true.
+    noahmp%model%thsfc_loc = .true.
+    noahmp%model%emiss(:) = noahmp%nmlist%initial_emiss
+    noahmp%model%alb_monthly(:,:) = noahmp%nmlist%initial_albedo
 
     !----------------------
     ! initialize soil and vegetation
     !----------------------
 
-    call set_soilveg(0, noahmp%static%isot, noahmp%static%ivegsrc, 0)
-    call gpvs()
-
-    !----------------------
-    ! unit conversion
-    !----------------------
-
-    ! at driver level, roughness length in cm
-    if (.not. noahmp%nmlist%restart_run) then
-       noahmp%model%zorl = 0.0_r8
-       where(noahmp%model%vegtype > 0) noahmp%model%zorl = z0_data(noahmp%model%vegtype)*100.0_r8
-    end if
+    call noahmpdrv_init(lsm, lsm_noahmp, me, noahmp%static%isot, noahmp%static%ivegsrc, &
+      nlunit, noahmp%model%pores, noahmp%model%resid, noahmp%static%do_mynnsfclay, &
+      noahmp%static%do_mynnedmf, noahmp%static%errmsg, noahmp%static%errflg)
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
@@ -143,7 +157,7 @@ contains
 
     ! local variables
     logical, save               :: first_time = .true.
-    integer                     :: i, step
+    integer                     :: i, step, iter, niter = 2
     integer                     :: year, month, day, hour, minute, second
     real(r8)                    :: now_time
     character(len=cl)           :: filename
@@ -155,6 +169,15 @@ contains
     type(ESMF_Time)             :: currTime
     type(ESMF_TimeInterval)     :: timeStep
     real(r8), parameter         :: tfreeze = 2.7315e+2_r8 
+    real(r8)                    :: virtfac, tv1, thv1, tvs
+    real(r8)                    :: tem1, tem2, z0max, ztmax, czilc
+    real(r8), parameter         :: zmin = 1.0e-6_r8
+    real(r8), parameter         :: qmin = 1.0e-8_r8
+    real(r8), parameter         :: z0lo = 0.1_r8
+    real(r8), parameter         :: z0up = 1.0_r8
+    real(r8), parameter         :: log01 = log(0.01_r8)
+    real(r8), parameter         :: log05 = log(0.05_r8)
+    real(r8), parameter         :: log07 = log(0.07_r8)
     character(len=*),parameter  :: subname = trim(modName)//':(drv_run) '
     !-------------------------------------------------------------------------------
 
@@ -195,14 +218,11 @@ contains
 
     step = int((currTime-startTime)/timeStep)
     if (.not. noahmp%nmlist%restart_run .and. step == 0) then
-       ! initialize model variables 
-       call noahmp%InitializeStates(noahmp%nmlist, noahmp%static, month)
-
-       ! transfer initial conditions
+       ! transfer common initial conditions for all configurations
        do i = noahmp%domain%begl, noahmp%domain%endl
           if (noahmp%domain%mask(i) == 1) then
              noahmp%model%weasd(i)  = noahmp%init%snow_water_equivalent(i)
-             noahmp%model%snwdph(i) = noahmp%init%snow_depth(i)*1000.0_r8
+             noahmp%model%snwdph(i) = noahmp%init%snow_depth(i)
              noahmp%model%canopy(i) = noahmp%init%canopy_water(i)
              noahmp%model%tskin(i)  = noahmp%init%skin_temperature(i)
              noahmp%model%stc(i,:)  = noahmp%init%soil_temperature(i,:)
@@ -210,19 +230,125 @@ contains
              noahmp%model%slc(i,:)  = noahmp%init%soil_liquid(i,:)
           end if
        end do
+
+       ! transfer custom initial conditions based on selected configuration
+       if (trim(noahmp%nmlist%ic_type) == 'sfc') then
+          where(noahmp%domain%mask(:) > 1)
+             noahmp%model%zorl(:) = noahmp%init%surface_roughness(:)
+             noahmp%model%ustar1(:) = noahmp%init%friction_velocity(:)
+          end where
+       else if (trim(noahmp%nmlist%ic_type) == 'custom') then
+          ! get initial value of zorl from pre-defined table
+          where(noahmp%model%vegtype(:) > 0) noahmp%model%zorl(:) = z0_data(noahmp%model%vegtype(:))*100.0_r8
+          ! additional unit conversion for datm configuration
+          where(noahmp%domain%mask(:) > 1) noahmp%model%snwdph(:) = noahmp%model%snwdph(:)*1000.0_r8
+       end if
+
+       ! initialize model variables
+       call noahmp%InitializeStates(noahmp%nmlist, noahmp%static, month)
     end if
 
+    !----------------------
+    ! set internal model variables from forcing
+    !----------------------
+
+    ! set forcing height
     noahmp%model%zf = noahmp%forc%hgt
 
-    noahmp%model%do_mynnsfclay = .false.
+    ! set net shortwave radiation
+    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_snet')) then
+       noahmp%model%snet = noahmp%forc%snet
+    end if
+    ! overwrite it if it is explicity specified
+    ! this also fixed all zero net shortwave provided by CDEPS
+    if (noahmp%nmlist%calc_snet) then
+       noahmp%model%snet = noahmp%forc%dswsfc*(1.0_r8-noahmp%model%sfalb)
+    end if
+
+    ! set surface temperature, it is same with skin temperature over land
+    noahmp%model%tsurf(:) = noahmp%model%tskin(:)
+
+    ! set air pressure at surface adjacent layer
+    ! cdeps provides Sa_pbot but Sa_prsl is used for coupling with fv3
+    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Sa_pbot') .or. &
+        check_for_connected(fldsToLnd, fldsToLnd_num, 'Sa_prsl')) then
+       noahmp%model%prsl1 = noahmp%forc%pbot
+    else
+       ! calculate it from surface pressure, height and temperature
+       noahmp%model%prsl1 = noahmp%forc%ps*exp(-1.0_r8*noahmp%model%zf/29.25_r8/noahmp%forc%t1)
+    end if
+
+    ! set dimensionless Exner function at surface adjacent layer
+    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Sa_exner')) then
+       noahmp%model%prslk1 = noahmp%forc%prslk1
+    else
+       ! calculate it based on bottom pressure
+       noahmp%model%prslk1 = (noahmp%forc%pbot(:)/p0)**cappa
+       ! following is used by ufs-land-driver
+       !noahmp%model%prslk1 = (exp(noahmp%model%zf/29.25_r8/noahmp%forc%t1))**(2.0_r8/7.0_r8)
+    end if
+
+    ! set dimensionless Exner function at the ground surface
+    noahmp%model%prsik1 = (noahmp%forc%ps(:)/p0)**cappa
+
+    ! set Exner function ratio between midlayer and interface
+    ! following is used by ufs-land-driver
+    !noahmp%model%prslki = (exp(noahmp%model%zf/29.25_r8/noahmp%forc%t1))**(2.0_r8/7.0_r8)
+    noahmp%model%prslki(:) = noahmp%model%prsik1(:)/noahmp%model%prslk1(:)
+
+    ! set wind forcing to model internal variables
+    noahmp%model%u1(:) = noahmp%forc%u1(:)
+    noahmp%model%v1(:) = noahmp%forc%v1(:)
+
+    ! NOTE: CCPP has addtional adjustment in wind speed which could lead to minor difference
+    ! The modification is done in GFS_surface_generic_pre.F90
+    noahmp%forc%wind(:) = sqrt(noahmp%forc%u1(:)**2+noahmp%forc%v1(:)**2)
+    noahmp%forc%wind(:) = max(noahmp%forc%wind(:), 1.0_r8)
+
+    ! set snow precipitation
+    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_snow')) then
+       noahmp%model%snow_mp(:) = noahmp%forc%snow(:)
+    else
+       noahmp%model%snow_mp(:) = 0.0_r8
+       if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_snowc')) then
+          noahmp%model%snow_mp(:) = noahmp%forc%snowc(:)
+       end if
+       if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_snowl')) then
+          noahmp%model%snow_mp(:) = noahmp%model%snow_mp(:)+noahmp%forc%snowl(:)
+       end if
+    end if
+
+    ! set precipitation, total, convective and large scale
+    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_rainc')) then
+       noahmp%model%rainc_mp(:) = noahmp%forc%tprcpc(:)
+    else
+       noahmp%model%rainc_mp(:) = 0.0_r8
+    end if
+    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_rainl')) then
+       noahmp%model%rainn_mp(:) = noahmp%forc%tprcpl(:)
+    else
+       noahmp%model%rainn_mp(:) = 0.0_r8
+    end if
+    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_rain')) then
+       noahmp%model%rainn_mp(:) = noahmp%forc%tprcp(:)
+    end if
+    noahmp%model%tprcp(:) = noahmp%model%rainn_mp(:)+noahmp%model%rainc_mp(:)
 
     !----------------------
     ! interpolate monthly data, vegetation fraction and mean sfc diffuse sw albedo (NOT used)
     !----------------------
 
-    call interpolate_monthly(currTime, noahmp%static%im, &
-       noahmp%model%gvf_monthly, noahmp%model%sigmaf, rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'vfrac')) then
+       where(noahmp%forc%vegfrac(:) < 0.01_r8)
+          noahmp%model%sigmaf(:) = 0.01_r8
+       else where
+          noahmp%model%sigmaf(:) = noahmp%forc%vegfrac(:)
+       end where
+    else
+       call interpolate_monthly(currTime, noahmp%static%im, &
+          noahmp%model%gvf_monthly, noahmp%model%sigmaf, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
  
     ! not used by the model but is set internally in the driver to albedo_total
     call interpolate_monthly(currTime, noahmp%static%im, &
@@ -233,30 +359,125 @@ contains
     ! calculate solar zenith angle
     !----------------------
 
+    ! TODO: this could be coupling field for active atm
     call calc_cosine_zenith(currTime, noahmp%static%im, &
       noahmp%domain%lats, noahmp%domain%lons, noahmp%model%xcoszin, &
       noahmp%model%julian, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    !----------------------
-    ! set variables from forcing  
-    !----------------------
+    ! -----------------------
+    ! custom calculations, unit conversion, variable modification etc.
+    ! -----------------------
 
-    noahmp%model%u1 = noahmp%forc%u1
-    noahmp%model%v1 = noahmp%forc%v1
-
-    noahmp%model%snet = noahmp%forc%dswsfc*(1.0_r8-noahmp%model%sfalb)
+    ! set snow/rain flag for precipitation
     noahmp%model%srflag = 0.0_r8
     where(noahmp%forc%t1 < tfreeze) noahmp%model%srflag = 1.0_r8
-    noahmp%model%prsl1 = noahmp%forc%ps*exp(-1.0_r8*noahmp%model%zf/29.25_r8/noahmp%forc%t1) 
-    noahmp%model%prslki = (exp(noahmp%model%zf/29.25_r8/noahmp%forc%t1))**(2.0_r8/7.0_r8)    
-    noahmp%model%prslk1 = (exp(noahmp%model%zf/29.25_r8/noahmp%forc%t1))**(2.0_r8/7.0_r8)
-    noahmp%model%prsik1 = (exp(noahmp%model%zf/29.25_r8/noahmp%forc%t1))**(2.0_r8/7.0_r8)
-    noahmp%model%rainn_mp = 1000.0_r8*noahmp%forc%tprcp/noahmp%static%delt
-    noahmp%model%rainc_mp = 0.0_r8
-    noahmp%model%snow_mp = 0.0_r8
+
+    ! unit conversion for precipitation
+    ! TODO: do we need for datm coupling?
+    ! convert mm/s to m
+    !noahmp%forc%tprcp(:) = noahmp%forc%tprcp(:)*noahmp%static%delt/1000.0_r8
+    ! datm
+    !noahmp%model%rainn_mp = 1000.0_r8*noahmp%forc%tprcp/noahmp%static%delt
+
+    ! they are not defined as coupling fields but CCPP provides those fields
     noahmp%model%graupel_mp = 0.0_r8
     noahmp%model%ice_mp = 0.0_r8
+
+    !----------------------
+    ! call stability
+    !----------------------
+    do i = noahmp%domain%begl, noahmp%domain%endl
+       if (noahmp%domain%mask(i) == 1 .and. noahmp%model%flag_iter(i)) then
+          ! set initial value for ztmax
+          ztmax = 1.0_r8
+
+          !virtual temperature in middle of lowest layer
+          virtfac = 1.0_r8+con_fvirt*max(noahmp%forc%q1(i),qmin)
+          tv1 = noahmp%forc%t1(i)*virtfac
+
+          if (noahmp%model%thsfc_loc) then
+             ! use local potential temperature
+             thv1 = noahmp%forc%t1(i)*noahmp%model%prslki(i)*virtfac
+             tvs  = 0.5_r8*(noahmp%model%tsurf(i)+noahmp%model%tskin(i))*virtfac
+          else
+             ! use potential temperature referenced to 1000 hPa
+             thv1 = noahmp%forc%t1(i)/noahmp%model%prslk1(i)*virtfac
+             tvs = 0.5_r8*(noahmp%model%tsurf(i)+noahmp%model%tskin(i))/noahmp%model%prsik1(i)*virtfac
+          end if
+
+         ! set initial value for zvfun
+         noahmp%model%zvfun(i) = 0.0_r8
+
+         ! set initial value for z0max
+         z0max = max(zmin, min(0.01_r8 * noahmp%model%zorl(i), noahmp%model%zf(i)))
+
+         tem1 = 1.0_r8-noahmp%model%shdmax(i)
+         tem2 = tem1*tem1
+         tem1 = 1.0_r8-tem2
+
+         if (noahmp%static%ivegsrc == 1) then
+            if (noahmp%model%vegtype(i) == 10) then
+               z0max = exp(tem2*log01+tem1*log07)
+            elseif (noahmp%model%vegtype(i) == 6) then
+               z0max = exp(tem2*log01+tem1*log05)
+            elseif (noahmp%model%vegtype(i) == 7) then
+               z0max = 0.01_r8
+            elseif (noahmp%model%vegtype(i) == 16) then
+               z0max = 0.01_r8
+            else
+               z0max = exp(tem2*log01+tem1*log(z0max))
+            endif
+         elseif (noahmp%static%ivegsrc == 2) then
+            if (noahmp%model%vegtype(i) == 7) then
+              z0max = exp(tem2*log01+tem1*log07)
+            elseif (noahmp%model%vegtype(i) == 8) then
+              z0max = exp(tem2*log01+tem1*log05)
+            elseif (noahmp%model%vegtype(i) == 9) then
+              z0max = 0.01_r8
+            elseif (noahmp%model%vegtype(i) == 11) then
+              z0max = 0.01_r8
+            else
+              z0max = exp(tem2*log01+tem1*log(z0max))
+            endif
+         endif
+
+         ! TODO: add surface perturbations to z0max over land
+         ! z0pert is defined in CCPP GFS_surface_generic_pre.F90
+         ! it is all zero for control_p8 configuration
+
+         ! limit z0max
+         z0max = max(z0max, zmin)
+
+         czilc = 10.0_r8**(-4.0_r8*z0max) ! Trier et al. (2011,WAF)
+         czilc = max(min(czilc, 0.8_r8), 0.08_r8)
+         tem1 = 1.0_r8-noahmp%model%sigmaf(i)
+         czilc = czilc*tem1*tem1
+         ztmax = z0max * exp( - czilc * karman * 258.2_r8 * sqrt(noahmp%model%ustar1(i)*z0max) )
+
+         ! TODO: add surface perturbations to ztmax over land
+         ! it is all zero for control_p8 configuration
+         ztmax = max(ztmax, zmin)
+
+         ! compute a function of surface roughness & green vegetation fraction (zvfun)
+         tem1 = (z0max-z0lo)/(z0up-z0lo)
+         tem1 = min(max(tem1, 0.0_r8), 1.0_r8)
+         tem2 = max(noahmp%model%sigmaf(i), 0.1_r8)
+         noahmp%model%zvfun(i) = sqrt(tem1*tem2)
+
+         ! call stability function
+         call stability( &
+         !  ---  inputs:
+              noahmp%model%zf(i), noahmp%model%zvfun(i) , sqrt(noahmp%domain%garea(i)), &
+              tv1               , thv1                  , noahmp%forc%wind(i)         , &
+              z0max             , ztmax                 , tvs                         , &
+              con_g             , noahmp%model%thsfc_loc,                               &
+         !  ---  outputs:
+              noahmp%model%rb1(i)  , noahmp%model%fm1(i)      , noahmp%model%fh1(i)   , &
+              noahmp%model%fm101(i), noahmp%model%fh21(i)     , noahmp%model%cm(i)    , &
+              noahmp%model%ch(i)   , noahmp%model%stress1(i)  , noahmp%model%ustar1(i))
+       end if
+    end do
 
     !----------------------
     ! write out initial conditions in case of debugging
@@ -273,7 +494,7 @@ contains
 
     !----------------------
     ! run model
-    !---------------------- 
+    !----------------------
 
     call noahmpdrv_run( &
     !  ---  inputs:
@@ -295,16 +516,16 @@ contains
          noahmp%static%iopt_snf, noahmp%static%iopt_tbot, noahmp%static%iopt_stc , &
          noahmp%static%iopt_trs, &
          noahmp%model%xlatin   , noahmp%model%xcoszin   , noahmp%model%iyrlen    , &
-         noahmp%model%julian   , noahmp%domain%garea    , & 
+         noahmp%model%julian   , noahmp%domain%garea    , &
          noahmp%model%rainn_mp , noahmp%model%rainc_mp  , &
          noahmp%model%snow_mp  , noahmp%model%graupel_mp, noahmp%model%ice_mp    , &
          con_hvap              , con_cp                 , con_jcal               , &
          rhoh2o                , con_eps                , con_epsm1              , &
          con_fvirt             , con_rd                 , con_hfus               , &
-         noahmp%model%thsfc_loc, & 
+         noahmp%model%thsfc_loc, &
     !  ---  in/outs:
          noahmp%model%weasd    , noahmp%model%snwdph    , noahmp%model%tskin     , &
-         noahmp%forc%tprcp     , noahmp%model%srflag    , noahmp%model%smc       , &
+         noahmp%model%tprcp    , noahmp%model%srflag    , noahmp%model%smc       , &
          noahmp%model%stc      , noahmp%model%slc       , noahmp%model%canopy    , &
          noahmp%model%trans    , noahmp%model%tsurf     , noahmp%model%zorl      , &
          noahmp%model%rb1      , noahmp%model%fm1       , noahmp%model%fh1       , &
@@ -326,7 +547,7 @@ contains
          noahmp%model%smoiseq  , noahmp%model%smcwtdxy  , noahmp%model%deeprechxy, &
          noahmp%model%rechxy   , noahmp%model%albdvis   , noahmp%model%albdnir   , &
          noahmp%model%albivis  , noahmp%model%albinir   , noahmp%model%emiss     , &
-     !  ---  outputs:
+    !  ---  outputs:
          noahmp%model%sncovr1  , noahmp%model%qsurf     , noahmp%model%gflux     , &
          noahmp%model%drain    , noahmp%model%evap      , noahmp%model%hflx      , &
          noahmp%model%ep       , noahmp%model%runoff    , noahmp%model%cmm       , &
@@ -342,7 +563,7 @@ contains
     ! unit conversions
     !----------------------
 
-    noahmp%model%rho = noahmp%model%prsl1/(con_rd*noahmp%forc%t1*(1.0_r8+con_fvirt*noahmp%forc%q1)) 
+    noahmp%model%rho = noahmp%model%prsl1/(con_rd*noahmp%forc%t1*(1.0_r8+con_fvirt*noahmp%forc%q1))
     noahmp%model%hflx = noahmp%model%hflx*noahmp%model%rho*con_cp
     noahmp%model%evap = noahmp%model%evap*noahmp%model%rho*con_hvap
     where(noahmp%forc%dswsfc>0.0_r8 .and. noahmp%model%sfalb<0.0_r8) noahmp%forc%dswsfc = 0.0_r8

@@ -15,6 +15,9 @@ module lnd_comp_import_export
   use lnd_comp_shr  , only : ChkErr
   use lnd_comp_kind , only : r8 => shr_kind_r8
   use lnd_comp_types, only : noahmp_type
+  use lnd_comp_types, only : fld_list_type, fldsMax
+  use lnd_comp_types, only : fldsToLnd, fldsToLnd_num
+  use lnd_comp_types, only : fldsFrLnd, fldsFrLnd_num
 
   implicit none
   private ! except
@@ -24,24 +27,13 @@ module lnd_comp_import_export
   public :: export_fields
   public :: import_fields
   public :: state_diagnose
+  public :: check_for_connected
 
   !--------------------------------------------------------------------------
   ! Private module data
   !--------------------------------------------------------------------------
 
-  type fld_list_type
-     character(len=128) :: stdname
-     integer :: ungridded_lbound = 0
-     integer :: ungridded_ubound = 0
-  end type fld_list_type
-
   integer                :: dbug = 2
-  integer, parameter     :: fldsMax = 100
-  integer                :: fldsToLnd_num = 0
-  integer                :: fldsFrLnd_num = 0
-  type(fld_list_type)    :: fldsToLnd(fldsMax)
-  type(fld_list_type)    :: fldsFrLnd(fldsMax)
-
   character(*),parameter :: modName =  "(lnd_comp_import_export)"
   character(*),parameter :: u_FILE_u = &
        __FILE__
@@ -91,15 +83,30 @@ contains
     ! import from atm
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_z')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_tbot')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_ta')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_tskn')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_pslv')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_prsl')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_pbot')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_shum')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_qa')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_u')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_v')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_ua')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_va')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_exner')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_ustar')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_swdn')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_lwdn')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_swnet')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_rainc')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_rainl')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_rain')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_snow')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_snowc')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_snowl')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'vfrac')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'zorl')
 
     ! Now advertise import fields
     do n = 1,fldsToLnd_num
@@ -193,7 +200,7 @@ contains
 
     ! input/output variables
     type(ESMF_State)    , intent(inout) :: state
-    type(fld_list_type) , intent(in)    :: fldList(:)
+    type(fld_list_type) , intent(inout) :: fldList(:)
     integer             , intent(in)    :: numflds
     character(len=*)    , intent(in)    :: tag
     type(ESMF_Mesh)     , intent(in)    :: mesh
@@ -229,6 +236,9 @@ contains
           ! NOW call NUOPC_Realize
           call NUOPC_Realize(state, field=field, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          ! Set flag for connected fields
+          fldList(n)%connected = .true.
        else
           call ESMF_LogWrite(subname // trim(tag) // " Field = "// trim(stdname) // " is not connected.", &
              ESMF_LOGMSG_INFO)
@@ -251,7 +261,6 @@ contains
 
     ! local variables
     type(ESMF_State)            :: importState
-    type(ESMF_StateItem_Flag)   :: itemType
     character(len=*), parameter :: subname=trim(modName)//':(import_fields)'
     ! ----------------------------------------------
 
@@ -266,47 +275,58 @@ contains
     ! atm input fields
     ! -----------------------
 
-    call state_getimport_1d(importState, 'Sa_z'     , noahmp%forc%hgt, rc=rc)
+    call state_getimport_1d(importState, 'Sa_z'      , noahmp%forc%hgt, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, 'Sa_tbot'  , noahmp%forc%t1, rc=rc)
+    call state_getimport_1d(importState, 'Sa_ta'     , noahmp%forc%t1, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, 'Sa_pslv'  , noahmp%forc%ps, rc=rc)
+    call state_getimport_1d(importState, 'Sa_tbot'   , noahmp%forc%t1, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, 'Sa_shum'  , noahmp%forc%q1, rc=rc)
+    call state_getimport_1d(importState, 'Sa_tskn'   , noahmp%forc%tskin, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, 'Faxa_swdn', noahmp%forc%dswsfc, rc=rc)
+    call state_getimport_1d(importState, 'Sa_prsl'   , noahmp%forc%pbot, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, 'Faxa_lwdn', noahmp%forc%dlwflx, rc=rc)
+    call state_getimport_1d(importState, 'Sa_pbot'   , noahmp%forc%pbot, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, 'Sa_u'     , noahmp%forc%u1, rc=rc)
+    call state_getimport_1d(importState, 'Sa_pslv'   , noahmp%forc%ps, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, 'Sa_v'     , noahmp%forc%v1, rc=rc)
+    call state_getimport_1d(importState, 'Sa_shum'   , noahmp%forc%q1, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    noahmp%forc%wind(:) = sqrt(noahmp%forc%u1(:)**2+noahmp%forc%v1(:)**2)
-
-    call ESMF_StateGet(importState, itemName='Faxa_rain', itemType=itemType, rc=rc)
+    call state_getimport_1d(importState, 'Sa_qa'     , noahmp%forc%q1, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    if (itemType == ESMF_STATEITEM_FIELD) then
-       call state_getimport_1d(importState, 'Faxa_rain', noahmp%forc%tprcp, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    else
-       call state_getimport_1d(importState, 'Faxa_rainc', noahmp%forc%tprcpc, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_getimport_1d(importState, 'Faxa_rainl', noahmp%forc%tprcpl, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       noahmp%forc%tprcp(:) = noahmp%forc%tprcpc(:)+noahmp%forc%tprcpl(:)
-    end if
-
-    ! -----------------------
-    ! custom calculations, unit conversion etc. 
-    ! -----------------------
-
-    ! limit wind speed
-    noahmp%forc%wind(:) = max(noahmp%forc%wind(:), 0.1_r8)
-
-    ! convert mm/s to m
-    !noahmp%forc%tprcp(:) = noahmp%forc%tprcp(:)*noahmp%static%delt/1000.0_r8
+    call state_getimport_1d(importState, 'Faxa_swdn' , noahmp%forc%dswsfc, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, 'Faxa_lwdn' , noahmp%forc%dlwflx, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, 'Faxa_swnet', noahmp%forc%snet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, 'Sa_u'      , noahmp%forc%u1, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, 'Sa_ua'     , noahmp%forc%u1, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, 'Sa_v'      , noahmp%forc%v1, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, 'Sa_va'     , noahmp%forc%v1, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, 'Sa_exner'  , noahmp%forc%prslk1, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, 'Sa_ustar'  , noahmp%forc%ustar1, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, 'Faxa_rain' , noahmp%forc%tprcp, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, 'Faxa_rainc', noahmp%forc%tprcpc, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, 'Faxa_rainl', noahmp%forc%tprcpl, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, 'Faxa_snow' , noahmp%forc%snow, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, 'Faxa_snowc', noahmp%forc%snowc, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, 'Faxa_snowl', noahmp%forc%snowl, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, 'vfrac'     , noahmp%forc%vegfrac, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport_1d(importState, 'zorl'      , noahmp%forc%zorl, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
@@ -365,18 +385,25 @@ contains
     integer          , intent(out)   :: rc
 
     ! local variables
-    real(r8), pointer :: fldPtr1d(:)
-    integer           :: g
+    real(r8), pointer           :: fldPtr1d(:)
+    type(ESMF_StateItem_Flag)   :: itemType
     character(len=*), parameter :: subname=trim(modName)//':(state_getimport_1d)'
     ! ----------------------------------------------
 
     rc = ESMF_SUCCESS
 
-    call state_getfldptr(State, trim(fldname), fldptr1d=fldptr1d, rc=rc)
+    call ESMF_StateGet(state, itemName=trim(fldname), itemType=itemType, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    arr1d(:) = fldptr1d(:)
-    call check_for_nans(arr1d, trim(fldname), 1, rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    if (itemType == ESMF_STATEITEM_FIELD) then
+       call state_getfldptr(State, trim(fldname), fldptr1d=fldptr1d, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       arr1d(:) = fldptr1d(:)
+       call check_for_nans(arr1d, trim(fldname), 1, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       call ESMF_LogWrite(subname//' '//trim(fldname)//' is not in the state!', ESMF_LOGMSG_INFO)
+    end if
 
   end subroutine state_getimport_1d
 
@@ -671,5 +698,29 @@ contains
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
   end subroutine check_for_nans
+
+  !=============================================================================
+
+  logical function check_for_connected(fldList, numflds, fname)
+
+    ! input/output variables
+    type(fld_list_type) , intent(inout) :: fldList(:)
+    integer             , intent(in)    :: numflds
+    character(len=*)    , intent(in)    :: fname
+
+    ! local variables
+    integer :: n
+    character(len=*), parameter :: subname='(check_for_connected)'
+    ! ----------------------------------------------
+
+    check_for_connected = .false.
+    do n = 1, numflds
+       if (trim(fname) == trim(fldList(n)%stdname)) then
+          check_for_connected = fldList(n)%connected 
+          exit
+       end if
+    end do
+
+  end function check_for_connected
 
 end module lnd_comp_import_export

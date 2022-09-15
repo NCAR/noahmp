@@ -82,7 +82,7 @@ contains
 
     rc = ESMF_SUCCESS
 
-    if (noahmp%nmlist%ic_type == 'sfc') then
+    if (trim(noahmp%nmlist%ic_type) == 'sfc') then
        !----------------------
        ! Set file name for initial conditions
        !----------------------
@@ -177,6 +177,32 @@ contains
        call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        noahmp%init%soil_liquid(:,:) = ptr(:,:,1)
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       !----------------------
+       ! Read surface roughness length
+       !----------------------
+
+       call read_tiled_file(filename, 'zorll', noahmp, field, numrec=1, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%init%surface_roughness(:) = ptr(:,1,1)
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       !----------------------
+       ! Read friction velocity 
+       !----------------------
+
+       call read_tiled_file(filename, 'uustar', noahmp, field, numrec=1, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%init%friction_velocity(:) = ptr(:,1,1)
        nullify(ptr)
        call ESMF_FieldDestroy(field, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -1654,6 +1680,7 @@ contains
     character(len=CL)                :: filename
     real(ESMF_KIND_R8), pointer      :: ptr(:,:,:)
     type(ESMF_Field)                 :: field 
+    real(ESMF_KIND_R8), parameter    :: pi_8 = 3.14159265358979323846_r8
     character(len=*), parameter      :: subname=trim(modName)//':(read_static) '
     !-------------------------------------------------------------------------------
 
@@ -1661,14 +1688,7 @@ contains
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
     !----------------------
-    ! Set data sources 
-    !----------------------
-
-    noahmp%static%isot = 1
-    noahmp%static%ivegsrc = 1
-
-    !----------------------
-    ! Read latitude 
+    ! Read latitude, we could also retrive from ESMF mesh object 
     !----------------------
 
     filename = trim(noahmp%nmlist%input_dir)//'oro_data.tile'
@@ -1680,6 +1700,9 @@ contains
     nullify(ptr)
     call ESMF_FieldDestroy(field, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! convert it to radian
+    noahmp%model%xlatin(:) = noahmp%model%xlatin(:)*pi_8/180.0_r8
 
     !----------------------
     ! Read soil type
@@ -1738,20 +1761,6 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------
-    ! Set emissivity
-    !----------------------
-
-    ! TODO: this needs to be option in nems.configure
-    noahmp%model%emiss(:) = 0.95
-
-    !----------------------
-    ! Set albedo
-    !----------------------
-
-    ! TODO: this needs to be option in nems.configure
-    noahmp%model%alb_monthly(:,:) = 0.25
-
-    !----------------------
     ! Read maximum snow albedo
     !----------------------
 
@@ -1782,13 +1791,11 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------
-    ! Set dry 
+    ! Set land-sea mask (dry)
     !----------------------
 
     noahmp%model%dry(:) = .false.
     where(noahmp%model%vegtype(:) /= iswater) noahmp%model%dry(:) = .true. 
-
-    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
   end subroutine read_static
 
@@ -1848,6 +1855,7 @@ contains
     !----------------------
    
     write(cname, fmt='(A,I1,A)') trim(filename), my_tile, '.nc' 
+    print*, trim(cname)
     call mpp_open(funit, trim(cname), action=MPP_RDONLY, form=MPP_NETCDF, &
                   threading=MPP_MULTI, fileset=MPP_SINGLE, is_root_pe=is_root_pe)
     call mpp_get_info(funit, ndim, nvar, natt, ntime)
@@ -2152,7 +2160,7 @@ contains
     call fld_add("weasd"     ,"water equivalent accumulated snow depth"                           ,"mm"     ,ptr2d=ptr2d, v1r8=noahmp%model%weasd)
     call fld_add("snwdph"    ,"snow depth (water equiv) over land"                                ,"m"      ,ptr2d=ptr2d, v1r8=noahmp%model%snwdph)
     call fld_add("tskin"     ,"ground surface skin temperature"                                   ,"K"      ,ptr2d=ptr2d, v1r8=noahmp%model%tskin)
-    call fld_add("tprcp"     ,"total precipitation"                                               ,"mm"     ,ptr2d=ptr2d, v1r8=noahmp%forc%tprcp)
+    call fld_add("tprcp"     ,"total precipitation"                                               ,"mm"     ,ptr2d=ptr2d, v1r8=noahmp%model%tprcp)
     call fld_add("srflag"    ,"snow/rain flag for precipitation"                                  ,"1"      ,ptr2d=ptr2d, v1r8=noahmp%model%srflag)
     call fld_add("smc"       ,"total soil moisture content"                                       ,"m3/m3"  ,ptr2d=ptr2d, v2r8=noahmp%model%smc, zaxis="z")
     call fld_add("stc"       ,"soil temperature"                                                  ,"K"      ,ptr2d=ptr2d, v2r8=noahmp%model%stc, zaxis="z")
@@ -2235,6 +2243,7 @@ contains
     call fld_add("zvfun"     ,"function of surface roughness length and green vegetation fraction","1"      ,ptr2d=ptr2d, v1r8=noahmp%model%zvfun)
     call fld_add("rho"       ,"density"                                                           ,"kg/m3"  ,ptr2d=ptr2d, v1r8=noahmp%model%rho)
     call fld_add("hgt"       ,"forcing height"                                                    ,"m"      ,ptr2d=ptr2d, v1r8=noahmp%forc%hgt)
+    call fld_add("pblh"      ,"height of pbl"                                                     ,"m"      ,ptr2d=ptr2d, v1r8=noahmp%model%pblh)
 
     !----------------------
     ! masked out data over ocean/inland water/lake

@@ -338,6 +338,21 @@ contains
     call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 
     ! ---------------------
+    ! Option to calculate net shortwave internally using downwelling component and albedo
+    ! ---------------------
+
+    call NUOPC_CompAttributeGet(gcomp, name='calc_snet', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    noahmp%nmlist%calc_snet = .false.
+    if (isPresent .and. isSet) then
+       if (trim(cvalue) .eq. '.true.' .or. trim(cvalue) .eq. 'true') noahmp%nmlist%calc_snet = .true.
+    end if
+
+    write(msg, fmt='(A,L)') trim(subname)//': calc_snet = ', noahmp%nmlist%calc_snet
+    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
+
+    ! ---------------------
     ! Create mosaic grid and convert it to mesh 
     ! ---------------------
 

@@ -18,6 +18,8 @@ module lnd_comp_types
      real(kind=kp), allocatable :: soil_temperature(:,:)
      real(kind=kp), allocatable :: soil_moisture(:,:)
      real(kind=kp), allocatable :: soil_liquid(:,:)
+     real(kind=kp), allocatable :: surface_roughness(:)
+     real(kind=kp), allocatable :: friction_velocity(:)
   end type initial_type
 
   ! data type for forcing
@@ -27,13 +29,23 @@ module lnd_comp_types
     real(kind=kp),  allocatable :: u1         (:) ! u-component of wind (m/s)
     real(kind=kp),  allocatable :: v1         (:) ! v-component of wind (m/s)
     real(kind=kp),  allocatable :: ps         (:) ! surface pressure (Pa)
+    real(kind=kp),  allocatable :: pbot       (:) ! bottom layer pressure (Pa)
+    real(kind=kp),  allocatable :: tskin      (:) ! skin temperature (K)
     real(kind=kp),  allocatable :: dlwflx     (:) ! downward longwave radiation (W/m2)
     real(kind=kp),  allocatable :: dswsfc     (:) ! downward shortwave radiation (W/m2)
+    real(kind=kp),  allocatable :: snet       (:) ! net shortwave radiation (W/m2)
     real(kind=kp),  allocatable :: wind       (:) ! wind speed (m/s)
     real(kind=kp),  allocatable :: tprcp      (:) ! total precipitation (mm/s)
     real(kind=kp),  allocatable :: tprcpc     (:) ! convective component of precipitation (mm/s)
     real(kind=kp),  allocatable :: tprcpl     (:) ! large-scale component of precipitation (mm/s)
-    real(kind=kp),  allocatable :: hgt        (:) ! forcing height
+    real(kind=kp),  allocatable :: snow       (:) ! snow fall (mm/s)
+    real(kind=kp),  allocatable :: snowc      (:) ! convective component of snow fall (mm/s)
+    real(kind=kp),  allocatable :: snowl      (:) ! large-scale component of snow fall (mm/s)
+    real(kind=kp),  allocatable :: vegfrac    (:) ! vegetation fraction (unitless, 0-1)
+    real(kind=kp),  allocatable :: hgt        (:) ! forcing height (m)
+    real(kind=kp),  allocatable :: prslk1     (:) ! dimensionless Exner function at the lowest model layer
+    real(kind=kp),  allocatable :: ustar1     (:) ! friction velocity (m/s)
+    real(kind=kp),  allocatable :: zorl       (:) ! surface roughness (m)
   end type forcing_type
 
   ! data type for static information provided by nems.configure
@@ -60,6 +72,8 @@ module lnd_comp_types
     integer                     :: iopt_rsf       ! option for surface resistent to evaporation/sublimation
     integer                     :: iopt_gla       ! option for glacier treatment
     integer                     :: iopt_trs       ! option for surface thermal roughness option
+    logical                     :: do_mynnedmf    ! option for MYNN-EDMF
+    logical                     :: do_mynnsfclay  ! option for MYNN surface layer scheme
     character(len=128)          :: errmsg         ! error message
     integer                     :: errflg         ! error flag 
   end type static_type
@@ -108,6 +122,7 @@ module lnd_comp_types
      real(kind=kp), allocatable :: snow_mp    (:)   ! microphysics snow (mm)
      real(kind=kp), allocatable :: graupel_mp (:)   ! microphysics graupel (mm)
      real(kind=kp), allocatable :: ice_mp     (:)   ! microphysics ice/hail (mm)
+     real(kind=kp), allocatable :: tprcp      (:)   ! total precipitation (mm/s)
      real(kind=kp), allocatable :: weasd      (:)   ! water equivalent accumulated snow depth (mm)
      real(kind=kp), allocatable :: snwdph     (:)   ! snow depth (water equiv) over land
      real(kind=kp), allocatable :: tskin      (:)   ! ground surface skin temperature (K)
@@ -183,6 +198,8 @@ module lnd_comp_types
      real(kind=kp), allocatable :: q2mp       (:)   ! combined q2m from tiles
      real(kind=kp), allocatable :: zvfun      (:)   ! some function of vegetation used for gfs stability
      real(kind=kp), allocatable :: rho        (:)   ! air density
+     real(kind=kp), allocatable :: pores      (:)   ! max soil moisture for a given soil type for land surface model
+     real(kind=kp), allocatable :: resid      (:)   ! min soil moisture for a given soil type for land surface model
      ! variables in dimensions im and km
      real(kind=kp), allocatable :: smc      (:,:)   ! total soil moisture content (fractional)
      real(kind=kp), allocatable :: stc      (:,:)   ! soil temp (K)
@@ -261,6 +278,11 @@ module lnd_comp_types
      integer                    :: surface_thermal_roughness_option
      integer                    :: output_freq                       ! model output interval
      logical                    :: has_export                        ! enable/disable export fields
+     logical                    :: calc_snet                         ! enable/disable calculating net shortwave rad. internally
+     integer                    :: soil_type_category                ! soil type (category)
+     integer                    :: veg_type_category                 ! vegetation type (category)
+     real(kind=kp)              :: initial_emiss                     ! initial value for the emissivity (constant in everywhere)
+     real(kind=kp)              :: initial_albedo                    ! initial value for the monthly albedo (constant in everywhere)
   end type namelist_type
 
   type noahmp_type
@@ -279,6 +301,19 @@ module lnd_comp_types
      procedure, public  :: InitializeStates
 
   end type noahmp_type
+
+  type fld_list_type
+     character(len=128) :: stdname
+     integer :: ungridded_lbound = 0
+     integer :: ungridded_ubound = 0
+     logical :: connected = .false.
+  end type fld_list_type
+
+  integer, parameter     :: fldsMax = 100
+  integer                :: fldsToLnd_num = 0
+  integer                :: fldsFrLnd_num = 0
+  type(fld_list_type)    :: fldsToLnd(fldsMax)
+  type(fld_list_type)    :: fldsFrLnd(fldsMax)
 
 contains
 
@@ -304,19 +339,31 @@ contains
     allocate(this%init%soil_temperature(begl:endl,km))
     allocate(this%init%soil_moisture(begl:endl,km))
     allocate(this%init%soil_liquid(begl:endl,km))
+    allocate(this%init%surface_roughness(begl:endl))
+    allocate(this%init%friction_velocity(begl:endl))
 
-    allocate(this%forc%t1    (begl:endl))
-    allocate(this%forc%q1    (begl:endl))
-    allocate(this%forc%u1    (begl:endl))
-    allocate(this%forc%v1    (begl:endl))
-    allocate(this%forc%ps    (begl:endl))
-    allocate(this%forc%dlwflx(begl:endl))
-    allocate(this%forc%dswsfc(begl:endl))
-    allocate(this%forc%wind  (begl:endl))
-    allocate(this%forc%tprcp (begl:endl))
-    allocate(this%forc%tprcpc(begl:endl))
-    allocate(this%forc%tprcpl(begl:endl))
-    allocate(this%forc%hgt   (begl:endl))
+    allocate(this%forc%t1     (begl:endl))
+    allocate(this%forc%q1     (begl:endl))
+    allocate(this%forc%u1     (begl:endl))
+    allocate(this%forc%v1     (begl:endl))
+    allocate(this%forc%ps     (begl:endl))
+    allocate(this%forc%pbot   (begl:endl))
+    allocate(this%forc%tskin  (begl:endl))
+    allocate(this%forc%dlwflx (begl:endl))
+    allocate(this%forc%dswsfc (begl:endl))
+    allocate(this%forc%snet   (begl:endl))
+    allocate(this%forc%wind   (begl:endl))
+    allocate(this%forc%tprcp  (begl:endl))
+    allocate(this%forc%tprcpc (begl:endl))
+    allocate(this%forc%tprcpl (begl:endl))
+    allocate(this%forc%snow   (begl:endl))
+    allocate(this%forc%snowc  (begl:endl))
+    allocate(this%forc%snowl  (begl:endl))
+    allocate(this%forc%vegfrac(begl:endl))
+    allocate(this%forc%hgt    (begl:endl))
+    allocate(this%forc%prslk1 (begl:endl))
+    allocate(this%forc%ustar1 (begl:endl))
+    allocate(this%forc%zorl   (begl:endl))
 
     allocate(this%model%u1         (begl:endl))
     allocate(this%model%v1         (begl:endl))
@@ -354,6 +401,7 @@ contains
     allocate(this%model%snow_mp    (begl:endl))
     allocate(this%model%graupel_mp (begl:endl))
     allocate(this%model%ice_mp     (begl:endl))
+    allocate(this%model%tprcp      (begl:endl))
     allocate(this%model%weasd      (begl:endl))
     allocate(this%model%snwdph     (begl:endl))
     allocate(this%model%tskin      (begl:endl))
@@ -428,6 +476,8 @@ contains
     allocate(this%model%q2mp       (begl:endl))
     allocate(this%model%zvfun      (begl:endl))
     allocate(this%model%rho        (begl:endl))
+    allocate(this%model%pores      (30))
+    allocate(this%model%resid      (30))
 
     allocate(this%model%smc        (begl:endl,km))
     allocate(this%model%stc        (begl:endl,km))
@@ -451,19 +501,31 @@ contains
     this%init%soil_temperature      = 0.0_kp
     this%init%soil_moisture         = 0.0_kp
     this%init%soil_liquid           = 0.0_kp
+    this%init%surface_roughness     = 0.0_kp
+    this%init%friction_velocity     = 0.0_kp
 
-    this%forc%t1     = 0.0_kp
-    this%forc%q1     = 0.0_kp
-    this%forc%u1     = 0.0_kp
-    this%forc%v1     = 0.0_kp
-    this%forc%ps     = 0.0_kp
-    this%forc%dlwflx = 0.0_kp
-    this%forc%dswsfc = 0.0_kp
-    this%forc%wind   = 0.0_kp
-    this%forc%tprcp  = 0.0_kp
-    this%forc%tprcpc = 0.0_kp
-    this%forc%tprcpl = 0.0_kp
-    this%forc%hgt    = 0.0_kp
+    this%forc%t1      = 0.0_kp
+    this%forc%q1      = 0.0_kp
+    this%forc%u1      = 0.0_kp
+    this%forc%v1      = 0.0_kp
+    this%forc%ps      = 0.0_kp
+    this%forc%pbot    = 0.0_kp
+    this%forc%tskin   = 0.0_kp
+    this%forc%dlwflx  = 0.0_kp
+    this%forc%dswsfc  = 0.0_kp
+    this%forc%snet    = 0.0_kp
+    this%forc%wind    = 0.0_kp
+    this%forc%tprcp   = 0.0_kp
+    this%forc%tprcpc  = 0.0_kp
+    this%forc%tprcpl  = 0.0_kp
+    this%forc%snow    = 0.0_kp
+    this%forc%snowc   = 0.0_kp
+    this%forc%snowl   = 0.0_kp
+    this%forc%vegfrac = 0.0_kp
+    this%forc%hgt     = 0.0_kp
+    this%forc%prslk1  = 0.0_kp
+    this%forc%ustar1  = 0.0_kp
+    this%forc%zorl    = 0.0_kp
 
     this%model%iyrlen      = 0
     this%model%julian      = 0.0_kp
@@ -503,6 +565,7 @@ contains
     this%model%snow_mp     = 0.0_kp
     this%model%graupel_mp  = 0.0_kp
     this%model%ice_mp      = 0.0_kp
+    this%model%tprcp       = 0.0_kp
     this%model%weasd       = 0.0_kp
     this%model%snwdph      = 0.0_kp
     this%model%tskin       = 0.0_kp
@@ -578,6 +641,8 @@ contains
     this%model%q2mp        = 0.0_kp
     this%model%zvfun       = 0.0_kp
     this%model%rho         = 0.0_kp
+    this%model%pores       = 0.0_kp
+    this%model%resid       = 0.0_kp
     this%model%smc         = 0.0_kp
     this%model%stc         = 0.0_kp
     this%model%slc         = 0.0_kp

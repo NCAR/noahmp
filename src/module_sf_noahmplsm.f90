@@ -3550,7 +3550,7 @@ endif   ! croptype == 0
      tmp1 = b*b - c*c
      h = sqrt(tmp1) / avmu
      sigma = tmp0*tmp0 - tmp1
-     if ( abs (sigma) < 1.e-6_kind_phys ) sigma = sign(1.e-6_kind_phys,sigma)
+     if ( abs (sigma) < 1.e-6 ) sigma = sign(1.e-6,sigma)
      p1 = b + avmu*h
      p2 = b - avmu*h
      p3 = b + tmp0
@@ -4578,7 +4578,7 @@ endif   ! croptype == 0
 !           z0h = z0m !* exp(-czil*0.4*258.2*sqrt(fv*z0m))
 !       end if
       call thermalz0(parameters,fveg,z0m,z0m,zlvl,zpd,zpd,ustarx,          & !in
-                       vegtyp,0.0_kind_phys,ur,csigmaf0,csigmaf1,temptrs,temptrs,temptrs,0, & !in
+                       vegtyp,0.,ur,csigmaf0,csigmaf1,temptrs,temptrs,temptrs,0, & !in
                        z0mo,z0h)
 
         if(opt_sfc == 1) then
@@ -10325,13 +10325,13 @@ end subroutine psn_crop
           if ( present(iz0tlnd) ) then
              if ( iz0tlnd .le. 1 ) then
                 call zilitinkevich_1995(znt,zt,zq,restar,&
-                      ust,vkc,1.0_kind_phys,iz0tlnd,0,0.0_kind_phys)
+                      ust,vkc,1.0,iz0tlnd,0,0.0)
              elseif ( iz0tlnd .eq. 2 ) then
                 call yang_2008(znt,zt,zq,ust,molx,&
                               qstar,restar,visc)
              elseif ( iz0tlnd .eq. 3 ) then
                 !original mynn in wrf-arw used this form:
-                call garratt_1992(zt,zq,znt,restar,1.0_kind_phys)
+                call garratt_1992(zt,zq,znt,restar,1.0)
              endif
 
 ! the GFS option is removed along with gfs_z0_lnd
@@ -10340,7 +10340,7 @@ end subroutine psn_crop
 
              !default to zilitinkevich
              call zilitinkevich_1995(znt,zt,zq,restar,&
-                         ust,vkc,1.0_kind_phys,0,0,0.0_kind_phys)
+                         ust,vkc,1.0,0,0,0.0)
           endif
        endif
 
@@ -11068,7 +11068,7 @@ end subroutine psn_crop
 
         x=(1.-16.*zolf)**.25
         !psimk=2*alog(0.5*(1+x))+alog(0.5*(1+x*x))-2.*atan(x)+2.*atan(1.)
-        psimk=2.*log(0.5*(1+x))+log(0.5*(1+x*x))-2.*atan(x)+2.*atan1
+        psimk=2.*alog(0.5*(1+x))+alog(0.5*(1+x*x))-2.*atan(x)+2.*atan1
 
         ym=(1.-10.*zolf)**onethird
         !psimc=(3./2.)*log((ym**2.+ym+1.)/3.)-sqrt(3.)*atan((2.*ym+1)/sqrt(3.))+4.*atan(1.)/sqrt(3.)
