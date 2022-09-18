@@ -24,6 +24,7 @@ module lnd_comp_nuopc
   use NUOPC            , only : NUOPC_CompSpecialize
   use NUOPC_Model      , only : NUOPC_ModelGet
   use NUOPC_Model      , only : model_routine_SS => SetServices
+  use NUOPC_Model      , only : SetVM
   use NUOPC_Model      , only : model_label_Advance => label_Advance
   use NUOPC_Model      , only : model_label_SetRunClock => label_SetRunClock
 
@@ -43,7 +44,7 @@ module lnd_comp_nuopc
   private ! except
 
   ! Module public routines
-  public  :: SetServices
+  public  :: SetServices, SetVM
 
   ! Module private routines
   private :: InitializeP0        ! Phase zero of initialization
