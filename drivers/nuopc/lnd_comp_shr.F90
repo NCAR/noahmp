@@ -796,7 +796,8 @@ contains
     else
        noahmp%nmlist%soil_type_category = 1
     end if
-    call ESMF_LogWrite(trim(subname)//' : soil_type_category or isot = '//trim(cvalue), ESMF_LOGMSG_INFO)
+    write(msg, fmt='(A,I1)') trim(subname)//' : soil_type_category (isot) = ', noahmp%nmlist%soil_type_category
+    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
     noahmp%static%isot = noahmp%nmlist%soil_type_category
 
     ! Option for vegetation type category
@@ -807,7 +808,8 @@ contains
     else
        noahmp%nmlist%veg_type_category = 1
     end if
-    call ESMF_LogWrite(trim(subname)//' : veg_type_category or ivegsrc = '//trim(cvalue), ESMF_LOGMSG_INFO)
+    write(msg, fmt='(A,I1)') trim(subname)//' : veg_type_category (ivegsrc) = ', noahmp%nmlist%veg_type_category
+    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
     noahmp%static%ivegsrc = noahmp%nmlist%veg_type_category
 
     ! Initial value of emissivity (constant in everywhere)
@@ -818,7 +820,8 @@ contains
     else
        noahmp%nmlist%initial_emiss = 0.95
     end if
-    call ESMF_LogWrite(trim(subname)//' : initial_emiss = '//trim(cvalue), ESMF_LOGMSG_INFO)
+    write(msg, fmt='(A,F6.2)') trim(subname)//' : initial_emiss = ', noahmp%nmlist%initial_emiss
+    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 
     ! Initial value of monthly albedo (constant in everywhere)
     call NUOPC_CompAttributeGet(gcomp, name='initial_albedo', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
@@ -828,7 +831,8 @@ contains
     else
        noahmp%nmlist%initial_albedo = 0.2
     end if
-    call ESMF_LogWrite(trim(subname)//' : initial_albedo = '//trim(cvalue), ESMF_LOGMSG_INFO)
+    write(msg, fmt='(A,F6.2)') trim(subname)//' : initial_albedo = ', noahmp%nmlist%initial_albedo
+    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
