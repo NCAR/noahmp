@@ -10,7 +10,7 @@
 
       implicit none
 
-      public :: sfc_diff_init, sfc_diff_run, sfc_diff_finalize
+      public :: sfc_diff_run
       public :: stability
 
       private
@@ -19,16 +19,9 @@
 
       contains
 
-      subroutine sfc_diff_init
-      end subroutine sfc_diff_init
-
-      subroutine sfc_diff_finalize
-      end subroutine sfc_diff_finalize
-
-!> \defgroup GFS_diff_main GFS Surface Layer Scheme Module
+!> \defgroup GFS_diff_main GFS Surface Layer Module
+!> This module calculates surface roughness length.
 !> @{
-!> \brief This subroutine calculates surface roughness length.
-!!
 !! This subroutine includes the surface roughness length formulation
 !! based on the surface sublayer scheme in
 !! Zeng and Dickinson (1998) \cite zeng_and_dickinson_1998.
@@ -448,7 +441,6 @@
 
       return
       end subroutine sfc_diff_run
-!> @}
 
 !----------------------------------------
 !>\ingroup GFS_diff_main
@@ -852,7 +844,5 @@
         endif
 
         END SUBROUTINE znot_t_v7
-
-
-!---------------------------------
+!> @}
       end module sfc_diff

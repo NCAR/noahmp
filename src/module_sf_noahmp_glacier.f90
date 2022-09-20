@@ -417,6 +417,7 @@ contains
 ! ==================================================================================================
 ! --------------------------------------------------------------------------------------------------
 !>\ingroup NoahMP_LSM
+!! This subroutine 
   subroutine energy_glacier (nsnow     ,nsoil   ,isnow   ,dt      ,qsnow   ,rhoair  , & !in
                              eair      ,sfcprs  ,qair    ,sfctmp  ,lwdn    ,uu      , & !in
                              vv        ,solad   ,solai   ,cosz    ,zref    ,          & !in
