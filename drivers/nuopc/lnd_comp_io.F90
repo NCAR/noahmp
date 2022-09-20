@@ -1855,7 +1855,6 @@ contains
     !----------------------
    
     write(cname, fmt='(A,I1,A)') trim(filename), my_tile, '.nc' 
-    print*, trim(cname)
     call mpp_open(funit, trim(cname), action=MPP_RDONLY, form=MPP_NETCDF, &
                   threading=MPP_MULTI, fileset=MPP_SINGLE, is_root_pe=is_root_pe)
     call mpp_get_info(funit, ndim, nvar, natt, ntime)
