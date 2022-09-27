@@ -38,7 +38,7 @@ module lnd_comp_nuopc
   use lnd_comp_domain  , only : lnd_set_decomp_and_domain_from_mosaic
   use lnd_comp_import_export, only : advertise_fields, realize_fields
   use lnd_comp_import_export, only : import_fields, export_fields, state_diagnose
-  use lnd_comp_driver  , only : drv_init, drv_run, drv_finalize
+  use lnd_comp_driver  , only : drv_init, drv_run
 
   implicit none
   private ! except

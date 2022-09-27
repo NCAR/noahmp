@@ -42,7 +42,7 @@ module lnd_comp_driver
   implicit none
   private
 
-  public :: drv_init, drv_run, drv_finalize
+  public :: drv_init, drv_run
 
   !--------------------------------------------------------------------------
   ! Private module data
@@ -161,7 +161,7 @@ contains
 
     ! local variables
     logical, save               :: first_time = .true.
-    integer                     :: i, step
+    integer                     :: i, is, step
     integer                     :: year, month, day, hour, minute, second
     real(r8)                    :: now_time
     character(len=cl)           :: filename
