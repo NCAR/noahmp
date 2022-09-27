@@ -26,6 +26,9 @@ module lnd_comp_driver
   use noahmpdrv       , only: noahmpdrv_init, noahmpdrv_run
   use namelist_soilveg, only: z0_data
   use set_soilveg_mod , only: set_soilveg
+  use noahmp_tables   , only: bexp_table, smcmax_table, smcwlt_table
+  use noahmp_tables   , only: dwsat_table, dksat_table, psisat_table
+  use noahmp_tables   , only: isurban_table
   use funcphys        , only: gpvs
   use physcons        , only: con_hvap, con_cp, con_jcal
   use physcons        , only: con_eps, con_epsm1, con_fvirt
@@ -142,6 +145,7 @@ contains
     call noahmpdrv_init(lsm, lsm_noahmp, me, noahmp%static%isot, noahmp%static%ivegsrc, &
       nlunit, noahmp%model%pores, noahmp%model%resid, noahmp%static%do_mynnsfclay, &
       noahmp%static%do_mynnedmf, noahmp%static%errmsg, noahmp%static%errflg)
+    call gpvs()
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
@@ -157,7 +161,7 @@ contains
 
     ! local variables
     logical, save               :: first_time = .true.
-    integer                     :: i, step, iter, niter = 2
+    integer                     :: i, step
     integer                     :: year, month, day, hour, minute, second
     real(r8)                    :: now_time
     character(len=cl)           :: filename
@@ -168,9 +172,11 @@ contains
     type(ESMF_Time)             :: startTime
     type(ESMF_Time)             :: currTime
     type(ESMF_TimeInterval)     :: timeStep
-    real(r8), parameter         :: tfreeze = 2.7315e+2_r8 
     real(r8)                    :: virtfac, tv1, thv1, tvs
     real(r8)                    :: tem1, tem2, z0max, ztmax, czilc
+    real(r8)                    :: bexp, ddz, smcmax, smcwlt, dwsat, dksat, psisat
+    real(r8), save, allocatable :: zs(:)
+    real(r8), parameter         :: tfreeze = 2.7315e+2_r8 
     real(r8), parameter         :: zmin = 1.0e-6_r8
     real(r8), parameter         :: qmin = 1.0e-8_r8
     real(r8), parameter         :: z0lo = 0.1_r8
@@ -233,7 +239,7 @@ contains
 
        ! transfer custom initial conditions based on selected configuration
        if (trim(noahmp%nmlist%ic_type) == 'sfc') then
-          where(noahmp%domain%mask(:) > 1)
+          where(noahmp%domain%mask(:) == 1)
              noahmp%model%zorl(:) = noahmp%init%surface_roughness(:)
              noahmp%model%ustar1(:) = noahmp%init%friction_velocity(:)
           end where
@@ -256,7 +262,7 @@ contains
     noahmp%model%zf = noahmp%forc%hgt
 
     ! set net shortwave radiation
-    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_snet')) then
+    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_swnet')) then
        noahmp%model%snet = noahmp%forc%snet
     end if
     ! overwrite it if it is explicity specified
@@ -318,7 +324,7 @@ contains
        end if
     end if
 
-    ! set precipitation, total, convective and large scale
+    ! set precipitation, convective and large scale
     if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_rainc')) then
        noahmp%model%rainc_mp(:) = noahmp%forc%tprcpc(:)
     else
@@ -332,6 +338,12 @@ contains
     if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_rain')) then
        noahmp%model%rainn_mp(:) = noahmp%forc%tprcp(:)
     end if
+
+    ! convert mm/s to m
+    noahmp%model%rainn_mp(:) = noahmp%model%rainn_mp(:)*noahmp%static%delt/1000.0_r8
+    noahmp%model%rainc_mp(:) = noahmp%model%rainc_mp(:)*noahmp%static%delt/1000.0_r8
+
+    ! calculate total precipitation
     noahmp%model%tprcp(:) = noahmp%model%rainn_mp(:)+noahmp%model%rainc_mp(:)
 
     !----------------------
@@ -383,6 +395,49 @@ contains
     ! they are not defined as coupling fields but CCPP provides those fields
     noahmp%model%graupel_mp = 0.0_r8
     noahmp%model%ice_mp = 0.0_r8
+
+    !----------------------
+    ! calculate initial values, ported from GFS_phys_time_vary.fv3 
+    !----------------------
+
+    ! set soil layers
+    if (.not. allocated(zs)) allocate(zs(noahmp%nmlist%num_soil_levels))
+    zs = -1.0_r8*noahmp%nmlist%soil_level_nodes
+ 
+    do i = noahmp%domain%begl, noahmp%domain%endl
+       if (noahmp%domain%mask(i) == 1) then
+          if (noahmp%model%soiltyp(i) /= 0) then
+             bexp   = bexp_table(noahmp%model%soiltyp(i))
+             smcmax = smcmax_table(noahmp%model%soiltyp(i))
+             smcwlt = smcwlt_table(noahmp%model%soiltyp(i))
+             dwsat  = dwsat_table(noahmp%model%soiltyp(i))
+             dksat  = dksat_table(noahmp%model%soiltyp(i))
+             psisat = -psisat_table(noahmp%model%soiltyp(i))
+          endif
+
+          if (noahmp%model%vegtype(i) == isurban_table) then
+             smcmax = 0.45_r8
+             smcwlt = 0.40_r8
+          endif
+
+          if ((bexp > 0.0_r8) .and. (smcmax > 0.0_r8) .and. (-psisat > 0.0_r8)) then
+             do is = 1, noahmp%nmlist%num_soil_levels
+                if (is == 1)then
+                   ddz = -zs(is+1)*0.5_r8
+                elseif (is < noahmp%nmlist%num_soil_levels) then
+                   ddz = (zs(is-1)-zs(is+1))*0.5_r8
+                else
+                   ddz = zs(is-1)-zs(is)
+                endif
+              noahmp%model%smoiseq(i,is) = min(max(find_eq_smc(bexp, dwsat, dksat, ddz, smcmax),1.e-4_r8),smcmax*0.99_r8)
+            enddo
+          else ! bexp <= 0.0
+            noahmp%model%smoiseq(i,:) = smcmax
+          endif  
+       
+          noahmp%model%smcwtdxy(i) = smcmax
+       end if
+    end do
 
     !----------------------
     ! call stability
@@ -608,10 +663,6 @@ contains
   end subroutine drv_run
 
   !===============================================================================
-  subroutine drv_finalize()
-  end subroutine drv_finalize
-
-  !===============================================================================
   subroutine interpolate_monthly(currTime, vector_length, monthly_var, interp_var, rc)
 
     ! input/output variables
@@ -692,6 +743,7 @@ contains
 
   end subroutine interpolate_monthly
 
+  !===============================================================================
   subroutine calc_cosine_zenith(currTime, vector_length, latitude, longitude, cosz, julian, rc)
     implicit none
 
@@ -753,5 +805,37 @@ contains
     end do
 
   end subroutine calc_cosine_zenith
+
+  !===============================================================================
+  function find_eq_smc(bexp, dwsat, dksat, ddz, smcmax) result(smc)
+    !
+    ! Use newton-raphson method to find eq soil moisture
+    !
+    implicit none
+
+    ! input/output variables
+    real(r8), intent(in) :: bexp, dwsat, dksat, ddz, smcmax
+
+    ! local variables
+    integer  :: iter
+    real(r8) :: smc
+    real(r8) :: expon, aa, bb, func, dfunc, dx
+    character(len=*), parameter :: subname=trim(modName)//':(find_eq_smc) '
+    !-------------------------------------------------------------------------------
+
+    expon = bexp + 1.0_r8
+    aa    = dwsat / ddz
+    bb    = dksat / smcmax ** expon
+    smc = 0.5_r8 * smcmax
+    
+    do iter = 1, 100
+       func  = (smc - smcmax) * aa +  bb * smc ** expon
+       dfunc = aa + bb * expon * smc ** bexp
+       dx    = func / dfunc
+       smc   = smc - dx
+       if (abs(dx) < 1.e-6_r8) return
+    end do
+
+  end function find_eq_smc
 
 end module lnd_comp_driver
