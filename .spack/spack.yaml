@@ -7,8 +7,8 @@ spack:
   - parallelio@2.5.8+pnetcdf
   view: /root/.spack-ci/view
   config:
-    source_cache: ~/.spack-ci/source_cache
-    misc_cache: ~/.spack-ci/misc_cache
-    test_cache: ~/.spack-ci/test_cache
+    source_cache: /root/.spack-ci/source_cache
+    misc_cache: /root/.spack-ci/misc_cache
+    test_cache: /root/.spack-ci/test_cache
     install_tree:
-      root: ~/.spack-ci/opt
+      root: /root/.spack-ci/opt
