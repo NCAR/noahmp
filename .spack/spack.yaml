@@ -3,12 +3,12 @@ spack:
     unify: true
   specs:
   - fms
-  - esmf@develop+parallelio
+  - esmf@8.4.0b15+parallelio
   - parallelio@2.5.8+pnetcdf
-  view: /root/.spack-ci/view
+  view: /home/runner/work/noahmp/.spack-ci/view
   config:
-    source_cache: /root/.spack-ci/source_cache
-    misc_cache: /root/.spack-ci/misc_cache
-    test_cache: /root/.spack-ci/test_cache
+    source_cache: /home/runner/work/noahmp/.spack-ci/source_cache
+    misc_cache: /home/runner/work/noahmp/.spack-ci/misc_cache
+    test_cache: /home/runner/work/noahmp/.spack-ci/test_cache
     install_tree:
-      root: /root/.spack-ci/opt
+      root: /home/runner/work/noahmp/.spack-ci/opt
