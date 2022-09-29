@@ -136,3 +136,22 @@ jobs:
           # compile and create executable
           cd ${{ github.workspace }}/app/build
           make
+
+      # restore input files from cache
+      - name: Restore Input Files From Cache
+        id: cache-input
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/app/build/INPUT
+          key: input-${{ hashFiles('**/file_checksum.lock') }}
+          restore-keys: |
+            input
+            
+      # download input files for components
+      - name: Download Input Files
+        if: steps.cache-input.outputs.cache-hit != 'true'
+        run: |
+          export PATH=${{ github.workspace }}/../.spack-ci/view/bin:$PATH
+          mkdir -p ${{ github.workspace }}/app/build/INPUT
+          cd ${{ github.workspace }}/app/build/INPUT
+          python3 ${{ github.workspace }}/tests/scripts/get_input.py --ifile ${{ github.workspace }}/tests/test_datm_lnd.yaml
