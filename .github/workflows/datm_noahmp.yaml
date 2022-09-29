@@ -1,4 +1,4 @@
-name: datm_noahmp
+name: test_datm_lnd
 
 on:
   push:
@@ -10,14 +10,22 @@ on:
   schedule:
     - cron: '0 0 * * MON'
     - cron: '0 0 * * FRI'
-
+  # following is required to run action manually
+  workflow_dispatch:
+  
 jobs:
-  create_environment:
-    runs-on: ubuntu-latest
+  latest-stable:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+        - ubuntu-22.04
     
     env:
       # installation location for spack and other components
-      INSTALL_DIR: $HOME/install
+      INSTALL_DIR: ${{ github.workspace }}/install
 
     steps:
       # checkout base repository
@@ -25,7 +33,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: feature/nuopc_cap_new
-
+          
       # prepare core environment
       - name: Install Core Development Tools
         run: |
@@ -34,34 +42,97 @@ jobs:
           sudo apt-get install build-essential binutils-dev gfortran
           sudo apt-get install python3-dev python3-boto3 python3-yaml
           sudo apt-get install wget awscli ca-certificates
-
       # checkout spack to create build environment
       - name: Checkout Spack
         uses: actions/checkout@v3
         with:
-          repository: NOAA-EMC/spack
+          repository: uturuncoglu/spack
           path: spack
-          ref: jcsda_emc_spack_stack
+          ref: feature/esmx_version
 
       # create build environment
       - name: Concretize Spack Environment Using YAML Specification
         run: |
           . $GITHUB_WORKSPACE/spack/share/spack/setup-env.sh
-          spack -e ${{ github.workspace }}/.spack concretize -f
-
+          spack --color always -e ${{ github.workspace }}/.spack concretize -f
+      
       # restore build environment from cache
       - name: Restore Build Environment From Cache
         id: cache-spack
         uses: actions/cache@v3
         with:
-          path: ~/.spack-ci
-          key: spack-${{ hashFiles('**/spack.lock') }}
+          path: /home/runner/work/noahmp/.spack-ci
+          key: ${{ matrix.os }}-spack-${{ hashFiles('**/spack.lock') }}
           restore-keys: |
-            spack-
+            ${{ matrix.os }}-spack
           
-      # create build environment
+      # install build environment
       - name: Install Spack Packages
         if: steps.cache-spack.outputs.cache-hit != 'true'
         run: |
           . $GITHUB_WORKSPACE/spack/share/spack/setup-env.sh
-          spack -e ${{ github.workspace }}/.spack install -j3
+          spack --color always -e ${{ github.workspace }}/.spack install -j3
+      # build and install component
+      # need to install with openmp support since fms build with it
+      # TODO: update fms in spack.yaml as fms~openmp to build it without openmp support 
+      - name: Build and Install NoahMP
+        run: |       
+          export PATH=${{ github.workspace }}/../.spack-ci/view/bin:$PATH
+          export ESMFMKFILE=${{ github.workspace }}/../.spack-ci/view/lib/esmf.mk
+          export NetCDF_ROOT=`nc-config --prefix`
+          export FC=gfortran
+          cd ${{ github.workspace }}
+          mkdir build
+          cd build
+          cmake -DCMAKE_INSTALL_PREFIX=${{ env.INSTALL_DIR }} -DOPENMP=ON ../
+          make
+          make install
+      # checkout data models
+      - name: Checkout CDEPS
+        uses: actions/checkout@v3
+        with:
+          repository: uturuncoglu/CDEPS
+          path: cdeps
+          ref: hotfix/std_build
+          
+      # build and install data models
+      - name: Build and Install CDEPS
+        run: |
+          export PATH=${{ github.workspace }}/../.spack-ci/view/bin:$PATH
+          export ESMFMKFILE=${{ github.workspace }}/../.spack-ci/view/lib/esmf.mk
+          export FC=gfortran
+          cd ${{ github.workspace }}/cdeps
+          mkdir build
+          cd build
+          cmake -DCMAKE_INSTALL_PREFIX=${{ env.INSTALL_DIR }} \
+            -DPIO_C_LIBRARY=${{ github.workspace }}/../.spack-ci/view/lib \
+            -DPIO_C_INCLUDE_DIR=${{ github.workspace }}/../.spack-ci/view/include \
+            -DPIO_Fortran_LIBRARY=${{ github.workspace }}/../.spack-ci/view/lib \
+            -DPIO_Fortran_INCLUDE_DIR=${{ github.workspace }}/../.spack-ci/view/include \
+            -DCMAKE_Fortran_FLAGS="-ffree-line-length-none -fallow-argument-mismatch -fallow-invalid-boz" \
+            -DDISABLE_FoX=ON ../
+          make
+          make install
+      # use ESMX generic driver and create executable
+      - name: Use ESMX to create executable
+        run: |
+          # set required environment variables
+          export PATH=${{ github.workspace }}/../.spack-ci/view/bin:$PATH
+          export ESMFMKFILE=${{ github.workspace }}/../.spack-ci/view/lib/esmf.mk
+          export ESMF_ESMXDIR=${{ github.workspace }}/../.spack-ci/view/include/ESMX
+          # create run directory
+          mkdir ${{ github.workspace }}/app
+          cd ${{ github.workspace }}/app
+          # create ESMX build file
+          echo "components:" >> esmxBuild.yaml
+          echo "  datm:" >> esmxBuild.yaml
+          echo "    cmake_config: ${{ env.INSTALL_DIR }}/lib/cmake/datm-esmx.cmake" >> esmxBuild.yaml 
+          echo "    fort_module: cdeps_datm_comp" >> esmxBuild.yaml
+          echo "  noahmp:" >> esmxBuild.yaml
+          echo "    cmake_config: ${{ env.INSTALL_DIR }}/lib/cmake/noahmp-esmx.cmake" >> esmxBuild.yaml
+          echo "    fort_module: lnd_comp_nuopc" >> esmxBuild.yaml
+          # create build directory
+          cmake -H$ESMF_ESMXDIR -Bbuild
+          # compile and create executable
+          cd ${{ github.workspace }}/app/build
+          make
