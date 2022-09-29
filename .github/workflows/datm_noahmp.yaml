@@ -159,10 +159,32 @@ jobs:
           mkdir -p ${{ github.workspace }}/app/build/INPUT
           cd ${{ github.workspace }}/app/build/INPUT
           python3 ${{ github.workspace }}/tests/scripts/get_input.py --ifile ${{ github.workspace }}/tests/test_datm_lnd.yaml
-          
-      # download input files for components
-      - name: Test 
+
+      # checkout paramgen to create configuration files
+      - name: Checkout ParamGen
+        uses: actions/checkout@v3
+        with:
+          repository: uturuncoglu/ParamGen
+          path: paramgen
+          ref: main
+
+      # generate configuration files
+      - name: Generate Configuration Files
         run: |
-          cd ${{ github.workspace }}/app/build/INPUT
+          export PYTHONPATH=$GITHUB_WORKSPACE/paramgen:$PYTHONPATH 
+          export INPUT_DIR='INPUT'
+          export DATAMODE='CLMNCEP'
+          export MODEL_MESHFILE='INPUT/fv1.9x2.5_141008_ESMFmesh.nc'
+          export MODEL_MASKFILE='INPUT/fv1.9x2.5_141008_ESMFmesh.nc'
+          export NX_GLOBAL=144
+          export NY_GLOBAL=96
+          cd ${{ github.workspace }}/app/build
+          python3 ${{ github.workspace }}/tests/scripts/gen_config.py --ifile ${{ github.workspace }}/tests/test_datm_lnd.yaml
           ls -al
-          cat file_checksum.lock
+
+      # download input files for components
+      #- name: Test 
+      #  run: |
+      #    cd ${{ github.workspace }}/app/build/INPUT
+      #    ls -al
+      #    cat file_checksum.lock
