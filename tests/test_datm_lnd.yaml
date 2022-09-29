@@ -1,0 +1,44 @@
+components:
+  drv:
+    runseq:
+      dt:
+        values: 3600
+      lnd-to-atm:
+        values: remapMethod=bilinear:unmappedaction=ignore:zeroregion=select
+      atm-to-lnd: 
+        values: remapMethod=bilinear:unmappedaction=ignore:zeroregion=select
+      atm:
+      lnd:
+    config:
+      nuopc:
+        name: nuopc.configure 
+        content:
+          ALLCOMP_attributes:
+            case_name:
+              values: comp.test
+            stop_n: 
+              values: 1
+            stop_option: 
+              values: ndays
+            stop_tod: 
+              values: 0
+            stop_ymd: 
+              values: -999
+            restart_n: 
+              values: 1
+            restart_option: 
+              values: never
+            restart_ymd: 
+              values: -999
+          CLOCK_attributes:
+            start_tod:
+              values: 0
+            start_ymd:
+              values: 20000101
+          no_group:
+            component_list:
+              values: ATM LND
+
+  lnd: lnd.yaml
+
+  atm: datm.yaml

@@ -1,0 +1,131 @@
+---
+input:
+  protocol: wget
+  end_point: ftp.cgd.ucar.edu
+  files:
+    - /cesm/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Precip/clmforc.GSWP3.c2011.0.5x0.5.Prec.1999-12.nc
+    - /cesm/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Precip/clmforc.GSWP3.c2011.0.5x0.5.Prec.2000-01.nc
+    - /cesm/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Solar/clmforc.GSWP3.c2011.0.5x0.5.Solr.1999-12.nc
+    - /cesm/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Solar/clmforc.GSWP3.c2011.0.5x0.5.Solr.2000-01.nc
+    - /cesm/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/TPHWL/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.1999-12.nc
+    - /cesm/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/TPHWL/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.2000-01.nc
+    - /cesm/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc
+    - /cesm/inputdata/atm/datm7/topo_forcing/topodata_0.9x1.25_USGS_070110_stream_c151201.nc
+    - /cesm/inputdata/atm/datm7/topo_forcing/topodata_0.9x1.SCRIP.210520_ESMFmesh.nc
+    - /cesm/inputdata/share/meshes/fv1.9x2.5_141008_ESMFmesh.nc
+config:
+  nuopc1:
+    name: nuopc.configure
+    content: 
+      no_group:
+        ATM_petlist:
+          values: 0-5
+      ATM_attributes:
+        Verbosity:
+          values: 0
+        Diagnostic:
+          values: 0
+        read_restart:
+          values: .false.
+        orb_eccen:
+          values: 1.e36
+        orb_iyear:
+          values: 2000
+        orb_iyear_align:
+          values: 2000
+        orb_mode: 
+          values: fixed_year
+        orb_mvelp: 
+          values: 1.e36
+        orb_obliq: 
+          values: 1.e36
+        ScalarFieldCount: 
+          values: 3
+        ScalarFieldIdxGridNX: 
+          values: 1
+        ScalarFieldIdxGridNY: 
+          values: 2
+        ScalarFieldIdxNextSwCday: 
+          values: 3
+        ScalarFieldName: 
+          values: cpl_scalars
+  nuopc2:
+    name: datm.streams
+    content:
+      no_group:
+        stream_info:
+          values:
+            - CLMGSWP3v1.Solar01
+            - CLMGSWP3v1.Precip02
+            - CLMGSWP3v1.TPQW03
+            - topo.observed04
+        taxmode:
+          values: limit, limit, limit, cycle
+        mapalgo:
+          values: bilinear, bilinear, bilinear, bilinear
+        tInterpAlgo:
+          values: coszen, nearest, linear, lower
+        readMode:
+          values: single, single, single, single
+        dtlimit:
+          values: 1.5, 1.5, 1.5, 1.5
+        stream_offset:
+          values: 0, 0, 0, 0
+        yearFirst: 
+          values: 1999, 1999, 1999, 1
+        yearLast:
+          values: 2000, 2000, 2000, 1
+        yearAlign:
+          values: 1999, 1999, 1999, 1
+        stream_vectors:
+          values: null, null, null, null
+        stream_mesh_file:
+          values: |
+            ${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc,
+            ${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc,
+            ${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc,
+            ${INPUT_DIR}/topodata_0.9x1.SCRIP.210520_ESMFmesh.nc
+        stream_lev_dimname:
+          values: null, null, null, null
+        stream_data_files:
+          values: |
+            "${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.Solr.1999-12.nc" "${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.Solr.2000-01.nc",
+            "${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.Prec.1999-12.nc" "${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.Prec.2000-01.nc",
+            "${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.1999-12.nc" "${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.2000-01.nc",
+            "${INPUT_DIR}/topodata_0.9x1.25_USGS_070110_stream_c151201.nc"
+        stream_data_variables:
+          values: |
+            "FSDS Faxa_swdn",
+            "PRECTmms Faxa_precn",
+            "TBOT Sa_tbot" "WIND Sa_wind" "QBOT Sa_shum" "PSRF Sa_pbot" "PSRF Sa_pslv" "FLDS Faxa_lwdn",
+            "TOPO Sa_topo"
+  nml:
+    name: datm_in
+    content:
+      datm_nml:
+        datamode: 
+          values: '"${DATAMODE}"'
+        factorfn_data:
+          values: '"null"'
+        factorfn_mesh:
+          values: '"null"'
+        flds_co2:
+          values: .false.
+        flds_presaero:
+          values: .false.
+        flds_wiso:
+          values: .false.
+        iradsw:
+          values: 1
+        model_maskfile:
+          values: '"${MODEL_MASKFILE}"'
+        model_meshfile:
+          values: '"${MODEL_MESHFILE}"'
+        nx_global:
+          values: ${NX_GLOBAL}
+        ny_global:
+          values: ${NY_GLOBAL}
+        restfilm:
+          values: '"null"'
+        export_all:
+          values: .true.
