@@ -10,7 +10,7 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
 from gen_runseq import RunSeq
-from CIME.ParamGen.paramgen import ParamGen
+from paramgen import ParamGen
 
 def expand_func(varname):
     my_dict = {}

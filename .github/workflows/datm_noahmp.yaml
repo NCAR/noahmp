@@ -55,7 +55,7 @@ jobs:
       - name: Concretize Spack Environment Using YAML Specification
         run: |
           . $GITHUB_WORKSPACE/spack/share/spack/setup-env.sh
-          spack --color always -e ${{ github.workspace }}/.spack concretize -f
+          spack --color always -e ${{ github.workspace }}/.github/workflows/spack concretize -f
       
       # restore build environment from cache
       - name: Restore Build Environment From Cache
@@ -72,7 +72,7 @@ jobs:
         if: steps.cache-spack.outputs.cache-hit != 'true'
         run: |
           . $GITHUB_WORKSPACE/spack/share/spack/setup-env.sh
-          spack --color always -e ${{ github.workspace }}/.spack install -j3
+          spack --color always -e ${{ github.workspace }}/.github/workflows/spack install -j3
       
       # build and install component
       # need to install with openmp support since fms build with it
@@ -158,7 +158,7 @@ jobs:
           export PATH=${{ github.workspace }}/../.spack-ci/view/bin:$PATH
           mkdir -p ${{ github.workspace }}/app/build/INPUT
           cd ${{ github.workspace }}/app/build/INPUT
-          python3 ${{ github.workspace }}/tests/scripts/get_input.py --ifile ${{ github.workspace }}/tests/test_datm_lnd.yaml
+          python3 ${{ github.workspace }}/.github/workflows/scripts/get_input.py --ifile ${{ github.workspace }}/.github/workflows/tests/test_datm_lnd.yaml
 
       # checkout paramgen to create configuration files
       - name: Checkout ParamGen
@@ -179,7 +179,7 @@ jobs:
           export NX_GLOBAL=144
           export NY_GLOBAL=96
           cd ${{ github.workspace }}/app/build
-          python3 ${{ github.workspace }}/tests/scripts/gen_config.py --ifile ${{ github.workspace }}/tests/test_datm_lnd.yaml
+          python3 ${{ github.workspace }}/.github/workflows/scripts/gen_config.py --ifile ${{ github.workspace }}/.github/workflows/tests/test_datm_lnd.yaml
           ls -al
 
       # download input files for components
