@@ -113,6 +113,7 @@ jobs:
             -DDISABLE_FoX=ON ../
           make
           make install
+
       # use ESMX generic driver and create executable
       - name: Use ESMX to create executable
         run: |
