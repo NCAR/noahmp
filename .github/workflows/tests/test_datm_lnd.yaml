@@ -11,8 +11,11 @@ components:
       lnd:
     config:
       nuopc:
-        name: nuopc.configure 
+        name: esmxRun.config
         content:
+          ESMX_attributes:
+            Verbosity:
+              values: high
           ALLCOMP_attributes:
             case_name:
               values: comp.test
@@ -30,14 +33,21 @@ components:
               values: never
             restart_ymd: 
               values: -999
-          CLOCK_attributes:
-            start_tod:
-              values: 0
-            start_ymd:
-              values: 20000101
           no_group:
             component_list:
               values: ATM LND
+            startTime:
+              values: 2000-01-01T00:00:00
+            stopTime:
+              values: 2000-01-02T00:00:00
+            logKindFlag:
+              values: ESMF_LOGKIND_MULTI
+            globalResourceControl:
+              values: .true.
+            ESMX_log_flush:
+              values: .true.
+            ESMX_field_dictionary: 
+              values: fd.yaml
 
   lnd: lnd.yaml
 

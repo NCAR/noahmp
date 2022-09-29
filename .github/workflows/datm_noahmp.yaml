@@ -159,6 +159,7 @@ jobs:
           mkdir -p ${{ github.workspace }}/app/build/INPUT
           cd ${{ github.workspace }}/app/build/INPUT
           python3 ${{ github.workspace }}/.github/workflows/scripts/get_input.py --ifile ${{ github.workspace }}/.github/workflows/tests/test_datm_lnd.yaml
+          ln -sf grid_spec.nc C96_mosaic.nc
 
       # checkout paramgen to create configuration files
       - name: Checkout ParamGen
@@ -181,6 +182,7 @@ jobs:
           cd ${{ github.workspace }}/app/build
           python3 ${{ github.workspace }}/.github/workflows/scripts/gen_config.py --ifile ${{ github.workspace }}/.github/workflows/tests/test_datm_lnd.yaml
           ls -al
+          cat esmxRun.config 
 
       # download input files for components
       #- name: Test 
