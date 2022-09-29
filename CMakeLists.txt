@@ -62,21 +62,41 @@ add_definitions(-DCCPP)
 #------------------------------------------------------------------------------
 # NOAHMP
 add_library(noahmp STATIC ${_noahmp_cap_files} ${_noahmp_ccpp_files} ${_noahmp_files})
-set_target_properties(noahmp PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
-target_include_directories(noahmp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/mod>
-                                       $<INSTALL_INTERFACE:mod>)
+set_target_properties(noahmp PROPERTIES 
+  Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include
+)
+target_include_directories(noahmp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+                                         $<INSTALL_INTERFACE:include>)
 target_link_libraries(noahmp PUBLIC esmf fms)
+
+#------------------------------------------------------------------------------
+# CMake export for ESMX driver
+file(WRITE  ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "add_library(FMS::fms_r8 STATIC IMPORTED)\n")
+file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "set_target_properties(FMS::fms_r8 PROPERTIES\n")
+file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  IMPORTED_LOCATION \"${FMS_R8_LIBRARIES}\"\n") 
+file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  INTERFACE_INCLUDE_DIRECTORIES \"${FMS_INSTALL_PREFIX}/include\"\n") 
+file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  INTERFACE_LINK_DIRECTORIES \"${FMS_INSTALL_PREFIX}/lib\"\n") 
+file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake ")\n\n")
+
+file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "add_library(noahmp STATIC IMPORTED)\n")
+file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "set_target_properties(noahmp PROPERTIES\n")
+file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  IMPORTED_LOCATION \"${CMAKE_INSTALL_PREFIX}/lib/libnoahmp.a\"\n")
+file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  INTERFACE_INCLUDE_DIRECTORIES \"${CMAKE_INSTALL_PREFIX}/include\"\n")
+file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  INTERFACE_LINK_DIRECTORIES  \"${CMAKE_INSTALL_PREFIX}/lib\"\n")
+file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  INTERFACE_LINK_LIBRARIES  \"noahmp;FMS::fms_r8\"\n")
+file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake ")\n")
+file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "target_link_libraries(esmx_driver PUBLIC noahmp)\n")
 
 #------------------------------------------------------------------------------
 # Install
 install(
- TARGETS noahmp
-  EXPORT  noahmp-config
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  COMPONENT Library)
+  TARGETS noahmp
+  EXPORT  noahmp
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
 
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include DESTINATION ${CMAKE_INSTALL_PREFIX})
 
-install(EXPORT      noahmp-config
-        DESTINATION lib/cmake)
+install(EXPORT noahmp
+	DESTINATION lib/cmake)
