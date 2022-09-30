@@ -72,6 +72,13 @@ jobs:
         if: steps.cache-spack.outputs.cache-hit != 'true'
         run: |
           . $GITHUB_WORKSPACE/spack/share/spack/setup-env.sh
+          ls -al ${{ github.workspace }}
+          if test -f "${{ github.workspace }}/spack.lock"; then
+            # spack environment is restored but still cache-hit != 'true'
+            # this seems bug with cache and at least we could only install small portion of packages
+            cat ${{ github.workspace }}/spack.lock
+            spack --color always -e ${{ github.workspace }}/.github/workflows/spack concretize -f
+          fi
           spack --color always -e ${{ github.workspace }}/.github/workflows/spack install -j3
       
       # build and install component
@@ -236,7 +243,7 @@ jobs:
       - name: Compare with Baseline
         id: compare-baseline 
         run: |
-          cd ${{ github.workspace }}/run
+          cd ${{ github.workspace }}/app/build
           # compare against the baseline
           if test -f "output_hash_baseline.txt"; then
             echo "Baseline:"
