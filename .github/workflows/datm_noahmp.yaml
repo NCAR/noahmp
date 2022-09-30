@@ -158,7 +158,20 @@ jobs:
           export PATH=${{ github.workspace }}/../.spack-ci/view/bin:$PATH
           mkdir -p ${{ github.workspace }}/app/build/INPUT
           cd ${{ github.workspace }}/app/build/INPUT
+          # get rest of the data from servers
           python3 ${{ github.workspace }}/.github/workflows/scripts/get_input.py --ifile ${{ github.workspace }}/.github/workflows/tests/test_datm_lnd.yaml
+          # some data for land is not correct in S3 bucket and need to be copied from workflow directory
+          rm -rf oro_data.tile*.nc
+          cp ${{ github.workspace }}/.github/workflows/data/oro_data.tile*.nc .
+          # copy initial conditions
+          cp ${{ github.workspace }}/.github/workflows/data/C96.initial.tile*.nc .
+          # add them to checksum file
+          lst=`ls -al oro_data.tile*.nc C96.initial.tile*.nc | awk '{print $9}'`
+          for i in $lst; do
+            md5sum $i >> file_checksum.lock
+          done
+          cat file_checksum.lock
+          # create link for grid spec file
           ln -sf grid_spec.nc C96_mosaic.nc
 
       # checkout paramgen to create configuration files

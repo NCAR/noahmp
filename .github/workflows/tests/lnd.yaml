@@ -46,12 +46,13 @@ input:
     - input-data-20220414/FV3_input_data/INPUT/C96_grid.tile5.nc
     - input-data-20220414/FV3_input_data/INPUT/C96_grid.tile6.nc
     - input-data-20220414/FV3_input_data/INPUT/grid_spec.nc
-    - input-data-20220414/FV3_input_data/INPUT/oro_data.tile1.nc
-    - input-data-20220414/FV3_input_data/INPUT/oro_data.tile2.nc
-    - input-data-20220414/FV3_input_data/INPUT/oro_data.tile3.nc
-    - input-data-20220414/FV3_input_data/INPUT/oro_data.tile4.nc
-    - input-data-20220414/FV3_input_data/INPUT/oro_data.tile5.nc
-    - input-data-20220414/FV3_input_data/INPUT/oro_data.tile6.nc    
+    # oro_data is not working under external noahmp, get it from repository
+    #- input-data-20220414/FV3_input_data/INPUT/oro_data.tile1.nc
+    #- input-data-20220414/FV3_input_data/INPUT/oro_data.tile2.nc
+    #- input-data-20220414/FV3_input_data/INPUT/oro_data.tile3.nc
+    #- input-data-20220414/FV3_input_data/INPUT/oro_data.tile4.nc
+    #- input-data-20220414/FV3_input_data/INPUT/oro_data.tile5.nc
+    #- input-data-20220414/FV3_input_data/INPUT/oro_data.tile6.nc    
 config:
   nuopc:
     name: esmxRun.config
