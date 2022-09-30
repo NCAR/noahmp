@@ -204,6 +204,7 @@ jobs:
           export PATH=${{ github.workspace }}/../.spack-ci/view/bin:$PATH
           cd ${{ github.workspace }}/app/build
           mpirun --oversubscribe -np 6 --allow-run-as-root ${{ github.workspace }}/app/build/esmx
+          cat PET*
         
       # upload model results to artifacts to check it later
       - uses: actions/upload-artifact@v3

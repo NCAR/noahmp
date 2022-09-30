@@ -68,7 +68,7 @@ def ftp_get(end_point, files, fhash, force_download):
         md5sum_local = hashlib.md5(open(lfile,'rb').read()).hexdigest()
 
         # write file name and checksum to file
-        fhash.write('{}: {}\n'.format(lfile, md5sum_local))
+        fhash.write('{}  {}\n'.format(md5sum_local, lfile))
 
 def cmd_get(end_point, files, fhash, force_download):
     # loop over files
@@ -87,7 +87,7 @@ def cmd_get(end_point, files, fhash, force_download):
         md5sum_local = hashlib.md5(open(lfile,'rb').read()).hexdigest()
 
         # write file name and checksum to file
-        fhash.write('{}: {}\n'.format(lfile, md5sum_local))
+        fhash.write('{}  {}\n'.format(md5sum_local, lfile))
 
 def s3_cli_get(end_point, files, fhash, force_download):
     # loop over files
@@ -109,7 +109,7 @@ def s3_cli_get(end_point, files, fhash, force_download):
         md5sum_local = hashlib.md5(open(lfile,'rb').read()).hexdigest()
 
         # write file name and checksum to file
-        fhash.write('{}: {}\n'.format(lfile, md5sum_local))    
+        fhash.write('{}  {}\n'.format(md5sum_local, lfile))    
 
 def s3_get(end_point, files, fhash, force_download):
     # create an S3 access object, config option allows accessing anonymously
@@ -151,7 +151,7 @@ def s3_get(end_point, files, fhash, force_download):
             print('file \'{}\' is found. skip downloading'.format(lfile))
 
         # write file name and checksum to file
-        fhash.write('{}: {}\n'.format(lfile, md5sum_remote))
+        fhash.write('{}  {}\n'.format(md5sum_remote, lfile))
 
 def main(argv):
     # default values
