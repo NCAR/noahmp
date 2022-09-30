@@ -18,6 +18,8 @@ config:
     name: esmxRun.config
     content: 
       no_group:
+        ATM_model:
+          values: datm
         ATM_petlist:
           values: 0-5
       ATM_attributes:

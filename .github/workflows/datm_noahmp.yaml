@@ -194,6 +194,7 @@ jobs:
           export NY_GLOBAL=96
           cd ${{ github.workspace }}/app/build
           python3 ${{ github.workspace }}/.github/workflows/scripts/gen_config.py --ifile ${{ github.workspace }}/.github/workflows/tests/test_datm_lnd.yaml
+          # get field dictionary from UFS weather model fork
           wget https://raw.githubusercontent.com/uturuncoglu/ufs-weather-model/feature/lnd_noahmp_new/tests/parm/fd_nems.yaml
           ls -al
           cat esmxRun.config 

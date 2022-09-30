@@ -58,6 +58,8 @@ config:
     name: esmxRun.config
     content: 
       no_group:
+        LND_model:
+          values: noahmp
         LND_petlist: 
           values: 0-5
       LND_attributes:
@@ -118,9 +120,9 @@ config:
     content:
       fms_nml:
         clock_grain:
-          values: 'ROUTINE'
+          values: "'ROUTINE'"
         clock_flags:
-          values: 'NONE'
+          values: "'NONE'"
         domains_stack_size:
           values: 5000000
         stack_size:
