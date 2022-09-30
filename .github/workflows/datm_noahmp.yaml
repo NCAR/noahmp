@@ -184,9 +184,60 @@ jobs:
           ls -al
           cat esmxRun.config 
 
-      # download input files for components
-      #- name: Test 
-      #  run: |
-      #    cd ${{ github.workspace }}/app/build/INPUT
-      #    ls -al
-      #    cat file_checksum.lock
+      # run application
+      - name: Run Application
+        run: |
+          export PATH=${{ github.workspace }}/../.spack-ci/view/bin:$PATH
+          cd ${{ github.workspace }}/app/build
+          mpirun --oversubscribe -np 6 --allow-run-as-root ${{ github.workspace }}/app/build/esmx
+        
+      # upload model results to artifacts to check it later
+      - uses: actions/upload-artifact@v3
+        with:
+          name: model output
+          path: ${{ github.workspace }}/app/build/comp.test.lnd*.nc
+          
+      # calculate hashes
+      - name: Calculate Hashes of Output Files
+        run: |
+          cd ${{ github.workspace }}/app/build
+          lst=`ls -al comp.test.lnd.out.*.nc | awk '{print $9}'`
+          for i in $lst; do
+            md5sum $i >> output_hash.txt
+          done
+          cat output_hash.txt
+
+      # restore baseline hash file from cache
+      - name: Restore Baseline Hash File From Cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
+          key: baseline-${{ hashFiles('output_hash_baseline.txt') }}
+          restore-keys: |
+            baseline-
+
+      # compare with the baseline
+      - name: Compare with Baseline
+        id: compare-baseline 
+        run: |
+          cd ${{ github.workspace }}/run
+          # compare against the baseline
+          if test -f "output_hash_baseline.txt"; then
+            echo "Baseline:"
+            cat output_hash_baseline.txt
+            echo "Current Run:"
+            cat output_hash.txt
+            echo "::set-output name=CHECK_RESULT::$(cmp --silent output_hash_baseline.txt output_hash.txt && echo 'true' || echo 'false' )"
+          # there is no baseline, just copy current one as baseline  
+          else
+            cp output_hash.txt output_hash_baseline.txt
+            echo "::set-output name=CHECK_RESULT::$(echo 'true')"
+          fi
+
+      # Force to fail if the results are not matched with the baseline
+      - name: Result of Baseline Check
+        if: steps.compare-baseline.outputs.CHECK_RESULT == 'false'
+        uses: actions/github-script@v3
+        with:
+          script: |
+            core.setFailed('The results do not match with the baseline!')
