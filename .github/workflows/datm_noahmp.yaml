@@ -26,6 +26,8 @@ jobs:
     env:
       # installation location for spack and other components
       INSTALL_DIR: ${{ github.workspace }}/install
+      # option for baseline generation
+      REGENERATE_BASELINE: 'false' 
 
     steps:
       # checkout base repository
@@ -233,6 +235,7 @@ jobs:
       # restore baseline hash file from cache
       - name: Restore Baseline Hash File From Cache
         uses: actions/cache@v3
+        if: ${{ env.REGENERATE_BASELINE }} != 'true'
         with:
           path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
           key: baseline-${{ hashFiles('output_hash_baseline.txt') }}
@@ -253,6 +256,8 @@ jobs:
             echo "::set-output name=CHECK_RESULT::$(cmp --silent output_hash_baseline.txt output_hash.txt && echo 'true' || echo 'false' )"
           # there is no baseline, just copy current one as baseline  
           else
+            echo "No baseline found! Current run will be catched as baseline."
+            cat output_hash.txt
             cp output_hash.txt output_hash_baseline.txt
             echo "::set-output name=CHECK_RESULT::$(echo 'true')"
           fi
