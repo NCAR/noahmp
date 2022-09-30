@@ -112,3 +112,15 @@ config:
           values: 10800
         has_export:
           values: .false.
+  nml:
+    name: input.nml
+    content:
+      fms_nml:
+        clock_grain:
+          values: 'ROUTINE'
+        clock_flags:
+          values: 'NONE'
+        domains_stack_size:
+          values: 5000000
+        stack_size:
+          values: 0

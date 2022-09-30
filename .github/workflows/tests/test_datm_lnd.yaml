@@ -47,7 +47,7 @@ components:
             ESMX_log_flush:
               values: .true.
             ESMX_field_dictionary: 
-              values: fd.yaml
+              values: fd_nems.yaml
 
   lnd: lnd.yaml
 
