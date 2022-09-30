@@ -28,6 +28,8 @@ jobs:
       INSTALL_DIR: ${{ github.workspace }}/install
       # option for baseline generation
       REGENERATE_BASELINE: 'false' 
+      # option for retention period for artifacts, default is 90 days
+      ARTIFACTS_RETENTION_PERIOD: 2
 
     steps:
       # checkout base repository
@@ -205,8 +207,6 @@ jobs:
           python3 ${{ github.workspace }}/.github/workflows/scripts/gen_config.py --ifile ${{ github.workspace }}/.github/workflows/tests/test_datm_lnd.yaml
           # get field dictionary from UFS weather model fork
           wget https://raw.githubusercontent.com/uturuncoglu/ufs-weather-model/feature/lnd_noahmp_new/tests/parm/fd_nems.yaml
-          ls -al
-          cat esmxRun.config 
 
       # run application
       - name: Run Application
@@ -214,14 +214,22 @@ jobs:
           export PATH=${{ github.workspace }}/../.spack-ci/view/bin:$PATH
           cd ${{ github.workspace }}/app/build
           mpirun --oversubscribe -np 6 --allow-run-as-root ${{ github.workspace }}/app/build/esmx
-          cat PET*
+          tar -czvf log_files.tar.gz PET* out err datm.log
         
       # upload model results to artifacts to check it later
       - uses: actions/upload-artifact@v3
         with:
           name: model output
           path: ${{ github.workspace }}/app/build/comp.test.lnd*.nc
-          
+          retention-days: ${{ env.ARTIFACTS_RETENTION_PERIOD }}
+
+      # upload log files to artifacts for further examination
+      - uses: actions/upload-artifact@v3
+        with:
+          name: log files
+          path: ${{ github.workspace }}/app/build/log_files.tar.gz
+          retention-days: ${{ env.ARTIFACTS_RETENTION_PERIOD }}
+
       # calculate hashes
       - name: Calculate Hashes of Output Files
         run: |
