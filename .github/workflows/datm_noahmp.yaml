@@ -66,6 +66,7 @@ jobs:
         id: cache-spack
         uses: actions/cache@v3
         with:
+          # NOTE: the following path needs to be consitent with the path defined in spack.yaml
           path: /home/runner/work/noahmp/.spack-ci
           key: ${{ matrix.os }}-spack-${{ hashFiles('**/spack.lock') }}
           restore-keys: |
@@ -77,6 +78,8 @@ jobs:
         run: |
           . $GITHUB_WORKSPACE/spack/share/spack/setup-env.sh
           ls -al ${{ github.workspace }}
+          ls -al ${{ github.workspace }}/spack
+          ls -al /home/runner/work/noahmp/.spack-ci
           if test -f "${{ github.workspace }}/spack.lock"; then
             # spack environment is restored but still cache-hit != 'true'
             # this seems bug with cache and at least we could only install small portion of packages
