@@ -3345,8 +3345,10 @@ JLOOP : DO J = jts, jte
 ILOOP : DO I = its, ite
 
 
-  IF( IVGTYP(I,J) == ISURBAN_TABLE .or. IVGTYP(I,J) == 31 .or. &
-      IVGTYP(I,J) == 32 .or. IVGTYP(I,J) == 33 ) THEN
+  IF( IVGTYP(I,J) == ISURBAN_TABLE .or. IVGTYP(I,J) == LCZ_1_TABLE .or. IVGTYP(I,J) == LCZ_2_TABLE .or. &
+      IVGTYP(I,J) == LCZ_3_TABLE   .or. IVGTYP(I,J) == LCZ_4_TABLE .or. IVGTYP(I,J) == LCZ_5_TABLE .or. &
+      IVGTYP(I,J) == LCZ_6_TABLE   .or. IVGTYP(I,J) == LCZ_7_TABLE .or. IVGTYP(I,J) == LCZ_8_TABLE .or. &
+      IVGTYP(I,J) == LCZ_9_TABLE   .or. IVGTYP(I,J) == LCZ_10_TABLE .or. IVGTYP(I,J) == LCZ_11_TABLE ) THEN
 
     UTYPE_URB = UTYPE_URB2D(I,J) !urban type (low, high or industrial)
 
