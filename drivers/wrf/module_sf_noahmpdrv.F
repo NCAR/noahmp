@@ -3024,7 +3024,9 @@ end function checkIfHarvest
   USE module_sf_bep,      only: bep
   USE module_sf_bep_bem,  only: bep_bem
   USE module_ra_gfdleta,  only: cal_mon_day
-  USE NOAHMP_TABLES, ONLY: ISURBAN_TABLE
+  USE NOAHMP_TABLES, ONLY: ISURBAN_TABLE,LCZ_1_TABLE,LCZ_2_TABLE,LCZ_3_TABLE,LCZ_4_TABLE, &
+                           LCZ_5_TABLE,LCZ_6_TABLE,LCZ_7_TABLE,LCZ_8_TABLE,  &
+                           LCZ_9_TABLE,LCZ_10_TABLE,LCZ_11_TABLE
   USE module_model_constants, only: KARMAN, CP, XLV
 !----------------------------------------------------------------
     IMPLICIT NONE
