@@ -60,6 +60,7 @@ jobs:
         run: |
           . $GITHUB_WORKSPACE/spack/share/spack/setup-env.sh
           spack --color always -e ${{ github.workspace }}/.github/workflows/spack concretize -f
+          ls -al ${{ github.workspace }}/.github/workflows/spack
       
       # restore build environment from cache
       - name: Restore Build Environment From Cache
@@ -220,14 +221,16 @@ jobs:
           tar -czvf log_files.tar.gz PET* out_err.txt datm.log
         
       # upload model results to artifacts to check it later
-      - uses: actions/upload-artifact@v3
+      - name: Upload Output to Artifacts
+        uses: actions/upload-artifact@v3
         with:
           name: model output
           path: ${{ github.workspace }}/app/build/comp.test.lnd*.nc
           retention-days: ${{ env.ARTIFACTS_RETENTION_PERIOD }}
 
       # upload log files to artifacts for further examination
-      - uses: actions/upload-artifact@v3
+      - name: Upload Logs to Artifacts
+        uses: actions/upload-artifact@v3
         with:
           name: log files
           path: ${{ github.workspace }}/app/build/log_files.tar.gz
