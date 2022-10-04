@@ -1,7 +1,8 @@
 [ccpp-table-properties]
   name = noahmpdrv
   type = scheme
-  dependencies = funcphys.f90,machine.F,sfc_diff.f,module_sf_noahmp_glacier.f90,module_sf_noahmplsm.f90,noahmp_tables.f90,set_soilveg.f
+  dependencies = ../../../funcphys.f90,../../../machine.F,../../../sfc_diff.f,../../../set_soilveg.f
+  dependencies = ../../src/module_sf_noahmp_glacier.f90,../../src/module_sf_noahmplsm.f90,noahmp_tables.f90
 
 ########################################################################
 [ccpp-arg-table]
