@@ -77,12 +77,17 @@ jobs:
         if: steps.cache-spack.outputs.cache-hit != 'true'
         run: |
           . $GITHUB_WORKSPACE/spack/share/spack/setup-env.sh
-          if test -f "${{ github.workspace }}/.github/workflows/spack/spack.lock"; then
-            # spack environment is restored but still cache-hit != 'true'
-            # this seems bug with cache and following allow only install small portion of packages
-            spack --color always -e ${{ github.workspace }}/.github/workflows/spack concretize -f
-          fi
-          spack --color always -e ${{ github.workspace }}/.github/workflows/spack install -j3
+          if test -d "/home/runner/work/noahmp/.spack-ci"; then
+            echo "Skip installing environment! It is restored from cache."
+          else
+            ls -al /home/runner/work/noahmp/
+            if test -f "${{ github.workspace }}/.github/workflows/spack/spack.lock"; then
+              # spack environment is restored but still cache-hit != 'true'
+              # this seems bug with cache and following allow only install small portion of packages
+              spack --color always -e ${{ github.workspace }}/.github/workflows/spack concretize -f
+            fi
+            spack --color always -e ${{ github.workspace }}/.github/workflows/spack install -j3
+          end if
       
       # build and install component
       # need to install with openmp support since fms build with it
