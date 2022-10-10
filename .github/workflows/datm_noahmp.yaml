@@ -72,7 +72,10 @@ jobs:
           restore-keys: |
             ${{ matrix.os }}-spack
       
-      - run: echo ${{ hashFiles('**/spack.lock') }}
+      - run: |
+          echo ${{ hashFiles('**/spack.lock') }}
+          cat ${{ github.workspace }}/.github/workflows/spack/spack.lock
+          cat ${{ github.workspace }}/.github/workflows/spack/spack.yaml
           
       # install build environment
       - name: Install Spack Packages
