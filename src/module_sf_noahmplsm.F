@@ -10356,7 +10356,7 @@ END  SUBROUTINE SHALLOWWATERTABLE
   INTEGER :: IHA       !Havestindex(0=on,1=off)
   INTEGER, INTENT(OUT) :: PGS       !Plant growth stage
 
-  REAL    :: PSNCROP 
+!  REAL    :: PSNCROP 
 
 ! ------------------------------------------------------------------------------------------
    IF ( ( VEGTYP == parameters%iswater ) .OR. ( VEGTYP == parameters%ISBARREN ) .OR. &
@@ -10390,9 +10390,11 @@ END  SUBROUTINE SHALLOWWATERTABLE
      WROOT = WROOT + SMC(J)/parameters%SMCMAX(J) *  DZSNSO(J) / (-ZSOIL(parameters%NROOT))
    ENDDO
 
-   CALL PSN_CROP     ( parameters,                           & !in
-                       SOLDN,   XLAI,    T2M,                & !in 
-                       PSNCROP                             )   !out
+! the following PSNCROP is not used currently. 
+! PSN is directly from calculations in the energy part (similar to the treatment in CARBON subroutine)
+!   CALL PSN_CROP     ( parameters,                           & !in
+!                       SOLDN,   XLAI,    T2M,                & !in 
+!                       PSNCROP                             )   !out
 
    CALL GROWING_GDD  (parameters,                           & !in
                       T2M ,   DT,  JULIAN,                  & !in
@@ -10444,74 +10446,74 @@ END  SUBROUTINE SHALLOWWATERTABLE
 
   REAL                        , INTENT(INOUT) :: XLAI   !leaf  area index from leaf carbon [-]
   REAL                        , INTENT(INOUT) :: XSAI   !stem area index from leaf carbon [-]
-  REAL                        , INTENT(INOUT) :: LFMASS !leaf mass [g/m2]
-  REAL                        , INTENT(INOUT) :: RTMASS !mass of fine roots [g/m2]
-  REAL                        , INTENT(INOUT) :: STMASS !stem mass [g/m2]
-  REAL                        , INTENT(INOUT) :: FASTCP !short lived carbon [g/m2]
-  REAL                        , INTENT(INOUT) :: STBLCP !stable carbon pool [g/m2]
-  REAL                        , INTENT(INOUT) :: WOOD   !mass of wood (incl. woody roots) [g/m2]
-  REAL                        , INTENT(INOUT) :: GRAIN  !mass of grain (XING) [g/m2]
+  REAL                        , INTENT(INOUT) :: LFMASS !leaf mass [gCH2O/m2]
+  REAL                        , INTENT(INOUT) :: RTMASS !mass of fine roots [gCH2O/m2]
+  REAL                        , INTENT(INOUT) :: STMASS !stem mass [gCH2O/m2]
+  REAL                        , INTENT(INOUT) :: FASTCP !short lived carbon [gC/m2]
+  REAL                        , INTENT(INOUT) :: STBLCP !stable carbon pool [gC/m2]
+  REAL                        , INTENT(INOUT) :: WOOD   !mass of wood (incl. woody roots) [gCH2O/m2]
+  REAL                        , INTENT(INOUT) :: GRAIN  !mass of grain (XING) [gCH2O/m2]
   REAL                        , INTENT(INOUT) :: GDD    !growing degree days (XING)
 
 ! output
 
-  REAL                          , INTENT(OUT) :: GPP    !net instantaneous assimilation [g/m2/s]
-  REAL                          , INTENT(OUT) :: NPP    !net primary productivity [g/m2]
-  REAL                          , INTENT(OUT) :: NEE    !net ecosystem exchange (autors+heters-gpp)
-  REAL                          , INTENT(OUT) :: AUTORS !net ecosystem resp. (maintance and growth)
-  REAL                          , INTENT(OUT) :: HETERS !organic respiration
-  REAL                          , INTENT(OUT) :: TOTSC  !total soil carbon (g/m2)
-  REAL                          , INTENT(OUT) :: TOTLB  !total living carbon (g/m2)
+  REAL                          , INTENT(OUT) :: GPP    !net instantaneous assimilation [gC/m2/s]
+  REAL                          , INTENT(OUT) :: NPP    !net primary productivity [gC/m2/s]
+  REAL                          , INTENT(OUT) :: NEE    !net ecosystem exchange (autors+heters-gpp) [gCO2/m2/s]
+  REAL                          , INTENT(OUT) :: AUTORS !net ecosystem resp. (maintance and growth) [gC/m2/s]
+  REAL                          , INTENT(OUT) :: HETERS !organic respiration [gC/m2/s]
+  REAL                          , INTENT(OUT) :: TOTSC  !total soil carbon (gC/m2)
+  REAL                          , INTENT(OUT) :: TOTLB  !total living carbon (gC/m2)
 
 ! local
 
-  REAL                   :: CFLUX    !carbon flux to atmosphere [g/m2/s]
-  REAL                   :: LFMSMN   !minimum leaf mass [g/m2]
-  REAL                   :: RSWOOD   !wood respiration [g/m2]
-  REAL                   :: RSLEAF   !leaf maintenance respiration per timestep[g/m2]
-  REAL                   :: RSROOT   !fine root respiration per time step [g/m2]
-  REAL                   :: RSGRAIN  !grain respiration [g/m2]  
-  REAL                   :: NPPL     !leaf net primary productivity [g/m2/s]
-  REAL                   :: NPPR     !root net primary productivity [g/m2/s]
-  REAL                   :: NPPW     !wood net primary productivity [g/m2/s]
-  REAL                   :: NPPS     !wood net primary productivity [g/m2/s]
-  REAL                   :: NPPG     !grain net primary productivity [g/m2/s] 
-  REAL                   :: DIELF    !death of leaf mass per time step [g/m2]
+  REAL                   :: CFLUX    !carbon flux to atmosphere [gC/m2/s]
+  REAL                   :: LFMSMN   !minimum leaf mass [gCH2O/m2]
+  REAL                   :: RSWOOD   !wood respiration [gCH2O/m2/s]
+  REAL                   :: RSLEAF   !leaf maintenance respiration per timestep[gCH2O/m2/s]
+  REAL                   :: RSROOT   !fine root respiration per time step [gCH2O/m2/s]
+  REAL                   :: RSGRAIN  !grain respiration [gCH2O/m2/s]  
+  REAL                   :: NPPL     !leaf net primary productivity [gCH2O/m2/s]
+  REAL                   :: NPPR     !root net primary productivity [gCH2O/m2/s]
+  REAL                   :: NPPW     !wood net primary productivity [gCH2O/m2/s]
+  REAL                   :: NPPS     !wood net primary productivity [gCH2O/m2/s]
+  REAL                   :: NPPG     !grain net primary productivity [gCH2O/m2/s] 
+  REAL                   :: DIELF    !death of leaf mass per time step [gCH2O/m2/s]
 
-  REAL                   :: ADDNPPLF !leaf assimil after resp. losses removed[g/m2]
-  REAL                   :: ADDNPPST !stem assimil after resp. losses removed[g/m2]
-  REAL                   :: CARBFX   !carbon assimilated per model step [g/m2]
-  REAL                   :: CBHYDRAFX!carbonhydrate assimilated per model step [g/m2]
-  REAL                   :: GRLEAF   !growth respiration rate for leaf [g/m2/s]
-  REAL                   :: GRROOT   !growth respiration rate for root [g/m2/s]
-  REAL                   :: GRWOOD   !growth respiration rate for wood [g/m2/s]
-  REAL                   :: GRSTEM   !growth respiration rate for stem [g/m2/s]
-  REAL                   :: GRGRAIN   !growth respiration rate for stem [g/m2/s]
+  REAL                   :: ADDNPPLF !leaf assimil after resp. losses removed[gCH2O/m2/s]
+  REAL                   :: ADDNPPST !stem assimil after resp. losses removed[gCH2O/m2/s]
+  REAL                   :: CARBFX   !carbon assimilated per model step [gC/m2/s]
+  REAL                   :: CBHYDRAFX!carbonhydrate assimilated per model step [gCH2O/m2/s]
+  REAL                   :: GRLEAF   !growth respiration rate for leaf [gCH2O/m2/s]
+  REAL                   :: GRROOT   !growth respiration rate for root [gCH2O/m2/s]
+  REAL                   :: GRWOOD   !growth respiration rate for wood [gCH2O/m2/s]
+  REAL                   :: GRSTEM   !growth respiration rate for stem [gCH2O/m2/s]
+  REAL                   :: GRGRAIN   !growth respiration rate for stem [gCH2O/m2/s]
   REAL                   :: LEAFPT   !fraction of carbon allocated to leaves [-]
-  REAL                   :: LFDEL    !maximum  leaf mass  available to change[g/m2/s]
-  REAL                   :: LFTOVR   !stem turnover per time step [g/m2]
-  REAL                   :: STTOVR   !stem turnover per time step [g/m2]
-  REAL                   :: WDTOVR   !wood turnover per time step [g/m2]
-  REAL                   :: GRTOVR   !grainturnover per time step [g/m2]
-  REAL                   :: RSSOIL   !soil respiration per time step [g/m2]
-  REAL                   :: RTTOVR   !root carbon loss per time step by turnover[g/m2]
-  REAL                   :: STABLC   !decay rate of fast carbon to slow carbon[g/m2/s]
+  REAL                   :: LFDEL    !maximum  leaf mass  available to change[gCH2O/m2/s]
+  REAL                   :: LFTOVR   !stem turnover per time step [gCH2O/m2/s]
+  REAL                   :: STTOVR   !stem turnover per time step [gCH2O/m2/s]
+  REAL                   :: WDTOVR   !wood turnover per time step [gCH2O/m2/s]
+  REAL                   :: GRTOVR   !grainturnover per time step [gCH2O/m2/s]
+  REAL                   :: RSSOIL   !soil respiration per time step [gCH2O/m2/s]
+  REAL                   :: RTTOVR   !root carbon loss per time step by turnover[gCH2O/m2/s]
+  REAL                   :: STABLC   !decay rate of fast carbon to slow carbon[gC/m2/s]
   REAL                   :: WOODF    !calculated wood to root ratio [-]
   REAL                   :: NONLEF   !fraction of carbon to root and wood [-]
-  REAL                   :: RESP     !leaf respiration [umol/m2/s]
-  REAL                   :: RSSTEM   !stem respiration [g/m2/s]
+  REAL                   :: RESP     !leaf respiration [umolCO2/m2/s]
+  REAL                   :: RSSTEM   !stem respiration [gCH2O/m2/s]
 
   REAL                   :: FSW      !soil water factor for microbial respiration
   REAL                   :: FST      !soil temperature factor for microbialrespiration
   REAL                   :: FNF      !foliage nitrogen adjustemt to respiration(<= 1)
   REAL                   :: TF       !temperature factor
-  REAL                   :: STDEL
-  REAL                   :: STMSMN
+  REAL                   :: STDEL    ! maximum stem mass available to change [gCH2O/m2/s]
+  REAL                   :: STMSMN   ! minimum stem mass[gCH2O/m2]
   REAL                   :: SAPM     !stem area per unit mass (m2/g)
-  REAL                   :: DIEST
-  REAL                   :: LFCONVERT   !leaf to grain conversion ! Zhe Zhang 2020-07-13
-  REAL                   :: STCONVERT   !stem to grain conversion [g/m2/s]
-  REAL                   :: RTCONVERT   !root to grain conversion [g/m2/s]
+  REAL                   :: DIEST    ! death of stem mass [gCH2O/m2/s]
+  REAL                   :: LFCONVERT   !leaf to grain conversion [gCH2O/m2]! Zhe Zhang 2020-07-13
+  REAL                   :: STCONVERT   !stem to grain conversion [gCH2O/m2]
+  REAL                   :: RTCONVERT   !root to grain conversion [gCH2O/m2]
 ! -------------------------- constants -------------------------------
   REAL                   :: BF       !parameter for present wood allocation [-]
   REAL                   :: RSWOODC  !wood respiration coeficient [1/s]
@@ -10548,80 +10550,78 @@ END  SUBROUTINE SHALLOWWATERTABLE
 ! carbon assimilation
 ! 1 mole -> 12 g carbon or 44 g CO2 or 30 g CH20
 
-     CARBFX     = PSN*12.0e-6!*IPA   !umol co2 /m2/ s -> g/m2/s C
-     CBHYDRAFX  = PSN*30.0e-6!*IPA
+     CARBFX     = PSN*12.0e-6   !umol co2 /m2/ s -> g/m2/s C
+     CBHYDRAFX  = PSN*30.0e-6   !umol co2 /m2/ s -> g/m2/s CH2O
 
 ! mainteinance respiration
      FNF     = MIN( FOLN/MAX(1.0E-06,parameters%FOLN_MX), 1.0 )
      TF      = parameters%Q10MR**( (TV-298.16)/10.0 )
-     RESP    = parameters%LFMR25 * TF * FNF * XLAI  * (1.-WSTRES)  ! umol/m2/s
-     RSLEAF  = MIN((LFMASS-LFMSMN)/DT,RESP*30.0e-6)                       ! g/m2/s
-     RSROOT  = parameters%RTMR25*(RTMASS*1E-3)*TF * 30.0e-6         ! g/m2/s
-     RSSTEM  = parameters%STMR25*(STMASS*1E-3)*TF * 30.0e-6         ! g/m2/s
-     RSGRAIN = parameters%GRAINMR25*(GRAIN*1E-3)*TF * 30.0e-6       ! g/m2/s
+     RESP    = parameters%LFMR25 * TF * FNF * XLAI  * (1.-WSTRES)  ! umolCO2/m2/s
+     RSLEAF  = MIN((LFMASS-LFMSMN)/DT,RESP*30.0e-6)                       ! gCH2O/m2/s
+     RSROOT  = parameters%RTMR25*(RTMASS*1E-3)*TF * 30.0e-6         ! gCH2O/m2/s
+     RSSTEM  = parameters%STMR25*(STMASS*1E-3)*TF * 30.0e-6         ! gCH2O/m2/s
+     RSGRAIN = parameters%GRAINMR25*(GRAIN*1E-3)*TF * 30.0e-6       ! gCH2O/m2/s
 
 ! calculate growth respiration for leaf, rtmass and grain
 
-     GRLEAF  = MAX(0.0,parameters%FRA_GR*(parameters%LFPT(PGS)*CBHYDRAFX  - RSLEAF))
-     GRSTEM  = MAX(0.0,parameters%FRA_GR*(parameters%STPT(PGS)*CBHYDRAFX  - RSSTEM))
-     GRROOT  = MAX(0.0,parameters%FRA_GR*(parameters%RTPT(PGS)*CBHYDRAFX  - RSROOT))
-     GRGRAIN = MAX(0.0,parameters%FRA_GR*(parameters%GRAINPT(PGS)*CBHYDRAFX  - RSGRAIN))
+     GRLEAF  = MAX(0.0,parameters%FRA_GR*(parameters%LFPT(PGS)*CBHYDRAFX  - RSLEAF)) ! gCH2O/m2/s
+     GRSTEM  = MAX(0.0,parameters%FRA_GR*(parameters%STPT(PGS)*CBHYDRAFX  - RSSTEM)) ! gCH2O/m2/s
+     GRROOT  = MAX(0.0,parameters%FRA_GR*(parameters%RTPT(PGS)*CBHYDRAFX  - RSROOT)) ! gCH2O/m2/s
+     GRGRAIN = MAX(0.0,parameters%FRA_GR*(parameters%GRAINPT(PGS)*CBHYDRAFX - RSGRAIN)) ! gCH2O/m2/s
 
 ! leaf turnover, stem turnover, root turnover and leaf death caused by soil
 ! water and soil temperature stress
 
-     LFTOVR  = parameters%LF_OVRC(PGS)*1.0E-6*LFMASS
-     RTTOVR  = parameters%RT_OVRC(PGS)*1.0E-6*RTMASS
-     STTOVR  = parameters%ST_OVRC(PGS)*1.0E-6*STMASS
+     LFTOVR  = parameters%LF_OVRC(PGS)*1.0E-6*LFMASS ! gCH2O/m2/s
+     RTTOVR  = parameters%RT_OVRC(PGS)*1.0E-6*RTMASS ! gCH2O/m2/s
+     STTOVR  = parameters%ST_OVRC(PGS)*1.0E-6*STMASS ! gCH2O/m2/s
      SC  = EXP(-0.3*MAX(0.0,TV-parameters%LEFREEZ)) * (LFMASS/120.0)
      SD  = EXP((WSTRES-1.0)*WSTRC)
-     DIELF = LFMASS*1.0E-6*(parameters%DILE_FW(PGS) * SD + parameters%DILE_FC(PGS)*SC)
+     DIELF = LFMASS*1.0E-6*(parameters%DILE_FW(PGS) * SD + parameters%DILE_FC(PGS)*SC) ! gCH2O/m2/s
 
 ! Allocation of CBHYDRAFX to leaf, stem, root and grain at each growth stage
 
-
-     ADDNPPLF    = MAX(0.0,parameters%LFPT(PGS)*CBHYDRAFX - GRLEAF-RSLEAF)
-     ADDNPPLF    = parameters%LFPT(PGS)*CBHYDRAFX - GRLEAF-RSLEAF
-     ADDNPPST    = MAX(0.0,parameters%STPT(PGS)*CBHYDRAFX - GRSTEM-RSSTEM)
-     ADDNPPST    = parameters%STPT(PGS)*CBHYDRAFX - GRSTEM-RSSTEM
+     !ADDNPPLF    = MAX(0.0,parameters%LFPT(PGS)*CBHYDRAFX - GRLEAF-RSLEAF) ! gCH2O/m2/s
+     ADDNPPLF    = parameters%LFPT(PGS)*CBHYDRAFX - GRLEAF-RSLEAF          ! gCH2O/m2/s
+     !ADDNPPST    = MAX(0.0,parameters%STPT(PGS)*CBHYDRAFX - GRSTEM-RSSTEM) ! gCH2O/m2/s
+     ADDNPPST    = parameters%STPT(PGS)*CBHYDRAFX - GRSTEM-RSSTEM          ! gCH2O/m2/s
     
-
 ! avoid reducing leaf mass below its minimum value but conserve mass
 
-     LFDEL = (LFMASS - LFMSMN)/DT
-     STDEL = (STMASS - STMSMN)/DT
-     LFTOVR  = MIN(LFTOVR,LFDEL+ADDNPPLF)
-     STTOVR  = MIN(STTOVR,STDEL+ADDNPPST)
-     DIELF = MIN(DIELF,LFDEL+ADDNPPLF-LFTOVR)
+     LFDEL = (LFMASS - LFMSMN)/DT              ! gCH2O/m2/s
+     STDEL = (STMASS - STMSMN)/DT              ! gCH2O/m2/s
+     LFTOVR = MIN(LFTOVR,LFDEL+ADDNPPLF)       ! gCH2O/m2/s
+     STTOVR = MIN(STTOVR,STDEL+ADDNPPST)       ! gCH2O/m2/s
+     DIELF = MIN(DIELF,LFDEL+ADDNPPLF-LFTOVR)  ! gCH2O/m2/s
 
 ! net primary productivities
 
-     NPPL   = MAX(ADDNPPLF,-LFDEL)
-     NPPL   = ADDNPPLF
-     NPPS   = MAX(ADDNPPST,-STDEL)
-     NPPS   = ADDNPPST
-     NPPR   = parameters%RTPT(PGS)*CBHYDRAFX - RSROOT - GRROOT
-     NPPG  =  parameters%GRAINPT(PGS)*CBHYDRAFX - RSGRAIN - GRGRAIN
+     !NPPL   = MAX(ADDNPPLF,-LFDEL)  ! gCH2O/m2/s
+     NPPL   = ADDNPPLF              ! gCH2O/m2/s
+     !NPPS   = MAX(ADDNPPST,-STDEL)  ! gCH2O/m2/s
+     NPPS   = ADDNPPST              ! gCH2O/m2/s
+     NPPR   = parameters%RTPT(PGS)*CBHYDRAFX - RSROOT - GRROOT      ! gCH2O/m2/s
+     NPPG  =  parameters%GRAINPT(PGS)*CBHYDRAFX - RSGRAIN - GRGRAIN ! gCH2O/m2/s
 
 ! masses of plant components
   
-     LFMASS = LFMASS + (NPPL-LFTOVR-DIELF)*DT
-     STMASS = STMASS + (NPPS-STTOVR)*DT   ! g/m2
-     RTMASS = RTMASS + (NPPR-RTTOVR)*DT
-     GRAIN =  GRAIN + NPPG*DT 
+     LFMASS = LFMASS + (NPPL-LFTOVR-DIELF)*DT   ! gCH2O/m2
+     STMASS = STMASS + (NPPS-STTOVR)*DT         ! gCH2O/m2
+     RTMASS = RTMASS + (NPPR-RTTOVR)*DT         ! gCH2O/m2
+     GRAIN  =  GRAIN + NPPG*DT                  ! gCH2O/m2
 
-     GPP = CBHYDRAFX* 0.4 !!g/m2/s C  0.4=12/30, CH20 to C
+     GPP = CBHYDRAFX* 0.4   !g/m2/s C  0.4=12/30, CH20 to C
 
      LFCONVERT = 0.0 ! Zhe Zhang 2020-07-13
      STCONVERT = 0.0
      RTCONVERT = 0.0
-     LFCONVERT = LFMASS*(parameters%LFCT(PGS)*DT/3600.0)
-     STCONVERT = STMASS*(parameters%STCT(PGS)*DT/3600.0)
-     RTCONVERT = RTMASS*(parameters%RTCT(PGS)*DT/3600.0)
-     LFMASS = LFMASS - LFCONVERT
-     STMASS = STMASS - STCONVERT
-     RTMASS = RTMASS - RTCONVERT
-     GRAIN  = GRAIN + STCONVERT + RTCONVERT + LFCONVERT
+     LFCONVERT = LFMASS*(parameters%LFCT(PGS)*DT/3600.0) ! gCH2O/m2 
+     STCONVERT = STMASS*(parameters%STCT(PGS)*DT/3600.0) ! gCH2O/m2
+     RTCONVERT = RTMASS*(parameters%RTCT(PGS)*DT/3600.0) ! gCH2O/m2
+     LFMASS = LFMASS - LFCONVERT   ! gCH2O/m2
+     STMASS = STMASS - STCONVERT   ! gCH2O/m2
+     RTMASS = RTMASS - RTCONVERT   ! gCH2O/m2
+     GRAIN  = GRAIN + STCONVERT + RTCONVERT + LFCONVERT  ! gCH2O/m2
      !IF(PGS==6) THEN
      !  STCONVERT = STMASS*(0.00005*DT/3600.0)
      !  STMASS = STMASS - STCONVERT
@@ -10644,35 +10644,30 @@ END  SUBROUTINE SHALLOWWATERTABLE
 !     IF(PGS == 1 .OR. PGS == 2 .OR. PGS == 8) THEN
 !       FASTCP=1000
 !     ELSE
-       FASTCP = FASTCP + (RTTOVR+LFTOVR+STTOVR+DIELF)*DT 
+       FASTCP = FASTCP + (RTTOVR+LFTOVR+STTOVR+DIELF)*DT*0.4  ! 0.4: gCH2O/m2 -> gC/m2
 !     END IF
      FST = 2.0**( (STC-283.16)/10.0 )
      FSW = WROOT / (0.20+WROOT) * 0.23 / (0.23+WROOT)
-     RSSOIL = FSW * FST * parameters%MRP* MAX(0.0,FASTCP*1.0E-3)*12.0E-6
+     RSSOIL = FSW * FST * parameters%MRP* MAX(0.0,FASTCP*1.0E-3)*30.0E-6  ! gCH2O/m2/s
 
-     STABLC = 0.1*RSSOIL
-     FASTCP = FASTCP - (RSSOIL + STABLC)*DT
-     STBLCP = STBLCP + STABLC*DT
+     STABLC = 0.1*RSSOIL   ! gCH2O/m2/s
+     FASTCP = FASTCP - (RSSOIL + STABLC)*DT*0.4  ! 0.4: gCH2O/m2 -> gC/m2
+     STBLCP = STBLCP + STABLC*DT*0.4  ! 0.4: gCH2O/m2 -> gC/m2
 
 !  total carbon flux
 
-     CFLUX  = - CARBFX + RSLEAF + RSROOT  + RSSTEM &
-              + RSSOIL + GRLEAF + GRROOT                  ! g/m2/s 0.4=12/30, CH20 to C
+     CFLUX  = - CARBFX + (RSLEAF + RSROOT + RSSTEM + RSGRAIN + &
+             0.9*RSSOIL + GRLEAF + GRROOT + GRSTEM + GRGRAIN)*0.4  ! gC/m2/s, 0.4=12/30, CH20 to C
 
 ! for outputs
-                                                                 !g/m2/s C
 
-     NPP   = (NPPL + NPPS+ NPPR +NPPG)*0.4      !!g/m2/s C  0.4=12/30, CH20 to C
- 
-  
-     AUTORS = RSROOT + RSGRAIN  + RSLEAF +  &                     !g/m2/s C
-              GRLEAF + GRROOT + GRGRAIN                           !g/m2/s C
-
-     HETERS = RSSOIL                                             !g/m2/s C
-     NEE    = (AUTORS + HETERS - GPP)*44.0/30.0                    !g/m2/s CO2
-     TOTSC  = FASTCP + STBLCP                                    !g/m2   C
-
-     TOTLB  = LFMASS + RTMASS + GRAIN         
+     NPP    = (NPPL + NPPS+ NPPR +NPPG)*0.4               ! gC/m2/s  0.4=12/30, CH20 to C
+     AUTORS = (RSROOT + RSGRAIN + RSLEAF + RSSTEM + &     ! gC/m2/s
+               GRLEAF + GRROOT + GRGRAIN + GRSTEM)*0.4    ! gC/m2/s
+     HETERS = 0.9*RSSOIL*0.4                              ! gC/m2/s
+     NEE    = (AUTORS + HETERS - GPP)*44.0/12.0           ! gCO2/m2/s
+     TOTSC  = FASTCP + STBLCP                             ! gC/m2
+     TOTLB  = (LFMASS + RTMASS + STMASS + GRAIN)*0.4      ! gC/m2
 
 ! leaf area index and stem area index
   
