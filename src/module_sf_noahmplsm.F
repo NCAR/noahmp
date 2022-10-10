@@ -1025,7 +1025,7 @@ contains
                  TROOT  ,IST    ,LAT    ,iloc   ,jloc   , & !in
                  LFMASS ,RTMASS ,STMASS ,WOOD   ,STBLCP ,FASTCP , & !inout
                  GPP    ,NPP    ,NEE    ,AUTORS ,HETERS ,TOTSC  , & !out
-                 TOTLB  ,LAI    ,SAI    )                   !out
+                 TOTLB  ,LAI    ,SAI    )                   !inout
    END IF
 
    IF (OPT_CROP == 1 .and. crop_active) THEN
@@ -9914,7 +9914,7 @@ END  SUBROUTINE SHALLOWWATERTABLE
                      TROOT  ,IST    ,LAT    ,ILOC   ,JLOC   , & !in
                      LFMASS ,RTMASS ,STMASS ,WOOD   ,STBLCP ,FASTCP , & !inout
                      GPP    ,NPP    ,NEE    ,AUTORS ,HETERS ,TOTSC  , & !out
-                     TOTLB  ,XLAI   ,XSAI   )                   !out
+                     TOTLB  ,XLAI   ,XSAI   )                   !inout
 ! ------------------------------------------------------------------------------------------
       IMPLICIT NONE
 ! ------------------------------------------------------------------------------------------
@@ -9951,6 +9951,8 @@ END  SUBROUTINE SHALLOWWATERTABLE
   REAL                        , INTENT(INOUT) :: WOOD   !mass of wood (incl. woody roots) [g/m2]
   REAL                        , INTENT(INOUT) :: STBLCP !stable carbon in deep soil [g/m2]
   REAL                        , INTENT(INOUT) :: FASTCP !short-lived carbon in shallow soil [g/m2]
+  REAL                        , INTENT(INOUT) :: XLAI   !leaf area index [-]
+  REAL                        , INTENT(INOUT) :: XSAI   !stem area index [-]
 
 ! outputs: (carbon)
 
@@ -9961,8 +9963,6 @@ END  SUBROUTINE SHALLOWWATERTABLE
   REAL                          , INTENT(OUT) :: HETERS !organic respiration [g/m2/s C]
   REAL                          , INTENT(OUT) :: TOTSC  !total soil carbon [g/m2 C]
   REAL                          , INTENT(OUT) :: TOTLB  !total living carbon ([g/m2 C]
-  REAL                          , INTENT(OUT) :: XLAI   !leaf area index [-]
-  REAL                          , INTENT(OUT) :: XSAI   !stem area index [-]
 !  REAL                          , INTENT(OUT) :: VOCFLX(5) ! voc fluxes [ug C m-2 h-1]
 
 ! local variables
