@@ -92,7 +92,7 @@ jobs:
               spack --color always -e ${{ github.workspace }}/.github/workflows/spack concretize -f
             fi
             spack --color always -e ${{ github.workspace }}/.github/workflows/spack install -j3
-          end if
+          fi
       
       # build and install component
       # need to install with openmp support since fms build with it
