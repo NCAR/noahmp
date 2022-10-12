@@ -71,22 +71,28 @@ jobs:
           key: ${{ matrix.os }}-spack-${{ hashFiles('**/spack.lock') }}
           restore-keys: |
             ${{ matrix.os }}-spack
+      
+      - run: |
+          echo ${{ hashFiles('**/spack.lock') }}
+          cat ${{ github.workspace }}/.github/workflows/spack/spack.lock
+          cat ${{ github.workspace }}/.github/workflows/spack/spack.yaml
           
       # install build environment
       - name: Install Spack Packages
         if: steps.cache-spack.outputs.cache-hit != 'true'
         run: |
           . $GITHUB_WORKSPACE/spack/share/spack/setup-env.sh
-          ls -al ${{ github.workspace }}
-          ls -al ${{ github.workspace }}/spack
-          ls -al /home/runner/work/noahmp/.spack-ci
-          if test -f "${{ github.workspace }}/spack.lock"; then
-            # spack environment is restored but still cache-hit != 'true'
-            # this seems bug with cache and at least we could only install small portion of packages
-            cat ${{ github.workspace }}/spack.lock
-            spack --color always -e ${{ github.workspace }}/.github/workflows/spack concretize -f
-          fi
-          spack --color always -e ${{ github.workspace }}/.github/workflows/spack install -j3
+          if test -d "/home/runner/work/noahmp/.spack-ci"; then
+            echo "Skip installing environment! It is restored from cache."
+          else
+            ls -al /home/runner/work/noahmp/
+            if test -f "${{ github.workspace }}/.github/workflows/spack/spack.lock"; then
+              # spack environment is restored but still cache-hit != 'true'
+              # this seems bug with cache and following allow only install small portion of packages
+              spack --color always -e ${{ github.workspace }}/.github/workflows/spack concretize -f
+            fi
+            spack --color always -e ${{ github.workspace }}/.github/workflows/spack install -j3
+          end if
       
       # build and install component
       # need to install with openmp support since fms build with it
@@ -220,14 +226,16 @@ jobs:
           tar -czvf log_files.tar.gz PET* out_err.txt datm.log
         
       # upload model results to artifacts to check it later
-      - uses: actions/upload-artifact@v3
+      - name: Upload Output to Artifacts
+        uses: actions/upload-artifact@v3
         with:
           name: model output
           path: ${{ github.workspace }}/app/build/comp.test.lnd*.nc
           retention-days: ${{ env.ARTIFACTS_RETENTION_PERIOD }}
 
       # upload log files to artifacts for further examination
-      - uses: actions/upload-artifact@v3
+      - name: Upload Logs to Artifacts
+        uses: actions/upload-artifact@v3
         with:
           name: log files
           path: ${{ github.workspace }}/app/build/log_files.tar.gz

@@ -4,9 +4,9 @@ components:
       dt:
         values: 3600
       lnd-to-atm:
-        values: remapMethod=bilinear:unmappedaction=ignore:zeroregion=select
+        values: remapMethod=bilinear:unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq
       atm-to-lnd: 
-        values: remapMethod=bilinear:unmappedaction=ignore:zeroregion=select
+        values: remapMethod=bilinear:unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq
       atm:
       lnd:
     config:
