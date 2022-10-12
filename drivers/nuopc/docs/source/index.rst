@@ -12,3 +12,4 @@ Welcome to the NoahMP Land Model User's Guide
 
    DriverAndCoupling
    BuildingAndRunning
+   ComponentTesting
