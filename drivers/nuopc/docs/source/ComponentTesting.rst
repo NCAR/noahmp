@@ -152,8 +152,25 @@ The application can be build with following commands:
 Running Data Atmosphere Forced NoahMP Configuration
 ===================================================
 
+To run `esmx` executable, the run directory, which includes input files for both CDEPS and NoahMP components, is required. The more information about running UFS Weather Model datm+lnd configuration can be found in :ref:`BuildingAndRunning`.
 
+===========================
+Automated Component Testing
+===========================
 
-========================================
-Component Testing Through GitHub Actions
-========================================
+The NoahMP model uses GitHub Actions (GHA), a GitHub-hosted continuous integration service, to perform CI/CD testing. The GHA is triggered in following cases,
+
+#. When a developer makes a pull request (PR) to the NoahMP repository
+
+#. When a developer makes a direct push to default branch (i.e. develop)
+
+#. Twice a week on Monday and Friday (This is required to prevent auto-removing cache entries after 7-days)
+
+#. Repository admin could also trigger GHA manually
+
+The GHA-related ``yaml`` script is located in the ``.github/workflows/`` directory. ``datm_noahmp.yaml`` is the main workflow file that aim to run `datm+lnd` configuration. 
+
+* `.github/workflows/tests/` directory includes YAML files that will be used to create required configuration files for CDEPS and NoahMP and retrive required input files.
+* `.github/workflows/data/` directory includes additional the input files that are not found on the web to retrive.
+* `.github/workflows/scripts/` directory includes Python scripts that reads the information from YAML files to create configuration files and retrieve required input files.
+* `.github/workflows/spack/` directory includes `spack.yaml` file that is used to insatll dependencies through the use of `spack <https://spack.io>`_ package manager.
