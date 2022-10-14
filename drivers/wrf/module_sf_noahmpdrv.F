@@ -1972,6 +1972,7 @@ SUBROUTINE PEDOTRANSFER_SR2006(nsoil,sand,clay,orgm,parameters)
     REAL, DIMENSION(ims:ime,jms:jme), INTENT(INOUT) :: chstarxy        !dummy
 !jref:end
 
+    logical :: urbanpt_flag ! added to identify urban pixels by accounting for LCZ
 
     REAL, DIMENSION(1:NSOIL)  :: ZSOIL      ! Depth of the soil layer bottom (m) from 
     !                                                   the surface (negative)
@@ -2150,8 +2151,17 @@ SUBROUTINE PEDOTRANSFER_SR2006(nsoil,sand,clay,orgm,parameters)
                    areaxy     (I,J) = (DX * DY) / ( MSFTX(I,J) * MSFTY(I,J) )
              endif
 
+! add urban flag to include LCZ
+           urbanpt_flag = .false.   
+           IF( IVGTYP(I,J) == ISURBAN_TABLE .or. IVGTYP(I,J) == LCZ_1_TABLE .or. IVGTYP(I,J) == LCZ_2_TABLE .or. &
+               IVGTYP(I,J) == LCZ_3_TABLE   .or. IVGTYP(I,J) == LCZ_4_TABLE .or. IVGTYP(I,J) == LCZ_5_TABLE .or. &
+               IVGTYP(I,J) == LCZ_6_TABLE   .or. IVGTYP(I,J) == LCZ_7_TABLE .or. IVGTYP(I,J) == LCZ_8_TABLE .or. &
+               IVGTYP(I,J) == LCZ_9_TABLE   .or. IVGTYP(I,J) == LCZ_10_TABLE .or. IVGTYP(I,J) == LCZ_11_TABLE ) THEN
+               urbanpt_flag = .true.
+           ENDIF
+
            IF(IVGTYP(I,J) == ISBARREN_TABLE .OR. IVGTYP(I,J) == ISICE_TABLE .OR. &
-	      ( SF_URBAN_PHYSICS == 0 .AND. IVGTYP(I,J) == ISURBAN_TABLE )  .OR. &
+	      ( SF_URBAN_PHYSICS == 0 .AND. urbanpt_flag )  .OR. &
 	      IVGTYP(I,J) == ISWATER_TABLE ) THEN
 	     
 	     lai        (I,J) = 0.0
@@ -2439,7 +2449,9 @@ SUBROUTINE PEDOTRANSFER_SR2006(nsoil,sand,clay,orgm,parameters)
 
 
   USE NOAHMP_TABLES, ONLY : BEXP_TABLE,SMCMAX_TABLE,PSISAT_TABLE,SMCWLT_TABLE,DWSAT_TABLE,DKSAT_TABLE, &
-                                ISURBAN_TABLE, ISICE_TABLE ,ISWATER_TABLE
+                            ISURBAN_TABLE, ISICE_TABLE ,ISWATER_TABLE, &
+                            LCZ_1_TABLE,LCZ_2_TABLE,LCZ_3_TABLE,LCZ_4_TABLE,LCZ_5_TABLE,LCZ_6_TABLE,&
+                            LCZ_7_TABLE,LCZ_8_TABLE,LCZ_9_TABLE,LCZ_10_TABLE,LCZ_11_TABLE
   USE module_sf_noahmp_groundwater, ONLY : LATERALFLOW
   USE module_domain, only: domain
 #if (EM_CORE == 1)
@@ -2490,6 +2502,7 @@ SUBROUTINE PEDOTRANSFER_SR2006(nsoil,sand,clay,orgm,parameters)
     REAL, DIMENSION(1:NSOIL) :: SMCEQ,ZSOIL
     REAL,      DIMENSION( ims:ime, jms:jme )    :: QLAT, QRF
     INTEGER,   DIMENSION( ims:ime, jms:jme )    :: LANDMASK !-1 for water (ice or no ice) and glacial areas, 1 for land where the LSM does its soil moisture calculations
+    logical :: urbanpt_flag ! added to identify urban pixels by accounting for LCZ
 
        ! Given the soil layer thicknesses (in DZS), calculate the soil layer
        ! depths from the surface.
@@ -2635,7 +2648,16 @@ EQWTD=WTD
              BEXP   =   BEXP_TABLE(ISLTYP(I,J))
              SMCMAX = SMCMAX_TABLE(ISLTYP(I,J))
              SMCWLT = SMCWLT_TABLE(ISLTYP(I,J))
-             IF(IVGTYP(I,J)==ISURBAN_TABLE)THEN
+             ! add urban flag to include LCZ
+             urbanpt_flag = .false.
+             IF( IVGTYP(I,J) == ISURBAN_TABLE .or. IVGTYP(I,J) == LCZ_1_TABLE .or. IVGTYP(I,J) == LCZ_2_TABLE .or. &
+                 IVGTYP(I,J) == LCZ_3_TABLE   .or. IVGTYP(I,J) == LCZ_4_TABLE .or. IVGTYP(I,J) == LCZ_5_TABLE .or. &
+                 IVGTYP(I,J) == LCZ_6_TABLE   .or. IVGTYP(I,J) == LCZ_7_TABLE .or. IVGTYP(I,J) == LCZ_8_TABLE .or. &
+                 IVGTYP(I,J) == LCZ_9_TABLE   .or. IVGTYP(I,J) == LCZ_10_TABLE .or. IVGTYP(I,J) == LCZ_11_TABLE ) THEN
+                 urbanpt_flag = .true.
+             ENDIF
+             !IF(IVGTYP(I,J)==ISURBAN_TABLE)THEN
+             IF (urbanpt_flag) THEN
                  SMCMAX = 0.45         
                  SMCWLT = 0.40         
              ENDIF 
