@@ -62,11 +62,11 @@ jobs:
           spack --color always -e ${{ github.workspace }}/.github/workflows/spack concretize -f
 
       # push spack lock file to the artifcats
-      - name: Upload spack.yaml to Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: spack lock
-          path: ${{ github.workspace }}/.github/workflows/spack/spack.lock
+      #- name: Upload spack.yaml to Artifacts
+      #  uses: actions/upload-artifact@v3
+      #  with:
+      #    name: spack lock
+      #    path: ${{ github.workspace }}/.github/workflows/spack/spack.lock
           
       # restore build environment from cache
       - name: Restore Build Environment From Cache
@@ -79,28 +79,17 @@ jobs:
           restore-keys: |
             ${{ matrix.os }}-spack
       
-      - run: |
-          echo ${{ hashFiles('**/spack.lock') }}
-          cat ${{ github.workspace }}/.github/workflows/spack/spack.lock
-          cat ${{ github.workspace }}/.github/workflows/spack/spack.yaml
+      #- run: |
+      #    echo ${{ hashFiles('**/spack.lock') }}
+      #    cat ${{ github.workspace }}/.github/workflows/spack/spack.lock
+      #    cat ${{ github.workspace }}/.github/workflows/spack/spack.yaml
           
       # install build environment
       - name: Install Spack Packages
         if: steps.cache-spack.outputs.cache-hit != 'true'
         run: |
           . $GITHUB_WORKSPACE/spack/share/spack/setup-env.sh
-          #if test -d "/home/runner/work/noahmp/.spack-ci"; then
-          #  echo "Skip installing environment! It is restored from cache."
-          #  ls /home/runner/work/noahmp/.spack-ci
-          #else
-          #  ls -al /home/runner/work/noahmp/
-          #  if test -f "${{ github.workspace }}/.github/workflows/spack/spack.lock"; then
-          #    # spack environment is restored but still cache-hit != 'true'
-          #    # this seems bug with cache and following allow only install small portion of packages
-          #    spack --color always -e ${{ github.workspace }}/.github/workflows/spack concretize -f
-          #  fi
           spack --color always -e ${{ github.workspace }}/.github/workflows/spack install -j3
-          #fi
       
       # build and install component
       # need to install with openmp support since fms build with it
