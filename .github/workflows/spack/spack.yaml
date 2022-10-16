@@ -5,6 +5,9 @@ spack:
   - fms
   - esmf@8.4.0b15+parallelio
   - parallelio@2.5.8+pnetcdf
+  packages:
+    all:
+      target: ['x86_64']
   view: /home/runner/work/noahmp/.spack-ci/view
   config:
     source_cache: /home/runner/work/noahmp/.spack-ci/source_cache
