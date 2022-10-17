@@ -1,3 +1,5 @@
+![datm+lnd configuration](https://github.com/esmf-org/noahmp/actions/workflows/datm_noahmp.yaml/badge.svg)
+
 # noahmp
 Noah-MP Community Repository
 
