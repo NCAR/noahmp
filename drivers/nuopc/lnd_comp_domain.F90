@@ -68,6 +68,7 @@ contains
     integer                          :: n, numOwnedElements, spatialDim, rank
     integer                          :: decomptile(2,6)
     real(r8), allocatable            :: ownedElemCoords(:)
+    integer, allocatable             :: vegtype(:)
     real(ESMF_KIND_R8), pointer      :: ptr1d(:)
     real(ESMF_KIND_R8), pointer      :: ptr2d(:,:)
     real(ESMF_KIND_R8), pointer      :: ptr3d(:,:,:)
@@ -225,6 +226,25 @@ contains
     end if
     noahmp%domain%frac(:) = ptr3d(:,1,1)
     nullify(ptr3d)
+    call ESMF_FieldDestroy(field, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! ---------------------
+    ! Read one of the static files to get mask information. This will be used to fix
+    ! land-sea mask inconsistency among the files and it is documented in
+    ! following link: https://github.com/ufs-community/ufs-weather-model/issues/1423 
+    ! ---------------------
+
+    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C',maxval(noahmp%domain%nit), '.vegetation_type.tile'
+    call read_tiled_file(filename, 'vegetation_type', noahmp, field, numrec=1, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr3d, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (.not. allocated(vegtype)) allocate(vegtype(noahmp%domain%begl:noahmp%domain%endl))
+    vegtype(:) = int(ptr3d(:,1,1))
+    nullify(ptr3d)
+    call ESMF_FieldDestroy(field, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! ---------------------
     ! Calculate mask from land-sea fraction
@@ -234,11 +254,13 @@ contains
        allocate(noahmp%domain%mask(noahmp%domain%begl:noahmp%domain%endl))
     end if
 
-    where (noahmp%domain%frac(:) > 0.0_r8)
-       noahmp%domain%mask(:)  = 1.0_r8
+    where (noahmp%domain%frac(:) > 0.0_r8 .and. vegtype(:) >= 0)
+       noahmp%domain%mask(:) = 1
     elsewhere
-       noahmp%domain%mask(:)  = 0.0_r8
+       noahmp%domain%mask(:) = 0
     end where
+
+    if (allocated(vegtype)) deallocate(vegtype)
 
     ! ---------------------
     ! Set mask in mesh 
@@ -252,6 +274,7 @@ contains
     ! ---------------------
 
     ! read data to ESMF field
+    filename = trim(noahmp%nmlist%input_dir)//'oro_data.tile'
     call read_tiled_file(filename, 'orog_raw', noahmp, field, numrec=1, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -267,6 +290,8 @@ contains
 
     ! clean memory
     nullify(ptr3d)
+    call ESMF_FieldDestroy(field, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! ---------------------
     ! Query cell area 
@@ -326,8 +351,6 @@ contains
     ! Clean memory
     ! ---------------------
 
-    call ESMF_FieldDestroy(field, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_FieldDestroy(farea, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 

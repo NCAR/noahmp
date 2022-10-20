@@ -185,7 +185,7 @@ contains
        ! Read surface roughness length
        !----------------------
 
-       call read_tiled_file(filename, 'zorll', noahmp, field, numrec=1, rc=rc)
+       call read_tiled_file(filename, 'zorl', noahmp, field, numrec=1, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -1795,7 +1795,7 @@ contains
     !----------------------
 
     noahmp%model%dry(:) = .false.
-    where(noahmp%model%vegtype(:) /= iswater) noahmp%model%dry(:) = .true. 
+    where(noahmp%domain%mask(:) > 0) noahmp%model%dry(:) = .true. 
 
   end subroutine read_static
 
