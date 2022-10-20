@@ -269,13 +269,13 @@ jobs:
             cat output_hash_baseline.txt
             echo "Current Run:"
             cat output_hash.txt
-            echo "::set-output name=CHECK_RESULT::$(cmp --silent output_hash_baseline.txt output_hash.txt && echo 'true' || echo 'false' )"
+            echo "CHECK_RESULT=$(cmp --silent output_hash_baseline.txt output_hash.txt && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
           # there is no baseline, just copy current one as baseline  
           else
             echo "No baseline found! Current run will be catched as baseline."
             cat output_hash.txt
             cp output_hash.txt output_hash_baseline.txt
-            echo "::set-output name=CHECK_RESULT::$(echo 'true')"
+            echo "CHECK_RESULT=$(echo 'true')" >> $GITHUB_OUTPUT
           fi
 
       # Force to fail if the results are not matched with the baseline
