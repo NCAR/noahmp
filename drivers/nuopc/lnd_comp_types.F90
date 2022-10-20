@@ -661,12 +661,13 @@ contains
     use noahmp_tables, only: isbarren_table, isice_table, isurban_table
     use noahmp_tables, only: iswater_table, laim_table, saim_table, sla_table
       
-    class(noahmp_type)   :: this
+    class(noahmp_type)  :: this
     type(namelist_type) :: namelist
     type(static_type)   :: static
 
     integer             :: iloc, ilevel, isnow
-    real                :: masslai, masssai, depthm, dzsno(-2:0)
+    real                :: masslai, masssai, depthm
+    real                :: dzsno(static%lsnowl:static%km)
     
     do iloc = 1, static%im
       this%model%tvxy (iloc) = this%model%tskin(iloc)
@@ -695,7 +696,8 @@ contains
       this%model%zwtxy   (iloc) = (25.0 + 2.0)-this%model%waxy(iloc)/1000.0/0.2
   
       if ((this%model%vegtype(iloc) == isbarren_table) .or. (this%model%vegtype(iloc) == isice_table) .or. &
-          (this%model%vegtype(iloc) == isurban_table)  .or. (this%model%vegtype(iloc) == iswater_table)) then
+          (this%model%vegtype(iloc) == isurban_table)  .or. (this%model%vegtype(iloc) == iswater_table) .or. &
+          (this%model%vegtype(iloc) < 0)) then
          this%model%xlaixy  (iloc) = 0.0
          this%model%xsaixy  (iloc) = 0.0
          this%model%lfmassxy(iloc) = 0.0
@@ -731,7 +733,7 @@ contains
         depthm = this%model%weasd(iloc)/1000.0*10.0 ! assume 10/1 ratio
       endif
   
-      if (this%model%vegtype(iloc) == 15) then  ! land ice in MODIS/IGBP
+      if (this%model%vegtype(iloc) == isice_table) then  ! land ice in MODIS/IGBP
          if (this%model%weasd(iloc) < 0.1) then
             this%model%weasd(iloc) = 0.1
             depthm = this%model%weasd(iloc)/1000.0*10.0 
