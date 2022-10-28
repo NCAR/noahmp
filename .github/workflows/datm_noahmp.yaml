@@ -36,7 +36,7 @@ jobs:
       - name: Checkout NoahMP Repository
         uses: actions/checkout@v3
         with:
-          ref: feature/nuopc_cap_new
+          ref: develop
           
       # prepare core environment
       - name: Install Core Development Tools
