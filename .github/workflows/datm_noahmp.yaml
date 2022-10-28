@@ -2,9 +2,9 @@ name: test_datm_lnd
 
 on:
   push:
-    branches: [ feature/nuopc_cap_new ]
+    branches: [ develop ]
   pull_request:
-    branches: [ feature/nuopc_cap_new ]
+    branches: [ develop ]
   # following is required to prevent auto-removing cache entries after 7-days
   # this only works on default branch
   schedule:
