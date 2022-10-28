@@ -1,0 +1,78 @@
+.. _BuildingAndRunning:
+
+**************************************************************
+Building and Running the UFS Weather Model Land Configurations
+**************************************************************
+
+==================================
+Downloading the Weather Model Code
+==================================
+
+To clone the ufs-weather-model repository that is capable to run land as a seperate component, execute the following commands:
+
+.. code-block:: console
+
+  git clone --recursive https://github.com/ufs-community/ufs-weather-model.git
+
+==========================
+Building the Weather Model
+==========================
+
+The UFS Weather Model uses the CMake build system. The build system is updated to include new land model related applications: `LND`, `ATML` and `S2SWAL`.
+
+.. list-table:: List of applications that supports external alnd component
+   :widths: 25 50 50
+   :header-rows: 1
+
+   * - Application Name
+     - Enabled Components
+     - Short Description 
+   * - LND
+     - CDEPS, NOAHMP, CMEPS, and FMS
+     - Land model forced by GSWP3 data atmosphere
+   * - ATML
+     - FV3ATM, NOAHMP, CMEPS, and FMS
+     - Land model forced by active atmosphere (FV3ATM) 
+   * - S2SWAL
+     - FV3ATM, MOM6, CICE6, WW3, NOAHMP, FMS, CMEPS
+     - All components used by S2S plus NOAHMP. There is no RT to test this configuration.
+
+To compile the model with land model support, following command can be used for NCAR's Cheyenne. Note that this is using `contol_p8` as an example for CCPP suites. The platform definition can be changed to build model in other platforms such as MSU's Orion but initial implementation is only tested on NCAR's Cheyenne at this point.
+
+.. code-block:: console
+
+  cd tests
+  ./compile.sh "cheyenne.gnu" "-DAPP=ATML -DCCPP_SUITES=FV3_GFS_v16,FV3_GFS_v15_thompson_mynn,FV3_GFS_v17_p8,FV3_GFS_v17_p8_rrtmgp,FV3_GFS_v15_thompson_mynn_lam3km" noahmp NO NO
+
+========================================
+Running NoahMP Specific Regression Tests
+========================================
+
+Three new regression test are included to test the external NoahMP land component:
+
+.. list-table:: List of regression tests 
+   :widths: 25 50
+   :header-rows: 1
+
+   * - Test Name
+     - Short Description
+   * - datm_cdeps_lnd_gswp3
+     - NoahMP forced by the CDEPS "data atmosphere" using Global Soil Wetness Project v3 forcings. 24 hour forecast with 1 hour coupling interval.
+   * - datm_cdeps_lnd_gswp3_rst
+     - Restart reproducibility test (compare results with datm_cdeps_lnd_gswp3)
+   * - control_p8_atmlnd_sbs
+     - Side-by-side test that forces external land component with active atmosphere in `contol_p8` configuration. This is mainly used to compare land output coming from CCPP/Physics with external NoahMP. In this configuration there is no feedback to active atmosphere.
+
+Newly introduced RTs can be run with following command,
+
+.. code-block:: console
+
+  cd tests
+  ./rt.sh -k -n datm_cdeps_lnd_gswp3_rst
+
+.. code-block:: console
+
+  cd tests
+  ./rt.sh -k -n control_p8_atmlnd_sbs
+
+The ``-k`` basically keeps the run directory for future reference. The user could use this run directory to modify out-of-box configuration for different purposes.

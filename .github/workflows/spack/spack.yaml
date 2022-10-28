@@ -1,0 +1,19 @@
+spack:
+  concretizer:
+    unify: true
+  specs:
+  - fms
+  - esmf@8.4.0b15+parallelio
+  - parallelio@2.5.8+pnetcdf
+  packages:
+    all:
+      # following is required to build same optimized spack for different github action runners
+      # spack arch --known-targets command can be used to list known targets
+      target: ['x86_64_v4'] 
+  view: /home/runner/work/noahmp/.spack-ci/view
+  config:
+    source_cache: /home/runner/work/noahmp/.spack-ci/source_cache
+    misc_cache: /home/runner/work/noahmp/.spack-ci/misc_cache
+    test_cache: /home/runner/work/noahmp/.spack-ci/test_cache
+    install_tree:
+      root: /home/runner/work/noahmp/.spack-ci/opt

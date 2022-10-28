@@ -1,0 +1,287 @@
+name: test_datm_lnd
+
+on:
+  push:
+    branches: [ feature/nuopc_cap_new ]
+  pull_request:
+    branches: [ feature/nuopc_cap_new ]
+  # following is required to prevent auto-removing cache entries after 7-days
+  # this only works on default branch
+  schedule:
+    - cron: '0 0 * * MON'
+    - cron: '0 0 * * FRI'
+  # following is required to run action manually
+  workflow_dispatch:
+  
+jobs:
+  latest-stable:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+        - ubuntu-22.04
+    
+    env:
+      # installation location for spack and other components
+      INSTALL_DIR: ${{ github.workspace }}/install
+      # option for baseline generation
+      REGENERATE_BASELINE: 'false' 
+      # option for retention period for artifacts, default is 90 days
+      ARTIFACTS_RETENTION_PERIOD: 2
+
+    steps:
+      # checkout base repository
+      - name: Checkout NoahMP Repository
+        uses: actions/checkout@v3
+        with:
+          ref: feature/nuopc_cap_new
+          
+      # prepare core environment
+      - name: Install Core Development Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install unzip file gringo
+          sudo apt-get install build-essential binutils-dev gfortran
+          sudo apt-get install python3-dev python3-boto3 python3-yaml
+          sudo apt-get install wget awscli ca-certificates
+  
+      # checkout spack to create build environment
+      - name: Checkout Spack
+        uses: actions/checkout@v3
+        with:
+          repository: uturuncoglu/spack
+          path: spack
+          ref: feature/esmx_version
+
+      # create build environment
+      - name: Concretize Spack Environment Using YAML Specification
+        run: |
+          . $GITHUB_WORKSPACE/spack/share/spack/setup-env.sh
+          spack --color always -e ${{ github.workspace }}/.github/workflows/spack concretize -f
+
+      # push spack lock file to the artifcats
+      #- name: Upload spack.yaml to Artifacts
+      #  uses: actions/upload-artifact@v3
+      #  with:
+      #    name: spack lock
+      #    path: ${{ github.workspace }}/.github/workflows/spack/spack.lock
+          
+      # restore build environment from cache
+      - name: Restore Build Environment From Cache
+        id: cache-spack
+        uses: actions/cache@v3
+        with:
+          # NOTE: the following path needs to be consitent with the path defined in spack.yaml
+          path: /home/runner/work/noahmp/.spack-ci
+          key: ${{ matrix.os }}-spack-${{ hashFiles('**/spack.lock') }}
+          restore-keys: |
+            ${{ matrix.os }}-spack
+      
+      #- run: |
+      #    echo ${{ hashFiles('**/spack.lock') }}
+      #    cat ${{ github.workspace }}/.github/workflows/spack/spack.lock
+      #    cat ${{ github.workspace }}/.github/workflows/spack/spack.yaml
+          
+      # install build environment
+      - name: Install Spack Packages
+        if: steps.cache-spack.outputs.cache-hit != 'true'
+        run: |
+          . $GITHUB_WORKSPACE/spack/share/spack/setup-env.sh
+          spack --color always -e ${{ github.workspace }}/.github/workflows/spack install -j3
+      
+      # build and install component
+      # need to install with openmp support since fms build with it
+      # TODO: update fms in spack.yaml as fms~openmp to build it without openmp support 
+      - name: Build and Install NoahMP
+        run: |       
+          export PATH=${{ github.workspace }}/../.spack-ci/view/bin:$PATH
+          export ESMFMKFILE=${{ github.workspace }}/../.spack-ci/view/lib/esmf.mk
+          export NetCDF_ROOT=`nc-config --prefix`
+          export FC=gfortran
+          cd ${{ github.workspace }}
+          mkdir build
+          cd build
+          cmake -DCMAKE_INSTALL_PREFIX=${{ env.INSTALL_DIR }} -DOPENMP=ON ../
+          make
+          make install
+      
+      # checkout data models
+      - name: Checkout CDEPS
+        uses: actions/checkout@v3
+        with:
+          repository: uturuncoglu/CDEPS
+          path: cdeps
+          ref: hotfix/std_build
+          
+      # build and install data models
+      - name: Build and Install CDEPS
+        run: |
+          export PATH=${{ github.workspace }}/../.spack-ci/view/bin:$PATH
+          export ESMFMKFILE=${{ github.workspace }}/../.spack-ci/view/lib/esmf.mk
+          export FC=gfortran
+          cd ${{ github.workspace }}/cdeps
+          mkdir build
+          cd build
+          cmake -DCMAKE_INSTALL_PREFIX=${{ env.INSTALL_DIR }} \
+            -DPIO_C_LIBRARY=${{ github.workspace }}/../.spack-ci/view/lib \
+            -DPIO_C_INCLUDE_DIR=${{ github.workspace }}/../.spack-ci/view/include \
+            -DPIO_Fortran_LIBRARY=${{ github.workspace }}/../.spack-ci/view/lib \
+            -DPIO_Fortran_INCLUDE_DIR=${{ github.workspace }}/../.spack-ci/view/include \
+            -DCMAKE_Fortran_FLAGS="-ffree-line-length-none -fallow-argument-mismatch -fallow-invalid-boz" \
+            -DDISABLE_FoX=ON ../
+          make
+          make install
+
+      # use ESMX generic driver and create executable
+      - name: Use ESMX to create executable
+        run: |
+          # set required environment variables
+          export PATH=${{ github.workspace }}/../.spack-ci/view/bin:$PATH
+          export ESMFMKFILE=${{ github.workspace }}/../.spack-ci/view/lib/esmf.mk
+          export ESMF_ESMXDIR=${{ github.workspace }}/../.spack-ci/view/include/ESMX
+          # create run directory
+          mkdir ${{ github.workspace }}/app
+          cd ${{ github.workspace }}/app
+          # create ESMX build file
+          echo "components:" >> esmxBuild.yaml
+          echo "  datm:" >> esmxBuild.yaml
+          echo "    cmake_config: ${{ env.INSTALL_DIR }}/lib/cmake/datm-esmx.cmake" >> esmxBuild.yaml 
+          echo "    fort_module: cdeps_datm_comp" >> esmxBuild.yaml
+          echo "  noahmp:" >> esmxBuild.yaml
+          echo "    cmake_config: ${{ env.INSTALL_DIR }}/lib/cmake/noahmp-esmx.cmake" >> esmxBuild.yaml
+          echo "    fort_module: lnd_comp_nuopc" >> esmxBuild.yaml
+          # create build directory
+          cmake -H$ESMF_ESMXDIR -Bbuild
+          # compile and create executable
+          cd ${{ github.workspace }}/app/build
+          make
+
+      # restore input files from cache
+      - name: Restore Input Files From Cache
+        id: cache-input
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/app/build/INPUT
+          key: input-${{ hashFiles('**/file_checksum.lock') }}
+          restore-keys: |
+            input
+            
+      # download input files for components
+      - name: Download Input Files
+        if: steps.cache-input.outputs.cache-hit != 'true'
+        run: |
+          export PATH=${{ github.workspace }}/../.spack-ci/view/bin:$PATH
+          mkdir -p ${{ github.workspace }}/app/build/INPUT
+          cd ${{ github.workspace }}/app/build/INPUT
+          # get rest of the data from servers
+          python3 ${{ github.workspace }}/.github/workflows/scripts/get_input.py --ifile ${{ github.workspace }}/.github/workflows/tests/test_datm_lnd.yaml
+          # some data for land is not correct in S3 bucket and need to be copied from workflow directory
+          rm -rf oro_data.tile*.nc
+          cp ${{ github.workspace }}/.github/workflows/data/oro_data.tile*.nc .
+          # copy initial conditions
+          cp ${{ github.workspace }}/.github/workflows/data/C96.initial.tile*.nc .
+          # add them to checksum file
+          lst=`ls -al oro_data.tile*.nc C96.initial.tile*.nc | awk '{print $9}'`
+          for i in $lst; do
+            md5sum $i >> file_checksum.lock
+          done
+          cat file_checksum.lock
+          # create link for grid spec file
+          ln -sf grid_spec.nc C96_mosaic.nc
+
+      # checkout paramgen to create configuration files
+      - name: Checkout ParamGen
+        uses: actions/checkout@v3
+        with:
+          repository: uturuncoglu/ParamGen
+          path: paramgen
+          ref: main
+
+      # generate configuration files
+      - name: Generate Configuration Files
+        run: |
+          export PYTHONPATH=$GITHUB_WORKSPACE/paramgen:$PYTHONPATH 
+          export INPUT_DIR='INPUT'
+          export DATAMODE='CLMNCEP'
+          export MODEL_MESHFILE='INPUT/fv1.9x2.5_141008_ESMFmesh.nc'
+          export MODEL_MASKFILE='INPUT/fv1.9x2.5_141008_ESMFmesh.nc'
+          export NX_GLOBAL=144
+          export NY_GLOBAL=96
+          cd ${{ github.workspace }}/app/build
+          python3 ${{ github.workspace }}/.github/workflows/scripts/gen_config.py --ifile ${{ github.workspace }}/.github/workflows/tests/test_datm_lnd.yaml
+          # get field dictionary from UFS weather model fork
+          wget https://raw.githubusercontent.com/uturuncoglu/ufs-weather-model/feature/lnd_noahmp_new/tests/parm/fd_nems.yaml
+
+      # run application
+      - name: Run Application
+        run: |
+          export PATH=${{ github.workspace }}/../.spack-ci/view/bin:$PATH
+          cd ${{ github.workspace }}/app/build
+          mpirun --oversubscribe -np 6 --allow-run-as-root ${{ github.workspace }}/app/build/esmx 2>&1 | tee out_err.txt
+          tar -czvf log_files.tar.gz PET* out_err.txt datm.log
+        
+      # upload model results to artifacts to check it later
+      - name: Upload Output to Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: model output
+          path: ${{ github.workspace }}/app/build/comp.test.lnd*.nc
+          retention-days: ${{ env.ARTIFACTS_RETENTION_PERIOD }}
+
+      # upload log files to artifacts for further examination
+      - name: Upload Logs to Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: log files
+          path: ${{ github.workspace }}/app/build/log_files.tar.gz
+          retention-days: ${{ env.ARTIFACTS_RETENTION_PERIOD }}
+
+      # calculate hashes
+      - name: Calculate Hashes of Output Files
+        run: |
+          cd ${{ github.workspace }}/app/build
+          lst=`ls -al comp.test.lnd.out.*.nc | awk '{print $9}'`
+          for i in $lst; do
+            md5sum $i >> output_hash.txt
+          done
+          cat output_hash.txt
+
+      # restore baseline hash file from cache
+      - name: Restore Baseline Hash File From Cache
+        uses: actions/cache@v3
+        if: ${{ env.REGENERATE_BASELINE }} != 'true'
+        with:
+          path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
+          key: baseline-${{ hashFiles('output_hash_baseline.txt') }}
+          restore-keys: |
+            baseline-
+
+      # compare with the baseline
+      - name: Compare with Baseline
+        id: compare-baseline 
+        run: |
+          cd ${{ github.workspace }}/app/build
+          # compare against the baseline
+          if test -f "output_hash_baseline.txt"; then
+            echo "Baseline:"
+            cat output_hash_baseline.txt
+            echo "Current Run:"
+            cat output_hash.txt
+            echo "CHECK_RESULT=$(cmp --silent output_hash_baseline.txt output_hash.txt && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
+          # there is no baseline, just copy current one as baseline  
+          else
+            echo "No baseline found! Current run will be catched as baseline."
+            cat output_hash.txt
+            cp output_hash.txt output_hash_baseline.txt
+            echo "CHECK_RESULT=$(echo 'true')" >> $GITHUB_OUTPUT
+          fi
+
+      # Force to fail if the results are not matched with the baseline
+      - name: Result of Baseline Check
+        if: steps.compare-baseline.outputs.CHECK_RESULT == 'false'
+        uses: actions/github-script@v3
+        with:
+          script: |
+            core.setFailed('The results do not match with the baseline!')
