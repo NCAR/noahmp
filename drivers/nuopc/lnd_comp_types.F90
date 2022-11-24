@@ -197,6 +197,7 @@ module lnd_comp_types
      real(kind=kp), allocatable :: t2mmp      (:)   ! combined T2m from tiles
      real(kind=kp), allocatable :: q2mp       (:)   ! combined q2m from tiles
      real(kind=kp), allocatable :: zvfun      (:)   ! some function of vegetation used for gfs stability
+     real(kind=kp), allocatable :: ztmax      (:)   ! bounded surface roughness length for heat over land
      real(kind=kp), allocatable :: rho        (:)   ! air density
      real(kind=kp), allocatable :: pores      (:)   ! max soil moisture for a given soil type for land surface model
      real(kind=kp), allocatable :: resid      (:)   ! min soil moisture for a given soil type for land surface model
@@ -475,6 +476,7 @@ contains
     allocate(this%model%t2mmp      (begl:endl))
     allocate(this%model%q2mp       (begl:endl))
     allocate(this%model%zvfun      (begl:endl))
+    allocate(this%model%ztmax      (begl:endl))
     allocate(this%model%rho        (begl:endl))
     allocate(this%model%pores      (30))
     allocate(this%model%resid      (30))
@@ -640,6 +642,7 @@ contains
     this%model%t2mmp       = 0.0_kp
     this%model%q2mp        = 0.0_kp
     this%model%zvfun       = 0.0_kp
+    this%model%ztmax       = 0.0_kp
     this%model%rho         = 0.0_kp
     this%model%pores       = 0.0_kp
     this%model%resid       = 0.0_kp

@@ -5430,7 +5430,7 @@ endif   ! croptype == 0
         z0ht = z0mt
      elseif (opt_trs == 2) then
         z0mt  = fveg * z0m      + (1.0 - fveg) * z0mg
-        czil1=10.0 ** (- (0.40/0.07) * parameters%hvt)
+        czil1=10.0 ** (- (0.4) * parameters%hvt)
         z0ht = fveg * z0m*exp(-czil1*0.4*258.2*sqrt(ustarx*z0m))  &
             +(1.0 - fveg) * z0mg*exp(-czil1*0.4*258.2*sqrt(ustarx*z0mg))
      elseif (opt_trs == 3) then
@@ -5466,7 +5466,7 @@ endif   ! croptype == 0
      if (opt_trs == 1) then
         z0ht = z0mt
      elseif (opt_trs == 2) then
-        czil1=10.0 ** (- (0.40/0.07) * parameters%hvt)
+        czil1=10.0 ** (- (0.4) * parameters%hvt)
         z0ht =z0mt*exp(-czil1*0.4*258.2*sqrt(ustarx*z0mt))
      elseif (opt_trs == 3) then
       if (vegtyp.le.5) then
@@ -5492,7 +5492,7 @@ endif   ! croptype == 0
        if (opt_trs == 1) then
          z0ht    = z0mt
        elseif (opt_trs == 2) then
-         czil1= 10.0 ** (- (0.40/0.07) * parameters%hvt)
+         czil1= 10.0 ** (- (0.4) * parameters%hvt)
          z0ht = z0mt*exp(-czil1*0.4*258.2*sqrt(ustarx*z0mt))
        elseif (opt_trs == 3) then
          if (vegtyp.le.5) then

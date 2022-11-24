@@ -128,8 +128,6 @@
 !!    - Call penman() to calculate potential evaporation.
 !!    - Calculate the surface specific humidity and convert surface sensible and latent heat fluxes in W m-2 from their kinematic values.
 !!    - If a "guess" run, restore the land-related prognostic fields.
-!                                                                       !
-!-----------------------------------
   subroutine noahmpdrv_run                                       &
 !...................................
 !  ---  inputs:
@@ -163,7 +161,7 @@
       sncovr1, qsurf, gflux, drain, evap, hflx, ep, runoff,      &
       cmm, chh, evbs, evcw, sbsno, pah, ecan, etran, edir, snowc,&
       stm, snohf,smcwlt2, smcref2, wet1, t2mmp, q2mp,zvfun,      &
-      errmsg, errflg)     
+      ztmax, errmsg, errflg)     
 
   use machine ,   only : kind_phys
   use funcphys,   only : fpvs
@@ -362,6 +360,7 @@
   real(kind=kind_phys), dimension(:)     , intent(out)   :: t2mmp      ! combined T2m from tiles
   real(kind=kind_phys), dimension(:)     , intent(out)   :: q2mp       ! combined q2m from tiles
   real(kind=kind_phys), dimension(:)     , intent(out)   :: zvfun      ! 
+  real(kind=kind_phys), dimension(:)     , intent(out)   :: ztmax      ! thermal roughness length
   character(len=*)    ,                    intent(out)   :: errmsg
   integer             ,                    intent(out)   :: errflg
 
@@ -958,6 +957,7 @@ do i = 1, im
       cmxy      (i)   = cm_noahmp
       chxy      (i)   = ch_noahmp
       zorl      (i)   = z0_total * 100.0  ! convert to cm
+      ztmax     (i)   = z0h_total 
 
       smc       (i,:) = soil_moisture_vol
       slc       (i,:) = soil_liquid_vol
