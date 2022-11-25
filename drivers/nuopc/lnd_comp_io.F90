@@ -2243,6 +2243,7 @@ contains
     call fld_add("rho"       ,"density"                                                           ,"kg/m3"  ,ptr2d=ptr2d, v1r8=noahmp%model%rho)
     call fld_add("hgt"       ,"forcing height"                                                    ,"m"      ,ptr2d=ptr2d, v1r8=noahmp%forc%hgt)
     call fld_add("pblh"      ,"height of pbl"                                                     ,"m"      ,ptr2d=ptr2d, v1r8=noahmp%model%pblh)
+    call fld_add("ztmax"     ,"surface roughness length for heat over land"                       ,"m"      ,ptr2d=ptr2d, v1r8=noahmp%model%ztmax)
 
     !----------------------
     ! masked out data over ocean/inland water/lake
