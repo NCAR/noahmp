@@ -51,9 +51,11 @@ jobs:
       - name: Checkout Spack
         uses: actions/checkout@v3
         with:
-          repository: uturuncoglu/spack
+          #repository: uturuncoglu/spack
+          repository: NOAA-EMC/spack
           path: spack
-          ref: feature/esmx_version
+          #ref: feature/esmx_version
+          ref: jcsda_emc_spack_stack
 
       # create build environment
       - name: Concretize Spack Environment Using YAML Specification
