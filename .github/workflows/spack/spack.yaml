@@ -5,6 +5,7 @@ spack:
   - fms
   - esmf@8.4.0b15+parallelio
   - parallelio@2.5.8+pnetcdf
+  - zlib@1.2.12
   packages:
     all:
       # following is required to build same optimized spack for different github action runners
