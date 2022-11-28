@@ -10,7 +10,8 @@ spack:
     all:
       # following is required to build same optimized spack for different github action runners
       # spack arch --known-targets command can be used to list known targets
-      target: ['x86_64_v4'] 
+      target: ['x86_64_v4']
+      compiler: [gcc@11.3.0]
   view: /home/runner/work/noahmp/.spack-ci/view
   config:
     source_cache: /home/runner/work/noahmp/.spack-ci/source_cache
