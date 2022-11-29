@@ -1,18 +1,18 @@
 ---
 input:
   protocol: wget
-  end_point: ftp.cgd.ucar.edu
+  end_point: 'https://svn-ccsm-inputdata.cgd.ucar.edu'
   files:
-    - /cesm/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Precip/clmforc.GSWP3.c2011.0.5x0.5.Prec.1999-12.nc
-    - /cesm/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Precip/clmforc.GSWP3.c2011.0.5x0.5.Prec.2000-01.nc
-    - /cesm/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Solar/clmforc.GSWP3.c2011.0.5x0.5.Solr.1999-12.nc
-    - /cesm/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Solar/clmforc.GSWP3.c2011.0.5x0.5.Solr.2000-01.nc
+    - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Precip/clmforc.GSWP3.c2011.0.5x0.5.Prec.1999-12.nc
+    - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Precip/clmforc.GSWP3.c2011.0.5x0.5.Prec.2000-01.nc
+    - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Solar/clmforc.GSWP3.c2011.0.5x0.5.Solr.1999-12.nc
+    - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Solar/clmforc.GSWP3.c2011.0.5x0.5.Solr.2000-01.nc
     - /cesm/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/TPHWL/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.1999-12.nc
-    - /cesm/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/TPHWL/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.2000-01.nc
-    - /cesm/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc
-    - /cesm/inputdata/atm/datm7/topo_forcing/topodata_0.9x1.25_USGS_070110_stream_c151201.nc
-    - /cesm/inputdata/atm/datm7/topo_forcing/topodata_0.9x1.SCRIP.210520_ESMFmesh.nc
-    - /cesm/inputdata/share/meshes/fv1.9x2.5_141008_ESMFmesh.nc
+    - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/TPHWL/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.2000-01.nc
+    - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc
+    - /trunk/inputdata/atm/datm7/topo_forcing/topodata_0.9x1.25_USGS_070110_stream_c151201.nc
+    - /trunk/inputdata/atm/datm7/topo_forcing/topodata_0.9x1.SCRIP.210520_ESMFmesh.nc
+    - /trunk/inputdata/share/meshes/fv1.9x2.5_141008_ESMFmesh.nc
 config:
   nuopc1:
     name: esmxRun.config
