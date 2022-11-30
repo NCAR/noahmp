@@ -2,15 +2,16 @@ spack:
   concretizer:
     unify: true
   specs:
-  - fms
-  - esmf@8.4.0b15+parallelio
-  - parallelio@2.5.8+pnetcdf
-  - zlib@1.2.12
+  - fms@2022.04 target=x86_64_v4
+  - esmf@8.4.0b15+parallelio target=x86_64_v4
+  - parallelio@2.5.8+pnetcdf target=x86_64_v4
+  - zlib@1.2.12 target=x86_64_v4
   packages:
     all:
       # following is required to build same optimized spack for different github action runners
       # spack arch --known-targets command can be used to list known targets
       target: ['x86_64_v4']
+      # following fixes compiler version
       compiler: [gcc@11.3.0]
   view: /home/runner/work/noahmp/.spack-ci/view
   config:
