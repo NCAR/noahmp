@@ -612,7 +612,8 @@ contains
          noahmp%model%snowc    , noahmp%model%stm       , &
          noahmp%model%snohf    , noahmp%model%smcwlt2   , noahmp%model%smcref2   , &
          noahmp%model%wet1     , noahmp%model%t2mmp     , noahmp%model%q2mp      , &
-         noahmp%model%zvfun    , noahmp%static%errmsg   , noahmp%static%errflg)
+         noahmp%model%zvfun    , noahmp%model%ztmax     , &
+         noahmp%static%errmsg   , noahmp%static%errflg)
 
     !----------------------
     ! unit conversions
