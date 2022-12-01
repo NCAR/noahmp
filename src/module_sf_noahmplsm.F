@@ -4732,7 +4732,7 @@ ENDIF   ! CROPTYPE == 0
     IF(ABS(CH2FH2) <= MPE) CH2FH2 = MPE
     CM  = VKC*VKC/(CMFM*CMFM)
     CH  = VKC*VKC/(CMFM*CHFH)
-    CH2  = VKC*VKC/(CM2FM2*CH2FH2)
+    !CH2  = VKC*VKC/(CM2FM2*CH2FH2)
         
 ! friction velocity
 
@@ -5189,7 +5189,7 @@ ENDIF   ! CROPTYPE == 0
 !  compute Q2 and Q2SAT
 
     Q2 = 0.622 *  EAH  / (SFCPRS - 0.378 * EAH) !specific humidity [kg/kg]
-    Q2 = Q2 / (1.0 + Q2)                        !mixing ratio [kg/kg]
+    Q2 = Q2 / (1.0 - Q2)                        !mixing ratio [kg/kg]
 
     CALL CALHUM(parameters,SFCTMP, SFCPRS, Q2SAT, DQSDT2)
 
