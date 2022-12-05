@@ -51,15 +51,17 @@ jobs:
       - name: Checkout Spack
         uses: actions/checkout@v3
         with:
-          repository: uturuncoglu/spack
+          repository: NOAA-EMC/spack
           path: spack
-          ref: feature/esmx_version
+          ref: jcsda_emc_spack_stack
 
       # create build environment
       - name: Concretize Spack Environment Using YAML Specification
+        id: build-env
         run: |
           . $GITHUB_WORKSPACE/spack/share/spack/setup-env.sh
           spack --color always -e ${{ github.workspace }}/.github/workflows/spack concretize -f
+          echo "SPACK_ARCH=$(spack arch)" >> $GITHUB_OUTPUT
 
       # push spack lock file to the artifcats
       #- name: Upload spack.yaml to Artifacts
@@ -75,9 +77,9 @@ jobs:
         with:
           # NOTE: the following path needs to be consitent with the path defined in spack.yaml
           path: /home/runner/work/noahmp/.spack-ci
-          key: ${{ matrix.os }}-spack-${{ hashFiles('**/spack.lock') }}
+          key: spack-${{ steps.build-env.outputs.SPACK_ARCH }}-${{ hashFiles('**/spack.lock') }}
           restore-keys: |
-            ${{ matrix.os }}-spack
+            spack-${{ steps.build-env.outputs.SPACK_ARCH }}
       
       #- run: |
       #    echo ${{ hashFiles('**/spack.lock') }}
@@ -89,7 +91,7 @@ jobs:
         if: steps.cache-spack.outputs.cache-hit != 'true'
         run: |
           . $GITHUB_WORKSPACE/spack/share/spack/setup-env.sh
-          spack --color always -e ${{ github.workspace }}/.github/workflows/spack install -j3
+          spack --color always -e ${{ github.workspace }}/.github/workflows/spack install -j3 --deprecated --no-checksum
       
       # build and install component
       # need to install with openmp support since fms build with it

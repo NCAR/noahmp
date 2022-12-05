@@ -77,9 +77,9 @@ def cmd_get(end_point, files, fhash, force_download):
 
         # download file
         if force_download:
-            cmd = 'wget --no-verbose {}:{}'.format(end_point, f)
+            cmd = 'wget --no-verbose --no-check-certificate {}:{}'.format(end_point, f)
         else:
-            cmd = 'wget --no-verbose -c {}:{}'.format(end_point, f)
+            cmd = 'wget --no-verbose --no-check-certificate -c {}:{}'.format(end_point, f)
         print("cmd is {}".format(cmd))
         os.system(cmd)
 
