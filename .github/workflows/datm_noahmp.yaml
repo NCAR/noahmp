@@ -263,10 +263,10 @@ jobs:
         id: compare-baseline
         run: |
           cd ${{ github.workspace }}/app/build
-          force_bc=${{ !contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
-          echo $force_bc
+          force_bc=${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
+          echo "Is baseline change forced by PR label? $force_bc"
           # compare against the baseline, returns false if it does not match
-          if [ test -f "output_hash_baseline.txt" ] && [ $force_bc == 'false' ]; then
+          if [ -f "output_hash_baseline.txt" ] && [ "$force_bc" == 'false' ]; then
             echo "Baseline:"
             cat output_hash_baseline.txt
             echo "Current Run:"
