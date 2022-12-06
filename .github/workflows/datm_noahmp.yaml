@@ -26,8 +26,6 @@ jobs:
     env:
       # installation location for spack and other components
       INSTALL_DIR: ${{ github.workspace }}/install
-      # option for baseline generation
-      REGENERATE_BASELINE: 'false' 
       # option for retention period for artifacts, default is 90 days
       ARTIFACTS_RETENTION_PERIOD: 2
 
@@ -253,7 +251,7 @@ jobs:
       # restore baseline hash file from cache
       - name: Restore Baseline Hash File From Cache
         uses: actions/cache@v3
-        if: ${{ env.REGENERATE_BASELINE }} != 'true'
+        if: ${{ github.event.label.name != 'Baseline Change' }}
         with:
           path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
           key: baseline-${{ hashFiles('output_hash_baseline.txt') }}
