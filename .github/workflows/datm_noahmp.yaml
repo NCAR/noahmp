@@ -260,11 +260,13 @@ jobs:
 
       # compare with the baseline
       - name: Compare with Baseline
-        id: compare-baseline 
+        id: compare-baseline
         run: |
           cd ${{ github.workspace }}/app/build
-          # compare against the baseline
-          if test -f "output_hash_baseline.txt"; then
+          force_bc=${{ !contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
+          echo $force_bc
+          # compare against the baseline, returns false if it does not match
+          if [ test -f "output_hash_baseline.txt" ] && [ $force_bc == 'false' ]; then
             echo "Baseline:"
             cat output_hash_baseline.txt
             echo "Current Run:"
@@ -280,15 +282,8 @@ jobs:
 
       # Force to fail if the results are not matched with the baseline
       - name: Result of Baseline Check
-        if: steps.compare-baseline.outputs.CHECK_RESULT == 'false' && ${{ !contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
+        if: steps.compare-baseline.outputs.CHECK_RESULT == 'false'
         uses: actions/github-script@v3
         with:
           script: |
             core.setFailed('The results do not match with the baseline!')
-
-      # copy new baseline
-      - name: Create New Baseline
-        if: ${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
-        run:
-          cd ${{ github.workspace }}/app/build
-          cp -f output_hash.txt output_hash_baseline.txt
