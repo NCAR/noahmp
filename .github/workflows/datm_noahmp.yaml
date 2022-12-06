@@ -4,6 +4,7 @@ on:
   push:
     branches: [ develop ]
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
     branches: [ develop ]
   # following is required to prevent auto-removing cache entries after 7-days
   # this only works on default branch
@@ -247,11 +248,12 @@ jobs:
             md5sum $i >> output_hash.txt
           done
           cat output_hash.txt
+          echo ${{ github.event.label.name }}
 
       # restore baseline hash file from cache
       - name: Restore Baseline Hash File From Cache
         uses: actions/cache@v3
-        if: ${{ github.event.label.name != 'Baseline Change' }}
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
         with:
           path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
           key: baseline-${{ hashFiles('output_hash_baseline.txt') }}
