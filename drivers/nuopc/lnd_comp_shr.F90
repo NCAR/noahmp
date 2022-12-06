@@ -540,6 +540,16 @@ contains
        noahmp%nmlist%case_name = 'ufs'
     end if
 
+    ! forcing height
+    call NUOPC_CompAttributeGet(gcomp, name='forcing_height', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) noahmp%nmlist%forcing_height
+    else
+       noahmp%nmlist%forcing_height = -999
+    end if
+    call ESMF_LogWrite(trim(subname)//' : forcing_height = '//trim(cvalue), ESMF_LOGMSG_INFO)
+
     ! get num_soil_levels
     call NUOPC_CompAttributeGet(gcomp, name='num_soil_levels', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
@@ -785,6 +795,7 @@ contains
        if (trim(cvalue) .eq. '.true.' .or. trim(cvalue) .eq. 'true') noahmp%model%do_mynnsfclay = .true.
     end if
     noahmp%model%do_mynnsfclay = noahmp%static%do_mynnsfclay
+    if (noahmp%static%iopt_sfc == 4) noahmp%model%do_mynnsfclay = .true.
     write(msg, fmt='(A,L)') trim(subname)//': do_mynnsfclay = ', noahmp%static%do_mynnsfclay
     call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 

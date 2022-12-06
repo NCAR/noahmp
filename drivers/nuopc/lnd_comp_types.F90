@@ -260,6 +260,7 @@ module lnd_comp_types
      character*255              :: ic_type                           ! source of initial conditions, custom vs. sfc
      logical                    :: restart_run                       ! flag for restart run
      integer                    :: num_soil_levels                   ! number of soil levels
+     real(kind=kp)              :: forcing_height                    ! forcing height (m)
      real(kind=kp), allocatable :: soil_level_thickness(:)           ! soil level thicknesses (m)
      real(kind=kp), allocatable :: soil_level_nodes(:)               ! soil level centroids from surface (m)
      integer                    :: dynamic_vegetation_option         ! choice for dynamic vegetation option

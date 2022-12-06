@@ -246,8 +246,15 @@ contains
        else if (trim(noahmp%nmlist%ic_type) == 'custom') then
           ! get initial value of zorl from pre-defined table
           where(noahmp%model%vegtype(:) > 0) noahmp%model%zorl(:) = z0_data(noahmp%model%vegtype(:))*100.0_r8
-          ! additional unit conversion for datm configuration
+          ! additional unit conversion for datm configuration, noahmp driver requires mm
           where(noahmp%domain%mask(:) > 1) noahmp%model%snwdph(:) = noahmp%model%snwdph(:)*1000.0_r8
+
+          ! following initial values are taken from ufs-land-driver
+          noahmp%model%pblh   = 1000.0_r8
+          noahmp%model%rmol1  = 1.0_r8
+          noahmp%model%flhc1  = 0.0_r8
+          noahmp%model%flqc1  = 0.0_r8
+          noahmp%model%ustar1 = 0.1_r8
        end if
 
        ! initialize model variables
@@ -255,11 +262,37 @@ contains
     end if
 
     !----------------------
+    ! interpolate monthly data, vegetation fraction and mean sfc diffuse sw albedo (NOT used)
+    !----------------------
+
+    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'vfrac')) then
+       where(noahmp%forc%vegfrac(:) < 0.01_r8)
+          noahmp%model%sigmaf(:) = 0.01_r8
+       else where
+          noahmp%model%sigmaf(:) = noahmp%forc%vegfrac(:)
+       end where
+    else
+       call interpolate_monthly(currTime, noahmp%static%im, &
+          noahmp%model%gvf_monthly, noahmp%model%sigmaf, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
+
+    ! not used by the model but is set internally in the driver to albedo_total
+    ! sfalb is also used to calculate snet in datm configurations when calc_snet = T
+    call interpolate_monthly(currTime, noahmp%static%im, &
+       noahmp%model%alb_monthly, noahmp%model%sfalb, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    !----------------------
     ! set internal model variables from forcing
     !----------------------
 
     ! set forcing height
-    noahmp%model%zf = noahmp%forc%hgt
+    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Sa_z')) then
+       noahmp%model%zf = noahmp%forc%hgt
+    else
+       noahmp%model%zf = noahmp%nmlist%forcing_height
+    end if
 
     ! set net shortwave radiation
     if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_swnet')) then
@@ -276,12 +309,13 @@ contains
 
     ! set air pressure at surface adjacent layer
     ! cdeps provides Sa_pbot but Sa_prsl is used for coupling with fv3
-    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Sa_pbot') .or. &
-        check_for_connected(fldsToLnd, fldsToLnd_num, 'Sa_prsl')) then
-       noahmp%model%prsl1 = noahmp%forc%pbot
-    else
-       ! calculate it from surface pressure, height and temperature
-       noahmp%model%prsl1 = noahmp%forc%ps*exp(-1.0_r8*noahmp%model%zf/29.25_r8/noahmp%forc%t1)
+    ! calculate it from surface pressure, height and temperature
+    noahmp%model%prsl1 = noahmp%forc%ps*exp(-1.0_r8*noahmp%model%zf/29.25_r8/noahmp%forc%t1)
+    if (trim(noahmp%nmlist%ic_type) /= 'custom') then
+       if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Sa_pbot') .or. &
+          check_for_connected(fldsToLnd, fldsToLnd_num, 'Sa_prsl')) then
+          noahmp%model%prsl1 = noahmp%forc%pbot
+       end if
     end if
 
     ! set dimensionless Exner function at surface adjacent layer
@@ -291,16 +325,26 @@ contains
        ! calculate it based on bottom pressure
        noahmp%model%prslk1 = (noahmp%forc%pbot(:)/p0)**cappa
        ! following is used by ufs-land-driver
-       !noahmp%model%prslk1 = (exp(noahmp%model%zf/29.25_r8/noahmp%forc%t1))**(2.0_r8/7.0_r8)
+       if (trim(noahmp%nmlist%ic_type) == 'custom') then
+          noahmp%model%prslk1 = (exp(noahmp%model%zf/29.25_r8/noahmp%forc%t1))**(2.0_r8/7.0_r8)
+       end if
     end if
 
     ! set dimensionless Exner function at the ground surface
-    noahmp%model%prsik1 = (noahmp%forc%ps(:)/p0)**cappa
+    if (trim(noahmp%nmlist%ic_type) == 'custom') then
+       ! following is used by ufs-land-driver
+       noahmp%model%prsik1 = (exp(noahmp%model%zf/29.25_r8/noahmp%forc%t1))**(2.0_r8/7.0_r8)
+    else
+       noahmp%model%prsik1 = (noahmp%forc%ps(:)/p0)**cappa
+    end if
 
     ! set Exner function ratio between midlayer and interface
-    ! following is used by ufs-land-driver
-    !noahmp%model%prslki = (exp(noahmp%model%zf/29.25_r8/noahmp%forc%t1))**(2.0_r8/7.0_r8)
-    noahmp%model%prslki(:) = noahmp%model%prsik1(:)/noahmp%model%prslk1(:)
+    if (trim(noahmp%nmlist%ic_type) == 'custom') then
+       ! following is used by ufs-land-driver
+       noahmp%model%prslki = (exp(noahmp%model%zf/29.25_r8/noahmp%forc%t1))**(2.0_r8/7.0_r8)
+    else
+       noahmp%model%prslki(:) = noahmp%model%prsik1(:)/noahmp%model%prslk1(:)
+    end if
 
     ! set wind forcing to model internal variables
     noahmp%model%u1(:) = noahmp%forc%u1(:)
@@ -309,7 +353,11 @@ contains
     ! NOTE: CCPP has addtional adjustment in wind speed which could lead to minor difference
     ! The modification is done in GFS_surface_generic_pre.F90
     noahmp%forc%wind(:) = sqrt(noahmp%forc%u1(:)**2+noahmp%forc%v1(:)**2)
-    noahmp%forc%wind(:) = max(noahmp%forc%wind(:), 1.0_r8)
+    if (trim(noahmp%nmlist%ic_type) == 'custom') then
+       noahmp%forc%wind(:) = max(noahmp%forc%wind(:), 0.1_r8)
+    else
+       noahmp%forc%wind(:) = max(noahmp%forc%wind(:), 1.0_r8)
+    end if
 
     ! set snow precipitation
     if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_snow')) then
@@ -337,35 +385,13 @@ contains
     end if
     if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_rain')) then
        noahmp%model%rainn_mp(:) = noahmp%forc%tprcp(:)
-    end if
-
-    ! convert mm/s to m
-    noahmp%model%rainn_mp(:) = noahmp%model%rainn_mp(:)*noahmp%static%delt/1000.0_r8
-    noahmp%model%rainc_mp(:) = noahmp%model%rainc_mp(:)*noahmp%static%delt/1000.0_r8
-
-    ! calculate total precipitation
-    noahmp%model%tprcp(:) = noahmp%model%rainn_mp(:)+noahmp%model%rainc_mp(:)
-
-    !----------------------
-    ! interpolate monthly data, vegetation fraction and mean sfc diffuse sw albedo (NOT used)
-    !----------------------
-
-    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'vfrac')) then
-       where(noahmp%forc%vegfrac(:) < 0.01_r8)
-          noahmp%model%sigmaf(:) = 0.01_r8
-       else where
-          noahmp%model%sigmaf(:) = noahmp%forc%vegfrac(:)
-       end where
+       ! convert mm/s to m, it will be converted to mm/s internally in noahmpdrv() call
+       noahmp%model%tprcp(:) = noahmp%forc%tprcp(:)*noahmp%static%delt/1000.0
     else
-       call interpolate_monthly(currTime, noahmp%static%im, &
-          noahmp%model%gvf_monthly, noahmp%model%sigmaf, rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%model%tprcp(:) = noahmp%model%rainn_mp(:)+noahmp%model%rainc_mp(:)
+       ! convert mm/s to m, it will be converted to mm/s internally in noahmpdrv() call
+       noahmp%model%tprcp(:) = noahmp%model%tprcp(:)*noahmp%static%delt/1000.0
     end if
- 
-    ! not used by the model but is set internally in the driver to albedo_total
-    call interpolate_monthly(currTime, noahmp%static%im, &
-       noahmp%model%alb_monthly, noahmp%model%sfalb, rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------
     ! calculate solar zenith angle
@@ -385,13 +411,6 @@ contains
     noahmp%model%srflag = 0.0_r8
     where(noahmp%forc%t1 < tfreeze) noahmp%model%srflag = 1.0_r8
 
-    ! unit conversion for precipitation
-    ! TODO: do we need for datm coupling?
-    ! convert mm/s to m
-    !noahmp%forc%tprcp(:) = noahmp%forc%tprcp(:)*noahmp%static%delt/1000.0_r8
-    ! datm
-    !noahmp%model%rainn_mp = 1000.0_r8*noahmp%forc%tprcp/noahmp%static%delt
-
     ! they are not defined as coupling fields but CCPP provides those fields
     noahmp%model%graupel_mp = 0.0_r8
     noahmp%model%ice_mp = 0.0_r8
@@ -400,139 +419,144 @@ contains
     ! calculate initial values, ported from GFS_phys_time_vary.fv3 
     !----------------------
 
-    ! set soil layers
-    if (.not. allocated(zs)) allocate(zs(noahmp%nmlist%num_soil_levels))
-    zs = -1.0_r8*noahmp%nmlist%soil_level_nodes
+    if (first_time) then
+       ! set soil layers
+       if (.not. allocated(zs)) allocate(zs(noahmp%nmlist%num_soil_levels))
+       zs = -1.0_r8*noahmp%nmlist%soil_level_nodes
  
-    do i = noahmp%domain%begl, noahmp%domain%endl
-       if (noahmp%domain%mask(i) == 1) then
-          if (noahmp%model%soiltyp(i) /= 0) then
-             bexp   = bexp_table(noahmp%model%soiltyp(i))
-             smcmax = smcmax_table(noahmp%model%soiltyp(i))
-             smcwlt = smcwlt_table(noahmp%model%soiltyp(i))
-             dwsat  = dwsat_table(noahmp%model%soiltyp(i))
-             dksat  = dksat_table(noahmp%model%soiltyp(i))
-             psisat = -psisat_table(noahmp%model%soiltyp(i))
-          endif
+       do i = noahmp%domain%begl, noahmp%domain%endl
+          if (noahmp%domain%mask(i) == 1) then
+             if (noahmp%model%soiltyp(i) /= 0) then
+                bexp   = bexp_table(noahmp%model%soiltyp(i))
+                smcmax = smcmax_table(noahmp%model%soiltyp(i))
+                smcwlt = smcwlt_table(noahmp%model%soiltyp(i))
+                dwsat  = dwsat_table(noahmp%model%soiltyp(i))
+                dksat  = dksat_table(noahmp%model%soiltyp(i))
+                psisat = -psisat_table(noahmp%model%soiltyp(i))
+             endif
 
-          if (noahmp%model%vegtype(i) == isurban_table) then
-             smcmax = 0.45_r8
-             smcwlt = 0.40_r8
-          endif
+             if (noahmp%model%vegtype(i) == isurban_table) then
+                smcmax = 0.45_r8
+                smcwlt = 0.40_r8
+             endif
 
-          if ((bexp > 0.0_r8) .and. (smcmax > 0.0_r8) .and. (-psisat > 0.0_r8)) then
-             do is = 1, noahmp%nmlist%num_soil_levels
-                if (is == 1)then
-                   ddz = -zs(is+1)*0.5_r8
-                elseif (is < noahmp%nmlist%num_soil_levels) then
-                   ddz = (zs(is-1)-zs(is+1))*0.5_r8
-                else
-                   ddz = zs(is-1)-zs(is)
-                endif
-              noahmp%model%smoiseq(i,is) = min(max(find_eq_smc(bexp, dwsat, dksat, ddz, smcmax),1.e-4_r8),smcmax*0.99_r8)
-            enddo
-          else ! bexp <= 0.0
-            noahmp%model%smoiseq(i,:) = smcmax
-          endif  
-       
-          noahmp%model%smcwtdxy(i) = smcmax
-       end if
-    end do
+             if ((bexp > 0.0_r8) .and. (smcmax > 0.0_r8) .and. (-psisat > 0.0_r8)) then
+                do is = 1, noahmp%nmlist%num_soil_levels
+                   if (is == 1)then
+                      ddz = -zs(is+1)*0.5_r8
+                   elseif (is < noahmp%nmlist%num_soil_levels) then
+                      ddz = (zs(is-1)-zs(is+1))*0.5_r8
+                   else
+                      ddz = zs(is-1)-zs(is)
+                   endif
+                 noahmp%model%smoiseq(i,is) = min(max(find_eq_smc(bexp, dwsat, dksat, ddz, smcmax),1.e-4_r8),smcmax*0.99_r8)
+               enddo
+             else ! bexp <= 0.0
+               noahmp%model%smoiseq(i,:) = smcmax
+             endif  
+          
+             noahmp%model%smcwtdxy(i) = smcmax
+          end if
+       end do
+    end if
 
     !----------------------
     ! call stability
     !----------------------
-    do i = noahmp%domain%begl, noahmp%domain%endl
-       if (noahmp%domain%mask(i) == 1 .and. noahmp%model%flag_iter(i)) then
-          ! set initial value for ztmax
-          ztmax = 1.0_r8
 
-          !virtual temperature in middle of lowest layer
-          virtfac = 1.0_r8+con_fvirt*max(noahmp%forc%q1(i),qmin)
-          tv1 = noahmp%forc%t1(i)*virtfac
+    if (first_time) then
+       do i = noahmp%domain%begl, noahmp%domain%endl
+          if (noahmp%domain%mask(i) == 1 .and. noahmp%model%flag_iter(i)) then
+             ! set initial value for ztmax
+             ztmax = 1.0_r8
 
-          if (noahmp%model%thsfc_loc) then
-             ! use local potential temperature
-             thv1 = noahmp%forc%t1(i)*noahmp%model%prslki(i)*virtfac
-             tvs  = 0.5_r8*(noahmp%model%tsurf(i)+noahmp%model%tskin(i))*virtfac
-          else
-             ! use potential temperature referenced to 1000 hPa
-             thv1 = noahmp%forc%t1(i)/noahmp%model%prslk1(i)*virtfac
-             tvs = 0.5_r8*(noahmp%model%tsurf(i)+noahmp%model%tskin(i))/noahmp%model%prsik1(i)*virtfac
+             !virtual temperature in middle of lowest layer
+             virtfac = 1.0_r8+con_fvirt*max(noahmp%forc%q1(i),qmin)
+             tv1 = noahmp%forc%t1(i)*virtfac
+
+             if (noahmp%model%thsfc_loc) then
+                ! use local potential temperature
+                thv1 = noahmp%forc%t1(i)*noahmp%model%prslki(i)*virtfac
+                tvs  = 0.5_r8*(noahmp%model%tsurf(i)+noahmp%model%tskin(i))*virtfac
+             else
+                ! use potential temperature referenced to 1000 hPa
+                thv1 = noahmp%forc%t1(i)/noahmp%model%prslk1(i)*virtfac
+                tvs = 0.5_r8*(noahmp%model%tsurf(i)+noahmp%model%tskin(i))/noahmp%model%prsik1(i)*virtfac
+             end if
+
+            ! set initial value for zvfun
+            noahmp%model%zvfun(i) = 0.0_r8
+
+            ! set initial value for z0max
+            z0max = max(zmin, min(0.01_r8 * noahmp%model%zorl(i), noahmp%model%zf(i)))
+
+            tem1 = 1.0_r8-noahmp%model%shdmax(i)
+            tem2 = tem1*tem1
+            tem1 = 1.0_r8-tem2
+
+            if (noahmp%static%ivegsrc == 1) then
+               if (noahmp%model%vegtype(i) == 10) then
+                  z0max = exp(tem2*log01+tem1*log07)
+               elseif (noahmp%model%vegtype(i) == 6) then
+                  z0max = exp(tem2*log01+tem1*log05)
+               elseif (noahmp%model%vegtype(i) == 7) then
+                  z0max = 0.01_r8
+               elseif (noahmp%model%vegtype(i) == 16) then
+                  z0max = 0.01_r8
+               else
+                  z0max = exp(tem2*log01+tem1*log(z0max))
+               endif
+            elseif (noahmp%static%ivegsrc == 2) then
+               if (noahmp%model%vegtype(i) == 7) then
+                 z0max = exp(tem2*log01+tem1*log07)
+               elseif (noahmp%model%vegtype(i) == 8) then
+                 z0max = exp(tem2*log01+tem1*log05)
+               elseif (noahmp%model%vegtype(i) == 9) then
+                 z0max = 0.01_r8
+               elseif (noahmp%model%vegtype(i) == 11) then
+                 z0max = 0.01_r8
+               else
+                 z0max = exp(tem2*log01+tem1*log(z0max))
+               endif
+            endif
+
+            ! TODO: add surface perturbations to z0max over land
+            ! z0pert is defined in CCPP GFS_surface_generic_pre.F90
+            ! it is all zero for control_p8 configuration
+
+            ! limit z0max
+            z0max = max(z0max, zmin)
+
+            czilc = 10.0_r8**(-4.0_r8*z0max) ! Trier et al. (2011,WAF)
+            czilc = max(min(czilc, 0.8_r8), 0.08_r8)
+            tem1 = 1.0_r8-noahmp%model%sigmaf(i)
+            czilc = czilc*tem1*tem1
+            ztmax = z0max * exp( - czilc * karman * 258.2_r8 * sqrt(noahmp%model%ustar1(i)*z0max) )
+
+            ! TODO: add surface perturbations to ztmax over land
+            ! it is all zero for control_p8 configuration
+            ztmax = max(ztmax, zmin)
+
+            ! compute a function of surface roughness & green vegetation fraction (zvfun)
+            tem1 = (z0max-z0lo)/(z0up-z0lo)
+            tem1 = min(max(tem1, 0.0_r8), 1.0_r8)
+            tem2 = max(noahmp%model%sigmaf(i), 0.1_r8)
+            noahmp%model%zvfun(i) = sqrt(tem1*tem2)
+
+            ! call stability function
+            call stability( &
+            !  ---  inputs:
+                 noahmp%model%zf(i), noahmp%model%zvfun(i) , sqrt(noahmp%domain%garea(i)), &
+                 tv1               , thv1                  , noahmp%forc%wind(i)         , &
+                 z0max             , ztmax                 , tvs                         , &
+                 con_g             , noahmp%model%thsfc_loc,                               &
+            !  ---  outputs:
+                 noahmp%model%rb1(i)  , noahmp%model%fm1(i)      , noahmp%model%fh1(i)   , &
+                 noahmp%model%fm101(i), noahmp%model%fh21(i)     , noahmp%model%cm(i)    , &
+                 noahmp%model%ch(i)   , noahmp%model%stress1(i)  , noahmp%model%ustar1(i))
           end if
-
-         ! set initial value for zvfun
-         noahmp%model%zvfun(i) = 0.0_r8
-
-         ! set initial value for z0max
-         z0max = max(zmin, min(0.01_r8 * noahmp%model%zorl(i), noahmp%model%zf(i)))
-
-         tem1 = 1.0_r8-noahmp%model%shdmax(i)
-         tem2 = tem1*tem1
-         tem1 = 1.0_r8-tem2
-
-         if (noahmp%static%ivegsrc == 1) then
-            if (noahmp%model%vegtype(i) == 10) then
-               z0max = exp(tem2*log01+tem1*log07)
-            elseif (noahmp%model%vegtype(i) == 6) then
-               z0max = exp(tem2*log01+tem1*log05)
-            elseif (noahmp%model%vegtype(i) == 7) then
-               z0max = 0.01_r8
-            elseif (noahmp%model%vegtype(i) == 16) then
-               z0max = 0.01_r8
-            else
-               z0max = exp(tem2*log01+tem1*log(z0max))
-            endif
-         elseif (noahmp%static%ivegsrc == 2) then
-            if (noahmp%model%vegtype(i) == 7) then
-              z0max = exp(tem2*log01+tem1*log07)
-            elseif (noahmp%model%vegtype(i) == 8) then
-              z0max = exp(tem2*log01+tem1*log05)
-            elseif (noahmp%model%vegtype(i) == 9) then
-              z0max = 0.01_r8
-            elseif (noahmp%model%vegtype(i) == 11) then
-              z0max = 0.01_r8
-            else
-              z0max = exp(tem2*log01+tem1*log(z0max))
-            endif
-         endif
-
-         ! TODO: add surface perturbations to z0max over land
-         ! z0pert is defined in CCPP GFS_surface_generic_pre.F90
-         ! it is all zero for control_p8 configuration
-
-         ! limit z0max
-         z0max = max(z0max, zmin)
-
-         czilc = 10.0_r8**(-4.0_r8*z0max) ! Trier et al. (2011,WAF)
-         czilc = max(min(czilc, 0.8_r8), 0.08_r8)
-         tem1 = 1.0_r8-noahmp%model%sigmaf(i)
-         czilc = czilc*tem1*tem1
-         ztmax = z0max * exp( - czilc * karman * 258.2_r8 * sqrt(noahmp%model%ustar1(i)*z0max) )
-
-         ! TODO: add surface perturbations to ztmax over land
-         ! it is all zero for control_p8 configuration
-         ztmax = max(ztmax, zmin)
-
-         ! compute a function of surface roughness & green vegetation fraction (zvfun)
-         tem1 = (z0max-z0lo)/(z0up-z0lo)
-         tem1 = min(max(tem1, 0.0_r8), 1.0_r8)
-         tem2 = max(noahmp%model%sigmaf(i), 0.1_r8)
-         noahmp%model%zvfun(i) = sqrt(tem1*tem2)
-
-         ! call stability function
-         call stability( &
-         !  ---  inputs:
-              noahmp%model%zf(i), noahmp%model%zvfun(i) , sqrt(noahmp%domain%garea(i)), &
-              tv1               , thv1                  , noahmp%forc%wind(i)         , &
-              z0max             , ztmax                 , tvs                         , &
-              con_g             , noahmp%model%thsfc_loc,                               &
-         !  ---  outputs:
-              noahmp%model%rb1(i)  , noahmp%model%fm1(i)      , noahmp%model%fh1(i)   , &
-              noahmp%model%fm101(i), noahmp%model%fh21(i)     , noahmp%model%cm(i)    , &
-              noahmp%model%ch(i)   , noahmp%model%stress1(i)  , noahmp%model%ustar1(i))
-       end if
-    end do
+       end do
+    end if
 
     !----------------------
     ! write out initial conditions in case of debugging
@@ -629,14 +653,6 @@ contains
     !---------------------- 
 
     ! return date to create file name
-    call ESMF_TimeGet(currTime+timeStep, yy=year, mm=month, dd=day, &
-      h=hour, m=minute, s=second, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! get as second
-    call ESMF_TimeIntervalGet(currTime-epoc+timeStep, s_r8=now_time, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
     ! check the output frequency before calling write method
     if (mod(int(now_time), noahmp%nmlist%output_freq) == 0) then
        write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5)') &
