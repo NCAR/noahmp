@@ -248,12 +248,10 @@ jobs:
             md5sum $i >> output_hash.txt
           done
           cat output_hash.txt
-          echo ${{ github.event.label.name }}
 
       # restore baseline hash file from cache
       - name: Restore Baseline Hash File From Cache
         uses: actions/cache@v3
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
         with:
           path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
           key: baseline-${{ hashFiles('output_hash_baseline.txt') }}
@@ -282,8 +280,15 @@ jobs:
 
       # Force to fail if the results are not matched with the baseline
       - name: Result of Baseline Check
-        if: steps.compare-baseline.outputs.CHECK_RESULT == 'false'
+        if: steps.compare-baseline.outputs.CHECK_RESULT == 'false' && ${{ !contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
         uses: actions/github-script@v3
         with:
           script: |
             core.setFailed('The results do not match with the baseline!')
+
+      # copy new baseline
+      - name: Create New Baseline
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
+        run:
+          cd ${{ github.workspace }}/app/build
+          cp -f output_hash.txt output_hash_baseline.txt
