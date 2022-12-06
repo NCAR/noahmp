@@ -417,7 +417,7 @@ contains
 ! ==================================================================================================
 ! --------------------------------------------------------------------------------------------------
 !>\ingroup NoahMP_LSM
-!! This subroutine 
+!! Compute energy budget (momentum & energy fluxes and phase changes).
   subroutine energy_glacier (nsnow     ,nsoil   ,isnow   ,dt      ,qsnow   ,rhoair  , & !in
                              eair      ,sfcprs  ,qair    ,sfctmp  ,lwdn    ,uu      , & !in
                              vv        ,solad   ,solai   ,cosz    ,zref    ,          & !in
@@ -507,7 +507,7 @@ contains
 #endif
 
 ! outputs
-  integer, dimension(-nsnow+1:nsoil), intent(out)   :: imelt  !< phase change index [1-melt; 2-freeze]
+  integer, dimension(-nsnow+1:nsoil)                 , intent(out)   :: imelt  !< phase change index [1-melt; 2-freeze]
   real (kind=kind_phys)   , dimension(-nsnow+1:    0), intent(out)   :: snicev !< partial volume ice [m3/m3]
   real (kind=kind_phys)   , dimension(-nsnow+1:    0), intent(out)   :: snliqv !< partial volume liq. water [m3/m3]
   real (kind=kind_phys)   , dimension(-nsnow+1:    0), intent(out)   :: epore  !< effective porosity [m3/m3]
@@ -650,6 +650,7 @@ contains
   end subroutine energy_glacier
 ! ==================================================================================================
 !>\ingroup NoahMP_LSM
+!! calculate thermal properties of soil, snow, lake, and frozen soil.
   subroutine thermoprop_glacier (nsoil   ,nsnow   ,isnow   ,dzsnso  , & !in
                                  dt      ,snowh   ,snice   ,snliq   , & !in
                                  df      ,hcpct   ,snicev  ,snliqv  ,epore   , & !out
@@ -782,6 +783,7 @@ contains
   end subroutine csnow_glacier
 !===================================================================================================
 !>\ingroup NoahMP_LSM
+!! Compute solar radiation: absorbed & reflected by the ground.
   subroutine radiation_glacier (dt      ,tg      ,sneqvo  ,sneqv   ,cosz   , & !in
                                 qsnow   ,solad   ,solai   ,                  & !in
                                 albold  ,tauss   ,                           & !inout
@@ -1462,6 +1464,11 @@ contains
 ! 2m air temperature
      ehb2  = fv*vkc/(log((2.+z0h)/z0h)-fh2)
      cq2b  = ehb2
+! for opt_sfc 3
+     if (opt_sfc ==3) then
+       ehb2  = fv*vkc/fh2
+       cq2b  = ehb2
+     endif
 
      if (opt_sfc == 4) then
        ehb2 = ch2 * wspd1i ! need conductance,z0h from sfcdif4 
@@ -3446,6 +3453,7 @@ end if   ! opt_gla == 1
 ! ==================================================================================================
 
 !>\ingroup NoahMP_LSM
+!!
   subroutine noahmp_options_glacier(iopt_alb  ,iopt_snf  ,iopt_tbot, iopt_stc, iopt_gla,&
                                     iopt_sfc, iopt_trs)
 
