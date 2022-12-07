@@ -239,8 +239,8 @@ jobs:
           path: ${{ github.workspace }}/app/build/log_files.tar.gz
           retention-days: ${{ env.ARTIFACTS_RETENTION_PERIOD }}
 
-      # restore baseline hash file from cache
-      - name: Restore Baseline Hash File From Cache (1st pass)
+      # restore baseline hash file from cache, most recent baseline
+      - name: Restore Baseline Hash File From Cache (1st)
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
@@ -280,14 +280,16 @@ jobs:
           cat output_hash.txt
 
       # restore baseline hash file from cache
-      #- name: Restore Baseline Hash File From Cache (2nd pass)
-      #  uses: actions/cache@v3
-      #  if: steps.calculate-hashes.outputs.BL_DATE_OLD =! steps.calculate-hashes.outputs.BL_DATE_NEW
-      #  with:
-      #    path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
-      #    key: baseline-${{ steps.calculate-hashes.outputs.BL_DATE }}-${{ hashFiles('output_hash_baseline.txt') }}
-      #    restore-keys: |
-      #      baseline-${{ steps.compare-baseline.outputs.BL_DATE }}-
+      # this is for uploading new baseline
+      # the previous first pass could hit a baseline and post step will not work
+      - name: Restore Baseline Hash File From Cache (2nd)
+        uses: actions/cache@v3
+        if: steps.calculate-hashes.outputs.BL_DATE_NEW != steps.calculate-hashes.outputs.BL_DATE_OLD
+        with:
+          path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
+          key: baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}-${{ hashFiles('output_hash_baseline.txt') }}
+          restore-keys: |
+            baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}
 
       # compare with the baseline
       - name: Compare with Baseline or Create New One
