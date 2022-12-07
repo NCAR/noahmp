@@ -278,6 +278,11 @@ jobs:
           echo "BL_DATE_OLD = $BL_DATE_OLD"
           echo "BL_DATE_NEW = $BL_DATE_NEW"
           cat output_hash.txt
+          # copy new baseline
+          if [ "$BL_DATE_OLD" != '$BL_DATE_NEW' ]; then
+            echo "Baseline is changed! Copy current run as baeline."
+            cp output_hash.txt output_hash_baseline.txt
+          fi
 
       # restore baseline hash file from cache
       # this is for uploading new baseline
@@ -296,10 +301,8 @@ jobs:
         id: compare-baseline
         run: |
           cd ${{ github.workspace }}/app/build
-          force_bc=${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
-          echo "Is baseline change forced by PR label? $force_bc"
           # compare against the baseline, returns false if it does not match
-          if [ -f "output_hash_baseline.txt" ] && [ "$force_bc" == 'false' ]; then
+          if [ -f "output_hash_baseline.txt" ]; then
             echo "Baseline:"
             cat output_hash_baseline.txt
             echo "Current Run:"
