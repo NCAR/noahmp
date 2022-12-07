@@ -240,7 +240,7 @@ jobs:
           retention-days: ${{ env.ARTIFACTS_RETENTION_PERIOD }}
 
       # restore baseline hash file from cache
-      - name: Restore Baseline Hash File From Cache
+      - name: Restore Baseline Hash File From Cache (1st pass)
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
@@ -250,6 +250,7 @@ jobs:
 
       # calculate hashes
       - name: Calculate Hashes of Output Files
+        id: calculate-hashes
         run: |
           # save hashes of output files
           cd ${{ github.workspace }}/app/build
@@ -270,16 +271,16 @@ jobs:
               echo "BL_DATE=$(date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
             fi
           fi
-          echo "BL_DATE = ${{ steps.compare-baseline.outputs.BL_DATE }}"
+          echo "BL_DATE = ${{ steps.calculate-hashes.outputs.BL_DATE }}"
 
       # restore baseline hash file from cache
-      #- name: Restore Baseline Hash File From Cache
-      #  uses: actions/cache@v3
-      #  with:
-      #    path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
-      #    key: baseline-${{ steps.compare-baseline.outputs.BL_DATE }}-${{ hashFiles('output_hash_baseline.txt') }}
-      #    restore-keys: |
-      #      baseline-${{ steps.compare-baseline.outputs.BL_DATE }}
+      - name: Restore Baseline Hash File From Cache (2nd pass)
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
+          key: baseline-${{ steps.calculate-hashes.outputs.BL_DATE }}-${{ hashFiles('output_hash_baseline.txt') }}
+          restore-keys: |
+            baseline-${{ steps.compare-baseline.outputs.BL_DATE }}-
 
       # compare with the baseline
       #- name: Compare with Baseline
