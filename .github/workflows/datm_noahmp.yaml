@@ -249,60 +249,67 @@ jobs:
             baseline
 
       # calculate hashes
-      - name: Calculate Hashes of Output Files
+      - name: Calculate Hashes of Output Files and Query Baseline Date
         id: calculate-hashes
         run: |
-          # save hashes of output files
+          # get current baseline date
+          if [ -f "${{ github.workspace }}/app/build/output_hash_baseline.txt" ]; then
+            BL_DATE_OLD=$(head -n 1 ${{ github.workspace }}/app/build/output_hash_baseline.txt)
+          else
+            BL_DATE_OLD=99999999
+          fi
+          echo "BL_DATE_OLD=$BL_DATE_OLD" >> $GITHUB_OUTPUT
+          # set new baseline date
+          force_bc=${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
+          if [ "$force_bc" == 'true' ]; then
+            BL_DATE_NEW=$(date -u '+%Y%m%d')
+          else
+            BL_DATE_NEW=$BL_DATE_OLD
+          fi
+          echo "BL_DATE_NEW=$BL_DATE_NEW" >> $GITHUB_OUTPUT
+          # save hashes of output files for current run
           cd ${{ github.workspace }}/app/build
-          /bin/date -u "+%Y%m%d" >> output_hash.txt
+          echo $BL_DATE_NEW >> output_hash.txt
           lst=`ls -al comp.test.lnd.out.*.nc | awk '{print $9}'`
           for i in $lst; do
             md5sum $i >> output_hash.txt
           done
+          # print out some debug information
+          echo "BL_DATE_OLD = $BL_DATE_OLD"
+          echo "BL_DATE_NEW = $BL_DATE_NEW"
           cat output_hash.txt
-          # set baseline date, force to update if baseline chnage is expected
-          force_bc=${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
-          if [ "$force_bc" == 'true' ]; then
-            echo "BL_DATE=$(date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
-          else
-            if [ -f "${{ github.workspace }}/app/build/output_hash_baseline.txt" ]; then
-              echo "BL_DATE=$(head -n 1 ${{ github.workspace }}/app/build/output_hash_baseline.txt)" >> $GITHUB_OUTPUT
-            else
-              echo "BL_DATE=$(date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
-            fi
-          fi
-          echo "BL_DATE = ${{ steps.calculate-hashes.outputs.BL_DATE }}"
 
       # restore baseline hash file from cache
-      - name: Restore Baseline Hash File From Cache (2nd pass)
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
-          key: baseline-${{ steps.calculate-hashes.outputs.BL_DATE }}-${{ hashFiles('output_hash_baseline.txt') }}
-          restore-keys: |
-            baseline-${{ steps.compare-baseline.outputs.BL_DATE }}-
+      #- name: Restore Baseline Hash File From Cache (2nd pass)
+      #  uses: actions/cache@v3
+      #  if: steps.calculate-hashes.outputs.BL_DATE_OLD =! steps.calculate-hashes.outputs.BL_DATE_NEW
+      #  with:
+      #    path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
+      #    key: baseline-${{ steps.calculate-hashes.outputs.BL_DATE }}-${{ hashFiles('output_hash_baseline.txt') }}
+      #    restore-keys: |
+      #      baseline-${{ steps.compare-baseline.outputs.BL_DATE }}-
 
       # compare with the baseline
-      #- name: Compare with Baseline
-      #  id: compare-baseline
-      #  run: |
-      #    cd ${{ github.workspace }}/app/build
-      #    force_bc=${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
-      #    echo "Is baseline change forced by PR label? $force_bc"
-      #    # compare against the baseline, returns false if it does not match
-      #    if [ -f "output_hash_baseline.txt" ] && [ "$force_bc" == 'false' ]; then
-      #      echo "Baseline:"
-      #      cat output_hash_baseline.txt
-      #      echo "Current Run:"
-      #      cat output_hash.txt
-      #      echo "CHECK_RESULT=$(cmp --silent output_hash_baseline.txt output_hash.txt && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
-      #    # there is no baseline, just copy current one as baseline  
-      #    else
-      #      echo "No baseline found! Current run will be catched as baseline."
-      #      cat output_hash.txt
-      #      cp output_hash.txt output_hash_baseline.txt
-      #      echo "CHECK_RESULT=$(echo 'true')" >> $GITHUB_OUTPUT
-      #    fi
+      - name: Compare with Baseline or Create New One
+        id: compare-baseline
+        run: |
+          cd ${{ github.workspace }}/app/build
+          force_bc=${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
+          echo "Is baseline change forced by PR label? $force_bc"
+          # compare against the baseline, returns false if it does not match
+          if [ -f "output_hash_baseline.txt" ] && [ "$force_bc" == 'false' ]; then
+            echo "Baseline:"
+            cat output_hash_baseline.txt
+            echo "Current Run:"
+            cat output_hash.txt
+            echo "CHECK_RESULT=$(cmp --silent output_hash_baseline.txt output_hash.txt && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
+          # there is no baseline, just copy current one as baseline  
+          else
+            echo "No baseline found! Current run will be catched as baseline."
+            cat output_hash.txt
+            cp output_hash.txt output_hash_baseline.txt
+            echo "CHECK_RESULT=$(echo 'true')" >> $GITHUB_OUTPUT
+          fi
 
       # Force to fail if the results are not matched with the baseline
       #- name: Result of Baseline Check
