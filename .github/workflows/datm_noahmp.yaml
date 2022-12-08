@@ -312,8 +312,7 @@ jobs:
             cat output_hash.txt
             cp output_hash.txt output_hash_baseline.txt
             mkdir ${{ github.workspace }}/app/build/baseline
-            cp ${{ github.workspace }}/app/build/baseline/comp.test.lnd.out.*.nc baseline/.
-            ${{ github.workspace }}/app/build/baseline/comp.test.lnd.out.*.nc
+            cp ${{ github.workspace }}/app/build/comp.test.lnd.out.*.nc baseline/.
             echo "CHECK_RESULT=$(echo 'true')" >> $GITHUB_OUTPUT
           fi
 
