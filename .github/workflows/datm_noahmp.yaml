@@ -239,7 +239,7 @@ jobs:
           path: ${{ github.workspace }}/app/build/log_files.tar.gz
           retention-days: ${{ env.ARTIFACTS_RETENTION_PERIOD }}
 
-      # find baseline date from cache, most recent baseline will be picked
+      # find baseline date from cache, the most recent baseline will be picked
       - name: Query Date for Old Baseline From Cache
         id: get-bl-previous 
         run: |
@@ -259,7 +259,7 @@ jobs:
         run: |
           # get current baseline date
           BL_DATE_OLD=${{ steps.get-bl-previous.outputs.BL_DATE_OLD }}
-          # set new baseline date
+          # set new baseline date if 'Baseline Change' tag in PR
           force_bc=${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
           echo "Baseline change request is force_bc = $force_bc"
           if [[ "$force_bc" == "true" ]]; then
@@ -282,11 +282,13 @@ jobs:
             echo "Force baseline change! BL_DATE_OLD ($BL_DATE_OLD) =! BL_DATE_NEW ($BL_DATE_NEW)"
           fi
 
-      # restore baseline hash file from cache
+      # restore baseline hash file and files from cache
       - name: Restore Baseline Hash File From Cache
         uses: actions/cache@v3
         with:
-          path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
+          path: |
+            ${{ github.workspace }}/app/build/output_hash_baseline.txt
+            ${{ github.workspace }}/app/build/baseline/comp.test.lnd.out.*.nc
           key: baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}
           restore-keys: |
             baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}
@@ -306,8 +308,12 @@ jobs:
           # there is no baseline, just copy current one as baseline  
           else
             echo "Current run will be used as a baseline."
+            # print out content of the has file
             cat output_hash.txt
             cp output_hash.txt output_hash_baseline.txt
+            mkdir ${{ github.workspace }}/app/build/baseline
+            cp ${{ github.workspace }}/app/build/baseline/comp.test.lnd.out.*.nc baseline/.
+            ${{ github.workspace }}/app/build/baseline/comp.test.lnd.out.*.nc
             echo "CHECK_RESULT=$(echo 'true')" >> $GITHUB_OUTPUT
           fi
 
