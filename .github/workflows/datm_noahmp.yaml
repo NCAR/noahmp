@@ -264,7 +264,7 @@ jobs:
           # set new baseline date
           force_bc=${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
           echo "Baseline change request is force_bc = $force_bc"
-          if [ "$force_bc" == 'true' ]; then
+          if [[ "$force_bc" == "true" ]]; then
             BL_DATE_NEW=$(date -u '+%Y%m%d')
           else
             BL_DATE_NEW=$BL_DATE_OLD
@@ -277,11 +277,11 @@ jobs:
             md5sum $i >> output_hash.txt
           done
           # print out some debug information
-          if [ "$BL_DATE_OLD" != '$BL_DATE_NEW' ]; then
-            echo "Force baseline change! BL_DATE_OLD ($BL_DATE_OLD) =! BL_DATE_NEW ($BL_DATE_NEW)"
-          else
+          if [[ "$BL_DATE_OLD" == "$BL_DATE_NEW" ]]; then
             echo "BL_DATE_OLD = $BL_DATE_OLD"
             echo "BL_DATE_NEW = $BL_DATE_NEW"
+          else
+            echo "Force baseline change! BL_DATE_OLD ($BL_DATE_OLD) =! BL_DATE_NEW ($BL_DATE_NEW)"
           fi
 
       # restore baseline hash file from cache
