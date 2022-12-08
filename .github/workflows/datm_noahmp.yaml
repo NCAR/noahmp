@@ -241,13 +241,15 @@ jobs:
           path: ${{ github.workspace }}/app/build/log_files.tar.gz
           retention-days: ${{ env.ARTIFACTS_RETENTION_PERIOD }}
 
-      # restore baseline hash file from cache, most recent baseline
+      # find baseline date from cache, most recent baseline will be picked
       - name: Restore Baseline Hash File From Cache
         run: |
-          gh api -H "Accept: application/vnd.github+json" \
+          BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
           --jq '.actions_caches[] | (.id|tostring) + " " + .key' \
           /repos/esmf-org/noahmp/actions/caches | sort -n | \
-          grep "baseline-" | tail -n 1 | awk -F\- '{print $2}'    
+          grep "baseline-" | tail -n 1 | awk -F\- '{print $2}')
+          echo "BL_DATE_OLD = $BL_DATE_OLD"
+          echo "BL_DATE_OLD=$BL_DATE_OLD" >> $GITHUB_OUTPUT
 
       # restore baseline hash file from cache, most recent baseline
       #- name: Restore Baseline Hash File From Cache (1st)
@@ -267,7 +269,7 @@ jobs:
       #      BL_DATE_OLD=$(head -n 1 ${{ github.workspace }}/app/build/output_hash_baseline.txt)
       #    else
       #      BL_DATE_OLD=99999999
-      #    fi
+      
       #    echo "BL_DATE_OLD=$BL_DATE_OLD" >> $GITHUB_OUTPUT
       #    # set new baseline date
       #    force_bc=${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
