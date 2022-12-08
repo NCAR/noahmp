@@ -24,6 +24,8 @@ jobs:
         - ubuntu-22.04
     
     env:
+      # set token to access gh command
+      GH_TOKEN: ${{ github.token }}
       # installation location for spack and other components
       INSTALL_DIR: ${{ github.workspace }}/install
       # option for baseline generation
