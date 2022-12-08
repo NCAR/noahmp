@@ -250,7 +250,7 @@ jobs:
           /repos/${{ github.repository }}/actions/caches | sort -n | \
           grep "baseline-" | tail -n 1 | awk -F\- '{print $2}')
           if [ -z "$BL_DATE_OLD" ]; then
-            BL_DATE_OLD=99999999
+            BL_DATE_OLD=$(date -u '+%Y%m%d')
           fi
           echo "BL_DATE_OLD = $BL_DATE_OLD"
           echo "BL_DATE_OLD=$BL_DATE_OLD" >> $GITHUB_OUTPUT
@@ -263,6 +263,7 @@ jobs:
           BL_DATE_OLD=${{ steps.get-bl-previous.outputs.BL_DATE_OLD }}
           # set new baseline date
           force_bc=${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
+          echo "Baseline change request is force_bc = $force_bc"
           if [ "$force_bc" == 'true' ]; then
             BL_DATE_NEW=$(date -u '+%Y%m%d')
           else
@@ -276,12 +277,11 @@ jobs:
             md5sum $i >> output_hash.txt
           done
           # print out some debug information
-          echo "BL_DATE_OLD = $BL_DATE_OLD"
-          echo "BL_DATE_NEW = $BL_DATE_NEW"
-          cat output_hash.txt
-          # copy new baseline
           if [ "$BL_DATE_OLD" != '$BL_DATE_NEW' ]; then
-            echo "Baseline is changed! Copy current run as baseline."
+            echo "Force baseline change! BL_DATE_OLD ($BL_DATE_OLD) =! BL_DATE_NEW ($BL_DATE_NEW)"
+          else
+            echo "BL_DATE_OLD = $BL_DATE_OLD"
+            echo "BL_DATE_NEW = $BL_DATE_NEW"
           fi
 
       # restore baseline hash file from cache
@@ -289,7 +289,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
-          key: baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}-${{ hashFiles('output_hash_baseline.txt') }}
+          key: baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}
           restore-keys: |
             baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}
 
@@ -307,7 +307,7 @@ jobs:
             echo "CHECK_RESULT=$(cmp --silent output_hash_baseline.txt output_hash.txt && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
           # there is no baseline, just copy current one as baseline  
           else
-            echo "No baseline found! Current run will be catched as baseline."
+            echo "Current run will be used as a baseline."
             cat output_hash.txt
             cp output_hash.txt output_hash_baseline.txt
             echo "CHECK_RESULT=$(echo 'true')" >> $GITHUB_OUTPUT
