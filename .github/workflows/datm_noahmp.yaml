@@ -36,8 +36,8 @@ jobs:
       # checkout base repository
       - name: Checkout NoahMP Repository
         uses: actions/checkout@v3
-        with:
-          ref: develop
+        #with:
+        #  ref: develop
           
       # prepare core environment
       - name: Install Core Development Tools
