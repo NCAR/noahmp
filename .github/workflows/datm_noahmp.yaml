@@ -36,9 +36,7 @@ jobs:
       # checkout base repository
       - name: Checkout NoahMP Repository
         uses: actions/checkout@v3
-        #with:
-        #  ref: develop
-          
+ 
       # prepare core environment
       - name: Install Core Development Tools
         run: |
@@ -250,7 +248,7 @@ jobs:
           /repos/${{ github.repository }}/actions/caches | sort -n | \
           grep "baseline-" | tail -n 1 | awk -F\- '{print $2}')
           if [ -z "$BL_DATE_OLD" ]; then
-            BL_DATE_OLD=$(date -u '+%Y%m%d')
+            BL_DATE_OLD=$(date -u '+%Y%m%d%I%M%S')
           fi
           echo "BL_DATE_OLD = $BL_DATE_OLD"
           echo "BL_DATE_OLD=$BL_DATE_OLD" >> $GITHUB_OUTPUT
@@ -265,7 +263,7 @@ jobs:
           force_bc=${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
           echo "Baseline change request is force_bc = $force_bc"
           if [[ "$force_bc" == "true" ]]; then
-            BL_DATE_NEW=$(date -u '+%Y%m%d')
+            BL_DATE_NEW=$(date -u '+%Y%m%d%I%M%S')
           else
             BL_DATE_NEW=$BL_DATE_OLD
           fi
