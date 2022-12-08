@@ -246,19 +246,13 @@ jobs:
         run: |
           BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
           --jq '.actions_caches[] | (.id|tostring) + " " + .key' \
-          /repos/esmf-org/noahmp/actions/caches | sort -n | \
+          /repos/${{ github.repository }}/actions/caches | sort -n | \
           grep "baseline-" | tail -n 1 | awk -F\- '{print $2}')
+          if [ -z "$BL_DATE_OLD" ]; then
+            BL_DATE_OLD=99999999
+          fi
           echo "BL_DATE_OLD = $BL_DATE_OLD"
           echo "BL_DATE_OLD=$BL_DATE_OLD" >> $GITHUB_OUTPUT
-
-      # restore baseline hash file from cache, most recent baseline
-      #- name: Restore Baseline Hash File From Cache (1st)
-      #  uses: actions/cache@v3
-      #  with:
-      #    path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
-      #    key: baseline
-      #    restore-keys: |
-      #      baseline
 
       # calculate hashes
       #- name: Calculate Hashes of Output Files and Query Baseline Date
