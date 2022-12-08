@@ -2122,6 +2122,7 @@ contains
     call ESMF_FieldGet(field_mesh, localDe=0, farrayPtr=ptr2d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+    noahmp%forc%ps = 0.0
     call fld_add("ps"        ,"surface pressure"                                                  ,"Pa"     ,ptr2d=ptr2d, v1r8=noahmp%forc%ps)
     call fld_add("u1"        ,"u-component of wind"                                               ,"m/s"    ,ptr2d=ptr2d, v1r8=noahmp%model%u1)
     call fld_add("v1"        ,"v-component of wind"                                               ,"m/s"    ,ptr2d=ptr2d, v1r8=noahmp%model%v1)
