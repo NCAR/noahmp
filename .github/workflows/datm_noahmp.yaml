@@ -25,6 +25,8 @@ jobs:
         - ubuntu-22.04
     
     env:
+      # set to run gh command 
+      GH_TOKEN: ${{ github.token }}
       # installation location for spack and other components
       INSTALL_DIR: ${{ github.workspace }}/install
       # option for retention period for artifacts, default is 90 days
