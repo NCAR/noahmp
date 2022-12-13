@@ -13,7 +13,7 @@ module lnd_comp_nuopc
   use ESMF             , only : ESMF_Array, ESMF_ArrayRead, ESMF_ArrayGet, ESMF_ArrayDestroy
   use ESMF             , only : ESMF_TimeInterval, ESMF_Alarm, ESMF_ClockGet
   use ESMF             , only : ESMF_ClockGetAlarmList, ESMF_Clock, ESMF_Time
-  use ESMF             , only : ESMF_ClockSet, ESMF_TimeInterval, ESMF_ALARMLIST_ALL 
+  use ESMF             , only : ESMF_ClockSet, ESMF_TimeIntervalGet, ESMF_ALARMLIST_ALL
   use ESMF             , only : ESMF_AlarmSet, ESMF_ClockAdvance
   use ESMF             , only : ESMF_TimeGet, ESMF_TimeInterval
   use ESMF             , only : ESMF_GEOMTYPE_GRID, ESMF_GEOMTYPE_MESH
@@ -33,6 +33,7 @@ module lnd_comp_nuopc
 
   use lnd_comp_types   , only : noahmp_type
   use lnd_comp_kind    , only : cl => shr_kind_cl
+  use lnd_comp_kind    , only : r8 => shr_kind_r8
   use lnd_comp_shr     , only : chkerr, alarm_init
   use lnd_comp_shr     , only : shr_string_listGetName, read_namelist
   use lnd_comp_domain  , only : lnd_set_decomp_and_domain_from_mosaic
@@ -185,7 +186,8 @@ contains
     integer, intent(out) :: rc
 
     ! local variables
-    integer                    :: n
+    integer                    :: n, suffix_sec
+    real(r8)                   :: dt
     integer, pointer           :: ptr(:)
     character(len=CL)          :: cvalue, cname, msg
     character(len=CL)          :: meshfile_mask
@@ -295,9 +297,20 @@ contains
 
           call ESMF_TimeGet(currTime, yy=year, mm=month, dd=day, h=hour, m=minute, s=second, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    
+
+          call ESMF_TimeIntervalGet(timeStep, s_r8=dt, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          ! update day if it is required
+          ! coupling time (dt) needs to be same in case of restart run
+          suffix_sec = int(hour*60*60+minute*60+second-dt)
+          if (suffix_sec < 0) then
+             day = day-1
+             suffix_sec = 86400-abs(suffix_sec)
+          end if
+
           write(noahmp%nmlist%restart_file, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5,a)') &
-             trim(noahmp%nmlist%case_name)//'.lnd.out.', year, '-', month, '-', day, '-', hour*60*60+minute*60+second, '.tile'
+             trim(noahmp%nmlist%case_name)//'.lnd.out.', year, '-', month, '-', day, '-', suffix_sec, '.tile'
        end if
 
        call ESMF_LogWrite(trim(subname)//': restart_file = '//trim(noahmp%nmlist%restart_file), ESMF_LOGMSG_INFO)

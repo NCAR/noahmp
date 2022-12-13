@@ -419,144 +419,140 @@ contains
     ! calculate initial values, ported from GFS_phys_time_vary.fv3 
     !----------------------
 
-    if (first_time) then
-       ! set soil layers
-       if (.not. allocated(zs)) allocate(zs(noahmp%nmlist%num_soil_levels))
-       zs = -1.0_r8*noahmp%nmlist%soil_level_nodes
+    ! set soil layers
+    if (.not. allocated(zs)) allocate(zs(noahmp%nmlist%num_soil_levels))
+    zs = -1.0_r8*noahmp%nmlist%soil_level_nodes
  
-       do i = noahmp%domain%begl, noahmp%domain%endl
-          if (noahmp%domain%mask(i) == 1) then
-             if (noahmp%model%soiltyp(i) /= 0) then
-                bexp   = bexp_table(noahmp%model%soiltyp(i))
-                smcmax = smcmax_table(noahmp%model%soiltyp(i))
-                smcwlt = smcwlt_table(noahmp%model%soiltyp(i))
-                dwsat  = dwsat_table(noahmp%model%soiltyp(i))
-                dksat  = dksat_table(noahmp%model%soiltyp(i))
-                psisat = -psisat_table(noahmp%model%soiltyp(i))
-             endif
+    do i = noahmp%domain%begl, noahmp%domain%endl
+       if (noahmp%domain%mask(i) == 1) then
+          if (noahmp%model%soiltyp(i) /= 0) then
+             bexp   = bexp_table(noahmp%model%soiltyp(i))
+             smcmax = smcmax_table(noahmp%model%soiltyp(i))
+             smcwlt = smcwlt_table(noahmp%model%soiltyp(i))
+             dwsat  = dwsat_table(noahmp%model%soiltyp(i))
+             dksat  = dksat_table(noahmp%model%soiltyp(i))
+             psisat = -psisat_table(noahmp%model%soiltyp(i))
+          endif
 
-             if (noahmp%model%vegtype(i) == isurban_table) then
-                smcmax = 0.45_r8
-                smcwlt = 0.40_r8
-             endif
+          if (noahmp%model%vegtype(i) == isurban_table) then
+             smcmax = 0.45_r8
+             smcwlt = 0.40_r8
+          endif
 
-             if ((bexp > 0.0_r8) .and. (smcmax > 0.0_r8) .and. (-psisat > 0.0_r8)) then
-                do is = 1, noahmp%nmlist%num_soil_levels
-                   if (is == 1)then
-                      ddz = -zs(is+1)*0.5_r8
-                   elseif (is < noahmp%nmlist%num_soil_levels) then
-                      ddz = (zs(is-1)-zs(is+1))*0.5_r8
-                   else
-                      ddz = zs(is-1)-zs(is)
-                   endif
-                 noahmp%model%smoiseq(i,is) = min(max(find_eq_smc(bexp, dwsat, dksat, ddz, smcmax),1.e-4_r8),smcmax*0.99_r8)
-               enddo
-             else ! bexp <= 0.0
-               noahmp%model%smoiseq(i,:) = smcmax
-             endif  
-          
-             noahmp%model%smcwtdxy(i) = smcmax
-          end if
-       end do
-    end if
+          if ((bexp > 0.0_r8) .and. (smcmax > 0.0_r8) .and. (-psisat > 0.0_r8)) then
+             do is = 1, noahmp%nmlist%num_soil_levels
+                if (is == 1)then
+                   ddz = -zs(is+1)*0.5_r8
+                elseif (is < noahmp%nmlist%num_soil_levels) then
+                   ddz = (zs(is-1)-zs(is+1))*0.5_r8
+                else
+                   ddz = zs(is-1)-zs(is)
+                endif
+              noahmp%model%smoiseq(i,is) = min(max(find_eq_smc(bexp, dwsat, dksat, ddz, smcmax),1.e-4_r8),smcmax*0.99_r8)
+            enddo
+          else ! bexp <= 0.0
+            noahmp%model%smoiseq(i,:) = smcmax
+          endif
+       
+          noahmp%model%smcwtdxy(i) = smcmax
+       end if
+    end do
 
     !----------------------
     ! call stability
     !----------------------
 
-    if (first_time) then
-       do i = noahmp%domain%begl, noahmp%domain%endl
-          if (noahmp%domain%mask(i) == 1 .and. noahmp%model%flag_iter(i)) then
-             ! set initial value for ztmax
-             ztmax = 1.0_r8
+    do i = noahmp%domain%begl, noahmp%domain%endl
+       if (noahmp%domain%mask(i) == 1 .and. noahmp%model%flag_iter(i)) then
+          ! set initial value for ztmax
+          ztmax = 1.0_r8
 
-             !virtual temperature in middle of lowest layer
-             virtfac = 1.0_r8+con_fvirt*max(noahmp%forc%q1(i),qmin)
-             tv1 = noahmp%forc%t1(i)*virtfac
+          !virtual temperature in middle of lowest layer
+          virtfac = 1.0_r8+con_fvirt*max(noahmp%forc%q1(i),qmin)
+          tv1 = noahmp%forc%t1(i)*virtfac
 
-             if (noahmp%model%thsfc_loc) then
-                ! use local potential temperature
-                thv1 = noahmp%forc%t1(i)*noahmp%model%prslki(i)*virtfac
-                tvs  = 0.5_r8*(noahmp%model%tsurf(i)+noahmp%model%tskin(i))*virtfac
-             else
-                ! use potential temperature referenced to 1000 hPa
-                thv1 = noahmp%forc%t1(i)/noahmp%model%prslk1(i)*virtfac
-                tvs = 0.5_r8*(noahmp%model%tsurf(i)+noahmp%model%tskin(i))/noahmp%model%prsik1(i)*virtfac
-             end if
-
-            ! set initial value for zvfun
-            noahmp%model%zvfun(i) = 0.0_r8
-
-            ! set initial value for z0max
-            z0max = max(zmin, min(0.01_r8 * noahmp%model%zorl(i), noahmp%model%zf(i)))
-
-            tem1 = 1.0_r8-noahmp%model%shdmax(i)
-            tem2 = tem1*tem1
-            tem1 = 1.0_r8-tem2
-
-            if (noahmp%static%ivegsrc == 1) then
-               if (noahmp%model%vegtype(i) == 10) then
-                  z0max = exp(tem2*log01+tem1*log07)
-               elseif (noahmp%model%vegtype(i) == 6) then
-                  z0max = exp(tem2*log01+tem1*log05)
-               elseif (noahmp%model%vegtype(i) == 7) then
-                  z0max = 0.01_r8
-               elseif (noahmp%model%vegtype(i) == 16) then
-                  z0max = 0.01_r8
-               else
-                  z0max = exp(tem2*log01+tem1*log(z0max))
-               endif
-            elseif (noahmp%static%ivegsrc == 2) then
-               if (noahmp%model%vegtype(i) == 7) then
-                 z0max = exp(tem2*log01+tem1*log07)
-               elseif (noahmp%model%vegtype(i) == 8) then
-                 z0max = exp(tem2*log01+tem1*log05)
-               elseif (noahmp%model%vegtype(i) == 9) then
-                 z0max = 0.01_r8
-               elseif (noahmp%model%vegtype(i) == 11) then
-                 z0max = 0.01_r8
-               else
-                 z0max = exp(tem2*log01+tem1*log(z0max))
-               endif
-            endif
-
-            ! TODO: add surface perturbations to z0max over land
-            ! z0pert is defined in CCPP GFS_surface_generic_pre.F90
-            ! it is all zero for control_p8 configuration
-
-            ! limit z0max
-            z0max = max(z0max, zmin)
-
-            czilc = 10.0_r8**(-4.0_r8*z0max) ! Trier et al. (2011,WAF)
-            czilc = max(min(czilc, 0.8_r8), 0.08_r8)
-            tem1 = 1.0_r8-noahmp%model%sigmaf(i)
-            czilc = czilc*tem1*tem1
-            ztmax = z0max * exp( - czilc * karman * 258.2_r8 * sqrt(noahmp%model%ustar1(i)*z0max) )
-
-            ! TODO: add surface perturbations to ztmax over land
-            ! it is all zero for control_p8 configuration
-            ztmax = max(ztmax, zmin)
-
-            ! compute a function of surface roughness & green vegetation fraction (zvfun)
-            tem1 = (z0max-z0lo)/(z0up-z0lo)
-            tem1 = min(max(tem1, 0.0_r8), 1.0_r8)
-            tem2 = max(noahmp%model%sigmaf(i), 0.1_r8)
-            noahmp%model%zvfun(i) = sqrt(tem1*tem2)
-
-            ! call stability function
-            call stability( &
-            !  ---  inputs:
-                 noahmp%model%zf(i), noahmp%model%zvfun(i) , sqrt(noahmp%domain%garea(i)), &
-                 tv1               , thv1                  , noahmp%forc%wind(i)         , &
-                 z0max             , ztmax                 , tvs                         , &
-                 con_g             , noahmp%model%thsfc_loc,                               &
-            !  ---  outputs:
-                 noahmp%model%rb1(i)  , noahmp%model%fm1(i)      , noahmp%model%fh1(i)   , &
-                 noahmp%model%fm101(i), noahmp%model%fh21(i)     , noahmp%model%cm(i)    , &
-                 noahmp%model%ch(i)   , noahmp%model%stress1(i)  , noahmp%model%ustar1(i))
+          if (noahmp%model%thsfc_loc) then
+             ! use local potential temperature
+             thv1 = noahmp%forc%t1(i)*noahmp%model%prslki(i)*virtfac
+             tvs  = 0.5_r8*(noahmp%model%tsurf(i)+noahmp%model%tskin(i))*virtfac
+          else
+             ! use potential temperature referenced to 1000 hPa
+             thv1 = noahmp%forc%t1(i)/noahmp%model%prslk1(i)*virtfac
+             tvs = 0.5_r8*(noahmp%model%tsurf(i)+noahmp%model%tskin(i))/noahmp%model%prsik1(i)*virtfac
           end if
-       end do
-    end if
+
+         ! set initial value for zvfun
+         noahmp%model%zvfun(i) = 0.0_r8
+
+         ! set initial value for z0max
+         z0max = max(zmin, min(0.01_r8 * noahmp%model%zorl(i), noahmp%model%zf(i)))
+
+         tem1 = 1.0_r8-noahmp%model%shdmax(i)
+         tem2 = tem1*tem1
+         tem1 = 1.0_r8-tem2
+
+         if (noahmp%static%ivegsrc == 1) then
+            if (noahmp%model%vegtype(i) == 10) then
+               z0max = exp(tem2*log01+tem1*log07)
+            elseif (noahmp%model%vegtype(i) == 6) then
+               z0max = exp(tem2*log01+tem1*log05)
+            elseif (noahmp%model%vegtype(i) == 7) then
+               z0max = 0.01_r8
+            elseif (noahmp%model%vegtype(i) == 16) then
+               z0max = 0.01_r8
+            else
+               z0max = exp(tem2*log01+tem1*log(z0max))
+            endif
+         elseif (noahmp%static%ivegsrc == 2) then
+            if (noahmp%model%vegtype(i) == 7) then
+              z0max = exp(tem2*log01+tem1*log07)
+            elseif (noahmp%model%vegtype(i) == 8) then
+              z0max = exp(tem2*log01+tem1*log05)
+            elseif (noahmp%model%vegtype(i) == 9) then
+              z0max = 0.01_r8
+            elseif (noahmp%model%vegtype(i) == 11) then
+              z0max = 0.01_r8
+            else
+              z0max = exp(tem2*log01+tem1*log(z0max))
+            endif
+         endif
+
+         ! TODO: add surface perturbations to z0max over land
+         ! z0pert is defined in CCPP GFS_surface_generic_pre.F90
+         ! it is all zero for control_p8 configuration
+
+         ! limit z0max
+         z0max = max(z0max, zmin)
+
+         czilc = 10.0_r8**(-4.0_r8*z0max) ! Trier et al. (2011,WAF)
+         czilc = max(min(czilc, 0.8_r8), 0.08_r8)
+         tem1 = 1.0_r8-noahmp%model%sigmaf(i)
+         czilc = czilc*tem1*tem1
+         ztmax = z0max * exp( - czilc * karman * 258.2_r8 * sqrt(noahmp%model%ustar1(i)*z0max) )
+
+         ! TODO: add surface perturbations to ztmax over land
+         ! it is all zero for control_p8 configuration
+         ztmax = max(ztmax, zmin)
+
+         ! compute a function of surface roughness & green vegetation fraction (zvfun)
+         tem1 = (z0max-z0lo)/(z0up-z0lo)
+         tem1 = min(max(tem1, 0.0_r8), 1.0_r8)
+         tem2 = max(noahmp%model%sigmaf(i), 0.1_r8)
+         noahmp%model%zvfun(i) = sqrt(tem1*tem2)
+
+         ! call stability function
+         call stability( &
+         !  ---  inputs:
+              noahmp%model%zf(i), noahmp%model%zvfun(i) , sqrt(noahmp%domain%garea(i)), &
+              tv1               , thv1                  , noahmp%forc%wind(i)         , &
+              z0max             , ztmax                 , tvs                         , &
+              con_g             , noahmp%model%thsfc_loc,                               &
+         !  ---  outputs:
+              noahmp%model%rb1(i)  , noahmp%model%fm1(i)      , noahmp%model%fh1(i)   , &
+              noahmp%model%fm101(i), noahmp%model%fh21(i)     , noahmp%model%cm(i)    , &
+              noahmp%model%ch(i)   , noahmp%model%stress1(i)  , noahmp%model%ustar1(i))
+       end if
+    end do
 
     !----------------------
     ! write out initial conditions in case of debugging
@@ -637,7 +633,7 @@ contains
          noahmp%model%snohf    , noahmp%model%smcwlt2   , noahmp%model%smcref2   , &
          noahmp%model%wet1     , noahmp%model%t2mmp     , noahmp%model%q2mp      , &
          noahmp%model%zvfun    , noahmp%model%ztmax     , &
-         noahmp%static%errmsg   , noahmp%static%errflg)
+         noahmp%static%errmsg  , noahmp%static%errflg)
 
     !----------------------
     ! unit conversions

@@ -1666,6 +1666,19 @@ contains
     call ESMF_FieldDestroy(field, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+    !----------------------
+    ! boundary layer height
+    !----------------------
+
+    call read_tiled_file(filename, 'pblh', noahmp, field, numrec=1, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    noahmp%model%pblh(:) = ptr(:,1,1)
+    nullify(ptr)
+    call ESMF_FieldDestroy(field, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
   end subroutine read_restart
 
   !===============================================================================
