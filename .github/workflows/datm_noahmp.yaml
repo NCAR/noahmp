@@ -60,7 +60,9 @@ jobs:
         run: |
           . $GITHUB_WORKSPACE/spack/share/spack/setup-env.sh
           spack --color always -e ${{ github.workspace }}/.github/workflows/spack concretize -f
-          echo "SPACK_ARCH=$(spack arch)" >> $GITHUB_OUTPUT
+          # DO NOT USE since 'spack arch' does not work correctly with fixed targets
+          #echo "SPACK_ARCH=$(spack arch)" >> $GITHUB_OUTPUT
+          echo "SPACK_ARCH=x86_64_v4" >> $GITHUB_OUTPUT
 
       # push spack lock file to the artifcats
       #- name: Upload spack.yaml to Artifacts
