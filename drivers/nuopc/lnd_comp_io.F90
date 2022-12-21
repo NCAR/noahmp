@@ -206,6 +206,19 @@ contains
        nullify(ptr)
        call ESMF_FieldDestroy(field, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       !----------------------
+       ! vegetation type
+       !----------------------
+
+       call read_tiled_file(filename, 'vtype', noahmp, field, numrec=1, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%model%vegtype(:) = int(ptr(:,1,1))
+       nullify(ptr)
+       call ESMF_FieldDestroy(field, rc=rc)
+
     else
        !----------------------
        ! Set file name for initial conditions
