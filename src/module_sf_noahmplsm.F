@@ -114,7 +114,7 @@ MODULE MODULE_SF_NOAHMPLSM
                       !   5 -> Miguez-Macho&Fan groundwater scheme (Miguez-Macho et al. 2007 JGR; Fan et al. 2007 JGR)
 		      !          (needs further testing for public use)
                       !   6 -> Variable Infiltration Capacity Model surface runoff scheme (Wood et al., 1992, JGR) 
-                      !   7 -> Xiananjiang Infiltration and surface runoff scheme ((Jayawardena and Zhou, 2000)
+                      !   7 -> Xinanjiang Infiltration and surface runoff scheme ((Jayawardena and Zhou, 2000)
                       !   8 -> Dynamic VIC surface runoff scheme (Liang and Xie, 2001)
 
   INTEGER :: OPT_SFC  ! options for surface layer drag coeff (CH & CM)
