@@ -1481,6 +1481,7 @@ SUBROUTINE TRANSFER_MP_PARAMETERS(NSOIL,VEGTYPE,SOILTYPE,SLOPETYPE,SOILCOLOR,CRO
   parameters%RC     =     RC_TABLE(VEGTYPE)       !tree crown radius (m)
   parameters%MFSNO  =  MFSNO_TABLE(VEGTYPE)       !snowmelt m parameter ()
   parameters%SCFFAC = SCFFAC_TABLE(VEGTYPE)       !snow cover factor (m) (originally hard-coded 2.5*z0 in SCF formulation)
+  parameters%CBIOM  =  CBIOM_TABLE(VEGTYPE)       !canopy biomass heat capacity parameter (m)
   parameters%SAIM   =   SAIM_TABLE(VEGTYPE,:)     !monthly stem area index, one-sided
   parameters%LAIM   =   LAIM_TABLE(VEGTYPE,:)     !monthly leaf area index, one-sided
   parameters%SLA    =    SLA_TABLE(VEGTYPE)       !single-side leaf area per Kg [m2/kg]

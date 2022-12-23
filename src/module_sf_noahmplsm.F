@@ -248,6 +248,7 @@ MODULE MODULE_SF_NOAHMPLSM
     REAL :: RC                 !tree crown radius (m)
     REAL :: MFSNO              !snowmelt m parameter ()
     REAL :: SCFFAC             !snow cover factor (m) (originally hard-coded 2.5*z0 in SCF formulation)
+    REAL :: CBIOM              !canopy biomass heat capacity parameter (m)
     REAL :: SAIM(12)           !monthly stem area index, one-sided
     REAL :: LAIM(12)           !monthly leaf area index, one-sided
     REAL :: SLA                !single-side leaf area per Kg [m2/kg]
@@ -4047,7 +4048,7 @@ ENDIF   ! CROPTYPE == 0
           EVC = MIN(CANICE*LATHEAV/DT,EVC)
 	END IF
         ! canopy heat capacity
-        HCV = 0.02*VAIE*CWAT + CANLIQ*CWAT/DENH2O + CANICE*CICE/DENICE    !j/m2/k
+        HCV = parameters%CBIOM*VAIE*CWAT + CANLIQ*CWAT/DENH2O + CANICE*CICE/DENICE    !j/m2/k
 
         B   = SAV-IRC-SHC-EVC-TR+PAHV                          !additional w/m2
 !        A   = FVEG*(4.0*CIR*TV**3 + CSH + (CEV+CTR)*DESTV) !volumetric heat capacity
@@ -11123,6 +11124,7 @@ MODULE NOAHMP_TABLES
     REAL :: RC_TABLE(MVT)          !tree crown radius (m)
     REAL :: MFSNO_TABLE(MVT)       !snowmelt curve parameter ()
     REAL :: SCFFAC_TABLE(MVT)      !snow cover factor (m) (replace original hard-coded 2.5*z0 in SCF formulation)
+    REAL :: CBIOM_TABLE(MVT)       !canopy biomass heat capacity parameter (m)
     REAL :: SAIM_TABLE(MVT,12)     !monthly stem area index, one-sided
     REAL :: LAIM_TABLE(MVT,12)     !monthly leaf area index, one-sided
     REAL :: SLA_TABLE(MVT)         !single-side leaf area per Kg [m2/kg]
@@ -11414,7 +11416,7 @@ CONTAINS
                                      LAI_JUL,LAI_AUG,LAI_SEP,LAI_OCT,LAI_NOV,LAI_DEC
     REAL, DIMENSION(MVT) :: RHOL_VIS, RHOL_NIR, RHOS_VIS, RHOS_NIR, &
                                      TAUL_VIS, TAUL_NIR, TAUS_VIS, TAUS_NIR
-    REAL, DIMENSION(MVT) :: CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, SCFFAC, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, &
+    REAL, DIMENSION(MVT) :: CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, SCFFAC, CBIOM, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, &
                      AVCMX, AQE, LTOVRC,  DILEFC,  DILEFW,  RMF25 ,  SLA   ,  FRAGR ,  TMIN  ,  VCMX25,  TDLEF ,  &
                      BP, MP, QE25, RMS25, RMR25, ARM, FOLNMX, WDPOOL, WRRAT, MRP, NROOT, RGL, RS, HS, TOPT, RSMAX, &
 		     SLAREA, EPS1, EPS2, EPS3, EPS4, EPS5
@@ -11422,7 +11424,7 @@ CONTAINS
     NAMELIST / noahmp_usgs_veg_categories / VEG_DATASET_DESCRIPTION, NVEG
     NAMELIST / noahmp_usgs_parameters / ISURBAN, ISWATER, ISBARREN, ISICE, ISCROP, EBLFOREST, NATURAL, &
          LCZ_1,LCZ_2,LCZ_3,LCZ_4,LCZ_5,LCZ_6,LCZ_7,LCZ_8,LCZ_9,LCZ_10,LCZ_11,&
-         CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, SCFFAC, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, AVCMX, AQE, &
+         CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, SCFFAC, CBIOM, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, AVCMX, AQE, &
          LTOVRC,  DILEFC,  DILEFW,  RMF25 ,  SLA   ,  FRAGR ,  TMIN  ,  VCMX25,  TDLEF ,  BP, MP, QE25, RMS25, RMR25, ARM, &
          FOLNMX, WDPOOL, WRRAT, MRP, NROOT, RGL, RS, HS, TOPT, RSMAX, &
          SAI_JAN, SAI_FEB, SAI_MAR, SAI_APR, SAI_MAY, SAI_JUN,SAI_JUL,SAI_AUG,SAI_SEP,SAI_OCT,SAI_NOV,SAI_DEC, &
@@ -11432,7 +11434,7 @@ CONTAINS
     NAMELIST / noahmp_modis_veg_categories / VEG_DATASET_DESCRIPTION, NVEG
     NAMELIST / noahmp_modis_parameters / ISURBAN, ISWATER, ISBARREN, ISICE, ISCROP, EBLFOREST, NATURAL, &
          LCZ_1,LCZ_2,LCZ_3,LCZ_4,LCZ_5,LCZ_6,LCZ_7,LCZ_8,LCZ_9,LCZ_10,LCZ_11, &
-         CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, SCFFAC, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, AVCMX, AQE, &
+         CH2OP, DLEAF, Z0MVT, HVT, HVB, DEN, RC, MFSNO, SCFFAC, CBIOM, XL, CWPVT, C3PSN, KC25, AKC, KO25, AKO, AVCMX, AQE, &
          LTOVRC,  DILEFC,  DILEFW,  RMF25 ,  SLA   ,  FRAGR ,  TMIN  ,  VCMX25,  TDLEF ,  BP, MP, QE25, RMS25, RMR25, ARM, &
          FOLNMX, WDPOOL, WRRAT, MRP, NROOT, RGL, RS, HS, TOPT, RSMAX, &
          SAI_JAN, SAI_FEB, SAI_MAR, SAI_APR, SAI_MAY, SAI_JUN,SAI_JUL,SAI_AUG,SAI_SEP,SAI_OCT,SAI_NOV,SAI_DEC, &
@@ -11449,6 +11451,7 @@ CONTAINS
     RC_TABLE     = -1.0E36
     MFSNO_TABLE  = -1.0E36
     SCFFAC_TABLE = -1.0E36
+    CBIOM_TABLE  = -1.0E36
     RHOL_TABLE   = -1.0E36
     RHOS_TABLE   = -1.0E36
     TAUL_TABLE   = -1.0E36
@@ -11561,6 +11564,7 @@ CONTAINS
         RC_TABLE(1:NVEG)  = RC(1:NVEG)
      MFSNO_TABLE(1:NVEG)  = MFSNO(1:NVEG)
     SCFFAC_TABLE(1:NVEG)  = SCFFAC(1:NVEG)
+     CBIOM_TABLE(1:NVEG)  = CBIOM(1:NVEG)
         XL_TABLE(1:NVEG)  = XL(1:NVEG)
      CWPVT_TABLE(1:NVEG)  = CWPVT(1:NVEG)
      C3PSN_TABLE(1:NVEG)  = C3PSN(1:NVEG)
