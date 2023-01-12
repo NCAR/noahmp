@@ -65,9 +65,17 @@ contains
     ! Advertise export fields
     !--------------------------------
 
-    ! export to atm
+    ! export to med
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_lfrin')
-    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_t')
+
+    ! export to atm
+    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_sfrac')
+    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_lat')
+    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_sen')
+    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_evap')
+    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_tref')
+    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_qref')
+    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_q')
 
     ! Now advertise above export fields
     do n = 1,fldsFrLnd_num
@@ -363,7 +371,19 @@ contains
     ! output to atm 
     ! -----------------------
 
-    call state_setexport_1d(exportState, 'Sl_t', noahmp%model%t2mmp, rc=rc)
+    call state_setexport_1d(exportState, 'Sl_sfrac', noahmp%model%sncovr1, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_setexport_1d(exportState, 'Fall_lat', noahmp%model%evap, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_setexport_1d(exportState, 'Fall_sen', noahmp%model%hflx, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_setexport_1d(exportState, 'Fall_evap', noahmp%model%ep, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_setexport_1d(exportState, 'Sl_tref', noahmp%model%t2mmp, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_setexport_1d(exportState, 'Sl_qref', noahmp%model%q2mp, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_setexport_1d(exportState, 'Sl_q', noahmp%model%qsurf, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)

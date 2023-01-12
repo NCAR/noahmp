@@ -1,8 +1,7 @@
 [ccpp-table-properties]
   name = noahmpdrv
   type = scheme
-  dependencies = ../../../funcphys.f90,../../../machine.F,../../../sfc_diff.f,../../../set_soilveg.f
-  dependencies = ../../src/module_sf_noahmp_glacier.f90,../../src/module_sf_noahmplsm.f90,noahmp_tables.f90
+  dependencies = funcphys.f90,machine.F,sfc_diff.f,module_sf_noahmp_glacier.f90,module_sf_noahmplsm.f90,noahmp_tables.f90,set_soilveg.f
 
 ########################################################################
 [ccpp-arg-table]
@@ -608,6 +607,20 @@
 [thsfc_loc]
   standard_name = flag_for_reference_pressure_theta
   long_name = flag for reference pressure in theta calculation
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+[cpllnd]
+  standard_name = flag_for_land_coupling
+  long_name = flag controlling cpllnd collection (default off)
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+[cpllnd2atm]
+  standard_name = flag_for_one_way_land_coupling_to_atmosphere
+  long_name = flag controlling land coupling to the atmosphere (default off)
   units = flag
   dimensions = ()
   type = logical

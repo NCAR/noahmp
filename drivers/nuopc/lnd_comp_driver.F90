@@ -166,6 +166,8 @@ contains
     real(r8)                    :: now_time
     character(len=cl)           :: filename
     logical                     :: restart_write
+    logical                     :: cpllnd = .false.
+    logical                     :: cpllnd2atm = .true.
     type(ESMF_VM)               :: vm
     type(ESMF_Clock)            :: clock
     type(ESMF_Alarm)            :: alarm
@@ -597,7 +599,7 @@ contains
          con_hvap              , con_cp                 , con_jcal               , &
          rhoh2o                , con_eps                , con_epsm1              , &
          con_fvirt             , con_rd                 , con_hfus               , &
-         noahmp%model%thsfc_loc, &
+         noahmp%model%thsfc_loc, cpllnd                 , cpllnd2atm             , &
     !  ---  in/outs:
          noahmp%model%weasd    , noahmp%model%snwdph    , noahmp%model%tskin     , &
          noahmp%model%tprcp    , noahmp%model%srflag    , noahmp%model%smc       , &
@@ -657,6 +659,14 @@ contains
        call write_mosaic_output(filename, noahmp, now_time, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
+
+    !----------------------
+    ! apply unit conversions after writing the history
+    ! two way atm-lnd coupling expects units in K m s-1 and kg kg-1 m s-1 not W m-2
+    !----------------------
+
+    noahmp%model%hflx = noahmp%model%hflx/(noahmp%model%rho*con_cp)
+    noahmp%model%evap = noahmp%model%evap/(noahmp%model%rho*con_hvap)
 
     !----------------------
     ! exit if there is an error 
