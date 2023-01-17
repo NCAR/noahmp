@@ -138,7 +138,7 @@
       idveg, iopt_crs, iopt_btr, iopt_run, iopt_sfc, iopt_frz,   &
       iopt_inf, iopt_rad, iopt_alb, iopt_snf, iopt_tbot,         &
       iopt_stc, iopt_trs,xlatin, xcoszin, iyrlen, julian, garea, &
-      rainn_mp, rainc_mp, snow_mp, graupel_mp, ice_mp,           &
+      rainn_mp, rainc_mp, snow_mp, graupel_mp, ice_mp,rhonewsn1, &
       con_hvap, con_cp, con_jcal, rhoh2o, con_eps, con_epsm1,    &
       con_fvirt, con_rd, con_hfus, thsfc_loc,                    &
 
@@ -262,6 +262,7 @@
   real(kind=kind_phys), dimension(:)     , intent(in)    :: snow_mp    ! microphysics snow [mm]
   real(kind=kind_phys), dimension(:)     , intent(in)    :: graupel_mp ! microphysics graupel [mm]
   real(kind=kind_phys), dimension(:)     , intent(in)    :: ice_mp     ! microphysics ice/hail [mm]
+  real(kind=kind_phys), dimension(:)     , intent(in)    :: rhonewsn1  ! precipitation ice density (kg/m^3)
   real(kind=kind_phys)                   , intent(in)    :: con_hvap   ! latent heat condensation [J/kg]
   real(kind=kind_phys)                   , intent(in)    :: con_cp     ! specific heat air [J/kg/K] 
   real(kind=kind_phys)                   , intent(in)    :: con_jcal   ! joules per calorie (not used)
@@ -757,7 +758,7 @@ do i = 1, im
 
       call transfer_mp_parameters(vegetation_category, soil_category, &
                         slope_category, soil_color_category, crop_type,parameters)
-
+      parameters%prcpiceden = rhonewsn1(i)
       call noahmp_options(idveg ,iopt_crs, iopt_btr , iopt_run, iopt_sfc,  &
                                  iopt_frz, iopt_inf , iopt_rad, iopt_alb,  &
                                  iopt_snf, iopt_tbot, iopt_stc, iopt_rsf,  &

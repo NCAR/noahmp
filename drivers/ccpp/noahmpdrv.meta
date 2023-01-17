@@ -533,6 +533,14 @@
   type = real
   kind = kind_phys
   intent = in
+[rhonewsn1]
+  standard_name = lwe_density_of_precip_ice
+  long_name = density of precipitation ice
+  units = kg m-3
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  intent = in
 [con_hvap]
   standard_name = latent_heat_of_vaporization_of_water_at_0C
   long_name = latent heat of evaporation/sublimation

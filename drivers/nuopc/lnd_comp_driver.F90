@@ -574,6 +574,7 @@ contains
          noahmp%model%julian   , noahmp%domain%garea    , &
          noahmp%model%rainn_mp , noahmp%model%rainc_mp  , &
          noahmp%model%snow_mp  , noahmp%model%graupel_mp, noahmp%model%ice_mp    , &
+         noahmp%model%rhonewsn1, &
          con_hvap              , con_cp                 , con_jcal               , &
          rhoh2o                , con_eps                , con_epsm1              , &
          con_fvirt             , con_rd                 , con_hfus               , &
