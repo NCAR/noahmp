@@ -1,18 +1,20 @@
 ---
 input:
-  protocol: wget
-  end_point: 'https://svn-ccsm-inputdata.cgd.ucar.edu'
-  files:
-    - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Precip/clmforc.GSWP3.c2011.0.5x0.5.Prec.1999-12.nc
-    - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Precip/clmforc.GSWP3.c2011.0.5x0.5.Prec.2000-01.nc
-    - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Solar/clmforc.GSWP3.c2011.0.5x0.5.Solr.1999-12.nc
-    - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Solar/clmforc.GSWP3.c2011.0.5x0.5.Solr.2000-01.nc
-    - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/TPHWL/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.1999-12.nc
-    - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/TPHWL/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.2000-01.nc
-    - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc
-    - /trunk/inputdata/atm/datm7/topo_forcing/topodata_0.9x1.25_USGS_070110_stream_c151201.nc
-    - /trunk/inputdata/atm/datm7/topo_forcing/topodata_0.9x1.SCRIP.210520_ESMFmesh.nc
-    - /trunk/inputdata/share/meshes/fv1.9x2.5_141008_ESMFmesh.nc
+  forcing:
+    protocol: wget
+    end_point: 'https://svn-ccsm-inputdata.cgd.ucar.edu'
+    files:
+      - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Precip/clmforc.GSWP3.c2011.0.5x0.5.Prec.1999-12.nc
+      - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Precip/clmforc.GSWP3.c2011.0.5x0.5.Prec.2000-01.nc
+      - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Solar/clmforc.GSWP3.c2011.0.5x0.5.Solr.1999-12.nc
+      - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Solar/clmforc.GSWP3.c2011.0.5x0.5.Solr.2000-01.nc
+      - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/TPHWL/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.1999-12.nc
+      - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/TPHWL/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.2000-01.nc
+      - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc
+      - /trunk/inputdata/atm/datm7/topo_forcing/topodata_0.9x1.25_USGS_070110_stream_c151201.nc
+      - /trunk/inputdata/atm/datm7/topo_forcing/topodata_0.9x1.SCRIP.210520_ESMFmesh.nc
+      - /trunk/inputdata/share/meshes/fv1.9x2.5_141008_ESMFmesh.nc
+    target_directory: 'INPUT'
 config:
   nuopc1:
     name: esmxRun.config
@@ -99,18 +101,18 @@ config:
           values: null, null, null, null
         stream_mesh_file:
           values: |
-            ${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc,
-            ${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc,
-            ${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc,
-            ${INPUT_DIR}/topodata_0.9x1.SCRIP.210520_ESMFmesh.nc
+            INPUT/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc,
+            INPUT/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc,
+            INPUT/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc,
+            INPUT/topodata_0.9x1.SCRIP.210520_ESMFmesh.nc
         stream_lev_dimname:
           values: null, null, null, null
         stream_data_files:
           values: |
-            "${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.Solr.1999-12.nc" "${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.Solr.2000-01.nc",
-            "${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.Prec.1999-12.nc" "${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.Prec.2000-01.nc",
-            "${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.1999-12.nc" "${INPUT_DIR}/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.2000-01.nc",
-            "${INPUT_DIR}/topodata_0.9x1.25_USGS_070110_stream_c151201.nc"
+            "INPUT/clmforc.GSWP3.c2011.0.5x0.5.Solr.1999-12.nc" "INPUT/clmforc.GSWP3.c2011.0.5x0.5.Solr.2000-01.nc",
+            "INPUT/clmforc.GSWP3.c2011.0.5x0.5.Prec.1999-12.nc" "INPUT/clmforc.GSWP3.c2011.0.5x0.5.Prec.2000-01.nc",
+            "INPUT/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.1999-12.nc" "INPUT/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.2000-01.nc",
+            "INPUT/topodata_0.9x1.25_USGS_070110_stream_c151201.nc"
         stream_data_variables:
           values: |
             "FSDS Faxa_swdn",
@@ -122,7 +124,7 @@ config:
     content:
       datm_nml:
         datamode: 
-          values: '"${DATAMODE}"'
+          values: '"CLMNCEP"'
         factorfn_data:
           values: '"null"'
         factorfn_mesh:
@@ -136,13 +138,13 @@ config:
         iradsw:
           values: 1
         model_maskfile:
-          values: '"${MODEL_MASKFILE}"'
+          values: '"INPUT/fv1.9x2.5_141008_ESMFmesh.nc"'
         model_meshfile:
-          values: '"${MODEL_MESHFILE}"'
+          values: '"INPUT/fv1.9x2.5_141008_ESMFmesh.nc"'
         nx_global:
-          values: ${NX_GLOBAL}
+          values: 144
         ny_global:
-          values: ${NY_GLOBAL}
+          values: 96
         restfilm:
           values: '"null"'
         export_all:
