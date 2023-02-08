@@ -1,3 +1,4 @@
+---
 components:
   drv:
     runseq:
@@ -9,6 +10,12 @@ components:
         values: remapMethod=bilinear:unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq
       atm:
       lnd:
+    input:
+      field_table:
+        protocol: wget
+        end_point: 'https://raw.githubusercontent.com'
+        files:
+          - /ufs-community/ufs-weather-model/develop/tests/parm/fd_nems.yaml
     config:
       nuopc:
         name: esmxRun.config
@@ -49,6 +56,6 @@ components:
             ESMX_field_dictionary: 
               values: fd_nems.yaml
 
-  lnd: lnd.yaml
+  lnd: test_datm_lnd/lnd.yaml
 
-  atm: datm.yaml
+  atm: test_datm_lnd/datm.yaml
