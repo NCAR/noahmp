@@ -1,8 +1,9 @@
 module lnd_comp_types 
 
   use ESMF           , only : ESMF_Grid, ESMF_Mesh, ESMF_RouteHandle
-  use machine        , only : kp => kind_phys
-  use mpp_domains_mod, only : domain2d
+  use lnd_comp_kind  , only : r8 => shr_kind_r8
+  use lnd_comp_kind  , only : r4 => shr_kind_r4
+  use lnd_comp_kind  , only : i4 => shr_kind_i4
 
   !----------------------------------------------------------------------------
   ! Land component specific data types
@@ -11,41 +12,41 @@ module lnd_comp_types
 
   ! data type for initial conditions
   type initial_type
-     real(kind=kp), allocatable :: snow_water_equivalent(:)
-     real(kind=kp), allocatable :: snow_depth(:)
-     real(kind=kp), allocatable :: canopy_water(:)
-     real(kind=kp), allocatable :: skin_temperature(:)
-     real(kind=kp), allocatable :: soil_temperature(:,:)
-     real(kind=kp), allocatable :: soil_moisture(:,:)
-     real(kind=kp), allocatable :: soil_liquid(:,:)
-     real(kind=kp), allocatable :: surface_roughness(:)
-     real(kind=kp), allocatable :: friction_velocity(:)
+     real(kind=r8), allocatable :: snow_water_equivalent(:)
+     real(kind=r8), allocatable :: snow_depth(:)
+     real(kind=r8), allocatable :: canopy_water(:)
+     real(kind=r8), allocatable :: skin_temperature(:)
+     real(kind=r8), allocatable :: soil_temperature(:,:)
+     real(kind=r8), allocatable :: soil_moisture(:,:)
+     real(kind=r8), allocatable :: soil_liquid(:,:)
+     real(kind=r8), allocatable :: surface_roughness(:)
+     real(kind=r8), allocatable :: friction_velocity(:)
   end type initial_type
 
   ! data type for forcing
   type forcing_type
-    real(kind=kp),  allocatable :: t1         (:) ! air temperature (K)
-    real(kind=kp),  allocatable :: q1         (:) ! mixing ratio/specific humidty at lowest model layer (kg/kg)
-    real(kind=kp),  allocatable :: u1         (:) ! u-component of wind (m/s)
-    real(kind=kp),  allocatable :: v1         (:) ! v-component of wind (m/s)
-    real(kind=kp),  allocatable :: ps         (:) ! surface pressure (Pa)
-    real(kind=kp),  allocatable :: pbot       (:) ! bottom layer pressure (Pa)
-    real(kind=kp),  allocatable :: tskin      (:) ! skin temperature (K)
-    real(kind=kp),  allocatable :: dlwflx     (:) ! downward longwave radiation (W/m2)
-    real(kind=kp),  allocatable :: dswsfc     (:) ! downward shortwave radiation (W/m2)
-    real(kind=kp),  allocatable :: snet       (:) ! net shortwave radiation (W/m2)
-    real(kind=kp),  allocatable :: wind       (:) ! wind speed (m/s)
-    real(kind=kp),  allocatable :: tprcp      (:) ! total precipitation (mm/s)
-    real(kind=kp),  allocatable :: tprcpc     (:) ! convective component of precipitation (mm/s)
-    real(kind=kp),  allocatable :: tprcpl     (:) ! large-scale component of precipitation (mm/s)
-    real(kind=kp),  allocatable :: snow       (:) ! snow fall (mm/s)
-    real(kind=kp),  allocatable :: snowc      (:) ! convective component of snow fall (mm/s)
-    real(kind=kp),  allocatable :: snowl      (:) ! large-scale component of snow fall (mm/s)
-    real(kind=kp),  allocatable :: vegfrac    (:) ! vegetation fraction (unitless, 0-1)
-    real(kind=kp),  allocatable :: hgt        (:) ! forcing height (m)
-    real(kind=kp),  allocatable :: prslk1     (:) ! dimensionless Exner function at the lowest model layer
-    real(kind=kp),  allocatable :: ustar1     (:) ! friction velocity (m/s)
-    real(kind=kp),  allocatable :: zorl       (:) ! surface roughness (m)
+    real(kind=r8),  allocatable :: t1         (:) ! air temperature (K)
+    real(kind=r8),  allocatable :: q1         (:) ! mixing ratio/specific humidty at lowest model layer (kg/kg)
+    real(kind=r8),  allocatable :: u1         (:) ! u-component of wind (m/s)
+    real(kind=r8),  allocatable :: v1         (:) ! v-component of wind (m/s)
+    real(kind=r8),  allocatable :: ps         (:) ! surface pressure (Pa)
+    real(kind=r8),  allocatable :: pbot       (:) ! bottom layer pressure (Pa)
+    real(kind=r8),  allocatable :: tskin      (:) ! skin temperature (K)
+    real(kind=r8),  allocatable :: dlwflx     (:) ! downward longwave radiation (W/m2)
+    real(kind=r8),  allocatable :: dswsfc     (:) ! downward shortwave radiation (W/m2)
+    real(kind=r8),  allocatable :: snet       (:) ! net shortwave radiation (W/m2)
+    real(kind=r8),  allocatable :: wind       (:) ! wind speed (m/s)
+    real(kind=r8),  allocatable :: tprcp      (:) ! total precipitation (mm/s)
+    real(kind=r8),  allocatable :: tprcpc     (:) ! convective component of precipitation (mm/s)
+    real(kind=r8),  allocatable :: tprcpl     (:) ! large-scale component of precipitation (mm/s)
+    real(kind=r8),  allocatable :: snow       (:) ! snow fall (mm/s)
+    real(kind=r8),  allocatable :: snowc      (:) ! convective component of snow fall (mm/s)
+    real(kind=r8),  allocatable :: snowl      (:) ! large-scale component of snow fall (mm/s)
+    real(kind=r8),  allocatable :: vegfrac    (:) ! vegetation fraction (unitless, 0-1)
+    real(kind=r8),  allocatable :: hgt        (:) ! forcing height (m)
+    real(kind=r8),  allocatable :: prslk1     (:) ! dimensionless Exner function at the lowest model layer
+    real(kind=r8),  allocatable :: ustar1     (:) ! friction velocity (m/s)
+    real(kind=r8),  allocatable :: zorl       (:) ! surface roughness (m)
   end type forcing_type
 
   ! data type for static information provided by nems.configure
@@ -57,7 +58,7 @@ module lnd_comp_types
     integer                     :: isot           ! sfc soil type data source zobler or statsgo
     integer                     :: ivegsrc        ! sfc veg type data source umd or igbp
     integer                     :: idveg          ! option for dynamic vegetation
-    real(kind=kp)               :: delt           ! time interval (s) 
+    real(kind=r8)               :: delt           ! time interval (s) 
     integer                     :: iopt_crs       ! option for canopy stomatal resistance
     integer                     :: iopt_btr       ! option for soil moisture factor for stomatal resistance
     integer                     :: iopt_run       ! option for runoff and groundwater
@@ -82,134 +83,134 @@ module lnd_comp_types
   type model_type
      ! scalar variables
      integer                    :: iyrlen           ! year length
-     real(kind=kp)              :: julian           ! julian day of year
+     real(kind=r8)              :: julian           ! julian day of year
      character(len=19)          :: reference_date   ! reference date
      logical                    :: thsfc_loc        ! flag for reference pressure theta
      ! variables in dimension im
-     real(kind=kp), allocatable :: u1         (:)   ! u-component of wind (m/s)
-     real(kind=kp), allocatable :: v1         (:)   ! v-component of wind (m/s)
+     real(kind=r8), allocatable :: u1         (:)   ! u-component of wind (m/s)
+     real(kind=r8), allocatable :: v1         (:)   ! v-component of wind (m/s)
      integer      , allocatable :: soiltyp    (:)   ! soil type (integer index)
      integer      , allocatable :: vegtype    (:)   ! vegetation type (integer index)
-     real(kind=kp), allocatable :: sigmaf     (:)   ! areal fractional cover of green vegetation
-     real(kind=kp), allocatable :: emiss      (:)   ! sfc lw emissivity (fraction)
-     real(kind=kp), allocatable :: albdvis    (:)   ! albedo - direct  visible (fraction)
-     real(kind=kp), allocatable :: albdnir    (:)   ! albedo - direct  NIR (fraction)
-     real(kind=kp), allocatable :: albivis    (:)   ! albedo - diffuse visible (fraction)
-     real(kind=kp), allocatable :: albinir    (:)   ! albedo - diffuse NIR (fraction)
-     real(kind=kp), allocatable :: snet       (:)   ! total sky sfc netsw flx into ground (W/m^2)    NOT USED
-     real(kind=kp), allocatable :: tg3        (:)   ! deep soil temperature (K)
-     real(kind=kp), allocatable :: cm         (:)   ! surface exchange coeff for momentum (m/s)
-     real(kind=kp), allocatable :: ch         (:)   ! surface exchange coeff heat & moisture (m/s)
-     real(kind=kp), allocatable :: prsl1      (:)   ! sfc layer 1 mean pressure (Pa)
-     real(kind=kp), allocatable :: prslki     (:)   ! ? 
-     real(kind=kp), allocatable :: prslk1     (:)   ! dimensionless exner function at surface adjacent layer
-     real(kind=kp), allocatable :: prsik1     (:)   ! surface dimensionless exner function
-     real(kind=kp), allocatable :: zf         (:)   ! height of bottom layer (m)
-     real(kind=kp), allocatable :: pblh       (:)   ! PBL thickness (m)
+     real(kind=r8), allocatable :: sigmaf     (:)   ! areal fractional cover of green vegetation
+     real(kind=r8), allocatable :: emiss      (:)   ! sfc lw emissivity (fraction)
+     real(kind=r8), allocatable :: albdvis    (:)   ! albedo - direct  visible (fraction)
+     real(kind=r8), allocatable :: albdnir    (:)   ! albedo - direct  NIR (fraction)
+     real(kind=r8), allocatable :: albivis    (:)   ! albedo - diffuse visible (fraction)
+     real(kind=r8), allocatable :: albinir    (:)   ! albedo - diffuse NIR (fraction)
+     real(kind=r8), allocatable :: snet       (:)   ! total sky sfc netsw flx into ground (W/m^2)    NOT USED
+     real(kind=r8), allocatable :: tg3        (:)   ! deep soil temperature (K)
+     real(kind=r8), allocatable :: cm         (:)   ! surface exchange coeff for momentum (m/s)
+     real(kind=r8), allocatable :: ch         (:)   ! surface exchange coeff heat & moisture (m/s)
+     real(kind=r8), allocatable :: prsl1      (:)   ! sfc layer 1 mean pressure (Pa)
+     real(kind=r8), allocatable :: prslki     (:)   ! ? 
+     real(kind=r8), allocatable :: prslk1     (:)   ! dimensionless exner function at surface adjacent layer
+     real(kind=r8), allocatable :: prsik1     (:)   ! surface dimensionless exner function
+     real(kind=r8), allocatable :: zf         (:)   ! height of bottom layer (m)
+     real(kind=r8), allocatable :: pblh       (:)   ! PBL thickness (m)
      logical      , allocatable :: dry        (:)   ! = T if a point with any land
      integer      , allocatable :: slopetyp   (:)   ! class of sfc slope (integer index)
-     real(kind=kp), allocatable :: alb_monthly(:,:) ! surface albedo
-     real(kind=kp), allocatable :: gvf_monthly(:,:) ! fractional coverage of green veg
-     real(kind=kp), allocatable :: shdmin     (:)   ! min fractional coverage of green veg           NOT USED
-     real(kind=kp), allocatable :: shdmax     (:)   ! max fractnl cover of green veg                 NOT USED
-     real(kind=kp), allocatable :: snoalb     (:)   ! upper bound on max albedo over deep snow       NOT USED
-     real(kind=kp), allocatable :: sfalb      (:)   ! mean sfc diffused sw albedo (fractional)       NOT USED
+     real(kind=r8), allocatable :: alb_monthly(:,:) ! surface albedo
+     real(kind=r8), allocatable :: gvf_monthly(:,:) ! fractional coverage of green veg
+     real(kind=r8), allocatable :: shdmin     (:)   ! min fractional coverage of green veg           NOT USED
+     real(kind=r8), allocatable :: shdmax     (:)   ! max fractnl cover of green veg                 NOT USED
+     real(kind=r8), allocatable :: snoalb     (:)   ! upper bound on max albedo over deep snow       NOT USED
+     real(kind=r8), allocatable :: sfalb      (:)   ! mean sfc diffused sw albedo (fractional)       NOT USED
      logical      , allocatable :: flag_iter  (:)   ! ? 
-     real(kind=kp), allocatable :: xlatin     (:)   ! latitude
-     real(kind=kp), allocatable :: xcoszin    (:)   ! cosine of zenith angle
-     real(kind=kp), allocatable :: rainn_mp   (:)   ! microphysics non-convective precipitation (mm)
-     real(kind=kp), allocatable :: rainc_mp   (:)   ! microphysics convective precipitation (mm)
-     real(kind=kp), allocatable :: snow_mp    (:)   ! microphysics snow (mm)
-     real(kind=kp), allocatable :: graupel_mp (:)   ! microphysics graupel (mm)
-     real(kind=kp), allocatable :: ice_mp     (:)   ! microphysics ice/hail (mm)
-     real(kind=kp), allocatable :: tprcp      (:)   ! total precipitation (mm/s)
-     real(kind=kp), allocatable :: weasd      (:)   ! water equivalent accumulated snow depth (mm)
-     real(kind=kp), allocatable :: snwdph     (:)   ! snow depth (water equiv) over land
-     real(kind=kp), allocatable :: tskin      (:)   ! ground surface skin temperature (K)
-     real(kind=kp), allocatable :: srflag     (:)   ! snow/rain flag for precipitation
-     real(kind=kp), allocatable :: canopy     (:)   ! canopy moisture content (m)
-     real(kind=kp), allocatable :: trans      (:)   ! total plant transpiration (m/s)
-     real(kind=kp), allocatable :: tsurf      (:)   ! surface skin temperature (after iteration)
-     real(kind=kp), allocatable :: zorl       (:)   ! surface roughness
-     real(kind=kp), allocatable :: rb1        (:)   ! composite bulk richardson number
-     real(kind=kp), allocatable :: fm1        (:)   ! composite momemtum stability
-     real(kind=kp), allocatable :: fh1        (:)   ! composite heat/moisture stability
-     real(kind=kp), allocatable :: ustar1     (:)   ! composite friction velocity
-     real(kind=kp), allocatable :: stress1    (:)   ! composite surface stress
-     real(kind=kp), allocatable :: fm101      (:)   ! composite 2-meter momemtum stability
-     real(kind=kp), allocatable :: fh21       (:)   ! composite 10-meter heat/moisture stability
-     real(kind=kp), allocatable :: rmol1      (:)   ! one over obukhov length
-     real(kind=kp), allocatable :: flhc1      (:)   ! surface exchange coefficient for heat
-     real(kind=kp), allocatable :: flqc1      (:)   ! surface exchange coefficient for moisture
+     real(kind=r8), allocatable :: xlatin     (:)   ! latitude
+     real(kind=r8), allocatable :: xcoszin    (:)   ! cosine of zenith angle
+     real(kind=r8), allocatable :: rainn_mp   (:)   ! microphysics non-convective precipitation (mm)
+     real(kind=r8), allocatable :: rainc_mp   (:)   ! microphysics convective precipitation (mm)
+     real(kind=r8), allocatable :: snow_mp    (:)   ! microphysics snow (mm)
+     real(kind=r8), allocatable :: graupel_mp (:)   ! microphysics graupel (mm)
+     real(kind=r8), allocatable :: ice_mp     (:)   ! microphysics ice/hail (mm)
+     real(kind=r8), allocatable :: tprcp      (:)   ! total precipitation (mm/s)
+     real(kind=r8), allocatable :: weasd      (:)   ! water equivalent accumulated snow depth (mm)
+     real(kind=r8), allocatable :: snwdph     (:)   ! snow depth (water equiv) over land
+     real(kind=r8), allocatable :: tskin      (:)   ! ground surface skin temperature (K)
+     real(kind=r8), allocatable :: srflag     (:)   ! snow/rain flag for precipitation
+     real(kind=r8), allocatable :: canopy     (:)   ! canopy moisture content (m)
+     real(kind=r8), allocatable :: trans      (:)   ! total plant transpiration (m/s)
+     real(kind=r8), allocatable :: tsurf      (:)   ! surface skin temperature (after iteration)
+     real(kind=r8), allocatable :: zorl       (:)   ! surface roughness
+     real(kind=r8), allocatable :: rb1        (:)   ! composite bulk richardson number
+     real(kind=r8), allocatable :: fm1        (:)   ! composite momemtum stability
+     real(kind=r8), allocatable :: fh1        (:)   ! composite heat/moisture stability
+     real(kind=r8), allocatable :: ustar1     (:)   ! composite friction velocity
+     real(kind=r8), allocatable :: stress1    (:)   ! composite surface stress
+     real(kind=r8), allocatable :: fm101      (:)   ! composite 2-meter momemtum stability
+     real(kind=r8), allocatable :: fh21       (:)   ! composite 10-meter heat/moisture stability
+     real(kind=r8), allocatable :: rmol1      (:)   ! one over obukhov length
+     real(kind=r8), allocatable :: flhc1      (:)   ! surface exchange coefficient for heat
+     real(kind=r8), allocatable :: flqc1      (:)   ! surface exchange coefficient for moisture
      logical                    :: do_mynnsfclay    ! flag to activate MYNN surface layer
-     real(kind=kp), allocatable :: snowxy     (:)   ! actual no. of snow layers
-     real(kind=kp), allocatable :: tvxy       (:)   ! vegetation leaf temperature (K)
-     real(kind=kp), allocatable :: tgxy       (:)   ! bulk ground surface temperature (K)
-     real(kind=kp), allocatable :: canicexy   (:)   ! canopy-intercepted ice (mm)
-     real(kind=kp), allocatable :: canliqxy   (:)   ! canopy-intercepted liquid water (mm)
-     real(kind=kp), allocatable :: eahxy      (:)   ! canopy air vapor pressure (Pa)
-     real(kind=kp), allocatable :: tahxy      (:)   ! canopy air temperature (K)
-     real(kind=kp), allocatable :: cmxy       (:)   ! bulk momentum drag coefficient (m/s)
-     real(kind=kp), allocatable :: chxy       (:)   ! bulk sensible heat exchange coefficient (m/s(
-     real(kind=kp), allocatable :: fwetxy     (:)   ! wetted or snowed fraction of the canopy (fractional)
-     real(kind=kp), allocatable :: sneqvoxy   (:)   ! snow mass at last time step (mm h2o)
-     real(kind=kp), allocatable :: alboldxy   (:)   ! snow albedo at last time step (fractional)
-     real(kind=kp), allocatable :: qsnowxy    (:)   ! snowfall on the ground (mm/s)
-     real(kind=kp), allocatable :: wslakexy   (:)   ! lake water storage (mm)
-     real(kind=kp), allocatable :: zwtxy      (:)   ! water table depth (m)
-     real(kind=kp), allocatable :: waxy       (:)   ! water in the "aquifer" (mm)
-     real(kind=kp), allocatable :: wtxy       (:)   ! groundwater storage (mm)
-     real(kind=kp), allocatable :: lfmassxy   (:)   ! leaf mass (g/m^2)
-     real(kind=kp), allocatable :: rtmassxy   (:)   ! mass of fine roots (g/m^2)
-     real(kind=kp), allocatable :: stmassxy   (:)   ! stem mass (g/m^2)
-     real(kind=kp), allocatable :: woodxy     (:)   ! mass of wood (incl. woody roots) (g/m^2)
-     real(kind=kp), allocatable :: stblcpxy   (:)   ! stable carbon in deep soil (g/m^2)
-     real(kind=kp), allocatable :: fastcpxy   (:)   ! short-lived carbon, shallow soil (g/m^2)
-     real(kind=kp), allocatable :: xlaixy     (:)   ! leaf area index
-     real(kind=kp), allocatable :: xsaixy     (:)   ! stem area index
-     real(kind=kp), allocatable :: taussxy    (:)   ! snow age factor
-     real(kind=kp), allocatable :: smcwtdxy   (:)   ! soil moisture content in the layer to the water table when deep
-     real(kind=kp), allocatable :: deeprechxy (:)   ! recharge to the water table when deep
-     real(kind=kp), allocatable :: rechxy     (:)   ! recharge to the water table (diagnostic) 
-     real(kind=kp), allocatable :: sncovr1    (:)   ! snow cover over land (fractional)
-     real(kind=kp), allocatable :: qsurf      (:)   ! specific humidity at sfc
-     real(kind=kp), allocatable :: gflux      (:)   ! soil heat flux (W/m^2)
-     real(kind=kp), allocatable :: drain      (:)   ! subsurface runoff (mm/s)
-     real(kind=kp), allocatable :: evap       (:)   ! evaperation from latent heat flux
-     real(kind=kp), allocatable :: hflx       (:)   ! sensible heat flux
-     real(kind=kp), allocatable :: ep         (:)   ! potential evaporation
-     real(kind=kp), allocatable :: runoff     (:)   ! surface runoff (m/s)
-     real(kind=kp), allocatable :: cmm        (:)   ! ?
-     real(kind=kp), allocatable :: chh        (:)   ! ?
-     real(kind=kp), allocatable :: evbs       (:)   ! direct soil evaporation (m/s)
-     real(kind=kp), allocatable :: evcw       (:)   ! canopy water evaporation (m/s)
-     real(kind=kp), allocatable :: sbsno      (:)   ! sublimation/deposit from snopack (m/s)
-     real(kind=kp), allocatable :: pah        (:)   ! precipitation advected heat - total (W/m2)
-     real(kind=kp), allocatable :: ecan       (:)   ! canopy evaporation (mm/s)
-     real(kind=kp), allocatable :: etran      (:)   ! transpiration (mm/s)
-     real(kind=kp), allocatable :: edir       (:)   ! soil surface evaporation (mm/s)
-     real(kind=kp), allocatable :: snowc      (:)   ! fractional snow cover 
-     real(kind=kp), allocatable :: stm        (:)   ! total soil column moisture content (m)
-     real(kind=kp), allocatable :: snohf      (:)   ! snow/freezing-rain latent heat flux (W/m^2)
-     real(kind=kp), allocatable :: smcwlt2    (:)   ! dry soil moisture threshold
-     real(kind=kp), allocatable :: smcref2    (:)   ! soil moisture threshold
-     real(kind=kp), allocatable :: wet1       (:)   ! normalized soil wetness
-     real(kind=kp), allocatable :: t2mmp      (:)   ! combined T2m from tiles
-     real(kind=kp), allocatable :: q2mp       (:)   ! combined q2m from tiles
-     real(kind=kp), allocatable :: zvfun      (:)   ! some function of vegetation used for gfs stability
-     real(kind=kp), allocatable :: ztmax      (:)   ! bounded surface roughness length for heat over land
-     real(kind=kp), allocatable :: rho        (:)   ! air density
-     real(kind=kp), allocatable :: pores      (:)   ! max soil moisture for a given soil type for land surface model
-     real(kind=kp), allocatable :: resid      (:)   ! min soil moisture for a given soil type for land surface model
+     real(kind=r8), allocatable :: snowxy     (:)   ! actual no. of snow layers
+     real(kind=r8), allocatable :: tvxy       (:)   ! vegetation leaf temperature (K)
+     real(kind=r8), allocatable :: tgxy       (:)   ! bulk ground surface temperature (K)
+     real(kind=r8), allocatable :: canicexy   (:)   ! canopy-intercepted ice (mm)
+     real(kind=r8), allocatable :: canliqxy   (:)   ! canopy-intercepted liquid water (mm)
+     real(kind=r8), allocatable :: eahxy      (:)   ! canopy air vapor pressure (Pa)
+     real(kind=r8), allocatable :: tahxy      (:)   ! canopy air temperature (K)
+     real(kind=r8), allocatable :: cmxy       (:)   ! bulk momentum drag coefficient (m/s)
+     real(kind=r8), allocatable :: chxy       (:)   ! bulk sensible heat exchange coefficient (m/s(
+     real(kind=r8), allocatable :: fwetxy     (:)   ! wetted or snowed fraction of the canopy (fractional)
+     real(kind=r8), allocatable :: sneqvoxy   (:)   ! snow mass at last time step (mm h2o)
+     real(kind=r8), allocatable :: alboldxy   (:)   ! snow albedo at last time step (fractional)
+     real(kind=r8), allocatable :: qsnowxy    (:)   ! snowfall on the ground (mm/s)
+     real(kind=r8), allocatable :: wslakexy   (:)   ! lake water storage (mm)
+     real(kind=r8), allocatable :: zwtxy      (:)   ! water table depth (m)
+     real(kind=r8), allocatable :: waxy       (:)   ! water in the "aquifer" (mm)
+     real(kind=r8), allocatable :: wtxy       (:)   ! groundwater storage (mm)
+     real(kind=r8), allocatable :: lfmassxy   (:)   ! leaf mass (g/m^2)
+     real(kind=r8), allocatable :: rtmassxy   (:)   ! mass of fine roots (g/m^2)
+     real(kind=r8), allocatable :: stmassxy   (:)   ! stem mass (g/m^2)
+     real(kind=r8), allocatable :: woodxy     (:)   ! mass of wood (incl. woody roots) (g/m^2)
+     real(kind=r8), allocatable :: stblcpxy   (:)   ! stable carbon in deep soil (g/m^2)
+     real(kind=r8), allocatable :: fastcpxy   (:)   ! short-lived carbon, shallow soil (g/m^2)
+     real(kind=r8), allocatable :: xlaixy     (:)   ! leaf area index
+     real(kind=r8), allocatable :: xsaixy     (:)   ! stem area index
+     real(kind=r8), allocatable :: taussxy    (:)   ! snow age factor
+     real(kind=r8), allocatable :: smcwtdxy   (:)   ! soil moisture content in the layer to the water table when deep
+     real(kind=r8), allocatable :: deeprechxy (:)   ! recharge to the water table when deep
+     real(kind=r8), allocatable :: rechxy     (:)   ! recharge to the water table (diagnostic) 
+     real(kind=r8), allocatable :: sncovr1    (:)   ! snow cover over land (fractional)
+     real(kind=r8), allocatable :: qsurf      (:)   ! specific humidity at sfc
+     real(kind=r8), allocatable :: gflux      (:)   ! soil heat flux (W/m^2)
+     real(kind=r8), allocatable :: drain      (:)   ! subsurface runoff (mm/s)
+     real(kind=r8), allocatable :: evap       (:)   ! evaperation from latent heat flux
+     real(kind=r8), allocatable :: hflx       (:)   ! sensible heat flux
+     real(kind=r8), allocatable :: ep         (:)   ! potential evaporation
+     real(kind=r8), allocatable :: runoff     (:)   ! surface runoff (m/s)
+     real(kind=r8), allocatable :: cmm        (:)   ! ?
+     real(kind=r8), allocatable :: chh        (:)   ! ?
+     real(kind=r8), allocatable :: evbs       (:)   ! direct soil evaporation (m/s)
+     real(kind=r8), allocatable :: evcw       (:)   ! canopy water evaporation (m/s)
+     real(kind=r8), allocatable :: sbsno      (:)   ! sublimation/deposit from snopack (m/s)
+     real(kind=r8), allocatable :: pah        (:)   ! precipitation advected heat - total (W/m2)
+     real(kind=r8), allocatable :: ecan       (:)   ! canopy evaporation (mm/s)
+     real(kind=r8), allocatable :: etran      (:)   ! transpiration (mm/s)
+     real(kind=r8), allocatable :: edir       (:)   ! soil surface evaporation (mm/s)
+     real(kind=r8), allocatable :: snowc      (:)   ! fractional snow cover 
+     real(kind=r8), allocatable :: stm        (:)   ! total soil column moisture content (m)
+     real(kind=r8), allocatable :: snohf      (:)   ! snow/freezing-rain latent heat flux (W/m^2)
+     real(kind=r8), allocatable :: smcwlt2    (:)   ! dry soil moisture threshold
+     real(kind=r8), allocatable :: smcref2    (:)   ! soil moisture threshold
+     real(kind=r8), allocatable :: wet1       (:)   ! normalized soil wetness
+     real(kind=r8), allocatable :: t2mmp      (:)   ! combined T2m from tiles
+     real(kind=r8), allocatable :: q2mp       (:)   ! combined q2m from tiles
+     real(kind=r8), allocatable :: zvfun      (:)   ! some function of vegetation used for gfs stability
+     real(kind=r8), allocatable :: ztmax      (:)   ! bounded surface roughness length for heat over land
+     real(kind=r8), allocatable :: rho        (:)   ! air density
+     real(kind=r8), allocatable :: pores      (:)   ! max soil moisture for a given soil type for land surface model
+     real(kind=r8), allocatable :: resid      (:)   ! min soil moisture for a given soil type for land surface model
      ! variables in dimensions im and km
-     real(kind=kp), allocatable :: smc      (:,:)   ! total soil moisture content (fractional)
-     real(kind=kp), allocatable :: stc      (:,:)   ! soil temp (K)
-     real(kind=kp), allocatable :: slc      (:,:)   ! liquid soil moisture (?)
-     real(kind=kp), allocatable :: tsnoxy   (:,:)   ! snow temperature (K)
-     real(kind=kp), allocatable :: zsnsoxy  (:,:)   ! snow layer depth (m)
-     real(kind=kp), allocatable :: snicexy  (:,:)   ! snow layer ice (mm)
-     real(kind=kp), allocatable :: snliqxy  (:,:)   ! snow layer liquid water (mm)
-     real(kind=kp), allocatable :: smoiseq  (:,:)   ! eq volumetric soil moisture (m^3/m^3)
+     real(kind=r8), allocatable :: smc      (:,:)   ! total soil moisture content (fractional)
+     real(kind=r8), allocatable :: stc      (:,:)   ! soil temp (K)
+     real(kind=r8), allocatable :: slc      (:,:)   ! liquid soil moisture (?)
+     real(kind=r8), allocatable :: tsnoxy   (:,:)   ! snow temperature (K)
+     real(kind=r8), allocatable :: zsnsoxy  (:,:)   ! snow layer depth (m)
+     real(kind=r8), allocatable :: snicexy  (:,:)   ! snow layer ice (mm)
+     real(kind=r8), allocatable :: snliqxy  (:,:)   ! snow layer liquid water (mm)
+     real(kind=r8), allocatable :: smoiseq  (:,:)   ! eq volumetric soil moisture (m^3/m^3)
   end type model_type
 
   ! data type for domain related variables
@@ -218,35 +219,21 @@ module lnd_comp_types
      type(ESMF_Mesh)            :: mesh           ! ESMF mesh object
      type(ESMF_RouteHandle)     :: rh_grid2mesh   ! ESMF RouteHandle for redist from grid to mesh
      type(ESMF_RouteHandle)     :: rh_mesh2grid_r8! ESMF RouteHandle for redist from mesh to grid
-     type(domain2d)             :: mosaic_domain  ! domain object created by FMS
      logical                    :: global         ! flag for global vs. regional domain
      integer                    :: ntiles         ! number of tiles in case of having CS grid
-     integer                    :: ncontacts      ! number of contacts in case of having CS grid
-     integer      , allocatable :: tile1      (:) ! list of tile numbers in tile 1 of each contact
-     integer      , allocatable :: tile2      (:) ! list of tile numbers in tile 2 of each contact
-     integer      , allocatable :: istart1    (:) ! list of starting i-index in tile 1 of each contact
-     integer      , allocatable :: iend1      (:) ! list of ending i-index in tile 1 of each contact
-     integer      , allocatable :: jstart1    (:) ! list of starting j-index in tile 1 of each contact
-     integer      , allocatable :: jend1      (:) ! list of ending j-index in tile 1 of each contact
-     integer      , allocatable :: istart2    (:) ! list of starting i-index in tile 2 of each contact
-     integer      , allocatable :: iend2      (:) ! list of ending i-index in tile 2 of each contact
-     integer      , allocatable :: jstart2    (:) ! list of starting j-index in tile 2 of each contact
-     integer      , allocatable :: jend2      (:) ! list of ending j-index in tile 2 of each contact
-     integer                    :: ni             ! global size in i direction, only for mesh as input
-     integer                    :: nj             ! global size in j direction, only for mesh as input
-     integer      , allocatable :: nit        (:) ! size of tile in i direction
-     integer      , allocatable :: njt        (:) ! size of tile in j direction
-     real(kind=kp), allocatable :: latt     (:,:) ! mosaic latitude
-     real(kind=kp), allocatable :: lont     (:,:) ! mosaic longitude
+     integer                    :: ni             ! global size in i direction
+     integer                    :: nj             ! global size in j direction
+     real(kind=r8), allocatable :: latt     (:,:) ! mosaic latitude
+     real(kind=r8), allocatable :: lont     (:,:) ! mosaic longitude
      integer                    :: begl           ! starting index of size
      integer                    :: endl           ! ending index of size 
      integer                    :: layout     (2) ! layout for domain decomposition
-     real(kind=kp), allocatable :: hgt        (:) ! topography
+     real(kind=r8), allocatable :: hgt        (:) ! topography
      integer      , allocatable :: mask       (:) ! mesh land mask: 1 = land, 0 = ocean
-     real(kind=kp), allocatable :: frac       (:) ! mesh fractional land
-     real(kind=kp), allocatable :: lats       (:) ! mesh latitude
-     real(kind=kp), allocatable :: lons       (:) ! mesh longitude
-     real(kind=kp), allocatable :: garea      (:) ! mesh cell area
+     real(kind=r8), allocatable :: frac       (:) ! mesh fractional land
+     real(kind=r8), allocatable :: lats       (:) ! mesh latitude
+     real(kind=r8), allocatable :: lons       (:) ! mesh longitude
+     real(kind=r8), allocatable :: garea      (:) ! mesh cell area
   end type domain_type
 
   ! data type for namelist options
@@ -260,9 +247,9 @@ module lnd_comp_types
      character*255              :: ic_type                           ! source of initial conditions, custom vs. sfc
      logical                    :: restart_run                       ! flag for restart run
      integer                    :: num_soil_levels                   ! number of soil levels
-     real(kind=kp)              :: forcing_height                    ! forcing height (m)
-     real(kind=kp), allocatable :: soil_level_thickness(:)           ! soil level thicknesses (m)
-     real(kind=kp), allocatable :: soil_level_nodes(:)               ! soil level centroids from surface (m)
+     real(kind=r8)              :: forcing_height                    ! forcing height (m)
+     real(kind=r8), allocatable :: soil_level_thickness(:)           ! soil level thicknesses (m)
+     real(kind=r8), allocatable :: soil_level_nodes(:)               ! soil level centroids from surface (m)
      integer                    :: dynamic_vegetation_option         ! choice for dynamic vegetation option
      integer                    :: canopy_stomatal_resistance_option ! choice for canopy stomatal resistance option
      integer                    :: soil_wetness_option               ! 
@@ -283,8 +270,8 @@ module lnd_comp_types
      logical                    :: calc_snet                         ! enable/disable calculating net shortwave rad. internally
      integer                    :: soil_type_category                ! soil type (category)
      integer                    :: veg_type_category                 ! vegetation type (category)
-     real(kind=kp)              :: initial_emiss                     ! initial value for the emissivity (constant in everywhere)
-     real(kind=kp)              :: initial_albedo                    ! initial value for the monthly albedo (constant in everywhere)
+     real(kind=r8)              :: initial_emiss                     ! initial value for the emissivity (constant in everywhere)
+     real(kind=r8)              :: initial_albedo                    ! initial value for the monthly albedo (constant in everywhere)
   end type namelist_type
 
   type noahmp_type
@@ -303,6 +290,22 @@ module lnd_comp_types
      procedure, public  :: InitializeStates
 
   end type noahmp_type
+
+  type field_type
+     real(r4), pointer  :: ptr1r4(:)             ! data pointer for 1d r4
+     real(r8), pointer  :: ptr1r8(:)             ! data pointer for 1d r8
+     integer , pointer  :: ptr1i4(:)             ! data pointer for 1d i4
+     real(r4), pointer  :: ptr2r4(:,:)           ! data pointer for 2d r4
+     real(r8), pointer  :: ptr2r8(:,:)           ! data pointer for 2d r8
+     integer , pointer  :: ptr2i4(:,:)           ! data pointer for 2d i4
+     character(len=128) :: short_name = ""       ! variable short name
+     character(len=128) :: units = ""            ! variable unit
+     character(len=128) :: long_name = ""        ! variable long name
+     character(len=128) :: zaxis = ""            ! name of z-axis
+     integer            :: nlev                  ! number of layers in z-axis
+     integer            :: nrec                  ! number of record in file (time axis)
+     !character(len=128) :: input_type = ""       ! input data type
+  end type field_type
 
   type fld_list_type
      character(len=128) :: stdname
@@ -497,164 +500,164 @@ contains
 
     class(noahmp_type) :: this
 
-    this%init%snow_water_equivalent = 0.0_kp
-    this%init%snow_depth            = 0.0_kp
-    this%init%canopy_water          = 0.0_kp
-    this%init%skin_temperature      = 0.0_kp
-    this%init%soil_temperature      = 0.0_kp
-    this%init%soil_moisture         = 0.0_kp
-    this%init%soil_liquid           = 0.0_kp
-    this%init%surface_roughness     = 0.0_kp
-    this%init%friction_velocity     = 0.0_kp
+    this%init%snow_water_equivalent = 0.0_r8
+    this%init%snow_depth            = 0.0_r8
+    this%init%canopy_water          = 0.0_r8
+    this%init%skin_temperature      = 0.0_r8
+    this%init%soil_temperature      = 0.0_r8
+    this%init%soil_moisture         = 0.0_r8
+    this%init%soil_liquid           = 0.0_r8
+    this%init%surface_roughness     = 0.0_r8
+    this%init%friction_velocity     = 0.0_r8
 
-    this%forc%t1      = 0.0_kp
-    this%forc%q1      = 0.0_kp
-    this%forc%u1      = 0.0_kp
-    this%forc%v1      = 0.0_kp
-    this%forc%ps      = 0.0_kp
-    this%forc%pbot    = 0.0_kp
-    this%forc%tskin   = 0.0_kp
-    this%forc%dlwflx  = 0.0_kp
-    this%forc%dswsfc  = 0.0_kp
-    this%forc%snet    = 0.0_kp
-    this%forc%wind    = 0.0_kp
-    this%forc%tprcp   = 0.0_kp
-    this%forc%tprcpc  = 0.0_kp
-    this%forc%tprcpl  = 0.0_kp
-    this%forc%snow    = 0.0_kp
-    this%forc%snowc   = 0.0_kp
-    this%forc%snowl   = 0.0_kp
-    this%forc%vegfrac = 0.0_kp
-    this%forc%hgt     = 0.0_kp
-    this%forc%prslk1  = 0.0_kp
-    this%forc%ustar1  = 0.0_kp
-    this%forc%zorl    = 0.0_kp
+    this%forc%t1      = 0.0_r8
+    this%forc%q1      = 0.0_r8
+    this%forc%u1      = 0.0_r8
+    this%forc%v1      = 0.0_r8
+    this%forc%ps      = 0.0_r8
+    this%forc%pbot    = 0.0_r8
+    this%forc%tskin   = 0.0_r8
+    this%forc%dlwflx  = 0.0_r8
+    this%forc%dswsfc  = 0.0_r8
+    this%forc%snet    = 0.0_r8
+    this%forc%wind    = 0.0_r8
+    this%forc%tprcp   = 0.0_r8
+    this%forc%tprcpc  = 0.0_r8
+    this%forc%tprcpl  = 0.0_r8
+    this%forc%snow    = 0.0_r8
+    this%forc%snowc   = 0.0_r8
+    this%forc%snowl   = 0.0_r8
+    this%forc%vegfrac = 0.0_r8
+    this%forc%hgt     = 0.0_r8
+    this%forc%prslk1  = 0.0_r8
+    this%forc%ustar1  = 0.0_r8
+    this%forc%zorl    = 0.0_r8
 
     this%model%iyrlen      = 0
-    this%model%julian      = 0.0_kp
-    this%model%u1          = 0.0_kp
-    this%model%v1          = 0.0_kp
+    this%model%julian      = 0.0_r8
+    this%model%u1          = 0.0_r8
+    this%model%v1          = 0.0_r8
     this%model%soiltyp     = 0
     this%model%vegtype     = 0
-    this%model%sigmaf      = 0.0_kp
-    this%model%emiss       = 0.0_kp
-    this%model%albdvis     = 0.0_kp
-    this%model%albdnir     = 0.0_kp
-    this%model%albivis     = 0.0_kp
-    this%model%albinir     = 0.0_kp
-    this%model%snet        = 0.0_kp
-    this%model%tg3         = 0.0_kp
-    this%model%cm          = 0.0_kp
-    this%model%ch          = 0.0_kp
-    this%model%prsl1       = 0.0_kp
-    this%model%prslki      = 0.0_kp
-    this%model%prslk1      = 0.0_kp
-    this%model%prsik1      = 0.0_kp
-    this%model%zf          = 0.0_kp
-    this%model%pblh        = 0.0_kp
+    this%model%sigmaf      = 0.0_r8
+    this%model%emiss       = 0.0_r8
+    this%model%albdvis     = 0.0_r8
+    this%model%albdnir     = 0.0_r8
+    this%model%albivis     = 0.0_r8
+    this%model%albinir     = 0.0_r8
+    this%model%snet        = 0.0_r8
+    this%model%tg3         = 0.0_r8
+    this%model%cm          = 0.0_r8
+    this%model%ch          = 0.0_r8
+    this%model%prsl1       = 0.0_r8
+    this%model%prslki      = 0.0_r8
+    this%model%prslk1      = 0.0_r8
+    this%model%prsik1      = 0.0_r8
+    this%model%zf          = 0.0_r8
+    this%model%pblh        = 0.0_r8
     this%model%dry         = .false.
     this%model%slopetyp    = 0
-    this%model%alb_monthly = 0.0_kp
-    this%model%gvf_monthly = 0.0_kp
-    this%model%shdmin      = 0.0_kp
-    this%model%shdmax      = 0.0_kp
-    this%model%snoalb      = 0.0_kp
-    this%model%sfalb       = 0.0_kp
+    this%model%alb_monthly = 0.0_r8
+    this%model%gvf_monthly = 0.0_r8
+    this%model%shdmin      = 0.0_r8
+    this%model%shdmax      = 0.0_r8
+    this%model%snoalb      = 0.0_r8
+    this%model%sfalb       = 0.0_r8
     this%model%flag_iter   = .false.
-    this%model%xlatin      = 0.0_kp
-    this%model%xcoszin     = 0.0_kp
-    this%model%rainn_mp    = 0.0_kp
-    this%model%rainc_mp    = 0.0_kp
-    this%model%snow_mp     = 0.0_kp
-    this%model%graupel_mp  = 0.0_kp
-    this%model%ice_mp      = 0.0_kp
-    this%model%tprcp       = 0.0_kp
-    this%model%weasd       = 0.0_kp
-    this%model%snwdph      = 0.0_kp
-    this%model%tskin       = 0.0_kp
-    this%model%srflag      = 0.0_kp
-    this%model%canopy      = 0.0_kp
-    this%model%trans       = 0.0_kp
-    this%model%tsurf       = 0.0_kp
-    this%model%zorl        = 0.0_kp
-    this%model%rb1         = 0.0_kp  
-    this%model%fm1         = 0.0_kp   
-    this%model%fh1         = 0.0_kp
-    this%model%ustar1      = 0.0_kp
-    this%model%stress1     = 0.0_kp
-    this%model%fm101       = 0.0_kp
-    this%model%fh21        = 0.0_kp
-    this%model%rmol1       = 0.0_kp
-    this%model%flhc1       = 0.0_kp
-    this%model%flqc1       = 0.0_kp
-    this%model%snowxy      = 0.0_kp
-    this%model%tvxy        = 0.0_kp
-    this%model%tgxy        = 0.0_kp
-    this%model%canicexy    = 0.0_kp
-    this%model%canliqxy    = 0.0_kp
-    this%model%eahxy       = 0.0_kp
-    this%model%tahxy       = 0.0_kp
-    this%model%cmxy        = 0.0_kp
-    this%model%chxy        = 0.0_kp
-    this%model%fwetxy      = 0.0_kp
-    this%model%sneqvoxy    = 0.0_kp
-    this%model%alboldxy    = 0.0_kp
-    this%model%qsnowxy     = 0.0_kp
-    this%model%wslakexy    = 0.0_kp
-    this%model%zwtxy       = 0.0_kp
-    this%model%waxy        = 0.0_kp
-    this%model%wtxy        = 0.0_kp
-    this%model%lfmassxy    = 0.0_kp
-    this%model%rtmassxy    = 0.0_kp
-    this%model%stmassxy    = 0.0_kp
-    this%model%woodxy      = 0.0_kp
-    this%model%stblcpxy    = 0.0_kp
-    this%model%fastcpxy    = 0.0_kp
-    this%model%xlaixy      = 0.0_kp
-    this%model%xsaixy      = 0.0_kp
-    this%model%taussxy     = 0.0_kp
-    this%model%smoiseq     = 0.0_kp
-    this%model%smcwtdxy    = 0.0_kp
-    this%model%deeprechxy  = 0.0_kp
-    this%model%rechxy      = 0.0_kp
-    this%model%sncovr1     = 0.0_kp
-    this%model%qsurf       = 0.0_kp
-    this%model%gflux       = 0.0_kp
-    this%model%drain       = 0.0_kp
-    this%model%evap        = 0.0_kp
-    this%model%hflx        = 0.0_kp
-    this%model%ep          = 0.0_kp
-    this%model%runoff      = 0.0_kp
-    this%model%cmm         = 0.0_kp
-    this%model%chh         = 0.0_kp
-    this%model%evbs        = 0.0_kp
-    this%model%evcw        = 0.0_kp
-    this%model%sbsno       = 0.0_kp
-    this%model%pah         = 0.0_kp
-    this%model%ecan        = 0.0_kp
-    this%model%etran       = 0.0_kp
-    this%model%edir        = 0.0_kp
-    this%model%snowc       = 0.0_kp
-    this%model%stm         = 0.0_kp
-    this%model%snohf       = 0.0_kp
-    this%model%smcwlt2     = 0.0_kp
-    this%model%smcref2     = 0.0_kp
-    this%model%wet1        = 0.0_kp
-    this%model%t2mmp       = 0.0_kp
-    this%model%q2mp        = 0.0_kp
-    this%model%zvfun       = 0.0_kp
-    this%model%ztmax       = 0.0_kp
-    this%model%rho         = 0.0_kp
-    this%model%pores       = 0.0_kp
-    this%model%resid       = 0.0_kp
-    this%model%smc         = 0.0_kp
-    this%model%stc         = 0.0_kp
-    this%model%slc         = 0.0_kp
-    this%model%smoiseq     = 0.0_kp
-    this%model%tsnoxy      = 0.0_kp
-    this%model%zsnsoxy     = 0.0_kp
-    this%model%snicexy     = 0.0_kp
-    this%model%snliqxy     = 0.0_kp
+    this%model%xlatin      = 0.0_r8
+    this%model%xcoszin     = 0.0_r8
+    this%model%rainn_mp    = 0.0_r8
+    this%model%rainc_mp    = 0.0_r8
+    this%model%snow_mp     = 0.0_r8
+    this%model%graupel_mp  = 0.0_r8
+    this%model%ice_mp      = 0.0_r8
+    this%model%tprcp       = 0.0_r8
+    this%model%weasd       = 0.0_r8
+    this%model%snwdph      = 0.0_r8
+    this%model%tskin       = 0.0_r8
+    this%model%srflag      = 0.0_r8
+    this%model%canopy      = 0.0_r8
+    this%model%trans       = 0.0_r8
+    this%model%tsurf       = 0.0_r8
+    this%model%zorl        = 0.0_r8
+    this%model%rb1         = 0.0_r8  
+    this%model%fm1         = 0.0_r8   
+    this%model%fh1         = 0.0_r8
+    this%model%ustar1      = 0.0_r8
+    this%model%stress1     = 0.0_r8
+    this%model%fm101       = 0.0_r8
+    this%model%fh21        = 0.0_r8
+    this%model%rmol1       = 0.0_r8
+    this%model%flhc1       = 0.0_r8
+    this%model%flqc1       = 0.0_r8
+    this%model%snowxy      = 0.0_r8
+    this%model%tvxy        = 0.0_r8
+    this%model%tgxy        = 0.0_r8
+    this%model%canicexy    = 0.0_r8
+    this%model%canliqxy    = 0.0_r8
+    this%model%eahxy       = 0.0_r8
+    this%model%tahxy       = 0.0_r8
+    this%model%cmxy        = 0.0_r8
+    this%model%chxy        = 0.0_r8
+    this%model%fwetxy      = 0.0_r8
+    this%model%sneqvoxy    = 0.0_r8
+    this%model%alboldxy    = 0.0_r8
+    this%model%qsnowxy     = 0.0_r8
+    this%model%wslakexy    = 0.0_r8
+    this%model%zwtxy       = 0.0_r8
+    this%model%waxy        = 0.0_r8
+    this%model%wtxy        = 0.0_r8
+    this%model%lfmassxy    = 0.0_r8
+    this%model%rtmassxy    = 0.0_r8
+    this%model%stmassxy    = 0.0_r8
+    this%model%woodxy      = 0.0_r8
+    this%model%stblcpxy    = 0.0_r8
+    this%model%fastcpxy    = 0.0_r8
+    this%model%xlaixy      = 0.0_r8
+    this%model%xsaixy      = 0.0_r8
+    this%model%taussxy     = 0.0_r8
+    this%model%smoiseq     = 0.0_r8
+    this%model%smcwtdxy    = 0.0_r8
+    this%model%deeprechxy  = 0.0_r8
+    this%model%rechxy      = 0.0_r8
+    this%model%sncovr1     = 0.0_r8
+    this%model%qsurf       = 0.0_r8
+    this%model%gflux       = 0.0_r8
+    this%model%drain       = 0.0_r8
+    this%model%evap        = 0.0_r8
+    this%model%hflx        = 0.0_r8
+    this%model%ep          = 0.0_r8
+    this%model%runoff      = 0.0_r8
+    this%model%cmm         = 0.0_r8
+    this%model%chh         = 0.0_r8
+    this%model%evbs        = 0.0_r8
+    this%model%evcw        = 0.0_r8
+    this%model%sbsno       = 0.0_r8
+    this%model%pah         = 0.0_r8
+    this%model%ecan        = 0.0_r8
+    this%model%etran       = 0.0_r8
+    this%model%edir        = 0.0_r8
+    this%model%snowc       = 0.0_r8
+    this%model%stm         = 0.0_r8
+    this%model%snohf       = 0.0_r8
+    this%model%smcwlt2     = 0.0_r8
+    this%model%smcref2     = 0.0_r8
+    this%model%wet1        = 0.0_r8
+    this%model%t2mmp       = 0.0_r8
+    this%model%q2mp        = 0.0_r8
+    this%model%zvfun       = 0.0_r8
+    this%model%ztmax       = 0.0_r8
+    this%model%rho         = 0.0_r8
+    this%model%pores       = 0.0_r8
+    this%model%resid       = 0.0_r8
+    this%model%smc         = 0.0_r8
+    this%model%stc         = 0.0_r8
+    this%model%slc         = 0.0_r8
+    this%model%smoiseq     = 0.0_r8
+    this%model%tsnoxy      = 0.0_r8
+    this%model%zsnsoxy     = 0.0_r8
+    this%model%snicexy     = 0.0_r8
+    this%model%snliqxy     = 0.0_r8
 
   end subroutine InitializeDefault
 

@@ -52,8 +52,6 @@ else()
     set(CMAKE_Fortran_LINK_FLAGS "${ESMF_F90LINKOPTS} ${ESMF_F90LINKPATHS} ${ESMF_F90LINKRPATHS} ${ESMF_F90ESMFLINKLIBS}")
   endif()
 endif()
-find_package(FMS REQUIRED COMPONENTS R8)
-add_library(fms ALIAS FMS::fms_r8)
 
 #------------------------------------------------------------------------------
 # Modification for compiler flags
@@ -85,19 +83,11 @@ target_link_libraries(noahmp PUBLIC esmf fms)
 
 #------------------------------------------------------------------------------
 # CMake export for ESMX driver
-file(WRITE  ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "add_library(FMS::fms_r8 STATIC IMPORTED)\n")
-file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "set_target_properties(FMS::fms_r8 PROPERTIES\n")
-file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  IMPORTED_LOCATION \"${FMS_R8_LIBRARIES}\"\n") 
-file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  INTERFACE_INCLUDE_DIRECTORIES \"${FMS_INSTALL_PREFIX}/include\"\n") 
-file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  INTERFACE_LINK_DIRECTORIES \"${FMS_INSTALL_PREFIX}/lib\"\n") 
-file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake ")\n\n")
-
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "add_library(noahmp STATIC IMPORTED)\n")
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "set_target_properties(noahmp PROPERTIES\n")
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  IMPORTED_LOCATION \"${CMAKE_INSTALL_PREFIX}/lib/libnoahmp.a\"\n")
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  INTERFACE_INCLUDE_DIRECTORIES \"${CMAKE_INSTALL_PREFIX}/include\"\n")
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  INTERFACE_LINK_DIRECTORIES  \"${CMAKE_INSTALL_PREFIX}/lib\"\n")
-file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  INTERFACE_LINK_LIBRARIES  \"noahmp;FMS::fms_r8\"\n")
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake ")\n")
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "target_link_libraries(esmx_driver PUBLIC noahmp)\n")
 

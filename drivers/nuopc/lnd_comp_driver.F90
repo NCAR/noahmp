@@ -19,7 +19,7 @@ module lnd_comp_driver
   use lnd_comp_types  , only: fldsToLnd, fldsToLnd_num
   use lnd_comp_shr    , only: chkerr
   use lnd_comp_io     , only: read_static, read_initial, read_restart
-  use lnd_comp_io     , only: write_mosaic_output
+  use lnd_comp_io     , only: write_tiled_file
   use lnd_comp_import_export, only: check_for_connected
 
   use sfc_diff        , only: stability
@@ -42,7 +42,7 @@ module lnd_comp_driver
   implicit none
   private
 
-  public :: drv_init, drv_run
+  public :: drv_init, drv_run, drv_finalize
 
   !--------------------------------------------------------------------------
   ! Private module data
@@ -161,7 +161,7 @@ contains
 
     ! local variables
     logical, save               :: first_time = .true.
-    integer                     :: i, is, step
+    integer                     :: i, is, step, localPet
     integer                     :: year, month, day, hour, minute, second
     real(r8)                    :: now_time
     character(len=cl)           :: filename
@@ -191,6 +191,13 @@ contains
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
+
+    !----------------------
+    ! Query component
+    !----------------------
+
+    call ESMF_GridCompGet(gcomp, localPet=localPet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------
     ! Query clock and set timestep, current time etc. 
@@ -561,10 +568,10 @@ contains
     !----------------------
 
     if (first_time) then
-       write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5)') &
+       write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5,a)') &
           trim(noahmp%nmlist%case_name)//'.lnd.ini.', &
-          year, '-', month, '-', day, '-', hour*60*60+minute*60+second
-       call write_mosaic_output(filename, noahmp, now_time, rc)
+          year, '-', month, '-', day, '-', hour*60*60+minute*60+second, '.tile#.nc'
+       call write_tiled_file(filename, noahmp, now_time, localPet, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        first_time = .false.
     end if
@@ -653,10 +660,10 @@ contains
     ! return date to create file name
     ! check the output frequency before calling write method
     if (mod(int(now_time), noahmp%nmlist%output_freq) == 0) then
-       write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5)') &
+       write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5,a)') &
           trim(noahmp%nmlist%case_name)//'.lnd.out.', &
-          year, '-', month, '-', day, '-', hour*60*60+minute*60+second 
-       call write_mosaic_output(filename, noahmp, now_time, rc)
+          year, '-', month, '-', day, '-', hour*60*60+minute*60+second, '.tile#.nc'
+       call write_tiled_file(filename, noahmp, now_time, localPet, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
 
@@ -684,6 +691,25 @@ contains
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
   end subroutine drv_run
+
+  !===============================================================================
+  subroutine drv_finalize(gcomp, noahmp, rc)
+
+    ! input/output variables
+    type(ESMF_GridComp), intent(in)    :: gcomp
+    type(noahmp_type)  , intent(inout) :: noahmp
+    integer            , intent(out)   :: rc
+
+    ! local variables
+    character(len=*),parameter  :: subname = trim(modName)//':(drv_finalize) '
+    !-------------------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
+
+    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
+
+  end subroutine drv_finalize
 
   !===============================================================================
   subroutine interpolate_monthly(currTime, vector_length, monthly_var, interp_var, rc)

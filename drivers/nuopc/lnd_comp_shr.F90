@@ -23,7 +23,8 @@ module lnd_comp_shr
   use ESMF,  only : ESMF_KIND_I4, ESMF_GRIDITEM_MASK, ESMF_STAGGERLOC_CENTER
   use ESMF,  only : ESMF_STAGGERLOC_CENTER, ESMF_STAGGERLOC_CORNER
   use ESMF,  only : ESMF_FieldWriteVTK, ESMF_FieldWrite, ESMF_Decomp_Flag, ESMF_DECOMP_SYMMEDGEMAX
-  use ESMF,  only : ESMF_INDEX_GLOBAL, ESMF_KIND_R4, ESMF_Field, ESMF_FieldGet, ESMF_ArraySpec, ESMF_ArraySpecSet, ESMF_TYPEKIND_R4
+  use ESMF,  only : ESMF_INDEX_GLOBAL, ESMF_KIND_R4, ESMF_Field, ESMF_FieldGet
+  use ESMF,  only : ESMF_LogFoundNetCDFError, ESMF_ArraySpec, ESMF_ArraySpecSet, ESMF_TYPEKIND_R4
   use ESMF,  only : ESMF_RouteHandle, ESMF_FieldRegridStore, ESMF_FieldRedist
   use NUOPC, only : NUOPC_CompAttributeGet
 
@@ -36,6 +37,7 @@ module lnd_comp_shr
 
   public :: alarm_init
   public :: chkerr 
+  public :: chkerrnc
   public :: read_namelist
   public :: shr_string_listGetName
   public :: shr_string_listGetNum
@@ -96,6 +98,22 @@ contains
        ChkErr = .true.
     endif
   end function ChkErr
+
+  !===============================================================================
+  logical function ChkErrNc(rc, line, file)
+
+    integer, intent(in) :: rc
+    integer, intent(in) :: line
+    character(len=*), intent(in) :: file
+
+    integer :: lrc
+
+    ChkErrNc = .false.
+    lrc = rc
+    if (ESMF_LogFoundNetCDFError(lrc, msg=ESMF_LOGERR_PASSTHRU, line=line, file=file)) then
+       ChkErrNc = .true.
+    endif
+  end function ChkErrNc
 
   !===============================================================================
   subroutine alarm_init( clock, alarm, option, &
