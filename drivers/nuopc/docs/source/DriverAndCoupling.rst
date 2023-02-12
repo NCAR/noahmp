@@ -27,7 +27,7 @@ Within the **drivers/nuopc/** directory, the following files are found,
    * - lnd_comp_import_export.F90
      - Includes subroutines to define import and export states as well as diagnostic code to check the fields in states 
    * - lnd_comp_io.F90
-     - Includes subroutines to read in static information and initial conditions from tiled files and writing model output in tiled format. The I/O routines currently using `FMS <https://github.com/NOAA-GFDL/FMS>` library to access multi-tile files but this will be replaced with ESMF calls in the near future and FMS dependency from NUOPC "cap" will be removed.
+     - Includes subroutines to read in static information and initial conditions from tiled files and writing model output in tiled format. 
    * - lnd_comp_kind.F90
      - Stores parameters that define used kind types etc.
    * - lnd_comp_nuopc.F90
@@ -56,7 +56,7 @@ The NUOPC "cap" uses set of namelist options provided as ESMF Config file format
    * - ic_type
      - Indicates the source of the initial conditions. Two options are supported 'custom' (i.e. C96.initial.tile[1-6].nc) and 'sfc' (default, sfc_data.tile[1-6].nc).
    * - layout
-     - Defines decompositions in each direction on each tile (i.e. 3:8 for C96). This needs to be consistent with resolution. If this is missing, then the NUOPC "cap" tries to calculate the tiles using FMS's `mpp_define_layout()` call.
+     - Defines decompositions in each direction on each tile (i.e. 3:8 for C96). This needs to be consistent with resolution.
    * - num_soil_levels
      - Number of soil levels used by NoahMP Land Model (i.e. 4)
    * - forcing_height
@@ -125,13 +125,13 @@ The current version of the NUOPC "cap" is able to create ESMF grid by reading mo
 Initialization
 --------------
 
-During the `InitializeAdvertise` phase, call is made to `fms_init()` to use `Flexible Modeling System (FMS) <https://www.gfdl.noaa.gov/fms/>`_ for reading and writing cubed-sphere tiled output. In this case, The MPI communicator is pulled in through the ESMF VM object and used by FMS. This phase also calls `advertise_fields()` to setup import and export states. The FMS initialization will be removed once the multi-tile I/O calls is supported by ESMF.
+During the `InitializeAdvertise` phase, call is made to `advertise_fields()` to setup import and export states.
 
 ---
 Run
 ---
 
-During the `ModelAdvance` phase, the `cap` updates the import state and calls NoahMP driver routine (`drv_run`, which is found in `drivers/nuopc/lnd_comp_driver.F90`) to run the model and updates the export state with the information calculated by model. The `drv_run` call mainly read in static information as well as initial conditions when it is first called and interpolate monthly data provided by the static information such as fractional coverage of green vegetation and surface albedo to the date of the simulation. Then calculates solar zenith angle based on the time information extracted from `cap` and calls `noahmpdrv_run` subroutine provided by the NoahMP. This phase also responsible to write NoahMP model output in tiled format by taking advantage of FMS and ESMF routines. 
+During the `ModelAdvance` phase, the `cap` updates the import state and calls NoahMP driver routine (`drv_run`, which is found in `drivers/nuopc/lnd_comp_driver.F90`) to run the model and updates the export state with the information calculated by model. The `drv_run` call mainly read in static information as well as initial conditions when it is first called and interpolate monthly data provided by the static information such as fractional coverage of green vegetation and surface albedo to the date of the simulation. Then calculates solar zenith angle based on the time information extracted from `cap` and calls `noahmpdrv_run` subroutine provided by the NoahMP. This phase also responsible to write NoahMP model output in tiled format by taking advantage of ESMF I/O multi-tile support. 
 
 .. note::
    : the restart capability is only tested with DATM+NOAHMP configuration.

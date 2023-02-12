@@ -170,7 +170,8 @@ The NoahMP model uses GitHub Actions (GHA), a GitHub-hosted continuous integrati
 
 The GHA-related ``yaml`` script is located in the ``.github/workflows/`` directory. ``datm_noahmp.yaml`` is the main workflow file that aim to run `datm+lnd` configuration. 
 
-* `.github/workflows/tests/` directory includes YAML files that will be used to create required configuration files for CDEPS and NoahMP and retrive required input files.
-* `.github/workflows/data/` directory includes additional the input files that are not found on the web to retrive.
-* `.github/workflows/scripts/` directory includes Python scripts that reads the information from YAML files to create configuration files and retrieve required input files.
-* `.github/workflows/spack/` directory includes `spack.yaml` file that is used to insatll dependencies through the use of `spack <https://spack.io>`_ package manager.
+* `.github/workflows/tests/` directory includes YAML file that will be used to create required configuration files for ESMX driver and retrive required input files.
+* `.github/workflows/tests/test_datm_lnd/` directory includes YAML files that will be used to create required configuration files for CDEPS and NoahMP and retrive required input files.
+* `.github/workflows/data/` directory includes additional the input files (initial conditions) that are not found on the web to retrive.
+
+The action uses composite action for isolated component testing that can be found in `esmf-org nuopc-comp-testing repository <https://github.com/esmf-org/nuopc-comp-testing>`_.
