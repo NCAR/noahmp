@@ -1321,6 +1321,7 @@ contains
     !----------------------
 
     do i = 1, size(flds)
+       print*, trim(flds(i)%short_name), size(flds), associated(flds(i)%ptr1r8)
        ! 2d/r8 field (x,y)
        if (associated(flds(i)%ptr1r8)) then
           ! set field type

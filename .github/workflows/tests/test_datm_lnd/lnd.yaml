@@ -85,6 +85,8 @@ config:
           values: INPUT/
         ic_type:
           values: custom
+        layout:
+          values: "1:1"
         num_soil_levels:
           values: 4
         forcing_height:

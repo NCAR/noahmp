@@ -15,7 +15,8 @@ components:
         protocol: wget
         end_point: 'https://raw.githubusercontent.com'
         files:
-          - /ufs-community/ufs-weather-model/develop/tests/parm/fd_nems.yaml
+          #- /ufs-community/ufs-weather-model/develop/tests/parm/fd_nems.yaml
+          - /uturuncoglu/ufs-weather-model/feature/noahmp/tests/parm/fd_nems.yaml
     config:
       nuopc:
         name: esmxRun.config

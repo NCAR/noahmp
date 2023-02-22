@@ -66,7 +66,7 @@ contains
     integer                          :: maxIndex(2)
     type(ESMF_Decomp_Flag)           :: decompflagPTile(2,6)
 
-    type(field_type), allocatable :: flds(:)
+    type(field_type)                 :: flds(1)
     integer                          :: numOwnedElements, spatialDim, rank
 
     integer                          :: tlb(1), tub(1), tc(1)
@@ -189,13 +189,11 @@ contains
     ! ---------------------
 
     ! read field
-    allocate(flds(1))
     filename = trim(noahmp%nmlist%input_dir)//'oro_data.tile#.nc'
     flds(1)%short_name = 'land_frac'
     flds(1)%ptr1r4 => tmpr4
     call read_tiled_file(noahmp, filename, flds, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    deallocate(flds)
 
     ! allocate data
     if (.not. allocated(noahmp%domain%frac)) then
@@ -210,13 +208,11 @@ contains
     ! ---------------------
 
     ! read field
-    allocate(flds(1))
     write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C',noahmp%domain%ni, '.vegetation_type.tile#.nc'
     flds(1)%short_name = 'vegetation_type'
     flds(1)%ptr1r4 => tmpr4
     call read_tiled_file(noahmp, filename, flds, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    deallocate(flds)
 
     ! allocate data
     if (.not. allocated(vegtype)) then
@@ -252,13 +248,11 @@ contains
     ! ---------------------
 
     ! read field
-    allocate(flds(1))
     filename = trim(noahmp%nmlist%input_dir)//'oro_data.tile#.nc'
     flds(1)%short_name = 'orog_raw'
     flds(1)%ptr1r4 => tmpr4
     call read_tiled_file(noahmp, filename, flds, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    deallocate(flds)
 
     ! allocate data
     if (.not. allocated(noahmp%domain%hgt)) then

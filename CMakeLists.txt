@@ -76,6 +76,9 @@ target_link_libraries(noahmp PUBLIC esmf fms)
 
 #------------------------------------------------------------------------------
 # CMake export for ESMX driver
+if(EXISTS "${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake")
+  file(REMOVE ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake)
+endif()
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "add_library(noahmp STATIC IMPORTED)\n")
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "set_target_properties(noahmp PROPERTIES\n")
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  IMPORTED_LOCATION \"${CMAKE_INSTALL_PREFIX}/lib/libnoahmp.a\"\n")

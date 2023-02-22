@@ -292,19 +292,18 @@ module lnd_comp_types
   end type noahmp_type
 
   type field_type
-     real(r4), pointer  :: ptr1r4(:)             ! data pointer for 1d r4
-     real(r8), pointer  :: ptr1r8(:)             ! data pointer for 1d r8
-     integer , pointer  :: ptr1i4(:)             ! data pointer for 1d i4
-     real(r4), pointer  :: ptr2r4(:,:)           ! data pointer for 2d r4
-     real(r8), pointer  :: ptr2r8(:,:)           ! data pointer for 2d r8
-     integer , pointer  :: ptr2i4(:,:)           ! data pointer for 2d i4
+     real(r4), pointer  :: ptr1r4(:) => null()   ! data pointer for 1d r4
+     real(r8), pointer  :: ptr1r8(:) => null()   ! data pointer for 1d r8
+     integer , pointer  :: ptr1i4(:) => null()   ! data pointer for 1d i4
+     real(r4), pointer  :: ptr2r4(:,:) => null() ! data pointer for 2d r4
+     real(r8), pointer  :: ptr2r8(:,:) => null() ! data pointer for 2d r8
+     integer , pointer  :: ptr2i4(:,:) => null() ! data pointer for 2d i4
      character(len=128) :: short_name = ""       ! variable short name
      character(len=128) :: units = ""            ! variable unit
      character(len=128) :: long_name = ""        ! variable long name
      character(len=128) :: zaxis = ""            ! name of z-axis
      integer            :: nlev                  ! number of layers in z-axis
      integer            :: nrec                  ! number of record in file (time axis)
-     !character(len=128) :: input_type = ""       ! input data type
   end type field_type
 
   type fld_list_type
