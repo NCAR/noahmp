@@ -24,6 +24,7 @@ module lnd_comp_io
   use ESMF          , only : ESMF_LocStream, ESMF_LocStreamCreate, ESMF_LocStreamDestroy
   use ESMF          , only : ESMF_GridCreate, ESMF_FILESTATUS_OLD, ESMF_TypeKind_Flag
   use ESMF          , only : ESMF_DistGrid, ESMF_DistGridCreate
+  use ESMF          , only : ESMF_VMBarrier, ESMF_VM
 
   use lnd_comp_types, only : noahmp_type
   use lnd_comp_types, only : field_type
@@ -1321,7 +1322,6 @@ contains
     !----------------------
 
     do i = 1, size(flds)
-       print*, trim(flds(i)%short_name), size(flds), associated(flds(i)%ptr1r8)
        ! 2d/r8 field (x,y)
        if (associated(flds(i)%ptr1r8)) then
           ! set field type
@@ -1596,7 +1596,7 @@ contains
   end subroutine read_tiled_file
 
   !===============================================================================
-  subroutine write_tiled_file(filename, noahmp, now_time, localPet, rh, rc)
+  subroutine write_tiled_file(filename, noahmp, now_time, vm, localPet, rh, rc)
     ! use statement
     use netcdf
 
@@ -1605,6 +1605,7 @@ contains
     type(noahmp_type) , target, intent(inout)    :: noahmp
     real(ESMF_KIND_R8), intent(in)               :: now_time
     integer           , intent(in)               :: localPet
+    type(ESMF_VM)     , intent(in)               :: vm
     type(ESMF_RouteHandle), optional, intent(in) :: rh
     integer           , optional, intent(inout)  :: rc
 
@@ -2207,6 +2208,9 @@ contains
     call ESMF_FieldBundleWrite(FBgrid, fileName=trim(filename), convention="NetCDF", purpose="NOAHMP", timeslice=1, overwrite=.true., status=ESMF_FILESTATUS_OLD, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+    call ESMF_VMBarrier(vm, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
     !----------------------
     ! Append coordinate variables (vertical and time)
     ! TODO: It uses serial netcdf library, once ESMF I/O layer extended to support
@@ -2220,7 +2224,6 @@ contains
           ! file name for tile
           sub_str_indx = index(trim(filename), "#", .true.)
           write(filename_tile, fmt='(a,i1,a)') trim(filename(:sub_str_indx-1)), i , trim(filename(sub_str_indx+1:))
-          print*, "filename_tile = ", trim(filename_tile)
        
           ! open file
           ncerr = nf90_open(trim(filename_tile), NF90_WRITE, ncid=ncid)

@@ -196,7 +196,7 @@ contains
     ! Query component
     !----------------------
 
-    call ESMF_GridCompGet(gcomp, localPet=localPet, rc=rc)
+    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------
@@ -571,7 +571,7 @@ contains
        write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5,a)') &
           trim(noahmp%nmlist%case_name)//'.lnd.ini.', &
           year, '-', month, '-', day, '-', hour*60*60+minute*60+second, '.tile#.nc'
-       call write_tiled_file(filename, noahmp, now_time, localPet, rc=rc)
+       call write_tiled_file(filename, noahmp, now_time, vm, localPet, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        first_time = .false.
     end if
@@ -663,7 +663,7 @@ contains
        write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5,a)') &
           trim(noahmp%nmlist%case_name)//'.lnd.out.', &
           year, '-', month, '-', day, '-', hour*60*60+minute*60+second, '.tile#.nc'
-       call write_tiled_file(filename, noahmp, now_time, localPet, rc=rc)
+       call write_tiled_file(filename, noahmp, now_time, vm, localPet, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
 
