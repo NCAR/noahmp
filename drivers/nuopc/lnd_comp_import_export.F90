@@ -77,6 +77,8 @@ contains
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_qref')
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_q')
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_gflx')
+    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_roff')
+    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_soff')
 
     ! Now advertise above export fields
     do n = 1,fldsFrLnd_num
@@ -387,6 +389,10 @@ contains
     call state_setexport_1d(exportState, 'Sl_q', noahmp%model%qsurf, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_setexport_1d(exportState, 'Fall_gflx', noahmp%model%gflux, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_setexport_1d(exportState, 'Fall_roff', noahmp%model%runoff, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_setexport_1d(exportState, 'Fall_soff', noahmp%model%drain, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
