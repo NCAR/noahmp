@@ -61,7 +61,6 @@ jobs:
             make install
           component_module_name: lnd_comp_nuopc
           data_component_name: datm
-          debug: true
           dependencies: |
             zlib@1.2.12
             esmf@8.5.0b10+parallelio~xerces
