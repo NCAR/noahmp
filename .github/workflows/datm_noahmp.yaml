@@ -20,7 +20,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         test: [test_datm_lnd]
-        esmf: [develop, esmf@8.5.0b10]
+        esmf: [develop, 8.5.0b10]
     
     env:
       # set token to access gh command
@@ -39,6 +39,7 @@ jobs:
         uses: esmf-org/nuopc-comp-testing@feature/v1.1
         with:
           app_install_dir: ${{ env.APP_INSTALL_DIR }}
+          artifacts_name: artifacts for ${{ matrix.test }} ${{ matrix.os }} esmf@${{ matrix.esmf }}
           artifacts_files: |
             ${{ env.APP_INSTALL_DIR }}/run/PET*
             ${{ env.APP_INSTALL_DIR }}/run/*.txt
