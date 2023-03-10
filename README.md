@@ -1,4 +1,3 @@
-# noahmp
-Noah-MP Community Repository
+# Noah-MP version 4.1 archive for NWM v2.1
 
-This is an old version of Noah-MP code consistent with the develop version of National Water Model version 2.1.
+This branch is to archive the Noah-MP version 4.1 for application in NWM v2.1.
