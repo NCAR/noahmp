@@ -5,6 +5,8 @@ Noah-MP is a widely-used state-of-the-art land surface model used in many resear
 
 This is the official Noah-MP land surface model unified repository for code downloading and contribution. Noah-MP is a community open-source model developed with the contributions from the entire scientific community. For development, maintenance, and release of the community Noah-MP GitHub code, please contact: Cenlin He (cenlinhe@ucar.edu) and Fei Chen (feichen@ucar.edu).
 
+Noah-MP model website: https://ral.ucar.edu/solutions/products/noah-multiparameterization-land-surface-model-noah-mp-lsm
+
 
 ## New: Release of Noah-MP version 5.0 (Refactored/Modernized version)
 
