@@ -1,5 +1,3 @@
-# noahmp
+# Noah-MP version 4.2 archive
 
-Noah-MP Community Repository
-
-This is an old code version consistent with the WRF version 4.2.
+This branch is to archive the Noah-MP version 4.2 consistent with the Noah-MP code released in WRF version 4.2.
