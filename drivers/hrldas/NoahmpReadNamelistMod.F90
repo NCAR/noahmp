@@ -143,7 +143,7 @@ contains
     !  Initialize namelist variables to dummy values, so we can tell
     !  if they have not been set properly.
     !---------------------------------------------------------------
-    if (.not. allocated(NoahmpIOsoil_thick_input)) allocate(NoahmpIO%soil_thick_input(1:MAX_SOIL_LEVELS))
+    if (.not. allocated(NoahmpIO%soil_thick_input)) allocate(NoahmpIO%soil_thick_input(1:MAX_SOIL_LEVELS))
     NoahmpIO%nsoil                   = undefined_int
     NoahmpIO%soil_thick_input        = undefined_real
     NoahmpIO%DTBL                    = undefined_real
