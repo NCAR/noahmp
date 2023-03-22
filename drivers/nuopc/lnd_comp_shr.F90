@@ -795,6 +795,33 @@ contains
     end if
     call ESMF_LogWrite(trim(subname)//' : output_freq = '//trim(cvalue), ESMF_LOGMSG_INFO)
 
+    ! output mode (high, low, debug)
+    call NUOPC_CompAttributeGet(gcomp, name='output_mode', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) noahmp%nmlist%output_mode
+       if (trim(noahmp%nmlist%output_mode) == 'all' .or. &
+           trim(noahmp%nmlist%output_mode) == 'mid' .or. &
+           trim(noahmp%nmlist%output_mode) == 'low') then
+       else
+         call ESMF_LogWrite(trim(subname)//": ERROR in output_mode. Only 'all', 'mid' and 'low' are allowed!", ESMF_LOGMSG_INFO)
+         rc = ESMF_FAILURE
+         return 
+       end if
+    else
+       noahmp%nmlist%output_mode = 'all'
+    end if
+
+    ! restart frequency
+    call NUOPC_CompAttributeGet(gcomp, name='restart_freq', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) noahmp%nmlist%restart_freq
+    else
+       noahmp%nmlist%restart_freq = 6
+    end if
+    call ESMF_LogWrite(trim(subname)//' : restart_freq = '//trim(cvalue), ESMF_LOGMSG_INFO)
+
     ! MYNN-EDMF
     call NUOPC_CompAttributeGet(gcomp, name='do_mynnedmf', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return

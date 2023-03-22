@@ -265,7 +265,9 @@ module lnd_comp_types
      integer                    :: surface_evap_resistance_option
      integer                    :: glacier_option
      integer                    :: surface_thermal_roughness_option
+     character*100              :: output_mode                       ! mods of output: all, low or mid 
      integer                    :: output_freq                       ! model output interval
+     integer                    :: restart_freq                      ! model restart interval
      logical                    :: has_export                        ! enable/disable export fields
      logical                    :: calc_snet                         ! enable/disable calculating net shortwave rad. internally
      integer                    :: soil_type_category                ! soil type (category)
@@ -298,6 +300,7 @@ module lnd_comp_types
      real(r4), pointer  :: ptr2r4(:,:) => null() ! data pointer for 2d r4
      real(r8), pointer  :: ptr2r8(:,:) => null() ! data pointer for 2d r8
      integer , pointer  :: ptr2i4(:,:) => null() ! data pointer for 2d i4
+     integer            :: id = -999             ! field id
      character(len=128) :: short_name = ""       ! variable short name
      character(len=128) :: units = ""            ! variable unit
      character(len=128) :: long_name = ""        ! variable long name
@@ -318,6 +321,10 @@ module lnd_comp_types
   integer                :: fldsFrLnd_num = 0
   type(fld_list_type)    :: fldsToLnd(fldsMax)
   type(fld_list_type)    :: fldsFrLnd(fldsMax)
+
+  integer, parameter     :: fldsMaxIO = 200
+  type(field_type)       :: histflds(fldsMaxIO)
+  type(field_type)       :: restflds(fldsMaxIO)
 
 contains
 

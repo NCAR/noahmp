@@ -17,9 +17,10 @@ module lnd_comp_driver
   use lnd_comp_kind   , only: cl => shr_kind_cl
   use lnd_comp_types  , only: noahmp_type
   use lnd_comp_types  , only: fldsToLnd, fldsToLnd_num
+  use lnd_comp_types  , only: histflds, restflds
   use lnd_comp_shr    , only: chkerr
   use lnd_comp_io     , only: read_static, read_initial, read_restart
-  use lnd_comp_io     , only: write_tiled_file
+  use lnd_comp_io     , only: write_tiled_file_init, write_tiled_file
   use lnd_comp_import_export, only: check_for_connected
 
   use sfc_diff        , only: stability
@@ -224,6 +225,14 @@ contains
     if (first_time) then
        ! use coupling time step and internal time step of model
        call ESMF_TimeIntervalGet(timeStep, s_r8=noahmp%static%delt, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       ! init data structure that will be used to write history files
+       call write_tiled_file_init(noahmp, 'hist', rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       ! init data structure that will be used to write restart files
+       call write_tiled_file_init(noahmp, 'rest', rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
 
@@ -571,7 +580,7 @@ contains
        write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5,a)') &
           trim(noahmp%nmlist%case_name)//'.lnd.ini.', &
           year, '-', month, '-', day, '-', hour*60*60+minute*60+second, '.tile#.nc'
-       call write_tiled_file(filename, noahmp, now_time, vm, localPet, rc=rc)
+       call write_tiled_file(filename, noahmp, histflds, now_time, vm, localPet, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        first_time = .false.
     end if
@@ -654,16 +663,24 @@ contains
     where(noahmp%forc%dswsfc>0.0_r8 .and. noahmp%model%sfalb<0.0_r8) noahmp%forc%dswsfc = 0.0_r8
 
     !----------------------
-    ! write output 
+    ! write output and restart files 
     !---------------------- 
 
-    ! return date to create file name
     ! check the output frequency before calling write method
     if (mod(int(now_time), noahmp%nmlist%output_freq) == 0) then
        write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5,a)') &
           trim(noahmp%nmlist%case_name)//'.lnd.out.', &
           year, '-', month, '-', day, '-', hour*60*60+minute*60+second, '.tile#.nc'
-       call write_tiled_file(filename, noahmp, now_time, vm, localPet, rc=rc)
+       call write_tiled_file(filename, noahmp, histflds, now_time, vm, localPet, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
+
+    ! check the restart frequency before calling write method
+    if (mod(int(now_time), noahmp%nmlist%restart_freq) == 0) then
+       write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5,a)') &
+          trim(noahmp%nmlist%case_name)//'.lnd.rst.', &
+          year, '-', month, '-', day, '-', hour*60*60+minute*60+second, '.tile#.nc'
+       call write_tiled_file(filename, noahmp, restflds, now_time, vm, localPet, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
 
