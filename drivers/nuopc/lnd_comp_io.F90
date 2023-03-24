@@ -1622,6 +1622,9 @@ contains
     character(cl)               :: zaxis_name
     character(cl), allocatable  :: fieldNameList(:)
     character(cl)               :: filename_tile
+    logical                     :: flag_soil_levels
+    logical                     :: flag_snow_levels
+    logical                     :: flag_snso_levels
     type(ESMF_RouteHandle)      :: rh_local
     type(ESMF_FieldBundle)      :: FBgrid, FBmesh
     type(ESMF_ArraySpec)        :: arraySpecI4, arraySpecR4, arraySpecR8
@@ -1721,6 +1724,11 @@ contains
     ! Loop over fields and add them to the field bundles
     !----------------------
 
+    ! init flags
+    flag_soil_levels = .false.
+    flag_snow_levels = .false.
+    flag_snso_levels = .false.
+
     ! get number of fields
     max_indx = count(outflds(:)%id /= -999, 1)
 
@@ -1735,14 +1743,15 @@ contains
        if (trim(outflds(i)%zaxis) == "z") then
           nlev = size(noahmp%nmlist%soil_level_nodes)
           zaxis_name = "soil_levels"
-       end if
-       if (trim(outflds(i)%zaxis) == "z1") then
+          flag_soil_levels = .true.
+       else if (trim(outflds(i)%zaxis) == "z1") then
           nlev = abs(noahmp%static%lsnowl)+1
           zaxis_name = "snow_levels"
-       end if
-       if (trim(outflds(i)%zaxis) == "z2") then
+          flag_snow_levels = .true.
+       else if (trim(outflds(i)%zaxis) == "z2") then
           nlev = size(noahmp%nmlist%soil_level_nodes)+abs(noahmp%static%lsnowl)+1
           zaxis_name = "snso_levels"
+          flag_snso_levels = .true.
        end if
 
        ! 2d/r8 field (x,y)
@@ -2071,6 +2080,7 @@ contains
           if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
 
           !----------------------
+
           ! enter define mode
           ncerr = nf90_redef(ncid=ncid)
           if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
@@ -2108,85 +2118,94 @@ contains
           if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
 
           !----------------------
-          ! enter define mode
-          ncerr = nf90_redef(ncid=ncid)
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
 
-          ! check soil_levels dimension
-          ncerr = nf90_inq_dimid(ncid, "soil_levels", dimid=dimid)
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+          if (flag_soil_levels) then
+             ! enter define mode
+             ncerr = nf90_redef(ncid=ncid)
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
 
-          ! define variable
-          ncerr = nf90_def_var(ncid, "soil_levels", NF90_DOUBLE, dimids=(/dimid/), varid=varid)
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+             ! check soil_levels dimension
+             ncerr = nf90_inq_dimid(ncid, "soil_levels", dimid=dimid)
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
 
-          ! add attributes
-          ncerr = nf90_put_att(ncid, varid, "long_name", "soil levels")
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
-          ncerr = nf90_put_att(ncid, varid, "units", "meters")
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+             ! define variable
+             ncerr = nf90_def_var(ncid, "soil_levels", NF90_DOUBLE, dimids=(/dimid/), varid=varid)
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
 
-          ! exit from define mode
-          ncerr = nf90_enddef(ncid=ncid)
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+             ! add attributes
+             ncerr = nf90_put_att(ncid, varid, "long_name", "soil levels")
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+             ncerr = nf90_put_att(ncid, varid, "units", "meters")
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
 
-          ! add value to soil levels
-          ncerr = nf90_put_var(ncid, varid, values=noahmp%nmlist%soil_level_nodes)
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+             ! exit from define mode
+             ncerr = nf90_enddef(ncid=ncid)
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
 
-          !----------------------
-          ! enter define mode
-          ncerr = nf90_redef(ncid=ncid)
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
-
-          ! check snow_levels dimension
-          ncerr = nf90_inq_dimid(ncid, "snow_levels", dimid=dimid)
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
-
-          ! define variable
-          ncerr = nf90_def_var(ncid, "snow_levels", NF90_DOUBLE, dimids=(/dimid/), varid=varid)
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
-
-          ! add attributes
-          ncerr = nf90_put_att(ncid, varid, "long_name", "snow levels")
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
-          ncerr = nf90_put_att(ncid, varid, "units", "unitless")
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
-
-          ! exit from define mode
-          ncerr = nf90_enddef(ncid=ncid)
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
-
-          ! add value to snow levels
-          ncerr = nf90_put_var(ncid, varid, values=(/(j*1.0d0,j=noahmp%static%lsnowl,0)/))
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+             ! add value to soil levels
+             ncerr = nf90_put_var(ncid, varid, values=noahmp%nmlist%soil_level_nodes)
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+          end if
 
           !----------------------
-          ! enter define mode
-          ncerr = nf90_redef(ncid=ncid)
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
 
-          ! check snso_levels dimension
-          ncerr = nf90_inq_dimid(ncid, "snso_levels", dimid=dimid)
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
-          
-          ! define variable
-          ncerr = nf90_def_var(ncid, "snso_levels", NF90_DOUBLE, dimids=(/dimid/), varid=varid)
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+          if (flag_snow_levels) then
+             ! enter define mode
+             ncerr = nf90_redef(ncid=ncid)
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
 
-          ! add attributes
-          ncerr = nf90_put_att(ncid, varid, "long_name", "snow soil levels")
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
-          ncerr = nf90_put_att(ncid, varid, "units", "unitless")
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+             ! check snow_levels dimension
+             ncerr = nf90_inq_dimid(ncid, "snow_levels", dimid=dimid)
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
 
-          ! exit from define mode
-          ncerr = nf90_enddef(ncid=ncid)
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+             ! define variable
+             ncerr = nf90_def_var(ncid, "snow_levels", NF90_DOUBLE, dimids=(/dimid/), varid=varid)
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
 
-          ! add value to snow levels
-          ncerr = nf90_put_var(ncid, varid, values=(/(j*1.0d0,j=noahmp%static%lsnowl,noahmp%nmlist%num_soil_levels)/))
-          if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+             ! add attributes
+             ncerr = nf90_put_att(ncid, varid, "long_name", "snow levels")
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+             ncerr = nf90_put_att(ncid, varid, "units", "unitless")
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+
+             ! exit from define mode
+             ncerr = nf90_enddef(ncid=ncid)
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+
+             ! add value to snow levels
+             ncerr = nf90_put_var(ncid, varid, values=(/(j*1.0d0,j=noahmp%static%lsnowl,0)/))
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+          end if
+
+          !----------------------
+
+          if (flag_snso_levels) then
+             ! enter define mode
+             ncerr = nf90_redef(ncid=ncid)
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+
+             ! check snso_levels dimension
+             ncerr = nf90_inq_dimid(ncid, "snso_levels", dimid=dimid)
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+             
+             ! define variable
+             ncerr = nf90_def_var(ncid, "snso_levels", NF90_DOUBLE, dimids=(/dimid/), varid=varid)
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+
+             ! add attributes
+             ncerr = nf90_put_att(ncid, varid, "long_name", "snow soil levels")
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+             ncerr = nf90_put_att(ncid, varid, "units", "unitless")
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+
+             ! exit from define mode
+             ncerr = nf90_enddef(ncid=ncid)
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+
+             ! add value to snow levels
+             ncerr = nf90_put_var(ncid, varid, values=(/(j*1.0d0,j=noahmp%static%lsnowl,noahmp%nmlist%num_soil_levels)/))
+             if (ChkErrNc(ncerr,__LINE__,u_FILE_u)) return
+          end if
 
           ! close file
           ncerr = nf90_close(ncid=ncid)
@@ -2293,7 +2312,7 @@ contains
        indx = max_indx+1
        max_indx = max_indx+1
        if (max_indx > fldsMaxIO) then
-          print*, "max_indx > fldsMaxIO could not add more variable! increase fldsMaxIO ..."
+          call ESMF_LogWrite(trim(subname)//": max_indx > fldsMaxIO could not add more variable! increase fldsMaxIO!", ESMF_LOGMSG_INFO)
           return
        end if
     end if
@@ -2320,15 +2339,17 @@ contains
     end if
 
     ! add extra metadata for the fields with z-axis
-    if (present(ptr2r4)) then
-       outflds(indx)%zaxis = trim(zAxis)
-       outflds(indx)%nlev = size(ptr2r4, dim=2)
-    else if (present(ptr2r8)) then
-       outflds(indx)%zaxis = trim(zAxis)
-       outflds(indx)%nlev = size(ptr2r8, dim=2)
-    else if (present(ptr2i4)) then
-       outflds(indx)%zaxis = trim(zAxis)
-       outflds(indx)%nlev = size(ptr2i4, dim=2)
+    if (present(zAxis)) then
+       if (present(ptr2r4)) then
+          outflds(indx)%zaxis = trim(zAxis)
+          outflds(indx)%nlev = size(ptr2r4, dim=2)
+       else if (present(ptr2r8)) then
+          outflds(indx)%zaxis = trim(zAxis)
+          outflds(indx)%nlev = size(ptr2r8, dim=2)
+       else if (present(ptr2i4)) then
+          outflds(indx)%zaxis = trim(zAxis)
+          outflds(indx)%nlev = size(ptr2i4, dim=2)
+      end if
     end if
 
     call ESMF_LogWrite(trim(subname)//' done for '//trim(varName), ESMF_LOGMSG_INFO)
@@ -2353,11 +2374,14 @@ contains
 
     !----------------------
     ! Prepare data structure to write the data 
-    ! NOTE: mask variable needs to be included to all output types and modes 
     !----------------------
+
 
     ! history
     if (trim(outtype) == 'hist') then
+       ! mask variable needs to be included to all output types and modes 
+       call fld_add("mask"      , "land-sea mask"                                                     , "1"      , histflds, ptr1i4=noahmp%domain%mask)
+
        ! mode = all
        if (trim(noahmp%nmlist%output_mode) == 'all') then
           call fld_add("ps"        , "surface pressure"                                                  , "Pa"     , histflds, ptr1r8=noahmp%forc%ps)
@@ -2379,7 +2403,6 @@ contains
           call fld_add("prslki"    , "Exner function ratio bt midlayer and interface at 1st layer"       , "1"      , histflds, ptr1r8=noahmp%model%prslki)
           call fld_add("prsik1"    , "dimensionless Exner function at the ground surface"                , "1"      , histflds, ptr1r8=noahmp%model%prsik1)
           call fld_add("zf"        , "height of bottom layer"                                            , "m"      , histflds, ptr1r8=noahmp%model%zf)
-          call fld_add("mask"      , "land-sea mask"                                                     , "1"      , histflds, ptr1i4=noahmp%domain%mask)
           call fld_add("wind"      , "wind speed"                                                        , "m/s"    , histflds, ptr1r8=noahmp%forc%wind)
           call fld_add("slopetyp"  , "class of sfc slope"                                                , "1"      , histflds, ptr1i4=noahmp%model%slopetyp)
           call fld_add("shdmin"    , "min fractional coverage of green veg"                              , "1"      , histflds, ptr1r8=noahmp%model%shdmin)
@@ -2486,12 +2509,33 @@ contains
           call fld_add("pblh"      , "height of pbl"                                                     , "m"      , histflds, ptr1r8=noahmp%model%pblh)
           call fld_add("rho"       , "density"                                                           , "kg/m3"  , histflds, ptr1r8=noahmp%model%rho)
           call fld_add("ztmax"     , "surface roughness length for heat over land"                       , "m"      , histflds, ptr1r8=noahmp%model%ztmax)
-
+       ! mode = mid
        else if (trim(noahmp%nmlist%output_mode) == 'mid') then
-          call fld_add("mask"      , "land-sea mask"                                                     , "1"      , histflds, ptr1i4=noahmp%domain%mask)
-
+          call fld_add("evap"      , "evaporation from latent heat flux"                                 , "mm/s"   , histflds, ptr1r8=noahmp%model%evap)
+          call fld_add("hflx"      , "sensible heat flux"                                                , "W/m2"   , histflds, ptr1r8=noahmp%model%hflx)
+          call fld_add("ep"        , "potential evaporation"                                             , "W/m2"   , histflds, ptr1r8=noahmp%model%ep)
+          call fld_add("runoff"    , "surface runoff"                                                    , "m/s"    , histflds, ptr1r8=noahmp%model%runoff)
+          call fld_add("cmm"       , "cm * rho"                                                          , "m/s"    , histflds, ptr1r8=noahmp%model%cmm)
+          call fld_add("chh"       , "ch * rho"                                                          , "kg/m2/s", histflds, ptr1r8=noahmp%model%chh)
+          call fld_add("t2mmp"     , "combined T2m from tiles"                                           , "K"      , histflds, ptr1r8=noahmp%model%t2mmp)
+          call fld_add("q2mp"      , "combined q2m from tiles"                                           , "kg/kg"  , histflds, ptr1r8=noahmp%model%q2mp)
+          call fld_add("smc"       , "total soil moisture content"                                       , "m3/m3"  , histflds, ptr2r8=noahmp%model%smc, zaxis="z")
+          call fld_add("stc"       , "soil temperature"                                                  , "K"      , histflds, ptr2r8=noahmp%model%stc, zaxis="z")
+          call fld_add("slc"       , "liquid soil moisture"                                              , "m3/m3"  , histflds, ptr2r8=noahmp%model%slc, zaxis="z")
+          call fld_add("tsnoxy"    , "temperature in surface snow"                                       , "K"      , histflds, ptr2r8=noahmp%model%tsnoxy , zaxis="z1")
+          call fld_add("zsnsoxy"   , "depth from the top of the snow surface at the bottom of the layer" , "m"      , histflds, ptr2r8=noahmp%model%zsnsoxy, zaxis="z2")
+          call fld_add("snicexy"   , "lwe thickness of ice in surface snow"                              , "mm"     , histflds, ptr2r8=noahmp%model%snicexy, zaxis="z1")
+          call fld_add("snliqxy"   , "snow layer liquid water"                                           , "mm"     , histflds, ptr2r8=noahmp%model%snliqxy, zaxis="z1")
+          call fld_add("smoiseq"   , "equilibrium soil water content"                                    , "m3/m3"  , histflds, ptr2r8=noahmp%model%smoiseq, zaxis="z")
+       ! mode = low
        else if (trim(noahmp%nmlist%output_mode) == 'low') then
-          call fld_add("mask"      , "land-sea mask"                                                     , "1"      , histflds, ptr1i4=noahmp%domain%mask)
+          call fld_add("evap"      , "evaporation from latent heat flux"                                 , "mm/s"   , histflds, ptr1r8=noahmp%model%evap)
+          call fld_add("hflx"      , "sensible heat flux"                                                , "W/m2"   , histflds, ptr1r8=noahmp%model%hflx)
+          call fld_add("t2mmp"     , "combined T2m from tiles"                                           , "K"      , histflds, ptr1r8=noahmp%model%t2mmp)
+          call fld_add("q2mp"      , "combined q2m from tiles"                                           , "kg/kg"  , histflds, ptr1r8=noahmp%model%q2mp)
+          call fld_add("smc"       , "total soil moisture content"                                       , "m3/m3"  , histflds, ptr2r8=noahmp%model%smc, zaxis="z")
+          call fld_add("stc"       , "soil temperature"                                                  , "K"      , histflds, ptr2r8=noahmp%model%stc, zaxis="z")
+          call fld_add("slc"       , "liquid soil moisture"                                              , "m3/m3"  , histflds, ptr2r8=noahmp%model%slc, zaxis="z")
        end if
 
     ! restart
