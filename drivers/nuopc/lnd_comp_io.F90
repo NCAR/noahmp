@@ -1612,6 +1612,9 @@ contains
     ! local variables
     integer                     :: i, j, k, rank, nlev, nfld, sub_str_indx
     integer                     :: ncerr, ncid, varid, dimid, max_indx
+    integer(ESMF_KIND_I4)       :: missing_i4 = -999
+    real(ESMF_KIND_R4)          :: missing_r4 = 1.0e20
+    real(ESMF_KIND_R8)          :: missing_r8 = 1.0d20
     real(r4), pointer           :: ptr2r4(:,:)
     real(r8), pointer           :: ptr2r8(:,:)
     integer , pointer           :: ptr2i4(:,:)
@@ -1768,7 +1771,7 @@ contains
           ! add missing value attribute to the field
           call ESMF_AttributeAdd(fgrid, convention="NetCDF", purpose="NOAHMP", attrList=(/'missing_value'/), rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call ESMF_AttributeSet(fgrid, convention="NetCDF", purpose="NOAHMP", name='missing_value', value=1.0d20, rc=rc)
+          call ESMF_AttributeSet(fgrid, convention="NetCDF", purpose="NOAHMP", name='missing_value', value=missing_r8, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           ! create field on mesh
@@ -1790,7 +1793,7 @@ contains
           ! add missing value attribute to the field
           call ESMF_AttributeAdd(fgrid, convention="NetCDF", purpose="NOAHMP", attrList=(/'missing_value'/), rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call ESMF_AttributeSet(fgrid, convention="NetCDF", purpose="NOAHMP", name='missing_value', value=1.0e20, rc=rc)
+          call ESMF_AttributeSet(fgrid, convention="NetCDF", purpose="NOAHMP", name='missing_value', value=missing_r4, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           ! create field on mesh
@@ -1812,7 +1815,7 @@ contains
           ! add missing value attribute to the field
           call ESMF_AttributeAdd(fgrid, convention="NetCDF", purpose="NOAHMP", attrList=(/'missing_value'/), rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call ESMF_AttributeSet(fgrid, convention="NetCDF", purpose="NOAHMP", name='missing_value', value=-999, rc=rc)
+          call ESMF_AttributeSet(fgrid, convention="NetCDF", purpose="NOAHMP", name='missing_value', value=missing_i4, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           ! create field on mesh
@@ -1835,7 +1838,7 @@ contains
           ! add missing value attribute to the field
           call ESMF_AttributeAdd(fgrid, convention="NetCDF", purpose="NOAHMP", attrList=(/'missing_value'/), rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call ESMF_AttributeSet(fgrid, convention="NetCDF", purpose="NOAHMP", name='missing_value', value=1.0d20, rc=rc)
+          call ESMF_AttributeSet(fgrid, convention="NetCDF", purpose="NOAHMP", name='missing_value', value=missing_r8, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           ! create field on mesh
@@ -1858,7 +1861,7 @@ contains
           ! add missing value attribute to the field
           call ESMF_AttributeAdd(fgrid, convention="NetCDF", purpose="NOAHMP", attrList=(/'missing_value'/), rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call ESMF_AttributeSet(fgrid, convention="NetCDF", purpose="NOAHMP", name='missing_value', value=1.0e20, rc=rc)
+          call ESMF_AttributeSet(fgrid, convention="NetCDF", purpose="NOAHMP", name='missing_value', value=missing_r4, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           ! create field on mesh
@@ -1881,7 +1884,7 @@ contains
           ! add missing value attribute to the field
           call ESMF_AttributeAdd(fgrid, convention="NetCDF", purpose="NOAHMP", attrList=(/'missing_value'/), rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call ESMF_AttributeSet(fgrid, convention="NetCDF", purpose="NOAHMP", name='missing_value', value=-999, rc=rc)
+          call ESMF_AttributeSet(fgrid, convention="NetCDF", purpose="NOAHMP", name='missing_value', value=missing_i4, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           ! create field on mesh
@@ -2012,17 +2015,17 @@ contains
           if (typekind == ESMF_TYPEKIND_R4) then
              call ESMF_FieldGet(fgrid, farrayPtr=ptr2r4, rc=rc)
              if (chkerr(rc,__LINE__,u_FILE_u)) return
-             where(ptrMask < 1) ptr2r4 = 1.0e20
+             where(ptrMask < 1) ptr2r4 = missing_r4
              nullify(ptr2r4)
           else if (typekind == ESMF_TYPEKIND_R8) then
              call ESMF_FieldGet(fgrid, farrayPtr=ptr2r8, rc=rc)
              if (chkerr(rc,__LINE__,u_FILE_u)) return
-             where(ptrMask < 1) ptr2r8 = 1.0d20
+             where(ptrMask < 1) ptr2r8 = missing_r8
              nullify(ptr2r8)
           else if (typekind == ESMF_TYPEKIND_I4) then
              call ESMF_FieldGet(fgrid, farrayPtr=ptr2i4, rc=rc)
              if (chkerr(rc,__LINE__,u_FILE_u)) return
-             where(ptrMask < 1) ptr2i4 = -999
+             where(ptrMask < 1) ptr2i4 = missing_i4
              nullify(ptr2i4)
           end if
        else if (rank .eq. 3) then
@@ -2030,21 +2033,21 @@ contains
              call ESMF_FieldGet(fgrid, farrayPtr=ptr3r4, rc=rc)
              if (chkerr(rc,__LINE__,u_FILE_u)) return
              do k = 1, ubound(ptr3r4, dim=3)
-                where(ptrMask < 1) ptr3r4(:,:,k) = 1.0e20
+                where(ptrMask < 1) ptr3r4(:,:,k) = missing_r4
              end do
              nullify(ptr3r4)
           else if (typekind == ESMF_TYPEKIND_R8) then
              call ESMF_FieldGet(fgrid, farrayPtr=ptr3r8, rc=rc)
              if (chkerr(rc,__LINE__,u_FILE_u)) return
              do k = 1, ubound(ptr3r8, dim=3)
-                where(ptrMask < 1) ptr3r8(:,:,k) = 1.0d20
+                where(ptrMask < 1) ptr3r8(:,:,k) = missing_r8
              end do
              nullify(ptr3r8)
           else if (typekind == ESMF_TYPEKIND_I4) then
              call ESMF_FieldGet(fgrid, farrayPtr=ptr3i4, rc=rc)
              if (chkerr(rc,__LINE__,u_FILE_u)) return
              do k = 1, ubound(ptr3i4, dim=3)
-                where(ptrMask < 1) ptr3i4(:,:,k) = -999
+                where(ptrMask < 1) ptr3i4(:,:,k) = missing_i4
              end do
              nullify(ptr3i4)
           end if
