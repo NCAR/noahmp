@@ -808,6 +808,9 @@ contains
       this%model%smcwtdxy(iloc)   = 0.0
       this%model%deeprechxy(iloc) = 0.0
       this%model%rechxy(iloc)     = 0.0
+
+      ! TODO: Fixed number given. This could be coupling field
+      this%model%rhonewsn1(iloc)= 200.0
     end do ! iloc
     
   end subroutine InitializeStates

@@ -2512,6 +2512,7 @@ contains
           call fld_add("pblh"      , "height of pbl"                                                     , "m"      , histflds, ptr1r8=noahmp%model%pblh)
           call fld_add("rho"       , "density"                                                           , "kg/m3"  , histflds, ptr1r8=noahmp%model%rho)
           call fld_add("ztmax"     , "surface roughness length for heat over land"                       , "m"      , histflds, ptr1r8=noahmp%model%ztmax)
+          call fld_add("rhonewsn1" , "density of precipitation ice"                                      , "kg/m3"  , histflds, ptr1r8=noahmp%model%rhonewsn1)
        ! mode = mid
        else if (trim(noahmp%nmlist%output_mode) == 'mid') then
           call fld_add("evap"      , "evaporation from latent heat flux"                                 , "mm/s"   , histflds, ptr1r8=noahmp%model%evap)
