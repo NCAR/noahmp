@@ -1,7 +1,7 @@
 [ccpp-table-properties]
   name = noahmpdrv
   type = scheme
-  dependencies = funcphys.f90,machine.F,sfc_diff.f,module_sf_noahmp_glacier.f90,module_sf_noahmplsm.f90,noahmp_tables.f90,set_soilveg.f
+  dependencies = funcphys.f90,machine.F,sfc_diff.f,module_sf_noahmp_glacier.F90,module_sf_noahmplsm.F90,noahmp_tables.f90,set_soilveg.f
 
 ########################################################################
 [ccpp-arg-table]
@@ -528,6 +528,14 @@
   standard_name = ice_precipitation_rate_on_previous_timestep
   long_name = ice precipitation rate from previous timestep
   units = mm s-1
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  intent = in
+[rhonewsn1]
+  standard_name = surface_frozen_precipitation_density
+  long_name = density of precipitation ice
+  units = kg m-3
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
