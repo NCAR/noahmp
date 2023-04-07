@@ -13,11 +13,13 @@
 
 !> \ingroup Noah_LSM
 !! This subroutine initializes soil and vegetation.
-      subroutine set_soilveg(me,isot,ivet,nlunit)
+      subroutine set_soilveg(me,isot,ivet,nlunit,errmsg,errflg)
       use namelist_soilveg
       implicit none
 
       integer, intent(in) :: me,isot,ivet,nlunit
+      character(len=*), intent(out) :: errmsg
+      integer,          intent(out) :: errflg
 !my begin locals
 !for 20 igbp veg type and 19 stasgo soil type
       integer i
@@ -385,16 +387,22 @@ c-----------------------------
 !         CLOSE(59)
 
          IF (DEFINED_SOIL .GT. MAX_SOILTYP) THEN
-            WRITE(0,*) 'Warning: DEFINED_SOIL too large in namelist'
-            STOP 222
+            errflg = 222
+            errmsg = 'ERROR(set_soilveg): DEFINED_SOIL too large in '// &
+     &           'namelist'
+            return
          ENDIF
          IF (DEFINED_VEG .GT. MAX_VEGTYP) THEN
-            WRITE(0,*) 'Warning: DEFINED_VEG too large in namelist'
-            STOP 222
+            errflg = 222
+            errmsg = 'ERROR(set_soilveg): DEFINED_VEG too large in '//  &
+     &           'namelist'
+            return
          ENDIF
          IF (DEFINED_SLOPE .GT. MAX_SLOPETYP) THEN
-            WRITE(0,*) 'Warning: DEFINED_SLOPE too large in namelist'
-            STOP 222
+            errflg = 222
+            errmsg = 'ERROR(set_soilveg): DEFINED_SLOPE too large in '//&
+     &           'namelist'
+            return
          ENDIF
          
          SMLOW  = SMLOW_DATA

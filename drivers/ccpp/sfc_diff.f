@@ -376,7 +376,9 @@
               call znot_t_v7(wind10m, ztmax_wat(i))   ! 10-m wind,m/s, ztmax(m)
             else if (sfc_z0_type > 0) then
               write(0,*)'no option for sfc_z0_type=',sfc_z0_type
-              stop
+              errflg = 1
+              errmsg = 'ERROR(sfc_diff_run): no option for sfc_z0_type'
+              return
             endif
 !
             call stability

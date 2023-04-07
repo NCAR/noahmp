@@ -53,8 +53,8 @@
   real(kind=kind_phys),parameter:: con_omega  =7.2921e-5_kind_phys                 !< ang vel of earth (\f$s^{-1}\f$)
   real(kind=kind_phys),parameter:: con_p0     =1.01325e5_kind_phys                 !< standard atmospheric pressure (\f$Pa\f$)
 ! real(kind=kind_phys),parameter:: con_solr   =1.36822e+3_kind_phys                ! solar constant    (W/m2)-aer(2001)
-  real(kind=kind_phys),parameter:: con_solr_old =1.3660e+3_kind_phys               !< solar constant (\f$W/m^{2}\f$)-Liu(2002)
-  real(kind=kind_phys),parameter:: con_solr   =1.3608e+3_kind_phys                 !< solar constant (\f$W/m^{2}\f$)-nasa-sorce Tim(2008)
+  real(kind=kind_phys),parameter:: con_solr_2002 =1.3660e+3_kind_phys              !< solar constant (\f$W/m^{2}\f$)-Liu(2002)
+  real(kind=kind_phys),parameter:: con_solr_2008 =1.3608e+3_kind_phys              !< solar constant (\f$W/m^{2}\f$)-nasa-sorce Tim(2008)
 ! real(kind=kind_phys),parameter:: con_solr   =1.36742732e+3_kind_phys             ! solar constant    (W/m2)-gfdl(1989) - OPR as of Jan 2006
   ! Selected geophysics/astronomy constants with kind=kind_dyn
   real(kind=kind_dyn), parameter:: con_g_dyn  =9.80665e+0_kind_dyn                 !< gravity (\f$m/s^{2}\f$)
