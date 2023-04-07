@@ -1,5 +1,5 @@
 #define CCPP
-!>  \file module_sf_noahmp_glacier.f90
+!>  \file module_sf_noahmp_glacier.F90
 !!  This file contains the NoahMP Glacier scheme.
 
 !>\ingroup NoahMP_LSM

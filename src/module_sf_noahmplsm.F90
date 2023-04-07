@@ -1,5 +1,5 @@
 #define CCPP
-!>  \file module_sf_noahmplsm.f90
+!>  \file module_sf_noahmplsm.F90
 !!  This file contains the NoahMP land surface model.
 
 !>\ingroup NoahMP_LSM
@@ -218,6 +218,7 @@ use sfc_diff, only   : stability
     real (kind=kind_phys) :: saim(12)           !< monthly stem area index, one-sided
     real (kind=kind_phys) :: laim(12)           !< monthly leaf area index, one-sided
     real (kind=kind_phys) :: sla                !< single-side leaf area per kg [m2/kg]
+    real (kind=kind_phys) :: prcpiceden         !< precipitation ice density [kg/m^3] 
     real (kind=kind_phys) :: dilefc             !< coeficient for leaf stress death [1/s]
     real (kind=kind_phys) :: dilefw             !< coeficient for leaf stress death [1/s]
     real (kind=kind_phys) :: fragr              !< fraction of growth respiration  !original was 0.3 
@@ -1068,13 +1069,14 @@ contains
 ! fresh snow density
 
      bdfall = min(120.,67.92+51.25*exp((sfctmp-tfrz)/2.59))       !mb/an: change to min  
-     if(opt_snf == 4) then
+     if(opt_snf == 4 .or. opt_snf == 5) then
         prcp_frozen = prcpsnow + prcpgrpl + prcphail
         if(prcpnonc > 0. .and. prcp_frozen > 0.) then
 	  fpice = min(1.0,prcp_frozen/prcpnonc)
 	  fpice = max(0.0,fpice)
-	  bdfall = bdfall*(prcpsnow/prcp_frozen) + rho_grpl*(prcpgrpl/prcp_frozen) + &
-	             rho_hail*(prcphail/prcp_frozen)
+          if(opt_snf==4) bdfall = bdfall*(prcpsnow/prcp_frozen) + rho_grpl*(prcpgrpl/prcp_frozen) + &
+                     rho_hail*(prcphail/prcp_frozen)
+          if(opt_snf==5) bdfall = parameters%prcpiceden
 	else
 	  fpice = 0.0
         endif
