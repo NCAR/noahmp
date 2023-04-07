@@ -191,6 +191,7 @@ module lnd_comp_types
      real(kind=r8), allocatable :: edir       (:)   ! soil surface evaporation (mm/s)
      real(kind=r8), allocatable :: snowc      (:)   ! fractional snow cover 
      real(kind=r8), allocatable :: stm        (:)   ! total soil column moisture content (m)
+     real(kind=r8), allocatable :: rhonewsn1  (:)   ! precipitation ice density (kg/m^3)
      real(kind=r8), allocatable :: snohf      (:)   ! snow/freezing-rain latent heat flux (W/m^2)
      real(kind=r8), allocatable :: smcwlt2    (:)   ! dry soil moisture threshold
      real(kind=r8), allocatable :: smcref2    (:)   ! soil moisture threshold
@@ -479,6 +480,7 @@ contains
     allocate(this%model%edir       (begl:endl))
     allocate(this%model%snowc      (begl:endl))
     allocate(this%model%stm        (begl:endl))
+    allocate(this%model%rhonewsn1  (begl:endl))
     allocate(this%model%snohf      (begl:endl))
     allocate(this%model%smcwlt2    (begl:endl))
     allocate(this%model%smcref2    (begl:endl))
@@ -645,6 +647,7 @@ contains
     this%model%edir        = 0.0_r8
     this%model%snowc       = 0.0_r8
     this%model%stm         = 0.0_r8
+    this%model%rhonewsn1   = 0.0_r8
     this%model%snohf       = 0.0_r8
     this%model%smcwlt2     = 0.0_r8
     this%model%smcref2     = 0.0_r8
