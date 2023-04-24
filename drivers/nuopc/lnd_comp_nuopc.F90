@@ -295,7 +295,7 @@ contains
 
           ! update day if it is required
           ! coupling time (dt) needs to be same in case of restart run
-          suffix_sec = int(hour*60*60+minute*60+second-dt)
+          suffix_sec = int(hour*60*60+minute*60+second)
           if (suffix_sec < 0) then
              day = day-1
              suffix_sec = 86400-abs(suffix_sec)

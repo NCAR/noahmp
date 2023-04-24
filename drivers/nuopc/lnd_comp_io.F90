@@ -56,6 +56,10 @@ module lnd_comp_io
   integer, parameter           :: iswater = 17
   character(len=1024)          :: msgString
 
+  integer(ESMF_KIND_I4)        :: missing_i4 = -999
+  real(ESMF_KIND_R4)           :: missing_r4 = 1.0e20
+  real(ESMF_KIND_R8)           :: missing_r8 = 1.0d20
+
   type(ESMF_FieldBundle)       :: FBgridO, FBmeshO
 
   character(*), parameter      :: modName = "(lnd_comp_io)"
@@ -287,7 +291,7 @@ contains
     ! Create field list
     !----------------------
 
-    allocate(flds(116))
+    allocate(flds(117))
 
     !----------------------
     ! zonal wind at lowest model layer
@@ -1115,10 +1119,18 @@ contains
     flds(116)%ptr2r8 => noahmp%model%zsnsoxy(:,:)
 
     !----------------------
+    ! precipitation ice density
+    !----------------------
+
+    flds(117)%short_name = 'rhonewsn1'
+    flds(117)%nrec = noahmp%nmlist%num_soil_levels
+    flds(117)%ptr1r8 => noahmp%model%rhonewsn1(:)
+
+    !----------------------
     ! Read file
     !----------------------
 
-    call read_tiled_file(noahmp, filename, flds, rc=rc)
+    call read_tiled_file(noahmp, filename, flds, maskflag=.true., rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------
@@ -1278,24 +1290,30 @@ contains
   end subroutine read_static
 
   !===============================================================================
-  subroutine read_tiled_file(noahmp, filename, flds, rh, rc)
+  subroutine read_tiled_file(noahmp, filename, flds, maskflag, rh, rc)
 
     ! input/output variables
     type(noahmp_type), intent(inout) :: noahmp
     character(len=*),  intent(in)    :: filename
     type(field_type),  intent(in)    :: flds(:)
+    logical, optional, intent(in)    :: maskflag
     type(ESMF_RouteHandle), optional, intent(in) :: rh
     integer, optional, intent(inout) :: rc
 
     ! local variables
+    logical                     :: amask
     integer                     :: i, j, k, rank, fieldCount
-    integer, pointer            :: ptr_i4(:)
-    real(r4), pointer           :: ptr_r4(:)
-    real(r8), pointer           :: ptr_r8(:)
+    integer, pointer            :: ptr1i4(:)
+    real(r4), pointer           :: ptr1r4(:)
+    real(r8), pointer           :: ptr1r8(:)
+    integer, pointer            :: ptr2i4(:,:)
+    real(r4), pointer           :: ptr2r4(:,:)
+    real(r8), pointer           :: ptr2r8(:,:)
     type(ESMF_RouteHandle)      :: rh_local
     type(ESMF_FieldBundle)      :: FBgrid, FBmesh
     type(ESMF_ArraySpec)        :: arraySpec
     type(ESMF_Field)            :: fgrid, fmesh, ftmp
+    type(ESMF_TypeKind_Flag)    :: typekind
     character(len=cl)           :: fname
     character(len=cl), allocatable :: fieldNameList(:)
     character(len=*), parameter :: subname = trim(modName)//': (read_tiled_file) '
@@ -1303,6 +1321,20 @@ contains
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called for '//trim(filename), ESMF_LOGMSG_INFO)
+
+    !----------------------
+    ! Check mask flag
+    !----------------------
+
+    if (.not. present(maskflag)) then
+       amask = .false.
+    else
+       amask = maskflag
+    end if
+
+    if (.not. allocated(noahmp%domain%mask) .and. amask) then
+       call ESMF_LogWrite(trim(subname)//' maskflag = .true. but noahmp%domain%mask is not allocated yet! Skip applying mask ...', ESMF_LOGMSG_INFO)
+    end if
 
     !----------------------
     ! Create field bundles
@@ -1462,67 +1494,134 @@ contains
     !if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------
-    ! Debug output
+    ! Apply masking
     !----------------------
 
-    if (dbug > 0) then
-       do i = 1, size(flds)
-          ! get field from FB
-          call ESMF_FieldBundleGet(FBmesh, fieldName=trim(flds(i)%short_name), field=fmesh, rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    do i = 1, size(flds)
+       ! get field from FB
+       call ESMF_FieldBundleGet(FBmesh, fieldName=trim(flds(i)%short_name), field=fmesh, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          ! check its rank
-          call ESMF_FieldGet(fmesh, rank=rank, rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       ! check its rank
+       call ESMF_FieldGet(fmesh, rank=rank, typekind=typekind, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          ! TODO: ESMF_FieldWriteVTK() call does not support ungridded dimension
-          ! The workaround is implemented in here but it would be nice to extend
-          ! ESMF_FieldWriteVTK() call to handle it.  
-          if (rank > 1) then
-             ! create temporary field
-             if (associated(flds(i)%ptr2r4)) then
-                ftmp = ESMF_FieldCreate(noahmp%domain%mesh, typekind=ESMF_TYPEKIND_R4, &
-                  name=trim(flds(i)%short_name), meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-                if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-                call ESMF_FieldGet(ftmp, localDe=0, farrayPtr=ptr_r4, rc=rc)
-                if (ChkErr(rc,__LINE__,u_FILE_u)) return
-             else if (associated(flds(i)%ptr2r8)) then
-                ftmp = ESMF_FieldCreate(noahmp%domain%mesh, typekind=ESMF_TYPEKIND_R8, &
-                  name=trim(flds(i)%short_name), meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-                if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-                call ESMF_FieldGet(ftmp, localDe=0, farrayPtr=ptr_r8, rc=rc)
-                if (ChkErr(rc,__LINE__,u_FILE_u)) return
-             else if (associated(flds(i)%ptr2i4)) then
-                ftmp = ESMF_FieldCreate(noahmp%domain%mesh, typekind=ESMF_TYPEKIND_I4, &
-                  name=trim(flds(i)%short_name), meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-                if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-                call ESMF_FieldGet(ftmp, localDe=0, farrayPtr=ptr_i4, rc=rc)
-                if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       ! query pointer and apply mask 
+       if (rank .eq. 1) then
+          if (amask .and. allocated(noahmp%domain%mask)) then
+             if (typekind == ESMF_TYPEKIND_R4) then
+                call ESMF_FieldGet(fmesh, farrayPtr=ptr1r4, rc=rc)
+                if (chkerr(rc,__LINE__,u_FILE_u)) return
+                where (noahmp%domain%mask < 1) ptr1r4 = 0.0_r4
+                nullify(ptr1r4)
+             else if (typekind == ESMF_TYPEKIND_R8) then
+                call ESMF_FieldGet(fmesh, farrayPtr=ptr1r8, rc=rc)
+                if (chkerr(rc,__LINE__,u_FILE_u)) return
+                where (noahmp%domain%mask < 1) ptr1r8 = 0.0_r8
+                nullify(ptr1r8)
+             else if (typekind == ESMF_TYPEKIND_I4) then
+                call ESMF_FieldGet(fmesh, farrayPtr=ptr1i4, rc=rc)
+                if (chkerr(rc,__LINE__,u_FILE_u)) return
+                where (noahmp%domain%mask < 1) ptr1i4 = 0
+                nullify(ptr1i4)
              end if
+          end if
 
-             ! write all record to seperate VTK file
-             do j = 1, flds(i)%nrec
-                if (associated(flds(i)%ptr2i4)) ptr_i4(:) = flds(i)%ptr2i4(:,j)
-                if (associated(flds(i)%ptr2r4)) ptr_r4(:) = flds(i)%ptr2r4(:,j)
-                if (associated(flds(i)%ptr2r8)) ptr_r8(:) = flds(i)%ptr2r8(:,j)
-                write(fname, fmt='(A,I2.2)') trim(flds(i)%short_name)//'_rec', j
-                call ESMF_FieldWriteVTK(ftmp, trim(fname), rc=rc)
-                if (ChkErr(rc,__LINE__,u_FILE_u)) return
-             end do
-
-             ! delete temporary field
-             call ESMF_FieldDestroy(ftmp, rc=rc)
-             if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          else
-             ! write field to VTK file
+          ! write field to VTK file
+          if (dbug > 0) then
              call ESMF_FieldWriteVTK(fmesh, trim(flds(i)%short_name), rc=rc)
              if (ChkErr(rc,__LINE__,u_FILE_u)) return
           end if
-       end do
-    end if
+       else
+          if (typekind == ESMF_TYPEKIND_R4) then
+             call ESMF_FieldGet(fmesh, farrayPtr=ptr2r4, rc=rc)
+             if (chkerr(rc,__LINE__,u_FILE_u)) return
+             if (amask .and. allocated(noahmp%domain%mask)) then
+                do j = 1, flds(i)%nrec
+                   where (noahmp%domain%mask < 1) ptr2r4(:,j) = 0.0_r4
+                end do
+             end if
+          else if (typekind == ESMF_TYPEKIND_R8) then
+             call ESMF_FieldGet(fmesh, farrayPtr=ptr2r8, rc=rc)
+             if (chkerr(rc,__LINE__,u_FILE_u)) return
+             if (amask .and. allocated(noahmp%domain%mask)) then
+                do j = 1, flds(i)%nrec
+                   where (noahmp%domain%mask < 1) ptr2r8(:,j) = 0.0_r8
+                end do
+             end if
+          else if (typekind == ESMF_TYPEKIND_I4) then
+             call ESMF_FieldGet(fmesh, farrayPtr=ptr2i4, rc=rc)
+             if (chkerr(rc,__LINE__,u_FILE_u)) return
+             if (amask .and. allocated(noahmp%domain%mask)) then
+                do j = 1, flds(i)%nrec
+                   where (noahmp%domain%mask < 1) ptr2i4(:,j) = 0
+                end do
+             end if
+          end if
+ 
+          ! write field to VTK file, each record seperate file
+          if (dbug > 0) then
+             do j = 1, flds(i)%nrec
+                ! file name
+                write(fname, fmt='(A,I2.2)') trim(flds(i)%short_name)//'_rec_', j
+
+                ! 2d/r4 field (element,layer)
+                if (typekind == ESMF_TYPEKIND_R4) then
+                   ! create temporary field and write it
+                   ftmp = ESMF_FieldCreate(noahmp%domain%mesh, typekind=ESMF_TYPEKIND_R4, &
+                     name=trim(flds(i)%short_name), meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+                   if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+                   ! get pointer and fill it
+                   call ESMF_FieldGet(ftmp, localDe=0, farrayPtr=ptr1r4, rc=rc)
+                   if (ChkErr(rc,__LINE__,u_FILE_u)) return
+                   ptr1r4(:) = ptr2r4(:,j)
+                   nullify(ptr1r4)
+
+                ! 2d/r8 field (element,layer)
+                else if (typekind == ESMF_TYPEKIND_R8) then
+                   ! create temporary field and write it
+                   ftmp = ESMF_FieldCreate(noahmp%domain%mesh, typekind=ESMF_TYPEKIND_R8, &
+                     name=trim(flds(i)%short_name), meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+                   if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+                   ! get pointer and fill it
+                   call ESMF_FieldGet(ftmp, localDe=0, farrayPtr=ptr1r8, rc=rc)
+                   if (ChkErr(rc,__LINE__,u_FILE_u)) return
+                   ptr1r8(:) = ptr2r8(:,j)
+                   nullify(ptr1r8)
+
+                ! 2d/i4 field (element,layer)
+                else if (typekind == ESMF_TYPEKIND_I4) then
+                   ! create temporary field and write it
+                   ftmp = ESMF_FieldCreate(noahmp%domain%mesh, typekind=ESMF_TYPEKIND_I4, &
+                     name=trim(flds(i)%short_name), meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+                   if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+                   ! get pointer and fill it
+                   call ESMF_FieldGet(ftmp, localDe=0, farrayPtr=ptr1i4, rc=rc)
+                   if (ChkErr(rc,__LINE__,u_FILE_u)) return
+                   ptr1i4(:) = ptr2i4(:,j)
+                   nullify(ptr1i4)
+
+                end if
+
+                ! write
+                call ESMF_FieldWriteVTK(ftmp, trim(fname), rc=rc)
+                if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+                ! delete temporary field
+                call ESMF_FieldDestroy(ftmp, rc=rc)
+                if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             end do
+          end if
+
+          ! nullify pointers
+          if (typekind == ESMF_TYPEKIND_R4) nullify(ptr2r4)
+          if (typekind == ESMF_TYPEKIND_R8) nullify(ptr2r8)
+          if (typekind == ESMF_TYPEKIND_I4) nullify(ptr2i4)
+       end if
+    end do
 
     !----------------------
     ! Empty FBs and destroy them 
@@ -1612,9 +1711,6 @@ contains
     ! local variables
     integer                     :: i, j, k, rank, nlev, nfld, sub_str_indx
     integer                     :: ncerr, ncid, varid, dimid, max_indx
-    integer(ESMF_KIND_I4)       :: missing_i4 = -999
-    real(ESMF_KIND_R4)          :: missing_r4 = 1.0e20
-    real(ESMF_KIND_R8)          :: missing_r8 = 1.0d20
     real(r4), pointer           :: ptr2r4(:,:)
     real(r8), pointer           :: ptr2r8(:,:)
     integer , pointer           :: ptr2i4(:,:)
@@ -2387,165 +2483,186 @@ contains
 
        ! mode = all
        if (trim(noahmp%nmlist%output_mode) == 'all') then
-          call fld_add("ps"        , "surface pressure"                                                  , "Pa"     , histflds, ptr1r8=noahmp%forc%ps)
-          call fld_add("u1"        , "u-component of wind"                                               , "m/s"    , histflds, ptr1r8=noahmp%model%u1)
-          call fld_add("v1"        , "v-component of wind"                                               , "m/s"    , histflds, ptr1r8=noahmp%model%v1)
-          call fld_add("t1"        , "forcing air temperature"                                           , "K"      , histflds, ptr1r8=noahmp%forc%t1)
-          call fld_add("q1"        , "forcing specific humidity"                                         , "kg/kg"  , histflds, ptr1r8=noahmp%forc%q1)
-          call fld_add("soiltyp"   , "soil type"                                                         , "1"      , histflds, ptr1i4=noahmp%model%soiltyp)
-          call fld_add("vegtype"   , "vegetation type"                                                   , "1"      , histflds, ptr1i4=noahmp%model%vegtype)
-          call fld_add("sigmaf"    , "green vegetation fraction"                                         , "1"      , histflds, ptr1r8=noahmp%model%sigmaf)
-          call fld_add("dlwflx"    , "forcing longwave downward flux"                                    , "W/m2"   , histflds, ptr1r8=noahmp%forc%dlwflx)
-          call fld_add("dswsfc"    , "forcing shortwave downward flux"                                   , "W/m2"   , histflds, ptr1r8=noahmp%forc%dswsfc)
-          call fld_add("snet"      , "forcing net shortwave flux"                                        , "W/m2"   , histflds, ptr1r8=noahmp%model%snet)
-          call fld_add("tg3"       , "deep soil temperature"                                             , "K"      , histflds, ptr1r8=noahmp%model%tg3)
-          call fld_add("cm"        , "surface exchange coeff for momentum"                               , "m/s"    , histflds, ptr1r8=noahmp%model%cm)
+          call fld_add("albdnir"   , "albedo - direct NIR"                                               , "1"      , histflds, ptr1r8=noahmp%model%albdnir)
+          call fld_add("albdvis"   , "albedo - direct visible"                                           , "1"      , histflds, ptr1r8=noahmp%model%albdvis)
+          call fld_add("albinir"   , "albedo - diffuse NIR"                                              , "1"      , histflds, ptr1r8=noahmp%model%albinir)
+          call fld_add("albivis"   , "albedo - diffuse visible"                                          , "1"      , histflds, ptr1r8=noahmp%model%albivis)
+          call fld_add("alboldxy"  , "snow albedo at last time step"                                     , "1"      , histflds, ptr1r8=noahmp%model%alboldxy)
+          call fld_add("canicexy"  , "canopy-intercepted ice"                                            , "mm"     , histflds, ptr1r8=noahmp%model%canicexy)
+          call fld_add("canliqxy"  , "canopy-intercepted liquid water"                                   , "mm"     , histflds, ptr1r8=noahmp%model%canliqxy)
+          call fld_add("canopy"    , "canopy moisture content"                                           , "m"      , histflds, ptr1r8=noahmp%model%canopy)
+          call fld_add("chh"       , "ch * rho"                                                          , "kg/m2/s", histflds, ptr1r8=noahmp%model%chh)
           call fld_add("ch"        , "surface exchange coeff for heat and moisture"                      , "m/s"    , histflds, ptr1r8=noahmp%model%ch)
+          call fld_add("chxy"      , "bulk sensible heat exchange coefficient"                           , "m/s"    , histflds, ptr1r8=noahmp%model%chxy)
+          call fld_add("cmm"       , "cm * rho"                                                          , "m/s"    , histflds, ptr1r8=noahmp%model%cmm)
+          call fld_add("cm"        , "surface exchange coeff for momentum"                               , "m/s"    , histflds, ptr1r8=noahmp%model%cm)
+          call fld_add("cmxy"      , "bulk momentum drag coefficient"                                    , "m/s"    , histflds, ptr1r8=noahmp%model%cmxy)
+          call fld_add("deeprechxy", "recharge to the water table when deep"                             , "1"      , histflds, ptr1r8=noahmp%model%deeprechxy)
+          call fld_add("dlwflx"    , "forcing longwave downward flux"                                    , "W/m2"   , histflds, ptr1r8=noahmp%forc%dlwflx)
+          call fld_add("drain"     , "subsurface runoff"                                                 , "mm/s"   , histflds, ptr1r8=noahmp%model%drain)
+          call fld_add("dswsfc"    , "forcing shortwave downward flux"                                   , "W/m2"   , histflds, ptr1r8=noahmp%forc%dswsfc)
+          call fld_add("eahxy"     , "canopy air vapor pressure"                                         , "Pa"     , histflds, ptr1r8=noahmp%model%eahxy)
+          call fld_add("ecan"      , "evaporation of intercepted water"                                  , "kg/m2/s", histflds, ptr1r8=noahmp%model%ecan)
+          call fld_add("edir"      , "soil surface evaporation rate"                                     , "kg/m2/s", histflds, ptr1r8=noahmp%model%edir)
+          call fld_add("emiss"     , "surface emissivity"                                                , "1"      , histflds, ptr1r8=noahmp%model%emiss)
+          call fld_add("ep"        , "potential evaporation"                                             , "W/m2"   , histflds, ptr1r8=noahmp%model%ep)
+          call fld_add("etran"     , "transpiration rate"                                                , "kg/m2/s", histflds, ptr1r8=noahmp%model%etran)
+          call fld_add("evap"      , "evaporation from latent heat flux"                                 , "mm/s"   , histflds, ptr1r8=noahmp%model%evap)
+          call fld_add("evbs"      , "direct soil evaporation"                                           , "m/s"    , histflds, ptr1r8=noahmp%model%evbs)
+          call fld_add("evcw"      , "canopy water evaporation"                                          , "m/s"    , histflds, ptr1r8=noahmp%model%evcw)
+          call fld_add("fastcpxy"  , "short-lived carbon, shallow soil"                                  , "g/m2"   , histflds, ptr1r8=noahmp%model%fastcpxy)
+          call fld_add("fh1"       , "Monin-Obukhov similarity function for heat over land"              , "1"      , histflds, ptr1r8=noahmp%model%fh1)
+          call fld_add("fh21"      , "Monin-Obukhov similarity parameter for heat at 2m over land"       , "1"      , histflds, ptr1r8=noahmp%model%fh21)
+          call fld_add("flhc1"     , "Surface exchange coefficient for heat"                             , "1"      , histflds, ptr1r8=noahmp%model%flhc1)
+          call fld_add("flqc1"     , "Surface exchange coefficient for moisture"                         , "1"      , histflds, ptr1r8=noahmp%model%flqc1)
+          call fld_add("fm101"     , "Monin-Obukhov similarity parameter for momentum at 10m over land"  , "1"      , histflds, ptr1r8=noahmp%model%fm101)
+          call fld_add("fm1"       , "Monin-Obukhov similarity function for momentum over land"          , "1"      , histflds, ptr1r8=noahmp%model%fm1)
+          call fld_add("fwetxy"    , "wetted or snowed fraction of the canopy"                           , "1"      , histflds, ptr1r8=noahmp%model%fwetxy)
+          call fld_add("garea"     , "area of the grid cell"                                             , "m2"     , histflds, ptr1r8=noahmp%domain%garea)
+          call fld_add("gflux"     , "soil heat flux"                                                    , "W/m2"   , histflds, ptr1r8=noahmp%model%gflux)
+          call fld_add("graupel_mp", "microphysics graupel"                                              , "mm"     , histflds, ptr1r8=noahmp%model%graupel_mp)
+          call fld_add("hflx"      , "sensible heat flux"                                                , "W/m2"   , histflds, ptr1r8=noahmp%model%hflx)
+          call fld_add("hgt"       , "forcing height"                                                    , "m"      , histflds, ptr1r8=noahmp%forc%hgt)
+          call fld_add("ice_mp"    , "microphysics ice/hail"                                             , "mm"     , histflds, ptr1r8=noahmp%model%ice_mp)
+          call fld_add("lfmassxy"  , "leaf mass"                                                         , "g/m2"   , histflds, ptr1r8=noahmp%model%lfmassxy)
+          call fld_add("pah"       , "precipitation advected heat - total"                               , "W/m2"   , histflds, ptr1r8=noahmp%model%pah)
+          call fld_add("pblh"      , "height of pbl"                                                     , "m"      , histflds, ptr1r8=noahmp%model%pblh)
+          call fld_add("prsik1"    , "dimensionless Exner function at the ground surface"                , "1"      , histflds, ptr1r8=noahmp%model%prsik1)
           call fld_add("prsl1"     , "mean pressure at lowest model layer"                               , "Pa"     , histflds, ptr1r8=noahmp%model%prsl1)
           call fld_add("prslk1"    , "dimensionless Exner function at the lowest model layer"            , "1"      , histflds, ptr1r8=noahmp%model%prslk1)
           call fld_add("prslki"    , "Exner function ratio bt midlayer and interface at 1st layer"       , "1"      , histflds, ptr1r8=noahmp%model%prslki)
-          call fld_add("prsik1"    , "dimensionless Exner function at the ground surface"                , "1"      , histflds, ptr1r8=noahmp%model%prsik1)
-          call fld_add("zf"        , "height of bottom layer"                                            , "m"      , histflds, ptr1r8=noahmp%model%zf)
-          call fld_add("wind"      , "wind speed"                                                        , "m/s"    , histflds, ptr1r8=noahmp%forc%wind)
-          call fld_add("slopetyp"  , "class of sfc slope"                                                , "1"      , histflds, ptr1i4=noahmp%model%slopetyp)
-          call fld_add("shdmin"    , "min fractional coverage of green veg"                              , "1"      , histflds, ptr1r8=noahmp%model%shdmin)
-          call fld_add("shdmax"    , "max fractional coverage of green veg"                              , "1"      , histflds, ptr1r8=noahmp%model%shdmax)
-          call fld_add("snoalb"    , "upper bound on max albedo over deep snow"                          , "1"      , histflds, ptr1r8=noahmp%model%snoalb)
-          call fld_add("sfalb"     , "mean sfc diffuse sw albedo"                                        , "1"      , histflds, ptr1r8=noahmp%model%sfalb)
-          call fld_add("xlatin"    , "latitude"                                                          , "radian" , histflds, ptr1r8=noahmp%model%xlatin)
-          call fld_add("xcoszin"   , "cosine of zenith angle"                                            , "degree" , histflds, ptr1r8=noahmp%model%xcoszin)
-          call fld_add("garea"     , "area of the grid cell"                                             , "m2"     , histflds, ptr1r8=noahmp%domain%garea)
-          call fld_add("rainn_mp"  , "microphysics non-convective precipitation"                         , "mm"     , histflds, ptr1r8=noahmp%model%rainn_mp)
-          call fld_add("rainc_mp"  , "microphysics convective precipitation"                             , "mm"     , histflds, ptr1r8=noahmp%model%rainc_mp)
-          call fld_add("snow_mp"   , "microphysics snow"                                                 , "mm"     , histflds, ptr1r8=noahmp%model%snow_mp)
-          call fld_add("graupel_mp", "microphysics graupel"                                              , "mm"     , histflds, ptr1r8=noahmp%model%graupel_mp)
-          call fld_add("ice_mp"    , "microphysics ice/hail"                                             , "mm"     , histflds, ptr1r8=noahmp%model%ice_mp)
-          call fld_add("weasd"     , "water equivalent accumulated snow depth"                           , "mm"     , histflds, ptr1r8=noahmp%model%weasd)
-          call fld_add("snwdph"    , "snow depth (water equiv) over land"                                , "m"      , histflds, ptr1r8=noahmp%model%snwdph)
-          call fld_add("tskin"     , "ground surface skin temperature"                                   , "K"      , histflds, ptr1r8=noahmp%model%tskin)
-          call fld_add("tprcp"     , "total precipitation"                                               , "mm"     , histflds, ptr1r8=noahmp%forc%tprcp)
-          call fld_add("srflag"    , "snow/rain flag for precipitation"                                  , "1"      , histflds, ptr1r8=noahmp%model%srflag)
-          call fld_add("smc"       , "total soil moisture content"                                       , "m3/m3"  , histflds, ptr2r8=noahmp%model%smc, zaxis="z")
-          call fld_add("stc"       , "soil temperature"                                                  , "K"      , histflds, ptr2r8=noahmp%model%stc, zaxis="z")
-          call fld_add("slc"       , "liquid soil moisture"                                              , "m3/m3"  , histflds, ptr2r8=noahmp%model%slc, zaxis="z")
-          call fld_add("canopy"    , "canopy moisture content"                                           , "m"      , histflds, ptr1r8=noahmp%model%canopy)
-          call fld_add("trans"     , "total plant transpiration"                                         , "m/2"    , histflds, ptr1r8=noahmp%model%trans)
-          call fld_add("tsurf"     , "surface skin temperature (after iteration)"                        , "K"      , histflds, ptr1r8=noahmp%model%tsurf)
-          call fld_add("zorl"      , "surface roughness"                                                 , "m"      , histflds, ptr1r8=noahmp%model%zorl)
-          call fld_add("rb1"       , "bulk Richardson number at the surface over land"                   , "1"      , histflds, ptr1r8=noahmp%model%rb1)
-          call fld_add("fm1"       , "Monin-Obukhov similarity function for momentum over land"          , "1"      , histflds, ptr1r8=noahmp%model%fm1)
-          call fld_add("fh1"       , "Monin-Obukhov similarity function for heat over land"              , "1"      , histflds, ptr1r8=noahmp%model%fh1)
-          call fld_add("ustar1"    , "surface friction velocity over land"                               , "m/s"    , histflds, ptr1r8=noahmp%model%ustar1)
-          call fld_add("stress1"   , "surface wind stress over land"                                     , "m2/s2"  , histflds, ptr1r8=noahmp%model%stress1)
-          call fld_add("fm101"     , "Monin-Obukhov similarity parameter for momentum at 10m over land"  , "1"      , histflds, ptr1r8=noahmp%model%fm101)
-          call fld_add("fh21"      , "Monin-Obukhov similarity parameter for heat at 2m over land"       , "1"      , histflds, ptr1r8=noahmp%model%fh21)
-          call fld_add("rmol1"     , "One over obukhov length"                                           , "1"      , histflds, ptr1r8=noahmp%model%rmol1)
-          call fld_add("flhc1"     , "Surface exchange coefficient for heat"                             , "1"      , histflds, ptr1r8=noahmp%model%flhc1) 
-          call fld_add("flqc1"     , "Surface exchange coefficient for moisture"                         , "1"      , histflds, ptr1r8=noahmp%model%flqc1) 
-          call fld_add("snowxy"    , "actual no. of snow layers"                                         , "1"      , histflds, ptr1r8=noahmp%model%snowxy)
-          call fld_add("tvxy"      , "vegetation leaf temperature"                                       , "K"      , histflds, ptr1r8=noahmp%model%tvxy)
-          call fld_add("tgxy"      , "bulk ground surface temperature"                                   , "K"      , histflds, ptr1r8=noahmp%model%tgxy)
-          call fld_add("canicexy"  , "canopy-intercepted ice"                                            , "mm"     , histflds, ptr1r8=noahmp%model%canicexy)
-          call fld_add("canliqxy"  , "canopy-intercepted liquid water"                                   , "mm"     , histflds, ptr1r8=noahmp%model%canliqxy)
-          call fld_add("eahxy"     , "canopy air vapor pressure"                                         , "Pa"     , histflds, ptr1r8=noahmp%model%eahxy)
-          call fld_add("tahxy"     , "canopy air temperature"                                            , "K"      , histflds, ptr1r8=noahmp%model%tahxy)
-          call fld_add("cmxy"      , "bulk momentum drag coefficient"                                    , "m/s"    , histflds, ptr1r8=noahmp%model%cmxy)
-          call fld_add("chxy"      , "bulk sensible heat exchange coefficient"                           , "m/s"    , histflds, ptr1r8=noahmp%model%chxy)
-          call fld_add("fwetxy"    , "wetted or snowed fraction of the canopy"                           , "1"      , histflds, ptr1r8=noahmp%model%fwetxy)
-          call fld_add("sneqvoxy"  , "snow mass at last time step"                                       , "mm"     , histflds, ptr1r8=noahmp%model%sneqvoxy)
-          call fld_add("alboldxy"  , "snow albedo at last time step"                                     , "1"      , histflds, ptr1r8=noahmp%model%alboldxy)
+          call fld_add("ps"        , "surface pressure"                                                  , "Pa"     , histflds, ptr1r8=noahmp%forc%ps)
+          call fld_add("q1"        , "forcing specific humidity"                                         , "kg/kg"  , histflds, ptr1r8=noahmp%forc%q1)
+          call fld_add("q2mp"      , "combined q2m from tiles"                                           , "kg/kg"  , histflds, ptr1r8=noahmp%model%q2mp)
           call fld_add("qsnowxy"   , "snowfall on the ground"                                            , "mm/s"   , histflds, ptr1r8=noahmp%model%qsnowxy)
-          call fld_add("wslakexy"  , "lake water storage"                                                , "mm"     , histflds, ptr1r8=noahmp%model%wslakexy)
-          call fld_add("zwtxy"     , "water table depth"                                                 , "m"      , histflds, ptr1r8=noahmp%model%zwtxy)
-          call fld_add("waxy"      , "water in the aquifer"                                              , "mm"     , histflds, ptr1r8=noahmp%model%waxy)
-          call fld_add("wtxy"      , "groundwater storage"                                               , "mm"     , histflds, ptr1r8=noahmp%model%wtxy)
-          call fld_add("tsnoxy"    , "temperature in surface snow"                                       , "K"      , histflds, ptr2r8=noahmp%model%tsnoxy , zaxis="z1")
-          call fld_add("zsnsoxy"   , "depth from the top of the snow surface at the bottom of the layer" , "m"      , histflds, ptr2r8=noahmp%model%zsnsoxy, zaxis="z2")
+          call fld_add("qsurf"     , "specific humidity at sfc"                                          , "kg/kg"  , histflds, ptr1r8=noahmp%model%qsurf)
+          call fld_add("rainc_mp"  , "microphysics convective precipitation"                             , "mm"     , histflds, ptr1r8=noahmp%model%rainc_mp)
+          call fld_add("rainn_mp"  , "microphysics non-convective precipitation"                         , "mm"     , histflds, ptr1r8=noahmp%model%rainn_mp)
+          call fld_add("rb1"       , "bulk Richardson number at the surface over land"                   , "1"      , histflds, ptr1r8=noahmp%model%rb1)
+          call fld_add("rechxy"    , "recharge to the water table (diagnostic)"                          , "1"      , histflds, ptr1r8=noahmp%model%rechxy)
+          call fld_add("rho"       , "density"                                                           , "kg/m3"  , histflds, ptr1r8=noahmp%model%rho)
+          call fld_add("rho"       , "density"                                                           , "kg/m3"  , histflds, ptr1r8=noahmp%model%rho)
+          call fld_add("rhonewsn1" , "density of precipitation ice"                                      , "kg/m3"  , histflds, ptr1r8=noahmp%model%rhonewsn1)
+          call fld_add("rmol1"     , "One over obukhov length"                                           , "1"      , histflds, ptr1r8=noahmp%model%rmol1)
+          call fld_add("rtmassxy"  , "mass of fine roots"                                                , "g/m2"   , histflds, ptr1r8=noahmp%model%rtmassxy)
+          call fld_add("runoff"    , "surface runoff"                                                    , "m/s"    , histflds, ptr1r8=noahmp%model%runoff)
+          call fld_add("sbsno"     , "sublimation/deposit from snopack"                                  , "m/s"    , histflds, ptr1r8=noahmp%model%sbsno)
+          call fld_add("sfalb"     , "mean sfc diffuse sw albedo"                                        , "1"      , histflds, ptr1r8=noahmp%model%sfalb)
+          call fld_add("shdmax"    , "max fractional coverage of green veg"                              , "1"      , histflds, ptr1r8=noahmp%model%shdmax)
+          call fld_add("shdmin"    , "min fractional coverage of green veg"                              , "1"      , histflds, ptr1r8=noahmp%model%shdmin)
+          call fld_add("sigmaf"    , "green vegetation fraction"                                         , "1"      , histflds, ptr1r8=noahmp%model%sigmaf)
+          call fld_add("slc"       , "liquid soil moisture"                                              , "m3/m3"  , histflds, ptr2r8=noahmp%model%slc, zaxis="z")
+          call fld_add("slopetyp"  , "class of sfc slope"                                                , "1"      , histflds, ptr1i4=noahmp%model%slopetyp)
+          call fld_add("smcref2"   , "soil moisture threshold"                                           , "m3/m3"  , histflds, ptr1r8=noahmp%model%smcref2)
+          call fld_add("smc"       , "total soil moisture content"                                       , "m3/m3"  , histflds, ptr2r8=noahmp%model%smc, zaxis="z")
+          call fld_add("smcwlt2"   , "dry soil moisture threshold"                                       , "m3/m3"  , histflds, ptr1r8=noahmp%model%smcwlt2)
+          call fld_add("smcwtdxy"  , "soil moisture content in the layer to the water table when deep"   , "mm"     , histflds, ptr1r8=noahmp%model%smcwtdxy)
+          call fld_add("smoiseq"   , "equilibrium soil water content"                                    , "m3/m3"  , histflds, ptr2r8=noahmp%model%smoiseq, zaxis="z")
+          call fld_add("sncovr1"   , "snow cover over land"                                              , "1"      , histflds, ptr1r8=noahmp%model%sncovr1)
+          call fld_add("sneqvoxy"  , "snow mass at last time step"                                       , "mm"     , histflds, ptr1r8=noahmp%model%sneqvoxy)
+          call fld_add("snet"      , "forcing net shortwave flux"                                        , "W/m2"   , histflds, ptr1r8=noahmp%model%snet)
           call fld_add("snicexy"   , "lwe thickness of ice in surface snow"                              , "mm"     , histflds, ptr2r8=noahmp%model%snicexy, zaxis="z1")
           call fld_add("snliqxy"   , "snow layer liquid water"                                           , "mm"     , histflds, ptr2r8=noahmp%model%snliqxy, zaxis="z1")
-          call fld_add("lfmassxy"  , "leaf mass"                                                         , "g/m2"   , histflds, ptr1r8=noahmp%model%lfmassxy)
-          call fld_add("rtmassxy"  , "mass of fine roots"                                                , "g/m2"   , histflds, ptr1r8=noahmp%model%rtmassxy)
-          call fld_add("stmassxy"  , "stem mas"                                                          , "g/m2"   , histflds, ptr1r8=noahmp%model%stmassxy)
-          call fld_add("woodxy"    , "mass of wood incl woody roots"                                     , "g/m2"   , histflds, ptr1r8=noahmp%model%woodxy)
-          call fld_add("stblcpxy"  , "stable carbon in deep soil"                                        , "g/m2"   , histflds, ptr1r8=noahmp%model%stblcpxy)
-          call fld_add("fastcpxy"  , "short-lived carbon, shallow soil"                                  , "g/m2"   , histflds, ptr1r8=noahmp%model%fastcpxy)
-          call fld_add("xlaixy"    , "leaf area index"                                                   , "1"      , histflds, ptr1r8=noahmp%model%xlaixy)
-          call fld_add("xsaixy"    , "stem area index"                                                   , "1"      , histflds, ptr1r8=noahmp%model%xsaixy)
-          call fld_add("taussxy"   , "snow age factor"                                                   , "1"      , histflds, ptr1r8=noahmp%model%taussxy)
-          call fld_add("smoiseq"   , "equilibrium soil water content"                                    , "m3/m3"  , histflds, ptr2r8=noahmp%model%smoiseq, zaxis="z")
-          call fld_add("smcwtdxy"  , "soil moisture content in the layer to the water table when deep"   , "mm"     , histflds, ptr1r8=noahmp%model%smcwtdxy)
-          call fld_add("deeprechxy", "recharge to the water table when deep"                             , "1"      , histflds, ptr1r8=noahmp%model%deeprechxy)
-          call fld_add("rechxy"    , "recharge to the water table (diagnostic)"                          , "1"      , histflds, ptr1r8=noahmp%model%rechxy)
-          call fld_add("albdvis"   , "albedo - direct visible"                                           , "1"      , histflds, ptr1r8=noahmp%model%albdvis)    
-          call fld_add("albdnir"   , "albedo - direct NIR"                                               , "1"      , histflds, ptr1r8=noahmp%model%albdnir)
-          call fld_add("albivis"   , "albedo - diffuse visible"                                          , "1"      , histflds, ptr1r8=noahmp%model%albivis)
-          call fld_add("albinir"   , "albedo - diffuse NIR"                                              , "1"      , histflds, ptr1r8=noahmp%model%albinir)
-          call fld_add("emiss"     , "surface emissivity"                                                , "1"      , histflds, ptr1r8=noahmp%model%emiss)
-          call fld_add("sncovr1"   , "snow cover over land"                                              , "1"      , histflds, ptr1r8=noahmp%model%sncovr1)
-          call fld_add("qsurf"     , "specific humidity at sfc"                                          , "kg/kg"  , histflds, ptr1r8=noahmp%model%qsurf)
-          call fld_add("gflux"     , "soil heat flux"                                                    , "W/m2"   , histflds, ptr1r8=noahmp%model%gflux)
-          call fld_add("drain"     , "subsurface runoff"                                                 , "mm/s"   , histflds, ptr1r8=noahmp%model%drain)
-          call fld_add("evap"      , "evaporation from latent heat flux"                                 , "mm/s"   , histflds, ptr1r8=noahmp%model%evap)
-          call fld_add("hflx"      , "sensible heat flux"                                                , "W/m2"   , histflds, ptr1r8=noahmp%model%hflx)
-          call fld_add("ep"        , "potential evaporation"                                             , "W/m2"   , histflds, ptr1r8=noahmp%model%ep)
-          call fld_add("runoff"    , "surface runoff"                                                    , "m/s"    , histflds, ptr1r8=noahmp%model%runoff)
-          call fld_add("cmm"       , "cm * rho"                                                          , "m/s"    , histflds, ptr1r8=noahmp%model%cmm)
-          call fld_add("chh"       , "ch * rho"                                                          , "kg/m2/s", histflds, ptr1r8=noahmp%model%chh)
-          call fld_add("evbs"      , "direct soil evaporation"                                           , "m/s"    , histflds, ptr1r8=noahmp%model%evbs)
-          call fld_add("evcw"      , "canopy water evaporation"                                          , "m/s"    , histflds, ptr1r8=noahmp%model%evcw)
-          call fld_add("sbsno"     , "sublimation/deposit from snopack"                                  , "m/s"    , histflds, ptr1r8=noahmp%model%sbsno)
-          call fld_add("pah"       , "precipitation advected heat - total"                               , "W/m2"   , histflds, ptr1r8=noahmp%model%pah)
-          call fld_add("ecan"      , "evaporation of intercepted water"                                  , "kg/m2/s", histflds, ptr1r8=noahmp%model%ecan)
-          call fld_add("etran"     , "transpiration rate"                                                , "kg/m2/s", histflds, ptr1r8=noahmp%model%etran)
-          call fld_add("edir"      , "soil surface evaporation rate"                                     , "kg/m2/s", histflds, ptr1r8=noahmp%model%edir)
-          call fld_add("snowc"     , "fractional snow cover"                                             , "1"      , histflds, ptr1r8=noahmp%model%snowc)
-          call fld_add("stm"       , "total soil column moisture content"                                , "m"      , histflds, ptr1r8=noahmp%model%stm)
+          call fld_add("snoalb"    , "upper bound on max albedo over deep snow"                          , "1"      , histflds, ptr1r8=noahmp%model%snoalb)
           call fld_add("snohf"     , "snow/freezing-rain latent heat flux"                               , "W/m2"   , histflds, ptr1r8=noahmp%model%snohf)
-          call fld_add("smcwlt2"   , "dry soil moisture threshold"                                       , "m3/m3"  , histflds, ptr1r8=noahmp%model%smcwlt2)
-          call fld_add("smcref2"   , "soil moisture threshold"                                           , "m3/m3"  , histflds, ptr1r8=noahmp%model%smcref2)
-          call fld_add("wet1"      , "normalized soil wetness"                                           , "1"      , histflds, ptr1r8=noahmp%model%wet1)
+          call fld_add("snowc"     , "fractional snow cover"                                             , "1"      , histflds, ptr1r8=noahmp%model%snowc)
+          call fld_add("snow_mp"   , "microphysics snow"                                                 , "mm"     , histflds, ptr1r8=noahmp%model%snow_mp)
+          call fld_add("snowxy"    , "actual no. of snow layers"                                         , "1"      , histflds, ptr1r8=noahmp%model%snowxy)
+          call fld_add("snwdph"    , "snow depth (water equiv) over land"                                , "m"      , histflds, ptr1r8=noahmp%model%snwdph)
+          call fld_add("soiltyp"   , "soil type"                                                         , "1"      , histflds, ptr1i4=noahmp%model%soiltyp)
+          call fld_add("srflag"    , "snow/rain flag for precipitation"                                  , "1"      , histflds, ptr1r8=noahmp%model%srflag)
+          call fld_add("stblcpxy"  , "stable carbon in deep soil"                                        , "g/m2"   , histflds, ptr1r8=noahmp%model%stblcpxy)
+          call fld_add("stc"       , "soil temperature"                                                  , "K"      , histflds, ptr2r8=noahmp%model%stc, zaxis="z")
+          call fld_add("stmassxy"  , "stem mas"                                                          , "g/m2"   , histflds, ptr1r8=noahmp%model%stmassxy)
+          call fld_add("stm"       , "total soil column moisture content"                                , "m"      , histflds, ptr1r8=noahmp%model%stm)
+          call fld_add("stress1"   , "surface wind stress over land"                                     , "m2/s2"  , histflds, ptr1r8=noahmp%model%stress1)
+          call fld_add("t1"        , "forcing air temperature"                                           , "K"      , histflds, ptr1r8=noahmp%forc%t1)
           call fld_add("t2mmp"     , "combined T2m from tiles"                                           , "K"      , histflds, ptr1r8=noahmp%model%t2mmp)
-          call fld_add("q2mp"      , "combined q2m from tiles"                                           , "kg/kg"  , histflds, ptr1r8=noahmp%model%q2mp)
-          call fld_add("zvfun"     , "function of surface roughness length and green vegetation fraction", "1"      , histflds, ptr1r8=noahmp%model%zvfun)
-          call fld_add("rho"       , "density"                                                           , "kg/m3"  , histflds, ptr1r8=noahmp%model%rho)
-          call fld_add("hgt"       , "forcing height"                                                    , "m"      , histflds, ptr1r8=noahmp%forc%hgt)
-          call fld_add("pblh"      , "height of pbl"                                                     , "m"      , histflds, ptr1r8=noahmp%model%pblh)
-          call fld_add("rho"       , "density"                                                           , "kg/m3"  , histflds, ptr1r8=noahmp%model%rho)
+          call fld_add("tahxy"     , "canopy air temperature"                                            , "K"      , histflds, ptr1r8=noahmp%model%tahxy)
+          call fld_add("taussxy"   , "snow age factor"                                                   , "1"      , histflds, ptr1r8=noahmp%model%taussxy)
+          call fld_add("tg3"       , "deep soil temperature"                                             , "K"      , histflds, ptr1r8=noahmp%model%tg3)
+          call fld_add("tgxy"      , "bulk ground surface temperature"                                   , "K"      , histflds, ptr1r8=noahmp%model%tgxy)
+          call fld_add("tprcp"     , "total precipitation"                                               , "mm"     , histflds, ptr1r8=noahmp%forc%tprcp)
+          call fld_add("trans"     , "total plant transpiration"                                         , "m/2"    , histflds, ptr1r8=noahmp%model%trans)
+          call fld_add("tskin"     , "ground surface skin temperature"                                   , "K"      , histflds, ptr1r8=noahmp%model%tskin)
+          call fld_add("tsnoxy"    , "temperature in surface snow"                                       , "K"      , histflds, ptr2r8=noahmp%model%tsnoxy, zaxis="z1")
+          call fld_add("tsurf"     , "surface skin temperature (after iteration)"                        , "K"      , histflds, ptr1r8=noahmp%model%tsurf)
+          call fld_add("tvxy"      , "vegetation leaf temperature"                                       , "K"      , histflds, ptr1r8=noahmp%model%tvxy)
+          call fld_add("u1"        , "u-component of wind"                                               , "m/s"    , histflds, ptr1r8=noahmp%model%u1)
+          call fld_add("ustar1"    , "surface friction velocity over land"                               , "m/s"    , histflds, ptr1r8=noahmp%model%ustar1)
+          call fld_add("v1"        , "v-component of wind"                                               , "m/s"    , histflds, ptr1r8=noahmp%model%v1)
+          call fld_add("vegtype"   , "vegetation type"                                                   , "1"      , histflds, ptr1i4=noahmp%model%vegtype)
+          call fld_add("waxy"      , "water in the aquifer"                                              , "mm"     , histflds, ptr1r8=noahmp%model%waxy)
+          call fld_add("weasd"     , "water equivalent accumulated snow depth"                           , "mm"     , histflds, ptr1r8=noahmp%model%weasd)
+          call fld_add("wet1"      , "normalized soil wetness"                                           , "1"      , histflds, ptr1r8=noahmp%model%wet1)
+          call fld_add("wind"      , "wind speed"                                                        , "m/s"    , histflds, ptr1r8=noahmp%forc%wind)
+          call fld_add("woodxy"    , "mass of wood incl woody roots"                                     , "g/m2"   , histflds, ptr1r8=noahmp%model%woodxy)
+          call fld_add("wslakexy"  , "lake water storage"                                                , "mm"     , histflds, ptr1r8=noahmp%model%wslakexy)
+          call fld_add("wtxy"      , "groundwater storage"                                               , "mm"     , histflds, ptr1r8=noahmp%model%wtxy)
+          call fld_add("xcoszin"   , "cosine of zenith angle"                                            , "degree" , histflds, ptr1r8=noahmp%model%xcoszin)
+          call fld_add("xlaixy"    , "leaf area index"                                                   , "1"      , histflds, ptr1r8=noahmp%model%xlaixy)
+          call fld_add("xlatin"    , "latitude"                                                          , "radian" , histflds, ptr1r8=noahmp%model%xlatin)
+          call fld_add("xsaixy"    , "stem area index"                                                   , "1"      , histflds, ptr1r8=noahmp%model%xsaixy)
+          call fld_add("zf"        , "height of bottom layer"                                            , "m"      , histflds, ptr1r8=noahmp%model%zf)
+          call fld_add("zorl"      , "surface roughness"                                                 , "m"      , histflds, ptr1r8=noahmp%model%zorl)
+          call fld_add("zsnsoxy"   , "depth from the top of the snow surface at the bottom of the layer" , "m"      , histflds, ptr2r8=noahmp%model%zsnsoxy, zaxis="z2")
           call fld_add("ztmax"     , "surface roughness length for heat over land"                       , "m"      , histflds, ptr1r8=noahmp%model%ztmax)
-          call fld_add("rhonewsn1" , "density of precipitation ice"                                      , "kg/m3"  , histflds, ptr1r8=noahmp%model%rhonewsn1)
+          call fld_add("zvfun"     , "function of surface roughness length and green vegetation fraction", "1"      , histflds, ptr1r8=noahmp%model%zvfun)
+          call fld_add("zwtxy"     , "water table depth"                                                 , "m"      , histflds, ptr1r8=noahmp%model%zwtxy)
        ! mode = mid
        else if (trim(noahmp%nmlist%output_mode) == 'mid') then
+          call fld_add("chh"       , "ch * rho"                                                          , "kg/m2/s", histflds, ptr1r8=noahmp%model%chh)
+          call fld_add("cmm"       , "cm * rho"                                                          , "m/s"    , histflds, ptr1r8=noahmp%model%cmm)
+          call fld_add("ep"        , "potential evaporation"                                             , "W/m2"   , histflds, ptr1r8=noahmp%model%ep)
           call fld_add("evap"      , "evaporation from latent heat flux"                                 , "mm/s"   , histflds, ptr1r8=noahmp%model%evap)
           call fld_add("hflx"      , "sensible heat flux"                                                , "W/m2"   , histflds, ptr1r8=noahmp%model%hflx)
-          call fld_add("ep"        , "potential evaporation"                                             , "W/m2"   , histflds, ptr1r8=noahmp%model%ep)
-          call fld_add("runoff"    , "surface runoff"                                                    , "m/s"    , histflds, ptr1r8=noahmp%model%runoff)
-          call fld_add("cmm"       , "cm * rho"                                                          , "m/s"    , histflds, ptr1r8=noahmp%model%cmm)
-          call fld_add("chh"       , "ch * rho"                                                          , "kg/m2/s", histflds, ptr1r8=noahmp%model%chh)
-          call fld_add("t2mmp"     , "combined T2m from tiles"                                           , "K"      , histflds, ptr1r8=noahmp%model%t2mmp)
           call fld_add("q2mp"      , "combined q2m from tiles"                                           , "kg/kg"  , histflds, ptr1r8=noahmp%model%q2mp)
-          call fld_add("smc"       , "total soil moisture content"                                       , "m3/m3"  , histflds, ptr2r8=noahmp%model%smc, zaxis="z")
-          call fld_add("stc"       , "soil temperature"                                                  , "K"      , histflds, ptr2r8=noahmp%model%stc, zaxis="z")
+          call fld_add("runoff"    , "surface runoff"                                                    , "m/s"    , histflds, ptr1r8=noahmp%model%runoff)
           call fld_add("slc"       , "liquid soil moisture"                                              , "m3/m3"  , histflds, ptr2r8=noahmp%model%slc, zaxis="z")
-          call fld_add("tsnoxy"    , "temperature in surface snow"                                       , "K"      , histflds, ptr2r8=noahmp%model%tsnoxy , zaxis="z1")
-          call fld_add("zsnsoxy"   , "depth from the top of the snow surface at the bottom of the layer" , "m"      , histflds, ptr2r8=noahmp%model%zsnsoxy, zaxis="z2")
+          call fld_add("smc"       , "total soil moisture content"                                       , "m3/m3"  , histflds, ptr2r8=noahmp%model%smc, zaxis="z")
+          call fld_add("smoiseq"   , "equilibrium soil water content"                                    , "m3/m3"  , histflds, ptr2r8=noahmp%model%smoiseq, zaxis="z")
           call fld_add("snicexy"   , "lwe thickness of ice in surface snow"                              , "mm"     , histflds, ptr2r8=noahmp%model%snicexy, zaxis="z1")
           call fld_add("snliqxy"   , "snow layer liquid water"                                           , "mm"     , histflds, ptr2r8=noahmp%model%snliqxy, zaxis="z1")
-          call fld_add("smoiseq"   , "equilibrium soil water content"                                    , "m3/m3"  , histflds, ptr2r8=noahmp%model%smoiseq, zaxis="z")
+          call fld_add("stc"       , "soil temperature"                                                  , "K"      , histflds, ptr2r8=noahmp%model%stc, zaxis="z")
+          call fld_add("t2mmp"     , "combined T2m from tiles"                                           , "K"      , histflds, ptr1r8=noahmp%model%t2mmp)
+          call fld_add("tsnoxy"    , "temperature in surface snow"                                       , "K"      , histflds, ptr2r8=noahmp%model%tsnoxy , zaxis="z1")
+          call fld_add("zsnsoxy"   , "depth from the top of the snow surface at the bottom of the layer" , "m"      , histflds, ptr2r8=noahmp%model%zsnsoxy, zaxis="z2")
        ! mode = low
        else if (trim(noahmp%nmlist%output_mode) == 'low') then
           call fld_add("evap"      , "evaporation from latent heat flux"                                 , "mm/s"   , histflds, ptr1r8=noahmp%model%evap)
           call fld_add("hflx"      , "sensible heat flux"                                                , "W/m2"   , histflds, ptr1r8=noahmp%model%hflx)
-          call fld_add("t2mmp"     , "combined T2m from tiles"                                           , "K"      , histflds, ptr1r8=noahmp%model%t2mmp)
           call fld_add("q2mp"      , "combined q2m from tiles"                                           , "kg/kg"  , histflds, ptr1r8=noahmp%model%q2mp)
+          call fld_add("slc"       , "liquid soil moisture"                                              , "m3/m3"  , histflds, ptr2r8=noahmp%model%slc, zaxis="z")
           call fld_add("smc"       , "total soil moisture content"                                       , "m3/m3"  , histflds, ptr2r8=noahmp%model%smc, zaxis="z")
           call fld_add("stc"       , "soil temperature"                                                  , "K"      , histflds, ptr2r8=noahmp%model%stc, zaxis="z")
-          call fld_add("slc"       , "liquid soil moisture"                                              , "m3/m3"  , histflds, ptr2r8=noahmp%model%slc, zaxis="z")
+          call fld_add("t2mmp"     , "combined T2m from tiles"                                           , "K"      , histflds, ptr1r8=noahmp%model%t2mmp)
        end if
 
     ! restart
     else if (trim(outtype) == 'rest') then
+       call fld_add("alboldxy"  , "snow albedo at last time step"                                     , "1"      , restflds, ptr1r8=noahmp%model%alboldxy)
+       call fld_add("canicexy"  , "canopy-intercepted ice"                                            , "mm"     , restflds, ptr1r8=noahmp%model%canicexy)
+       call fld_add("canliqxy"  , "canopy-intercepted liquid water"                                   , "mm"     , restflds, ptr1r8=noahmp%model%canliqxy)
+       call fld_add("eahxy"     , "canopy air vapor pressure"                                         , "Pa"     , restflds, ptr1r8=noahmp%model%eahxy)
        call fld_add("mask"      , "land-sea mask"                                                     , "1"      , restflds, ptr1i4=noahmp%domain%mask)
+       call fld_add("qsnowxy"   , "snowfall on the ground"                                            , "mm/s"   , restflds, ptr1r8=noahmp%model%qsnowxy)
+       call fld_add("slc"       , "liquid soil moisture"                                              , "m3/m3"  , restflds, ptr2r8=noahmp%model%slc, zaxis="z")
+       call fld_add("smc"       , "total soil moisture content"                                       , "m3/m3"  , restflds, ptr2r8=noahmp%model%smc, zaxis="z")
+       call fld_add("snicexy"   , "lwe thickness of ice in surface snow"                              , "mm"     , restflds, ptr2r8=noahmp%model%snicexy, zaxis="z1")
+       call fld_add("snliqxy"   , "snow layer liquid water"                                           , "mm"     , restflds, ptr2r8=noahmp%model%snliqxy, zaxis="z1")
+       call fld_add("snowxy"    , "actual no. of snow layers"                                         , "1"      , restflds, ptr1r8=noahmp%model%snowxy)
+       call fld_add("snwdph"    , "snow depth (water equiv) over land"                                , "m"      , restflds, ptr1r8=noahmp%model%snwdph)
+       call fld_add("stc"       , "soil temperature"                                                  , "K"      , restflds, ptr2r8=noahmp%model%stc, zaxis="z")
+       call fld_add("tahxy"     , "canopy air temperature"                                            , "K"      , restflds, ptr1r8=noahmp%model%tahxy)
+       call fld_add("tgxy"      , "bulk ground surface temperature"                                   , "K"      , restflds, ptr1r8=noahmp%model%tgxy)
+       call fld_add("tsnoxy"    , "temperature in surface snow"                                       , "K"      , restflds, ptr2r8=noahmp%model%tsnoxy, zaxis="z1")
+       call fld_add("tvxy"      , "vegetation leaf temperature"                                       , "K"      , restflds, ptr1r8=noahmp%model%tvxy)
        call fld_add("ustar1"    , "surface friction velocity over land"                               , "m/s"    , restflds, ptr1r8=noahmp%model%ustar1)
+       call fld_add("waxy"      , "water in the aquifer"                                              , "mm"     , restflds, ptr1r8=noahmp%model%waxy)
+       call fld_add("weasd"     , "water equivalent accumulated snow depth"                           , "mm"     , restflds, ptr1r8=noahmp%model%weasd)
+       call fld_add("wtxy"      , "groundwater storage"                                               , "mm"     , restflds, ptr1r8=noahmp%model%wtxy)
+       call fld_add("zsnsoxy"   , "depth from the top of the snow surface at the bottom of the layer" , "m"      , restflds, ptr2r8=noahmp%model%zsnsoxy, zaxis="z2")
+       call fld_add("zwtxy"     , "water table depth"                                                 , "m"      , restflds, ptr1r8=noahmp%model%zwtxy)
     endif
 
     call ESMF_LogWrite(trim(subname)//' done ', ESMF_LOGMSG_INFO)

@@ -665,7 +665,17 @@ contains
 
     !----------------------
     ! write output and restart files 
+    ! since component land is called after ccpp/radiation step, use time for one time step ahead
     !---------------------- 
+
+    ! return date to create file name
+    call ESMF_TimeGet(currTime+timeStep, yy=year, mm=month, dd=day, &
+      h=hour, m=minute, s=second, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! get as second
+    call ESMF_TimeIntervalGet(currTime-epoc+timeStep, s_r8=now_time, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! check the output frequency before calling write method
     if (mod(int(now_time), noahmp%nmlist%output_freq) == 0) then
