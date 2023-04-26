@@ -20,7 +20,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         test: [test_datm_lnd]
-        esmf: [develop, 8.5.0b10, 8.4.2]
+        esmf: [develop, 8.5.0b10]
     
     env:
       # set token to access gh command
