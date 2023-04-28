@@ -818,9 +818,10 @@ contains
     if (isPresent .and. isSet) then
        read(cvalue,*) noahmp%nmlist%restart_freq
     else
-       noahmp%nmlist%restart_freq = 6
+       noahmp%nmlist%restart_freq = noahmp%nmlist%output_freq
     end if
-    call ESMF_LogWrite(trim(subname)//' : restart_freq = '//trim(cvalue), ESMF_LOGMSG_INFO)
+    write(msg, fmt='(A,I6)') trim(subname)//': restart_freq = ', noahmp%nmlist%restart_freq
+    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 
     ! MYNN-EDMF
     call NUOPC_CompAttributeGet(gcomp, name='do_mynnedmf', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)

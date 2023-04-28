@@ -282,7 +282,7 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        if (isPresent .and. isSet) then
-          noahmp%nmlist%restart_file = trim(cvalue)
+          noahmp%nmlist%restart_file = trim(cvalue)//'.tile#.nc'
        else
           call ESMF_ClockGet(clock, currTime=currTime, timeStep=timeStep, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return

@@ -162,10 +162,10 @@ contains
 
     ! local variables
     logical, save               :: first_time = .true.
-    integer                     :: i, is, step, localPet
+    integer                     :: i, is, localPet
     integer                     :: year, month, day, hour, minute, second
     real(r8)                    :: now_time
-    character(len=cl)           :: filename
+    character(len=cl)           :: filename, start_time_str, end_time_str
     logical                     :: restart_write
     logical                     :: cpllnd = .false.
     logical                     :: cpllnd2atm = .true.
@@ -236,47 +236,55 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
 
+    ! print out start and stop time for step
+    call ESMF_TimeGet(currTime, timeString=start_time_str, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_TimeGet(currTime+timeStep, timeString=end_time_str, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_LogWrite(subname//' advance model: '//trim(start_time_str)//' --> '//trim(end_time_str), ESMF_LOGMSG_INFO)
+
     !----------------------
     ! initialize model variables
     !----------------------
 
-    step = int((currTime-startTime)/timeStep)
-    if (.not. noahmp%nmlist%restart_run .and. step == 0) then
-       ! transfer common initial conditions for all configurations
-       do i = noahmp%domain%begl, noahmp%domain%endl
-          if (noahmp%domain%mask(i) == 1) then
-             noahmp%model%weasd(i)  = noahmp%init%snow_water_equivalent(i)
-             noahmp%model%snwdph(i) = noahmp%init%snow_depth(i)
-             noahmp%model%canopy(i) = noahmp%init%canopy_water(i)
-             noahmp%model%tskin(i)  = noahmp%init%skin_temperature(i)
-             noahmp%model%stc(i,:)  = noahmp%init%soil_temperature(i,:)
-             noahmp%model%smc(i,:)  = noahmp%init%soil_moisture(i,:)
-             noahmp%model%slc(i,:)  = noahmp%init%soil_liquid(i,:)
+    if (first_time) then
+       if (.not. noahmp%nmlist%restart_run) then
+          ! transfer common initial conditions for all configurations
+          do i = noahmp%domain%begl, noahmp%domain%endl
+             if (noahmp%domain%mask(i) == 1) then
+                noahmp%model%weasd(i)  = noahmp%init%snow_water_equivalent(i)
+                noahmp%model%snwdph(i) = noahmp%init%snow_depth(i)
+                noahmp%model%canopy(i) = noahmp%init%canopy_water(i)
+                noahmp%model%tskin(i)  = noahmp%init%skin_temperature(i)
+                noahmp%model%stc(i,:)  = noahmp%init%soil_temperature(i,:)
+                noahmp%model%smc(i,:)  = noahmp%init%soil_moisture(i,:)
+                noahmp%model%slc(i,:)  = noahmp%init%soil_liquid(i,:)
+             end if
+          end do
+
+          ! transfer custom initial conditions based on selected configuration
+          if (trim(noahmp%nmlist%ic_type) == 'sfc') then
+             where(noahmp%domain%mask(:) == 1)
+                noahmp%model%zorl(:) = noahmp%init%surface_roughness(:)
+                noahmp%model%ustar1(:) = noahmp%init%friction_velocity(:)
+             end where
+          else if (trim(noahmp%nmlist%ic_type) == 'custom') then
+             ! get initial value of zorl from pre-defined table
+             where(noahmp%model%vegtype(:) > 0) noahmp%model%zorl(:) = z0_data(noahmp%model%vegtype(:))*100.0_r8
+             ! additional unit conversion for datm configuration, noahmp driver requires mm
+             where(noahmp%domain%mask(:) > 1) noahmp%model%snwdph(:) = noahmp%model%snwdph(:)*1000.0_r8
+
+             ! following initial values are taken from ufs-land-driver
+             noahmp%model%pblh   = 1000.0_r8
+             noahmp%model%rmol1  = 1.0_r8
+             noahmp%model%flhc1  = 0.0_r8
+             noahmp%model%flqc1  = 0.0_r8
+             noahmp%model%ustar1 = 0.1_r8
           end if
-       end do
 
-       ! transfer custom initial conditions based on selected configuration
-       if (trim(noahmp%nmlist%ic_type) == 'sfc') then
-          where(noahmp%domain%mask(:) == 1)
-             noahmp%model%zorl(:) = noahmp%init%surface_roughness(:)
-             noahmp%model%ustar1(:) = noahmp%init%friction_velocity(:)
-          end where
-       else if (trim(noahmp%nmlist%ic_type) == 'custom') then
-          ! get initial value of zorl from pre-defined table
-          where(noahmp%model%vegtype(:) > 0) noahmp%model%zorl(:) = z0_data(noahmp%model%vegtype(:))*100.0_r8
-          ! additional unit conversion for datm configuration, noahmp driver requires mm
-          where(noahmp%domain%mask(:) > 1) noahmp%model%snwdph(:) = noahmp%model%snwdph(:)*1000.0_r8
-
-          ! following initial values are taken from ufs-land-driver
-          noahmp%model%pblh   = 1000.0_r8
-          noahmp%model%rmol1  = 1.0_r8
-          noahmp%model%flhc1  = 0.0_r8
-          noahmp%model%flqc1  = 0.0_r8
-          noahmp%model%ustar1 = 0.1_r8
+          ! initialize model variables
+          call noahmp%InitializeStates(noahmp%nmlist, noahmp%static, month)
        end if
-
-       ! initialize model variables
-       call noahmp%InitializeStates(noahmp%nmlist, noahmp%static, month)
     end if
 
     !----------------------

@@ -36,6 +36,8 @@ module lnd_comp_io
   use lnd_comp_shr  , only : chkerr
   use lnd_comp_shr  , only : chkerrnc
 
+  use physcons      , only : con_rd, con_fvirt
+
   use mpi
 
   implicit none
@@ -262,6 +264,7 @@ contains
     integer          ,         intent(inout) :: rc
 
     ! local variables
+    integer                       :: i
     character(len=cl)             :: filename
     integer, target, allocatable  :: tmpi4(:)
     type(field_type), allocatable :: flds(:)
@@ -291,840 +294,137 @@ contains
     ! Create field list
     !----------------------
 
-    allocate(flds(117))
-
-    !----------------------
-    ! zonal wind at lowest model layer
-    !----------------------
-
-    flds(1)%short_name = 'u1'
-    flds(1)%ptr1r8 => noahmp%model%u1(:)
-
-    !----------------------
-    ! meridional wind at lowest model layer
-    !----------------------
-
-    flds(2)%short_name = 'v1'
-    flds(2)%ptr1r8 => noahmp%model%v1(:)
-
-    !----------------------
-    ! soil type
-    !----------------------
-
-    flds(3)%short_name = 'soiltyp'
-    flds(3)%ptr1i4 => noahmp%model%soiltyp(:)
-
-    !----------------------
-    ! vegetation type
-    !----------------------
-
-    flds(4)%short_name = 'vegtype'
-    flds(4)%ptr1i4 => noahmp%model%vegtype(:)
-
-    !----------------------
-    ! green vegetation fraction
-    !----------------------
-
-    flds(5)%short_name = 'sigmaf'
-    flds(5)%ptr1r8 => noahmp%model%sigmaf(:)
-
-    !----------------------
-    ! forcing net shortwave flux
-    !----------------------
-
-    flds(6)%short_name = 'snet'
-    flds(6)%ptr1r8 => noahmp%model%snet(:)
-
-    !----------------------
-    ! deep soil temperature
-    !----------------------
-
-    flds(7)%short_name = 'tg3'
-    flds(7)%ptr1r8 => noahmp%model%tg3(:)
-
-    !----------------------
-    ! surface exchange coeff for momentum
-    !----------------------
-
-    flds(8)%short_name = 'cm'
-    flds(8)%ptr1r8 => noahmp%model%cm(:)
-
-    !----------------------
-    ! surface exchange coeff for heat and moisture
-    !----------------------
-
-    flds(9)%short_name = 'ch'
-    flds(9)%ptr1r8 => noahmp%model%ch(:)
-
-    !----------------------
-    ! mean pressure at lowest model layer
-    !----------------------
-
-    flds(10)%short_name = 'prsl1'
-    flds(10)%ptr1r8 => noahmp%model%prsl1(:)
-
-    !----------------------
-    ! dimensionless Exner function at the lowest model layer
-    !----------------------
-
-    flds(11)%short_name = 'prslk1'
-    flds(11)%ptr1r8 => noahmp%model%prslk1(:)
-
-    !----------------------
-    ! Exner function ratio bt midlayer and interface at 1st layer
-    !----------------------
-
-    flds(12)%short_name = 'prslki'
-    flds(12)%ptr1r8 => noahmp%model%prslki(:)
-
-    !----------------------
-    ! dimensionless Exner function at the ground surface
-    !----------------------
-
-    flds(13)%short_name = 'prsik1'
-    flds(13)%ptr1r8 => noahmp%model%prsik1(:)
-
-    !----------------------
-    ! height of bottom layer
-    !----------------------
-
-    flds(14)%short_name = 'zf'
-    flds(14)%ptr1r8 => noahmp%model%zf(:)
-
-    !----------------------
-    ! PBL thickness (m) 
-    !----------------------
-
-    flds(15)%short_name = 'pblh'
-    flds(15)%ptr1r8 => noahmp%model%pblh(:)
-
-    !----------------------
-    ! flag for a point with any land
-    !----------------------
-
-    flds(16)%short_name = 'mask'
-    flds(16)%ptr1i4 => tmpi4(:)
-    where(tmpi4(:) > 0)
-       noahmp%model%dry(:) = .true.
-    elsewhere
-       noahmp%model%dry(:) = .false.
-    end where
-
-    !----------------------
-    ! class of sfc slope
-    !----------------------
-
-    flds(17)%short_name = 'slopetyp'
-    flds(17)%ptr1i4 => noahmp%model%slopetyp(:)
-
-    !----------------------
-    ! min fractional coverage of green veg
-    !----------------------
-
-    flds(18)%short_name = 'shdmin'
-    flds(18)%ptr1r8 => noahmp%model%shdmin(:)
-
-    !----------------------
-    ! max fractional coverage of green veg
-    !----------------------
-
-    flds(19)%short_name = 'shdmax'
-    flds(19)%ptr1r8 => noahmp%model%shdmax(:)
-
-    !----------------------
-    ! upper bound on max albedo over deep snow
-    !----------------------
-
-    flds(20)%short_name = 'snoalb'
-    flds(20)%ptr1r8 => noahmp%model%snoalb(:)
-
-    !----------------------
-    ! mean sfc diffuse sw albedo
-    !----------------------
-
-    flds(21)%short_name = 'sfalb'
-    flds(21)%ptr1r8 => noahmp%model%sfalb(:)
-
-    !----------------------
-    ! latitude
-    !----------------------
-
-    flds(22)%short_name = 'xlatin'
-    flds(22)%ptr1r8 => noahmp%model%xlatin(:)
-
-    !----------------------
-    ! cosine of zenith angle
-    !----------------------
-
-    flds(23)%short_name = 'xcoszin'
-    flds(23)%ptr1r8 => noahmp%model%xcoszin(:)
-
-    !----------------------
-    ! microphysics non-convective precipitation
-    !----------------------
-
-    flds(24)%short_name = 'rainn_mp'
-    flds(24)%ptr1r8 => noahmp%model%rainn_mp(:)
-
-    !----------------------
-    ! microphysics convective precipitation
-    !----------------------
-
-    flds(25)%short_name = 'rainc_mp'
-    flds(25)%ptr1r8 => noahmp%model%rainc_mp(:)
-
-    !----------------------
-    ! microphysics snow
-    !----------------------
-
-    flds(26)%short_name = 'snow_mp'
-    flds(26)%ptr1r8 => noahmp%model%snow_mp(:)
-
-    !----------------------
-    ! microphysics graupel 
-    !----------------------
-
-    flds(27)%short_name = 'graupel_mp'
-    flds(27)%ptr1r8 => noahmp%model%graupel_mp(:)
-
-    !----------------------
-    ! microphysics ice/hail
-    !----------------------
-
-    flds(28)%short_name = 'ice_mp'
-    flds(28)%ptr1r8 => noahmp%model%ice_mp(:)
-
-    !----------------------
-    ! water equivalent accumulated snow depth
-    !----------------------
-
-    flds(29)%short_name = 'weasd'
-    flds(29)%ptr1r8 => noahmp%model%weasd(:)
-
-    !----------------------
-    ! snow depth (water equiv) over land
-    !----------------------
-
-    flds(30)%short_name = 'snwdph'
-    flds(30)%ptr1r8 => noahmp%model%snwdph(:)
-
-    !----------------------
-    ! ground surface skin temperature
-    !----------------------
-
-    flds(31)%short_name = 'tskin'
-    flds(31)%ptr1r8 => noahmp%model%tskin(:)
-
-    !----------------------
-    ! total precipitation
-    !----------------------
-
-    flds(32)%short_name = 'tprcp'
-    flds(32)%ptr1r8 => noahmp%model%tprcp(:)
-
-    !----------------------
-    ! snow/rain flag for precipitation
-    !----------------------
-
-    flds(33)%short_name = 'srflag'
-    flds(33)%ptr1r8 => noahmp%model%srflag(:)
-
-    !----------------------
-    ! canopy moisture content
-    !----------------------
-
-    flds(34)%short_name = 'canopy'
-    flds(34)%ptr1r8 => noahmp%model%canopy(:)
-
-    !----------------------
-    ! total plant transpiration
-    !----------------------
-
-    flds(35)%short_name = 'trans'
-    flds(35)%ptr1r8 => noahmp%model%trans(:)
-
-    !----------------------
-    ! surface skin temperature (after iteration)
-    !----------------------
-
-    flds(36)%short_name = 'tsurf'
-    flds(36)%ptr1r8 => noahmp%model%tsurf(:)
-
-    !----------------------
-    ! surface roughness
-    !----------------------
-
-    flds(37)%short_name = 'zorl'
-    flds(37)%ptr1r8 => noahmp%model%zorl(:)
-
-    !----------------------
-    ! bulk Richardson number at the surface over land
-    !----------------------
-
-    flds(38)%short_name = 'rb1'
-    flds(38)%ptr1r8 => noahmp%model%rb1(:)
-
-    !----------------------
-    ! Monin-Obukhov similarity function for momentum over land
-    !----------------------
-
-    flds(39)%short_name = 'fm1'
-    flds(39)%ptr1r8 => noahmp%model%fm1(:)
-
-    !----------------------
-    ! Monin-Obukhov similarity function for heat over land
-    !----------------------
-
-    flds(40)%short_name = 'fh1'
-    flds(40)%ptr1r8 => noahmp%model%fh1(:)
-
-    !----------------------
-    ! surface friction velocity over land
-    !----------------------
-
-    flds(41)%short_name = 'ustar1'
-    flds(41)%ptr1r8 => noahmp%model%ustar1(:)
-
-    !----------------------
-    ! surface wind stress over land
-    !----------------------
-
-    flds(42)%short_name = 'stress1'
-    flds(42)%ptr1r8 => noahmp%model%stress1(:)
-
-    !----------------------
-    ! Monin-Obukhov similarity parameter for momentum at 10m over land
-    !----------------------
-
-    flds(43)%short_name = 'fm101'
-    flds(43)%ptr1r8 => noahmp%model%fm101(:)
-
-    !----------------------
-    ! Monin-Obukhov similarity parameter for heat at 2m over land
-    !----------------------
-
-    flds(44)%short_name = 'fh21'
-    flds(44)%ptr1r8 => noahmp%model%fh21(:)
-
-    !----------------------
-    ! One over obukhov length
-    !----------------------
-
-    flds(45)%short_name = 'rmol1'
-    flds(45)%ptr1r8 => noahmp%model%rmol1(:)
-
-    !----------------------
-    ! Surface exchange coefficient for heat
-    !----------------------
-
-    flds(46)%short_name = 'flhc1'
-    flds(46)%ptr1r8 => noahmp%model%flhc1(:)
-
-    !----------------------
-    ! Surface exchange coefficient for moisture
-    !----------------------
-
-    flds(47)%short_name = 'flqc1'
-    flds(47)%ptr1r8 => noahmp%model%flqc1(:)
-
-    !----------------------
-    ! actual no. of snow layers
-    !----------------------
-
-    flds(48)%short_name = 'snowxy'
-    flds(48)%ptr1r8 => noahmp%model%snowxy(:)
-
-    !----------------------
-    ! vegetation leaf temperature
-    !----------------------
-
-    flds(49)%short_name = 'tvxy'
-    flds(49)%ptr1r8 => noahmp%model%tvxy(:)
-
-    !----------------------
-    ! bulk ground surface temperature
-    !----------------------
-
-    flds(50)%short_name = 'tgxy'
-    flds(50)%ptr1r8 => noahmp%model%tgxy(:)
-
-    !----------------------
-    ! canopy-intercepted ice
-    !----------------------
-
-    flds(51)%short_name = 'canicexy'
-    flds(51)%ptr1r8 => noahmp%model%canicexy(:)
-
-    !----------------------
-    ! canopy-intercepted liquid water
-    !----------------------
-
-    flds(52)%short_name = 'canliqxy'
-    flds(52)%ptr1r8 => noahmp%model%canliqxy(:)
-
-    !----------------------
-    ! canopy air vapor pressure
-    !----------------------
-
-    flds(53)%short_name = 'eahxy'
-    flds(53)%ptr1r8 => noahmp%model%eahxy(:)
-
-    !----------------------
-    ! canopy air temperature
-    !----------------------
-
-    flds(54)%short_name = 'tahxy'
-    flds(54)%ptr1r8 => noahmp%model%tahxy(:)
-
-    !----------------------
-    ! bulk momentum drag coefficient
-    !----------------------
-
-    flds(55)%short_name = 'cmxy'
-    flds(55)%ptr1r8 => noahmp%model%cmxy(:)
-
-    !----------------------
-    ! bulk sensible heat exchange coefficient
-    !----------------------
-
-    flds(56)%short_name = 'chxy'
-    flds(56)%ptr1r8 => noahmp%model%chxy(:)
-
-    !----------------------
-    ! wetted or snowed fraction of the canopy
-    !----------------------
-
-    flds(57)%short_name = 'fwetxy'
-    flds(57)%ptr1r8 => noahmp%model%fwetxy(:)
-
-    !----------------------
-    ! snow mass at last time step
-    !----------------------
-
-    flds(58)%short_name = 'sneqvoxy'
-    flds(58)%ptr1r8 => noahmp%model%sneqvoxy(:)
-
-    !----------------------
-    ! snow albedo at last time step
-    !----------------------
-
-    flds(59)%short_name = 'alboldxy'
-    flds(59)%ptr1r8 => noahmp%model%alboldxy(:)
-
-    !----------------------
-    ! snowfall on the ground
-    !----------------------
-
-    flds(60)%short_name = 'qsnowxy'
-    flds(60)%ptr1r8 => noahmp%model%qsnowxy(:)
-
-    !----------------------
-    ! lake water storage
-    !----------------------
-
-    flds(61)%short_name = 'wslakexy'
-    flds(61)%ptr1r8 => noahmp%model%wslakexy(:)
-
-    !----------------------
-    ! water table depth
-    !----------------------
-
-    flds(62)%short_name = 'zwtxy'
-    flds(62)%ptr1r8 => noahmp%model%zwtxy(:)
-
-    !----------------------
-    ! water in the aquifer
-    !----------------------
-
-    flds(63)%short_name = 'waxy'
-    flds(63)%ptr1r8 => noahmp%model%waxy(:)
-
-    !----------------------
-    ! groundwater storage
-    !----------------------
-
-    flds(64)%short_name = 'wtxy'
-    flds(64)%ptr1r8 => noahmp%model%wtxy(:)
-
-    !----------------------
-    ! leaf mass
-    !----------------------
-
-    flds(65)%short_name = 'lfmassxy'
-    flds(65)%ptr1r8 => noahmp%model%lfmassxy(:)
-
-    !----------------------
-    ! mass of fine roots
-    !----------------------
-
-    flds(66)%short_name = 'rtmassxy'
-    flds(66)%ptr1r8 => noahmp%model%rtmassxy(:)
-
-    !----------------------
-    ! stem mas
-    !----------------------
-
-    flds(67)%short_name = 'stmassxy'
-    flds(67)%ptr1r8 => noahmp%model%stmassxy(:)
-
-    !----------------------
-    ! mass of wood incl woody roots
-    !----------------------
-
-    flds(68)%short_name = 'woodxy'
-    flds(68)%ptr1r8 => noahmp%model%woodxy(:)
-
-    !----------------------
-    ! stable carbon in deep soil
-    !----------------------
-
-    flds(69)%short_name = 'stblcpxy'
-    flds(69)%ptr1r8 => noahmp%model%stblcpxy(:)
-
-    !----------------------
-    ! short-lived carbon, shallow soil
-    !----------------------
-
-    flds(70)%short_name = 'fastcpxy'
-    flds(70)%ptr1r8 => noahmp%model%fastcpxy(:)
-
-    !----------------------
-    ! leaf area index
-    !----------------------
-
-    flds(71)%short_name = 'xlaixy'
-    flds(71)%ptr1r8 => noahmp%model%xlaixy(:)
-
-    !----------------------
-    ! stem area index
-    !----------------------
-
-    flds(72)%short_name = 'xsaixy'
-    flds(72)%ptr1r8 => noahmp%model%xsaixy(:)
-
-    !----------------------
-    ! snow age factor
-    !----------------------
-
-    flds(73)%short_name = 'taussxy'
-    flds(73)%ptr1r8 => noahmp%model%taussxy(:)
-
-    !----------------------
-    ! soil moisture content in the layer to the water table when deep
-    !----------------------
-
-    flds(74)%short_name = 'smcwtdxy'
-    flds(74)%ptr1r8 => noahmp%model%smcwtdxy(:)
-
-    !----------------------
-    ! recharge to the water table when deep
-    !----------------------
-
-    flds(75)%short_name = 'deeprechxy'
-    flds(75)%ptr1r8 => noahmp%model%deeprechxy(:)
-
-    !----------------------
-    ! recharge to the water table (diagnostic)
-    !----------------------
-
-    flds(76)%short_name = 'rechxy'
-    flds(76)%ptr1r8 => noahmp%model%rechxy(:)
-
-    !----------------------
-    ! albedo - direct visible
-    !----------------------
-
-    flds(77)%short_name = 'albdvis'
-    flds(77)%ptr1r8 => noahmp%model%albdvis(:)
-
-    !----------------------
-    ! albedo - direct NIR
-    !----------------------
-
-    flds(78)%short_name = 'albdnir'
-    flds(78)%ptr1r8 => noahmp%model%albdnir(:)
-
-    !----------------------
-    ! albedo - diffuse visible
-    !----------------------
-
-    flds(79)%short_name = 'albivis'
-    flds(79)%ptr1r8 => noahmp%model%albivis(:)
-
-    !----------------------
-    ! albedo - diffuse NIR
-    !----------------------
-
-    flds(80)%short_name = 'albinir'
-    flds(80)%ptr1r8 => noahmp%model%albinir(:)
-
-    !----------------------
-    ! surface emissivity
-    !----------------------
-
-    flds(81)%short_name = 'emiss'
-    flds(81)%ptr1r8 => noahmp%model%emiss(:)
-
-    !----------------------
-    ! snow cover over land
-    !----------------------
-
-    flds(82)%short_name = 'sncovr1'
-    flds(82)%ptr1r8 => noahmp%model%sncovr1(:)
-
-    !----------------------
-    ! specific humidity at sfc
-    !----------------------
-
-    flds(83)%short_name = 'qsurf'
-    flds(83)%ptr1r8 => noahmp%model%qsurf(:)
-
-    !----------------------
-    ! soil heat flux
-    !----------------------
-
-    flds(84)%short_name = 'gflux'
-    flds(84)%ptr1r8 => noahmp%model%gflux(:)
-
-    !----------------------
-    ! subsurface runoff
-    !----------------------
-
-    flds(85)%short_name = 'drain'
-    flds(85)%ptr1r8 => noahmp%model%drain(:)
-
-    !----------------------
-    ! evaporation from latent heat flux
-    !----------------------
-
-    flds(86)%short_name = 'evap'
-    flds(86)%ptr1r8 => noahmp%model%evap(:)
-
-    !----------------------
-    ! sensible heat flux
-    !----------------------
-
-    flds(87)%short_name = 'hflx'
-    flds(87)%ptr1r8 => noahmp%model%hflx(:)
-
-    !----------------------
-    ! potential evaporation
-    !----------------------
-
-    flds(88)%short_name = 'ep'
-    flds(88)%ptr1r8 => noahmp%model%ep(:)
-
-    !----------------------
-    ! surface runoff
-    !----------------------
-
-    flds(89)%short_name = 'runoff'
-    flds(89)%ptr1r8 => noahmp%model%runoff(:)
-
-    !----------------------
-    ! cm * rho
-    !----------------------
-
-    flds(90)%short_name = 'cmm'
-    flds(90)%ptr1r8 => noahmp%model%cmm(:)
-
-    !----------------------
-    ! ch * rho
-    !----------------------
-
-    flds(91)%short_name = 'chh'
-    flds(91)%ptr1r8 => noahmp%model%chh(:)
-
-    !----------------------
-    ! direct soil evaporation
-    !----------------------
-
-    flds(92)%short_name = 'evbs'
-    flds(92)%ptr1r8 => noahmp%model%evbs(:)
-
-    !----------------------
-    ! canopy water evaporation
-    !----------------------
-
-    flds(93)%short_name = 'evcw'
-    flds(93)%ptr1r8 => noahmp%model%evcw(:)
-
-    !----------------------
-    ! sublimation/deposit from snopack
-    !----------------------
-
-    flds(94)%short_name = 'sbsno'
-    flds(94)%ptr1r8 => noahmp%model%sbsno(:)
-
-    !----------------------
-    ! precipitation advected heat - total
-    !----------------------
-
-    flds(95)%short_name = 'pah'
-    flds(95)%ptr1r8 => noahmp%model%pah(:)
-
-    !----------------------
-    ! evaporation of intercepted water
-    !----------------------
-
-    flds(96)%short_name = 'ecan'
-    flds(96)%ptr1r8 => noahmp%model%ecan(:)
-
-    !----------------------
-    ! transpiration rate
-    !----------------------
-
-    flds(97)%short_name = 'etran'
-    flds(97)%ptr1r8 => noahmp%model%etran(:)
-
-    !----------------------
-    ! soil surface evaporation rate
-    !----------------------
-
-    flds(98)%short_name = 'edir'
-    flds(98)%ptr1r8 => noahmp%model%edir(:)
-
-    !----------------------
-    ! fractional snow cover
-    !----------------------
-
-    flds(99)%short_name = 'snowc'
-    flds(99)%ptr1r8 => noahmp%model%snowc(:)
-
-    !----------------------
-    ! total soil column moisture content
-    !----------------------
-
-    flds(100)%short_name = 'stm'
-    flds(100)%ptr1r8 => noahmp%model%stm(:)
-
-    !----------------------
-    ! snow/freezing-rain latent heat flux
-    !----------------------
-
-    flds(101)%short_name = 'snohf'
-    flds(101)%ptr1r8 => noahmp%model%snohf(:)
-
-    !----------------------
-    ! dry soil moisture threshold
-    !----------------------
-
-    flds(102)%short_name = 'smcwlt2'
-    flds(102)%ptr1r8 => noahmp%model%smcwlt2(:)
-
-    !----------------------
-    ! soil moisture threshold
-    !----------------------
-
-    flds(103)%short_name = 'smcref2'
-    flds(103)%ptr1r8 => noahmp%model%smcref2(:)
-
-    !----------------------
-    ! normalized soil wetness
-    !----------------------
-
-    flds(104)%short_name = 'wet1'
-    flds(104)%ptr1r8 => noahmp%model%wet1(:)
-
-    !----------------------
-    ! combined T2m from tiles
-    !----------------------
-
-    flds(105)%short_name = 't2mmp'
-    flds(105)%ptr1r8 => noahmp%model%t2mmp(:)
-
-    !----------------------
-    ! combined q2m from tiles
-    !----------------------
-
-    flds(106)%short_name = 'q2mp'
-    flds(106)%ptr1r8 => noahmp%model%q2mp(:)
-
-    !----------------------
-    ! function of surface roughness length and green vegetation fraction
-    !----------------------
-
-    flds(107)%short_name = 'zvfun'
-    flds(107)%ptr1r8 => noahmp%model%zvfun(:)
-
-    !----------------------
-    ! bounded surface roughness length for heat over land
-    !----------------------
-
-    flds(108)%short_name = 'ztmax'
-    flds(108)%ptr1r8 => noahmp%model%ztmax(:)
-
-    !----------------------
-    ! total soil moisture content
-    !----------------------
-
-    flds(109)%short_name = 'smc'
-    flds(109)%nrec = noahmp%nmlist%num_soil_levels
-    flds(109)%ptr2r8 => noahmp%model%smc(:,:)
-
-    !----------------------
-    ! soil temperature
-    !----------------------
-
-    flds(110)%short_name = 'stc'
-    flds(110)%nrec = noahmp%nmlist%num_soil_levels
-    flds(110)%ptr2r8 => noahmp%model%stc(:,:)
-
-    !----------------------
-    ! liquid soil moisture
-    !----------------------
-
-    flds(111)%short_name = 'slc'
-    flds(111)%nrec = noahmp%nmlist%num_soil_levels
-    flds(111)%ptr2r8 => noahmp%model%slc(:,:)
-
-    !----------------------
-    ! equilibrium soil water content
-    !----------------------
-
-    flds(112)%short_name = 'smoiseq'
-    flds(112)%nrec = noahmp%nmlist%num_soil_levels
-    flds(112)%ptr2r8 => noahmp%model%smoiseq(:,:)
-
-    !----------------------
-    ! temperature in surface snow
-    !----------------------
-
-    flds(113)%short_name = 'tsnoxy'
-    flds(113)%nrec = abs(noahmp%static%lsnowl)+1
-    flds(113)%ptr2r8 => noahmp%model%tsnoxy(:,:)
-
-    !----------------------
-    ! lwe thickness of ice in surface snow
-    !----------------------
-
-    flds(114)%short_name = 'snicexy'
-    flds(114)%nrec = abs(noahmp%static%lsnowl)+1
-    flds(114)%ptr2r8 => noahmp%model%snicexy(:,:)
-
-    !----------------------
-    ! snow layer liquid water
-    !----------------------
-
-    flds(115)%short_name = 'snliqxy'
-    flds(115)%nrec = abs(noahmp%static%lsnowl)+1
-    flds(115)%ptr2r8 => noahmp%model%snliqxy(:,:)
-
-    !----------------------
-    ! depth from the top of the snow surface at the bottom of the layer
-    !----------------------
-
-    flds(116)%short_name = 'zsnsoxy'
-    flds(116)%nrec = abs(noahmp%static%lsnowl)+noahmp%nmlist%num_soil_levels+1
-    flds(116)%ptr2r8 => noahmp%model%zsnsoxy(:,:)
-
-    !----------------------
-    ! precipitation ice density
-    !----------------------
-
-    flds(117)%short_name = 'rhonewsn1'
-    flds(117)%nrec = noahmp%nmlist%num_soil_levels
-    flds(117)%ptr1r8 => noahmp%model%rhonewsn1(:)
+    i = 1
+    allocate(flds(125))
+
+    ! 2d fields
+    flds(i)%short_name = 'albdnir'   ; flds(i)%ptr1r8 => noahmp%model%albdnir(:)   ; i=i+1 ! albedo - direct NIR
+    flds(i)%short_name = 'albdvis'   ; flds(i)%ptr1r8 => noahmp%model%albdvis(:)   ; i=i+1 ! albedo - direct visible
+    flds(i)%short_name = 'albinir'   ; flds(i)%ptr1r8 => noahmp%model%albinir(:)   ; i=i+1 ! albedo - diffuse NIR
+    flds(i)%short_name = 'albivis'   ; flds(i)%ptr1r8 => noahmp%model%albivis(:)   ; i=i+1 ! albedo - diffuse visible
+    flds(i)%short_name = 'alboldxy'  ; flds(i)%ptr1r8 => noahmp%model%alboldxy(:)  ; i=i+1 ! snow albedo at last time step
+    flds(i)%short_name = 'canicexy'  ; flds(i)%ptr1r8 => noahmp%model%canicexy(:)  ; i=i+1 ! canopy-intercepted ice
+    flds(i)%short_name = 'canliqxy'  ; flds(i)%ptr1r8 => noahmp%model%canliqxy(:)  ; i=i+1 ! canopy-intercepted liquid water
+    flds(i)%short_name = 'canopy'    ; flds(i)%ptr1r8 => noahmp%model%canopy(:)    ; i=i+1 ! canopy moisture content
+    flds(i)%short_name = 'ch'        ; flds(i)%ptr1r8 => noahmp%model%ch(:)        ; i=i+1 ! surface exchange coeff for heat and moisture
+    flds(i)%short_name = 'chh'       ; flds(i)%ptr1r8 => noahmp%model%chh(:)       ; i=i+1 ! ch * rho
+    flds(i)%short_name = 'chxy'      ; flds(i)%ptr1r8 => noahmp%model%chxy(:)      ; i=i+1 ! bulk sensible heat exchange coefficient
+    flds(i)%short_name = 'cm'        ; flds(i)%ptr1r8 => noahmp%model%cm(:)        ; i=i+1 ! surface exchange coeff for momentum
+    flds(i)%short_name = 'cmm'       ; flds(i)%ptr1r8 => noahmp%model%cmm(:)       ; i=i+1 ! cm * rho
+    flds(i)%short_name = 'cmxy'      ; flds(i)%ptr1r8 => noahmp%model%cmxy(:)      ; i=i+1 ! bulk momentum drag coefficient
+    flds(i)%short_name = 'deeprechxy'; flds(i)%ptr1r8 => noahmp%model%deeprechxy(:); i=i+1 ! recharge to the water table when deep
+    flds(i)%short_name = 'dlwflx'    ; flds(i)%ptr1r8 => noahmp%forc%dlwflx(:)     ; i=i+1 ! downward longwave radiation
+    flds(i)%short_name = 'drain'     ; flds(i)%ptr1r8 => noahmp%model%drain(:)     ; i=i+1 ! subsurface runoff
+    flds(i)%short_name = 'dswsfc'    ; flds(i)%ptr1r8 => noahmp%forc%dswsfc(:)     ; i=i+1 ! downward shortwave radiation
+    flds(i)%short_name = 'eahxy'     ; flds(i)%ptr1r8 => noahmp%model%eahxy(:)     ; i=i+1 ! canopy air vapor pressure
+    flds(i)%short_name = 'ecan'      ; flds(i)%ptr1r8 => noahmp%model%ecan(:)      ; i=i+1 ! evaporation of intercepted water
+    flds(i)%short_name = 'edir'      ; flds(i)%ptr1r8 => noahmp%model%edir(:)      ; i=i+1 ! soil surface evaporation rate
+    flds(i)%short_name = 'emiss'     ; flds(i)%ptr1r8 => noahmp%model%emiss(:)     ; i=i+1 ! surface emissivity
+    flds(i)%short_name = 'ep'        ; flds(i)%ptr1r8 => noahmp%model%ep(:)        ; i=i+1 ! potential evaporation
+    flds(i)%short_name = 'etran'     ; flds(i)%ptr1r8 => noahmp%model%etran(:)     ; i=i+1 ! transpiration rate
+    flds(i)%short_name = 'evap'      ; flds(i)%ptr1r8 => noahmp%model%evap(:)      ; i=i+1 ! evaporation from latent heat flux
+    flds(i)%short_name = 'evbs'      ; flds(i)%ptr1r8 => noahmp%model%evbs(:)      ; i=i+1 ! direct soil evaporation
+    flds(i)%short_name = 'evcw'      ; flds(i)%ptr1r8 => noahmp%model%evcw(:)      ; i=i+1 ! canopy water evaporation
+    flds(i)%short_name = 'fastcpxy'  ; flds(i)%ptr1r8 => noahmp%model%fastcpxy(:)  ; i=i+1 ! short-lived carbon, shallow soil
+    flds(i)%short_name = 'fh1'       ; flds(i)%ptr1r8 => noahmp%model%fh1(:)       ; i=i+1 ! Monin-Obukhov similarity function for heat over land
+    flds(i)%short_name = 'fh21'      ; flds(i)%ptr1r8 => noahmp%model%fh21(:)      ; i=i+1 ! Monin-Obukhov similarity parameter for heat at 2m over land
+    flds(i)%short_name = 'flhc1'     ; flds(i)%ptr1r8 => noahmp%model%flhc1(:)     ; i=i+1 ! Surface exchange coefficient for heat
+    flds(i)%short_name = 'flqc1'     ; flds(i)%ptr1r8 => noahmp%model%flqc1(:)     ; i=i+1 ! Surface exchange coefficient for moisture
+    flds(i)%short_name = 'fm101'     ; flds(i)%ptr1r8 => noahmp%model%fm101(:)     ; i=i+1 ! Monin-Obukhov similarity parameter for momentum at 10m over land
+    flds(i)%short_name = 'fm1'       ; flds(i)%ptr1r8 => noahmp%model%fm1(:)       ; i=i+1 ! Monin-Obukhov similarity function for momentum over land
+    flds(i)%short_name = 'fwetxy'    ; flds(i)%ptr1r8 => noahmp%model%fwetxy(:)    ; i=i+1 ! wetted or snowed fraction of the canopy
+    flds(i)%short_name = 'gflux'     ; flds(i)%ptr1r8 => noahmp%model%gflux(:)     ; i=i+1 ! soil heat flux
+    flds(i)%short_name = 'graupel_mp'; flds(i)%ptr1r8 => noahmp%model%graupel_mp(:); i=i+1 ! microphysics graupel
+    flds(i)%short_name = 'hflx'      ; flds(i)%ptr1r8 => noahmp%model%hflx(:)      ; i=i+1 ! sensible heat flux
+    flds(i)%short_name = 'hgt'       ; flds(i)%ptr1r8 => noahmp%forc%hgt(:)        ; i=i+1 ! forcing or lowest model layer height
+    flds(i)%short_name = 'ice_mp'    ; flds(i)%ptr1r8 => noahmp%model%ice_mp(:)    ; i=i+1 ! microphysics ice/hail
+    flds(i)%short_name = 'lfmassxy'  ; flds(i)%ptr1r8 => noahmp%model%lfmassxy(:)  ; i=i+1 ! leaf mass
+    flds(i)%short_name = 'mask'      ; flds(i)%ptr1i4 => tmpi4(:)                  ; i=i+1 ! flag for a point with any land
+    flds(i)%short_name = 'pah'       ; flds(i)%ptr1r8 => noahmp%model%pah(:)       ; i=i+1 ! precipitation advected heat - total
+    flds(i)%short_name = 'pblh'      ; flds(i)%ptr1r8 => noahmp%model%pblh(:)      ; i=i+1 ! PBL thickness
+    flds(i)%short_name = 'prsik1'    ; flds(i)%ptr1r8 => noahmp%model%prsik1(:)    ; i=i+1 ! dimensionless Exner function at the ground surface
+    flds(i)%short_name = 'prsl1'     ; flds(i)%ptr1r8 => noahmp%model%prsl1(:)     ; i=i+1 ! mean pressure at lowest model layer
+    flds(i)%short_name = 'prslk1'    ; flds(i)%ptr1r8 => noahmp%model%prslk1(:)    ; i=i+1 ! dimensionless Exner function at the lowest model layer
+    flds(i)%short_name = 'prslki'    ; flds(i)%ptr1r8 => noahmp%model%prslki(:)    ; i=i+1 ! Exner function ratio bt midlayer and interface at 1st layer
+    flds(i)%short_name = 'ps'        ; flds(i)%ptr1r8 => noahmp%forc%ps(:)         ; i=i+1 ! surface pressure
+    flds(i)%short_name = 'q1'        ; flds(i)%ptr1r8 => noahmp%forc%q1(:)         ; i=i+1 ! mixing ratio
+    flds(i)%short_name = 'q2mp'      ; flds(i)%ptr1r8 => noahmp%model%q2mp(:)      ; i=i+1 ! combined q2m from tiles
+    flds(i)%short_name = 'qsnowxy'   ; flds(i)%ptr1r8 => noahmp%model%qsnowxy(:)   ; i=i+1 ! snowfall on the ground
+    flds(i)%short_name = 'qsurf'     ; flds(i)%ptr1r8 => noahmp%model%qsurf(:)     ; i=i+1 ! specific humidity at sfc
+    flds(i)%short_name = 'rainc_mp'  ; flds(i)%ptr1r8 => noahmp%model%rainc_mp(:)  ; i=i+1 ! microphysics convective precipitation
+    flds(i)%short_name = 'rainn_mp'  ; flds(i)%ptr1r8 => noahmp%model%rainn_mp(:)  ; i=i+1 ! microphysics non-convective precipitation
+    flds(i)%short_name = 'rb1'       ; flds(i)%ptr1r8 => noahmp%model%rb1(:)       ; i=i+1 ! bulk Richardson number at the surface over land
+    flds(i)%short_name = 'rechxy'    ; flds(i)%ptr1r8 => noahmp%model%rechxy(:)    ; i=i+1 ! recharge to the water table (diagnostic)
+    flds(i)%short_name = 'rho'       ; flds(i)%ptr1r8 => noahmp%model%rho(:)       ; i=i+1 ! density
+    flds(i)%short_name = 'rhonewsn1' ; flds(i)%ptr1r8 => noahmp%model%rhonewsn1(:) ; i=i+1 ! precipitation ice density
+    flds(i)%short_name = 'rmol1'     ; flds(i)%ptr1r8 => noahmp%model%rmol1(:)     ; i=i+1 ! One over obukhov length
+    flds(i)%short_name = 'rtmassxy'  ; flds(i)%ptr1r8 => noahmp%model%rtmassxy(:)  ; i=i+1 ! mass of fine roots
+    flds(i)%short_name = 'runoff'    ; flds(i)%ptr1r8 => noahmp%model%runoff(:)    ; i=i+1 ! surface runoff
+    flds(i)%short_name = 'sbsno'     ; flds(i)%ptr1r8 => noahmp%model%sbsno(:)     ; i=i+1 ! sublimation/deposit from snopack
+    flds(i)%short_name = 'sfalb'     ; flds(i)%ptr1r8 => noahmp%model%sfalb(:)     ; i=i+1 ! mean sfc diffuse sw albedo
+    flds(i)%short_name = 'shdmax'    ; flds(i)%ptr1r8 => noahmp%model%shdmax(:)    ; i=i+1 ! max fractional coverage of green veg
+    flds(i)%short_name = 'shdmin'    ; flds(i)%ptr1r8 => noahmp%model%shdmin(:)    ; i=i+1 ! min fractional coverage of green veg
+    flds(i)%short_name = 'sigmaf'    ; flds(i)%ptr1r8 => noahmp%model%sigmaf(:)    ; i=i+1 ! green vegetation fraction
+    flds(i)%short_name = 'slopetyp'  ; flds(i)%ptr1i4 => noahmp%model%slopetyp(:)  ; i=i+1 ! class of sfc slope
+    flds(i)%short_name = 'smcref2'   ; flds(i)%ptr1r8 => noahmp%model%smcref2(:)   ; i=i+1 ! soil moisture threshold
+    flds(i)%short_name = 'smcwlt2'   ; flds(i)%ptr1r8 => noahmp%model%smcwlt2(:)   ; i=i+1 ! dry soil moisture threshold
+    flds(i)%short_name = 'smcwtdxy'  ; flds(i)%ptr1r8 => noahmp%model%smcwtdxy(:)  ; i=i+1 ! soil moisture content in the layer to the water table when deep
+    flds(i)%short_name = 'sncovr1'   ; flds(i)%ptr1r8 => noahmp%model%sncovr1(:)   ; i=i+1 ! snow cover over land
+    flds(i)%short_name = 'sneqvoxy'  ; flds(i)%ptr1r8 => noahmp%model%sneqvoxy(:)  ; i=i+1 ! snow mass at last time step
+    flds(i)%short_name = 'snet'      ; flds(i)%ptr1r8 => noahmp%model%snet(:)      ; i=i+1 ! forcing net shortwave flux
+    flds(i)%short_name = 'snoalb'    ; flds(i)%ptr1r8 => noahmp%model%snoalb(:)    ; i=i+1 ! upper bound on max albedo over deep snow
+    flds(i)%short_name = 'snohf'     ; flds(i)%ptr1r8 => noahmp%model%snohf(:)     ; i=i+1 ! snow/freezing-rain latent heat flux
+    flds(i)%short_name = 'snowc'     ; flds(i)%ptr1r8 => noahmp%model%snowc(:)     ; i=i+1 ! fractional snow cover
+    flds(i)%short_name = 'snow_mp'   ; flds(i)%ptr1r8 => noahmp%model%snow_mp(:)   ; i=i+1 ! microphysics snow
+    flds(i)%short_name = 'snowxy'    ; flds(i)%ptr1r8 => noahmp%model%snowxy(:)    ; i=i+1 ! actual no. of snow layers
+    flds(i)%short_name = 'snwdph'    ; flds(i)%ptr1r8 => noahmp%model%snwdph(:)    ; i=i+1 ! snow depth (water equiv) over land
+    flds(i)%short_name = 'soiltyp'   ; flds(i)%ptr1i4 => noahmp%model%soiltyp(:)   ; i=i+1 ! soil type
+    flds(i)%short_name = 'srflag'    ; flds(i)%ptr1r8 => noahmp%model%srflag(:)    ; i=i+1 ! snow/rain flag for precipitation
+    flds(i)%short_name = 'stblcpxy'  ; flds(i)%ptr1r8 => noahmp%model%stblcpxy(:)  ; i=i+1 ! stable carbon in deep soil
+    flds(i)%short_name = 'stmassxy'  ; flds(i)%ptr1r8 => noahmp%model%stmassxy(:)  ; i=i+1 ! stem mass
+    flds(i)%short_name = 'stm'       ; flds(i)%ptr1r8 => noahmp%model%stm(:)       ; i=i+1 ! total soil column moisture content
+    flds(i)%short_name = 'stress1'   ; flds(i)%ptr1r8 => noahmp%model%stress1(:)   ; i=i+1 ! surface wind stress over land
+    flds(i)%short_name = 't1'        ; flds(i)%ptr1r8 => noahmp%forc%t1(:)         ; i=i+1 ! surface or lowest layer air temperature
+    flds(i)%short_name = 't2mmp'     ; flds(i)%ptr1r8 => noahmp%model%t2mmp(:)     ; i=i+1 ! combined T2m from tiles
+    flds(i)%short_name = 'tahxy'     ; flds(i)%ptr1r8 => noahmp%model%tahxy(:)     ; i=i+1 ! canopy air temperature
+    flds(i)%short_name = 'taussxy'   ; flds(i)%ptr1r8 => noahmp%model%taussxy(:)   ; i=i+1 ! snow age factor
+    flds(i)%short_name = 'tg3'       ; flds(i)%ptr1r8 => noahmp%model%tg3(:)       ; i=i+1 ! deep soil temperature
+    flds(i)%short_name = 'tgxy'      ; flds(i)%ptr1r8 => noahmp%model%tgxy(:)      ; i=i+1 ! bulk ground surface temperature
+    flds(i)%short_name = 'tprcp'     ; flds(i)%ptr1r8 => noahmp%model%tprcp(:)     ; i=i+1 ! total precipitation
+    flds(i)%short_name = 'trans'     ; flds(i)%ptr1r8 => noahmp%model%trans(:)     ; i=i+1 ! total plant transpiration
+    flds(i)%short_name = 'tskin'     ; flds(i)%ptr1r8 => noahmp%model%tskin(:)     ; i=i+1 ! ground surface skin temperature
+    flds(i)%short_name = 'tsurf'     ; flds(i)%ptr1r8 => noahmp%model%tsurf(:)     ; i=i+1 ! surface skin temperature (after iteration)
+    flds(i)%short_name = 'tvxy'      ; flds(i)%ptr1r8 => noahmp%model%tvxy(:)      ; i=i+1 ! vegetation leaf temperature
+    flds(i)%short_name = 'u1'        ; flds(i)%ptr1r8 => noahmp%model%u1(:)        ; i=i+1 ! zonal wind at lowest model layer
+    flds(i)%short_name = 'ustar1'    ; flds(i)%ptr1r8 => noahmp%model%ustar1(:)    ; i=i+1 ! surface friction velocity over land
+    flds(i)%short_name = 'v1'        ; flds(i)%ptr1r8 => noahmp%model%v1(:)        ; i=i+1 ! meridional wind at lowest model layer
+    flds(i)%short_name = 'vegtype'   ; flds(i)%ptr1i4 => noahmp%model%vegtype(:)   ; i=i+1 ! vegetation type
+    flds(i)%short_name = 'waxy'      ; flds(i)%ptr1r8 => noahmp%model%waxy(:)      ; i=i+1 ! water in the aquifer
+    flds(i)%short_name = 'weasd'     ; flds(i)%ptr1r8 => noahmp%model%weasd(:)     ; i=i+1 ! water equivalent accumulated snow depth
+    flds(i)%short_name = 'wet1'      ; flds(i)%ptr1r8 => noahmp%model%wet1(:)      ; i=i+1 ! normalized soil wetness
+    flds(i)%short_name = 'wind'      ; flds(i)%ptr1r8 => noahmp%forc%wind(:)       ; i=i+1 ! wind speed
+    flds(i)%short_name = 'woodxy'    ; flds(i)%ptr1r8 => noahmp%model%woodxy(:)    ; i=i+1 ! mass of wood incl woody roots
+    flds(i)%short_name = 'wslakexy'  ; flds(i)%ptr1r8 => noahmp%model%wslakexy(:)  ; i=i+1 ! lake water storage
+    flds(i)%short_name = 'wtxy'      ; flds(i)%ptr1r8 => noahmp%model%wtxy(:)      ; i=i+1 ! groundwater storage
+    flds(i)%short_name = 'xcoszin'   ; flds(i)%ptr1r8 => noahmp%model%xcoszin(:)   ; i=i+1 ! cosine of zenith angle
+    flds(i)%short_name = 'xlaixy'    ; flds(i)%ptr1r8 => noahmp%model%xlaixy(:)    ; i=i+1 ! leaf area index
+    flds(i)%short_name = 'xlatin'    ; flds(i)%ptr1r8 => noahmp%model%xlatin(:)    ; i=i+1 ! latitude
+    flds(i)%short_name = 'xsaixy'    ; flds(i)%ptr1r8 => noahmp%model%xsaixy(:)    ; i=i+1 ! stem area index
+    flds(i)%short_name = 'zf'        ; flds(i)%ptr1r8 => noahmp%model%zf(:)        ; i=i+1 ! height of bottom layer
+    flds(i)%short_name = 'zorl'      ; flds(i)%ptr1r8 => noahmp%model%zorl(:)      ; i=i+1 ! surface roughness
+    flds(i)%short_name = 'ztmax'     ; flds(i)%ptr1r8 => noahmp%model%ztmax(:)     ; i=i+1 ! bounded surface roughness length for heat over land
+    flds(i)%short_name = 'zvfun'     ; flds(i)%ptr1r8 => noahmp%model%zvfun(:)     ; i=i+1 ! function of surface roughness length and green vegetation fraction
+    flds(i)%short_name = 'zwtxy'     ; flds(i)%ptr1r8 => noahmp%model%zwtxy(:)     ; i=i+1 ! water table depth
+
+    ! 3d fields
+    flds(i)%short_name = 'slc'       ; flds(i)%ptr2r8 => noahmp%model%slc(:,:)     ; flds(i)%nrec = noahmp%nmlist%num_soil_levels; i=i+1 ! liquid soil moisture
+    flds(i)%short_name = 'smc'       ; flds(i)%ptr2r8 => noahmp%model%smc(:,:)     ; flds(i)%nrec = noahmp%nmlist%num_soil_levels; i=i+1 ! total soil moisture content
+    flds(i)%short_name = 'smoiseq'   ; flds(i)%ptr2r8 => noahmp%model%smoiseq(:,:) ; flds(i)%nrec = noahmp%nmlist%num_soil_levels; i=i+1 ! equilibrium soil water content
+    flds(i)%short_name = 'snicexy'   ; flds(i)%ptr2r8 => noahmp%model%snicexy(:,:) ; flds(i)%nrec = abs(noahmp%static%lsnowl)+1  ; i=i+1 ! lwe thickness of ice in surface snow
+    flds(i)%short_name = 'snliqxy'   ; flds(i)%ptr2r8 => noahmp%model%snliqxy(:,:) ; flds(i)%nrec = abs(noahmp%static%lsnowl)+1  ; i=i+1 ! snow layer liquid water
+    flds(i)%short_name = 'stc'       ; flds(i)%ptr2r8 => noahmp%model%stc(:,:)     ; flds(i)%nrec = noahmp%nmlist%num_soil_levels; i=i+1 ! soil temperature
+    flds(i)%short_name = 'tsnoxy'    ; flds(i)%ptr2r8 => noahmp%model%tsnoxy(:,:)  ; flds(i)%nrec = abs(noahmp%static%lsnowl)+1  ; i=i+1 ! temperature in surface snow
+    flds(i)%short_name = 'zsnsoxy'   ; flds(i)%ptr2r8 => noahmp%model%zsnsoxy(:,:) ; flds(i)%nrec = abs(noahmp%static%lsnowl)+noahmp%nmlist%num_soil_levels+1; i=i+1 ! depth from the top of the snow surface at the bottom of the layer
 
     !----------------------
     ! Read file
@@ -1132,6 +432,20 @@ contains
 
     call read_tiled_file(noahmp, filename, flds, maskflag=.true., rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    !----------------------
+    ! Set additional variables 
+    !----------------------
+
+    where(tmpi4(:) > 0)
+       noahmp%model%dry(:) = .true.
+    elsewhere
+       noahmp%model%dry(:) = .false.
+    end where
+
+    noahmp%forc%tprcp(:) = noahmp%model%tprcp(:)
+    noahmp%forc%u1(:) = noahmp%model%u1(:)
+    noahmp%forc%v1(:) = noahmp%model%v1(:)
 
     !----------------------
     ! Clean memory
@@ -2540,7 +1854,6 @@ contains
           call fld_add("rainn_mp"  , "microphysics non-convective precipitation"                         , "mm"     , histflds, ptr1r8=noahmp%model%rainn_mp)
           call fld_add("rb1"       , "bulk Richardson number at the surface over land"                   , "1"      , histflds, ptr1r8=noahmp%model%rb1)
           call fld_add("rechxy"    , "recharge to the water table (diagnostic)"                          , "1"      , histflds, ptr1r8=noahmp%model%rechxy)
-          call fld_add("rho"       , "density"                                                           , "kg/m3"  , histflds, ptr1r8=noahmp%model%rho)
           call fld_add("rho"       , "density"                                                           , "kg/m3"  , histflds, ptr1r8=noahmp%model%rho)
           call fld_add("rhonewsn1" , "density of precipitation ice"                                      , "kg/m3"  , histflds, ptr1r8=noahmp%model%rhonewsn1)
           call fld_add("rmol1"     , "One over obukhov length"                                           , "1"      , histflds, ptr1r8=noahmp%model%rmol1)
