@@ -25,7 +25,7 @@ To create Docker container that will be the foundation of development and testin
 .. note::
    Using container to create test and development environment is optional. The following steps can be used also in other platforms or/and OS in case of lack of depencenies in there.
 
-Then, `spack <https://spack.io>`_ package manager can be used to install dependencies such as ESMF, FMS. In this case, the content of the `spack.yaml` can be structured as following. Also note that the installadtion directory can be changed through the `config` section of the YAML file. 
+Then, `spack <https://spack.io>`_ package manager can be used to install dependencies such as ESMF. In this case, the content of the `spack.yaml` can be structured as following. Also note that the installadtion directory can be changed through the `config` section of the YAML file. 
 
 .. code-block:: yaml 
 
@@ -33,9 +33,8 @@ Then, `spack <https://spack.io>`_ package manager can be used to install depende
     concretizer:
       unify: true
     specs:
-    - fms
-    - esmf@8.4.0b15+parallelio~xerces
-    - parallelio@2.5.8+pnetcdf~shared
+    - esmf@8.5.0b17+external-parallelio
+    - parallelio@2.5.10+pnetcdf~shared
     view: /root/.spack-ci/view
     config:
       source_cache: ~/.spack-ci/source_cache

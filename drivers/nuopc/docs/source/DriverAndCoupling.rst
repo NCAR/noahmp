@@ -94,7 +94,11 @@ The NUOPC "cap" uses set of namelist options provided as ESMF Config file format
    * - glacier_option (iopt_gla, Note: this is not used currently and fixed to 2 in `noahmpdrv.F90`)
      - Options for glacier treatment (1->phase change; 2->simple)
    * - output_freq
-     - Options for output frequency in seconds (i.e. 21600 for 6-hourly output, 1 output every coupling time-step and can be used for debugging)
+     - Option for output frequency in seconds (i.e. 21600 for 6-hourly output, 1 output every coupling time-step and can be used for debugging)
+   * - restart_freq
+     - Option for restart frequency in seconds. If it is not provided, it will be same with `output_freq`
+   * - restart_file
+     - Option for specifying the restart file (`.tile#.nc` will be added to the given file name). If it is not provided the model specifies the file name internally using current model time and coupling time step. 
    * - do_mynnedmf
      - Option for MYNN-EDMF (default value is `.false.`)
    * - do_mynnsfclay
@@ -107,6 +111,8 @@ The NUOPC "cap" uses set of namelist options provided as ESMF Config file format
      - Option for initial surface lw emissivity in fraction (default value is 0.95)
    * - initial_albedo
      - Option for initial mean surface albedo (value is default 0.2)
+   * - calc_snet
+     - Option for calculating net shortwave radiation using downward component and surface albedo
 
 .. note::
    ``:`` symbol is used as a seperator for namelist options with multiple values such as `layout`, `soil_level_thickness`.
@@ -160,17 +166,17 @@ Model Fields Used for Coupling
      - m
      - noahmp%forc%hgt
      - bottom layer height
-     - namelist option `forcing_height
+     - namelist option `forcing_height`
    * - inst_temp_height_lowest (`Sa_tbot`)
      - K
      - noahmp%forc%t1
      - bottom layer temperature
-     -
+     - 
    * - inst_temp_height_lowest_from_phys (`Sa_ta`)
      - K
      - noahmp%forc%t1
      - bottom layer temperature
-     - used under UFS Weather Model, and active atmosphere
+     - used if coupled with active atmosphere
    * - inst_temp_height_surface (`Sa_tskn`)
      - K
      - noahmp%forc%tskin
@@ -185,7 +191,7 @@ Model Fields Used for Coupling
      - Pa
      - noahmp%forc%pbot
      - pressure at lowest model layer
-     - used under UFS Weather Model, and active atmosphere
+     - used if coupled with active atmosphere
    * - inst_pres_height_surface (`Sa_pslv`)
      - Pa
      - noahmp%forc%ps
@@ -200,7 +206,7 @@ Model Fields Used for Coupling
      - kg kg-1 
      - noahmp%forc%q1
      - bottom layer specific humidity
-     - used under UFS Weather Model, and active atmosphere
+     - used if coupled with active atmosphere
    * - inst_zonal_wind_height_lowest (`Sa_u`)
      - m s-1 
      - noahmp%forc%u1
@@ -215,12 +221,12 @@ Model Fields Used for Coupling
      - m s-1 
      - noahmp%forc%u1
      - bottom layer zonal wind
-     - used under UFS Weather Model, and active atmosphere
+     - used if coupled with active atmosphere
    * - inst_merid_wind_height_lowest_from_phys (`Sa_va`)
      - m s-1 
      - noahmp%forc%v1
      - bottom layer meridional wind
-     - used under UFS Weather Model, and active atmosphere
+     - used if coupled with  active atmosphere
    * - inst_exner_function_height_lowest (`Sa_exner`)
      - 1 
      - noahmp%forc%prslk1
@@ -245,7 +251,7 @@ Model Fields Used for Coupling
      - W m-2 
      - noahmp%forc%dlwflx
      - net SW radiation 
-     - if it is not available, it will be calculated by using `mean_down_sw_flx` and surface albedo
+     - if it is not available, it will be calculated by using `mean_down_sw_flx` and surface albedo (see `calc_snet` option)
    * - mean_prec_rate_conv (`Faxa_rainc`)
      - kg m-2 s-1
      - noahmp%forc%tprcpc
@@ -299,10 +305,70 @@ Model Fields Used for Coupling
    * - Sl_lfrin
      - 0-1
      - noahmp%domain%frac
-     - land fraction     
+     - land fraction
      - required by mediator
-   * - Sl_t
+   * - Sl_sfrac
+     - 0-1
+     - noahmp%model%sncovr1
+     - mean snow area fraction
+     -
+   * - Fall_lat
+     - kg kg-1 m s-1
+     - noahmp%model%evap
+     - mean latent heat flux
+     -
+   * - Fall_sen
+     - kg kg-1 m s-1
+     - noahmp%model%hflx
+     - mean sensible heat flux
+     -
+   * - Fall_evap
+     - W m-2
+     - noahmp%model%ep
+     - mean potential latent heat flux
+     -
+   * - Sl_tref
      - K
      - noahmp%model%t2mmp
-     - land surface temperature
-     - 
+     - instantenous temperature at 2 meters
+     -
+   * - Sl_qref
+     - kg kg-1
+     - noahmp%model%q2mp
+     - instantenous specific humidity at 2 meters
+     -
+   * - Sl_q
+     - kg kg-1
+     - noahmp%model%qsurf
+     - instantenous specific humidity (at lowest model layer)
+     -
+   * - Fall_gflx
+     - W m-2
+     - noahmp%model%gflux
+     - mean upward heat flux (ground)
+     -
+   * - Fall_roff
+     - kg m-2 s-1
+     - noahmp%model%runoff
+     - mean runoff rate (surface)
+     -
+   * - Fall_soff
+     - kg m-2 s-1
+     - noahmp%model%drain
+     - mean runoff rate (sub-surface)
+     -
+   * - Sl_cmm
+     - m s-1
+     - noahmp%model%cmm
+     - instantenous drag wind speed for momentum
+     -
+   * - Sl_chh
+     - kg m-2 s-1
+     - noahmp%model%chh
+     - instantenous drag wind speed for heat and moisture
+     -
+   * - Sl_zvfun
+     - 0-1
+     - noahmp%model%zvfun
+     - instantenous function of roughness length and areal fractional cover of green vegetation
+     -
