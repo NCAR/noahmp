@@ -1,6 +1,9 @@
 ![image](https://user-images.githubusercontent.com/43385564/236596277-45d492e7-79fd-4006-83e2-3044106afd94.png)
 
 
+[![DOI](https://zenodo.org/badge/236657733.svg)](https://zenodo.org/badge/latestdoi/236657733)
+
+
 # Noah-MP Community Model Repository
 
 
