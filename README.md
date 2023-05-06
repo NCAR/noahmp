@@ -1,3 +1,6 @@
+![image](https://user-images.githubusercontent.com/43385564/236596277-45d492e7-79fd-4006-83e2-3044106afd94.png)
+
+
 # Noah-MP Community Model Repository
 
 
@@ -77,5 +80,7 @@ Some suggestions for model developers to contribute to Noah-MP code through the 
 7. Step (7) The Noah-MP physics and code review committee merges the updated "develop" branch to the master branch during the annual release of new model versions.
 
 
+## License
 
-Updated on March 9, 2023
+The license and terms of use for this software can be found [here](https://github.com/NCAR/noahmp/blob/develop/LICENSE.txt)
+
