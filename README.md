@@ -1,3 +1,6 @@
+![image](https://user-images.githubusercontent.com/43385564/236596277-45d492e7-79fd-4006-83e2-3044106afd94.png)
+
+
 # Noah-MP Community Model Repository
 
 
@@ -21,7 +24,7 @@ Technical documentation freely available at http://dx.doi.org/10.5065/ew8g-yr95
 
 **Original Noah-MP model description paper**:   Niu, G. Y., Yang, Z. L., Mitchell, K. E., Chen, F., Ek, M. B., Barlage, M., ... & Xia, Y. (2011). The community Noah land surface model with multiparameterization options (Noah‐MP): 1. Model description and evaluation with local‐scale measurements. Journal of Geophysical Research: Atmospheres, 116(D12).
 
-**Noah-MP version 5.0 model description paper**:  He, C., P. Valayamkunnath, M. Barlage, F. Chen, D. Gochis, R. Cabell, T. Schneider, R. Rasmussen, G.-Y. Niu, Z.-L. Yang, D. Niyogi, and M. Ek (2023): Modernizing the open-source community Noah-MP land surface model (version 5.0) with enhanced modularity, interoperability, and applicability, GMD, to be submitted.
+**Noah-MP version 5.0 model description paper**:  He, C., Valayamkunnath, P., Barlage, M., Chen, F., Gochis, D., Cabell, R., Schneider, T., Rasmussen, R., Niu, G.-Y., Yang, Z.-L., Niyogi, D., and Ek, M.: Modernizing the open-source community Noah-MP land surface model (version 5.0) with enhanced modularity, interoperability, and applicability, EGUsphere [preprint], https://doi.org/10.5194/egusphere-2023-675, 2023.
 
 
 ## Noah-MP GitHub structure
@@ -77,5 +80,7 @@ Some suggestions for model developers to contribute to Noah-MP code through the 
 7. Step (7) The Noah-MP physics and code review committee merges the updated "develop" branch to the master branch during the annual release of new model versions.
 
 
+## License
 
-Updated on March 9, 2023
+The license and terms of use for this software can be found [here](https://github.com/NCAR/noahmp/blob/develop/LICENSE.txt)
+
