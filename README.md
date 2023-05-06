@@ -24,7 +24,7 @@ Technical documentation freely available at http://dx.doi.org/10.5065/ew8g-yr95
 
 **Original Noah-MP model description paper**:   Niu, G. Y., Yang, Z. L., Mitchell, K. E., Chen, F., Ek, M. B., Barlage, M., ... & Xia, Y. (2011). The community Noah land surface model with multiparameterization options (Noah‐MP): 1. Model description and evaluation with local‐scale measurements. Journal of Geophysical Research: Atmospheres, 116(D12).
 
-**Noah-MP version 5.0 model description paper**:  He, C., P. Valayamkunnath, M. Barlage, F. Chen, D. Gochis, R. Cabell, T. Schneider, R. Rasmussen, G.-Y. Niu, Z.-L. Yang, D. Niyogi, and M. Ek (2023): Modernizing the open-source community Noah-MP land surface model (version 5.0) with enhanced modularity, interoperability, and applicability, GMD, to be submitted.
+**Noah-MP version 5.0 model description paper**:  He, C., Valayamkunnath, P., Barlage, M., Chen, F., Gochis, D., Cabell, R., Schneider, T., Rasmussen, R., Niu, G.-Y., Yang, Z.-L., Niyogi, D., and Ek, M.: Modernizing the open-source community Noah-MP land surface model (version 5.0) with enhanced modularity, interoperability, and applicability, EGUsphere [preprint], https://doi.org/10.5194/egusphere-2023-675, 2023.
 
 
 ## Noah-MP GitHub structure
