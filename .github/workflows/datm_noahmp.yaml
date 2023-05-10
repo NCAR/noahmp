@@ -63,8 +63,6 @@ jobs:
           component_module_name: lnd_comp_nuopc
           data_component_name: datm
           dependencies: |
-            zlib@1.2.12
-            esmf@${{ matrix.esmf }}+parallelio~xerces~pnetcdf
-            parallelio@2.5.10+pnetcdf
+            esmf@${{ matrix.esmf }}~external-parallelio
           dependencies_install_dir: ${{ env.DEP_INSTALL_DIR }}
           test_definition: ${{ env.APP_INSTALL_DIR }}/noahmp/.github/workflows/tests/${{ matrix.test }}.yaml
