@@ -64,8 +64,6 @@ jobs:
           data_component_name: datm
           dependencies: |
             esmf@${{ matrix.esmf }}
-            #zlib@1.2.12
-            #esmf@${{ matrix.esmf }}+parallelio~xerces~pnetcdf
             parallelio@2.5.10+pnetcdf
           dependencies_install_dir: ${{ env.DEP_INSTALL_DIR }}
           test_definition: ${{ env.APP_INSTALL_DIR }}/noahmp/.github/workflows/tests/${{ matrix.test }}.yaml
