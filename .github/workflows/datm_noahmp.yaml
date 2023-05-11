@@ -63,6 +63,6 @@ jobs:
           component_module_name: lnd_comp_nuopc
           data_component_name: datm
           dependencies: |
-            esmf@${{ matrix.esmf }}~external-parallelio
+            esmf@${{ matrix.esmf }}
           dependencies_install_dir: ${{ env.DEP_INSTALL_DIR }}
           test_definition: ${{ env.APP_INSTALL_DIR }}/noahmp/.github/workflows/tests/${{ matrix.test }}.yaml
