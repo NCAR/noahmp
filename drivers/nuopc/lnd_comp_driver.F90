@@ -695,12 +695,15 @@ contains
     end if
 
     ! check the restart frequency before calling write method
-    if (mod(int(now_time), noahmp%nmlist%restart_freq) == 0) then
-       write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5,a)') &
-          trim(noahmp%nmlist%case_name)//'.lnd.rst.', &
-          year, '-', month, '-', day, '-', hour*60*60+minute*60+second, '.tile#.nc'
-       call write_tiled_file(filename, noahmp, restflds, now_time, vm, localPet, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! if restart frequency < 0 then skip writing restart file
+    if (noahmp%nmlist%restart_freq > 0) then
+       if (mod(int(now_time), noahmp%nmlist%restart_freq) == 0) then
+          write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5,a)') &
+             trim(noahmp%nmlist%case_name)//'.lnd.rst.', &
+             year, '-', month, '-', day, '-', hour*60*60+minute*60+second, '.tile#.nc'
+          call write_tiled_file(filename, noahmp, restflds, now_time, vm, localPet, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       end if
     end if
 
     !----------------------
