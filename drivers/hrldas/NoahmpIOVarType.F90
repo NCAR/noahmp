@@ -218,6 +218,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  LAI                 ! leaf area index
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  XSAIXY              ! stem area index
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TAUSSXY             ! snow age factor
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  BTRANXY             ! soil transpiration factor (0-1) 
 
     ! irrigation
     real(kind=kind_noahmp), allocatable, dimension(:,:)    :: IRFRACT              ! irrigation fraction

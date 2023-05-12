@@ -128,6 +128,7 @@ contains
     NoahmpIO%ACC_ETRANIXY(I,1:NumSoilLayer,J)       = noahmp%water%flux%TranspWatLossSoilAcc(1:NumSoilLayer)
     NoahmpIO%SNICEXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%SnowIce(-NumSnowLayerMax+1:0)
     NoahmpIO%SNLIQXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%SnowLiqWater(-NumSnowLayerMax+1:0)
+    NoahmpIO%BTRANXY     (I,J) = noahmp%water%state%SoilTranspFacAcc
 
     ! irrigation
     NoahmpIO%IRNUMSI   (I,J) = noahmp%water%state%IrrigationCntSprinkler

@@ -180,6 +180,7 @@ contains
     if ( .not. allocated (NoahmpIO%ZSNSOXY)   ) allocate ( NoahmpIO%ZSNSOXY    (XSTART:XEND,-NSNOW+1:NSOIL,YSTART:YEND) ) ! snow layer depth [m]
     if ( .not. allocated (NoahmpIO%SNICEXY)   ) allocate ( NoahmpIO%SNICEXY    (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) ) ! snow layer ice [mm]
     if ( .not. allocated (NoahmpIO%SNLIQXY)   ) allocate ( NoahmpIO%SNLIQXY    (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) ) ! snow layer liquid water [mm]
+    if ( .not. allocated (NoahmpIO%BTRANXY)   ) allocate ( NoahmpIO%BTRANXY    (XSTART:XEND,               YSTART:YEND) ) ! soil transpiration factor (0-1) 
 
     ! irrigation
     if ( .not. allocated (NoahmpIO%IRFRACT) ) allocate ( NoahmpIO%IRFRACT (XSTART:XEND,YSTART:YEND) ) ! irrigation fraction
@@ -596,6 +597,7 @@ contains
     NoahmpIO%Z0              = undefined_real
     NoahmpIO%ZNT             = undefined_real
     NoahmpIO%TAUSSXY         = 0.0
+    NoahmpIO%BTRANXY         = 0.0
     NoahmpIO%DEEPRECHXY      = 0.0
     NoahmpIO%RECHXY          = 0.0
     NoahmpIO%ACSNOM          = 0.0
