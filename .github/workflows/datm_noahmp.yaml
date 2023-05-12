@@ -35,7 +35,8 @@ jobs:
     steps:
       # test component
       - name: Test Component
-        uses: esmf-org/nuopc-comp-testing@v1.1.0
+        #uses: esmf-org/nuopc-comp-testing@v1.1.0
+        uses: esmf-org/nuopc-comp-testing@feature/v1.2
         with:
           app_install_dir: ${{ env.APP_INSTALL_DIR }}
           artifacts_name: artifacts for ${{ matrix.test }} ${{ matrix.os }} esmf@${{ matrix.esmf }}
@@ -63,7 +64,8 @@ jobs:
           component_module_name: lnd_comp_nuopc
           data_component_name: datm
           dependencies: |
-            esmf@${{ matrix.esmf }}
+            zlib@1.2.12
+            esmf@${{ matrix.esmf }}+parallelio~xerces~pnetcdf
             parallelio@2.5.10+pnetcdf
           dependencies_install_dir: ${{ env.DEP_INSTALL_DIR }}
           test_definition: ${{ env.APP_INSTALL_DIR }}/noahmp/.github/workflows/tests/${{ matrix.test }}.yaml
