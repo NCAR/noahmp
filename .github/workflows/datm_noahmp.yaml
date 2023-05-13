@@ -21,7 +21,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         test: [test_datm_lnd]
-        esmf: [develop, 8.5.0b10]
+        esmf: [develop]
     
     env:
       # set token to access gh command
@@ -67,4 +67,5 @@ jobs:
           dependencies: |
             esmf@${{ matrix.esmf }}+external-parallelio
           dependencies_install_dir: ${{ env.DEP_INSTALL_DIR }}
+          mpirun_args: --oversubscribe -np 6 --allow-run-as-root --mca coll dynamic_gen2
           test_definition: ${{ env.APP_INSTALL_DIR }}/noahmp/.github/workflows/tests/${{ matrix.test }}.yaml
