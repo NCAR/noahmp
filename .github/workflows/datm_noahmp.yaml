@@ -67,5 +67,5 @@ jobs:
           dependencies: |
             esmf@${{ matrix.esmf }}+external-parallelio
           dependencies_install_dir: ${{ env.DEP_INSTALL_DIR }}
-          mpirun_args: --oversubscribe -np 6 --allow-run-as-root --mca coll dynamic_gen2
+          mpirun_args: --oversubscribe -np 6
           test_definition: ${{ env.APP_INSTALL_DIR }}/noahmp/.github/workflows/tests/${{ matrix.test }}.yaml
