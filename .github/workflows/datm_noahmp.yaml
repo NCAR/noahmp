@@ -14,10 +14,8 @@ on:
 jobs:
   latest-stable:
     runs-on: ${{ matrix.os }}
-    continue-on-error: false
 
     strategy:
-      fail-fast: false
       matrix:
         os: [ubuntu-22.04]
         test: [test_datm_lnd]
