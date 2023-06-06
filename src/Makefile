@@ -137,17 +137,20 @@ all:	$(OBJS)
 GroundWaterMmfMod.o: GroundWaterMmfMod.F90
 	@echo ""
 	$(RM) GroundWaterMmfMod.f90
-	$(CPP) $(CPPFLAGS) $(CPPHRLDAS) $(*).F90 > $(*).f90
-	$(COMPILERF90) -o $(@) -c $(F90FLAGS) $(FREESOURCE) -I ../../hrldas/MPP -I. \
-	-I../../hrldas/Utility_routines -I../utility $(NETCDFMOD) $(*).f90
-	$(RM) GroundWaterMmfMod.f90
+	$(CPP) $(CPPFLAGS) $(*).F90 > $(*).f90
+	$(COMPILERF90) -c -I../../hrldas/MPP -I. -I../../hrldas/Utility_routines \
+        -I../utility -I../drivers/hrldas $(F90FLAGS) $(FREESOURCE) $(NETCDFMOD) $(*).f90
 	@echo ""
 
 .F90.o:
-	$(COMPILERF90) -c $(F90FLAGS) $(FREESOURCE) -I../utility -I../drivers/hrldas $(NETCDFMOD) $(*).F90
+	@echo ""
+	$(RM) $(*).f90
+	$(CPP) $(CPPFLAGS) $(*).F90 > $(*).f90
+	$(COMPILERF90) -c -I. -I../utility -I../drivers/hrldas $(F90FLAGS) $(FREESOURCE) $(NETCDFMOD) $(*).f90
+	@echo ""
 
 clean:
-	rm -f *.o *.mod *.exe
+	rm -f *.o *.mod *.exe *.f90
 
 #
 # Dependencies:
@@ -310,7 +313,7 @@ BiochemCropMainMod.o:                    ../utility/Machine.o NoahmpVarType.o Co
 IrrigationPrepareMod.o:                  ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o IrrigationTriggerMod.o
 BalanceErrorCheckMod.o:                  ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 GeneralInitMod.o:                        ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
-GroundWaterMmfMod.o:                     ../utility/Machine.o NoahmpVarType.o ../drivers/hrldas/NoahmpIOVarType.o 
+GroundWaterMmfMod.o:                     ../utility/Machine.o NoahmpVarType.o ../drivers/hrldas/NoahmpIOVarType.o
 BalanceErrorCheckGlacierMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 EnergyMainGlacierMod.o:                  ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o SnowCoverGlacierMod.o \
                                          GroundRoughnessPropertyGlacierMod.o GroundThermalPropertyGlacierMod.o \
