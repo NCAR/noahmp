@@ -305,14 +305,14 @@ contains
        EnergyResTmp         = RadSwAbsVeg - RadLwNetCanopy - HeatSensibleCanopy - &
                               HeatLatentCanEvap - HeatLatentCanTransp + HeatPrecipAdvCanopy
        FluxTotCoeff         = VegFrac * (4.0*LwCoeffCan*TemperatureCanopy**3 + ShCoeff + &
-                                        (LhCoeff+TranspHeatCoeff)*VapPresSatCanTempD) + HeatCapacCan/MainTimeStep     ! volumetric heat capacity
+                                        (LhCoeff+TranspHeatCoeff)*VapPresSatCanTempD + HeatCapacCan/MainTimeStep)     ! volumetric heat capacity
        TemperatureCanChg    = EnergyResTmp / FluxTotCoeff
        ! update fluxes with temperature change
        RadLwNetCanopy       = RadLwNetCanopy + VegFrac * 4.0 * LwCoeffCan * TemperatureCanopy**3 * TemperatureCanChg
        HeatSensibleCanopy   = HeatSensibleCanopy + VegFrac * ShCoeff * TemperatureCanChg
        HeatLatentCanEvap    = HeatLatentCanEvap + VegFrac * LhCoeff * VapPresSatCanTempD * TemperatureCanChg
        HeatLatentCanTransp  = HeatLatentCanTransp  + VegFrac * TranspHeatCoeff * VapPresSatCanTempD * TemperatureCanChg
-       HeatCanStorageChg    = TemperatureCanChg * HeatCapacCan / MainTimeStep   ! canopy heat storage change [W/m2]
+       HeatCanStorageChg    = TemperatureCanChg * (VegFrac * HeatCapacCan / MainTimeStep)   ! canopy heat storage change [W/m2]
        ! update vegetation temperature
        TemperatureCanopy    = TemperatureCanopy + TemperatureCanChg
       !TemperatureCanopyAir = TempShGhTmp + ExchCoeffShFrac * TemperatureCanopy                        ! canopy air T; update here for consistency
