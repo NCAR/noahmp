@@ -129,11 +129,12 @@ contains
 
     ! treatment for urban point
     if ( (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISURBAN_TABLE) .or. (NoahmpIO%IVGTYP(I,J) > NoahmpIO%URBTYPE_beg) ) then
-       noahmp%config%domain%FlagUrban = .true. 
-       if(NoahmpIO%SF_URBAN_PHYSICS == 0 ) then
-           noahmp%config%domain%VegType = NoahmpIO%ISURBAN_TABLE
+       if ( NoahmpIO%SF_URBAN_PHYSICS == 0 ) then
+           noahmp%config%domain%VegType = NoahmpIO%ISURBAN_TABLE  ! treat as bulk urban point
+           noahmp%config%domain%FlagUrban = .true.
        else
-           noahmp%config%domain%VegType = NoahmpIO%NATURAL_TABLE  ! set urban vegetation type based on table natural
+           noahmp%config%domain%VegType = NoahmpIO%NATURAL_TABLE  ! set rural vegetation type based on table natural
+                                                                  ! urban is handled by explicit urban scheme outside Noah-MP
            NoahmpIO%GVFMAX(I,J)         = 0.96 * 100.0            ! unit: %
        endif         
     endif
