@@ -280,6 +280,7 @@ module lnd_comp_types
      integer                    :: surface_evap_resistance_option
      integer                    :: glacier_option
      integer                    :: surface_thermal_roughness_option
+     integer                    :: surface_diagnose_approach_option  ! option for surface diagnose approach
      integer                    :: output_freq                       ! model output interval
      logical                    :: has_export                        ! enable/disable export fields
      logical                    :: calc_snet                         ! enable/disable calculating net shortwave rad. internally
