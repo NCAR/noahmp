@@ -17,6 +17,7 @@ components:
         files:
           #- /ufs-community/ufs-weather-model/develop/tests/parm/fd_nems.yaml
           - /uturuncoglu/ufs-weather-model/feature/noahmp/tests/parm/fd_nems.yaml
+        force: True
     config:
       nuopc:
         name: esmxRun.config
