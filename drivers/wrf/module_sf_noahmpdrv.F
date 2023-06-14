@@ -3035,6 +3035,7 @@ end function checkIfHarvest
                           dgr_urb3d,       dg_urb3d,      lfr_urb3d,  lfg_urb3d,            & !RMS
                            lp_urb2d,       hi_urb2d,       lb_urb2d,  hgt_urb2d,            & !H multi-layer urban
                            mh_urb2d,     stdh_urb2d,       lf_urb2d,                        & !SLUCM
+                         lf_urb2d_s,       z0_urb2d,         vegfra,                        & !SLUCM
                              th_phy,            rho,          p_phy,        ust,            & !I multi-layer urban
                                 gmt,         julday,          xlong,       xlat,            & !I multi-layer urban
                             a_u_bep,        a_v_bep,        a_t_bep,    a_q_bep,            & !O multi-layer urban
@@ -3239,6 +3240,11 @@ end function checkIfHarvest
      REAL :: hgt_urb
      REAL, DIMENSION(4) :: lf_urb
 
+! Distributed aerodynamics parameters
+     REAL :: lf_urb_s
+     REAL :: z0_urb
+     REAL :: vegfrac
+
 ! Local variables
 
      INTEGER :: I,J,K
@@ -3277,6 +3283,9 @@ end function checkIfHarvest
      REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                     INTENT(IN   ) :: mh_urb2d
      REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                     INTENT(IN   ) :: stdh_urb2d
      REAL, OPTIONAL, DIMENSION( ims:ime, 4, jms:jme ),                  INTENT(IN   ) :: lf_urb2d
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                     INTENT(IN   ) :: lf_urb2d_s
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                     INTENT(IN   ) :: z0_urb2d
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                     INTENT(IN   ) :: vegfra
 
      REAL, OPTIONAL, DIMENSION( ims:ime, 1:urban_map_zrd, jms:jme ),    INTENT(INOUT) :: trb_urb4d
      REAL, OPTIONAL, DIMENSION( ims:ime, 1:urban_map_zwd, jms:jme ),    INTENT(INOUT) :: tw1_urb4d
@@ -3472,6 +3481,10 @@ ILOOP : DO I = its, ite
     IF (I.EQ.73.AND.J.EQ.125)THEN
       CHECK = 1
     END IF
+! Distributed aerodynamics
+    lf_urb_s = lf_urb2d_s(I, J)
+    z0_urb = z0_urb2d(I, J)
+    vegfrac = vegfra(I, J) / 100
 
 ! Call urban
 
@@ -3496,7 +3509,8 @@ ILOOP : DO I = its, ite
             hgt_urb,    frc_urb,     lb_urb,      check, CMCR_URB,TGR_URB,             & ! H
            TGRL_URB,    SMR_URB,   CMGR_URB,   CHGR_URB,   jmonth,                     & ! H
           DRELR_URB,  DRELB_URB,                                                       & ! H
-          DRELG_URB,FLXHUMR_URB,FLXHUMB_URB,FLXHUMG_URB )
+          DRELG_URB,FLXHUMR_URB,FLXHUMB_URB,FLXHUMG_URB,                               &
+          lf_urb_s, z0_urb, vegfrac)
 
     TS_URB2D(I,J) = TS_URB
 
