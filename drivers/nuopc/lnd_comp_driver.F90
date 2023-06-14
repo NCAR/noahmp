@@ -557,6 +557,7 @@ contains
          noahmp%static%itime   , &
          noahmp%forc%ps        , noahmp%model%u1        , noahmp%model%v1        , &
          noahmp%forc%t1        , noahmp%forc%q1         , noahmp%model%soiltyp   , &
+         noahmp%model%soilcol  , &
          noahmp%model%vegtype  , noahmp%model%sigmaf    , noahmp%forc%dlwflx     , &
          noahmp%forc%dswsfc    , noahmp%model%snet      , noahmp%static%delt     , &
          noahmp%model%tg3      , noahmp%model%cm        , noahmp%model%ch        , &
@@ -569,7 +570,7 @@ contains
          noahmp%static%iopt_run, noahmp%static%iopt_sfc , noahmp%static%iopt_frz , &
          noahmp%static%iopt_inf, noahmp%static%iopt_rad , noahmp%static%iopt_alb , &
          noahmp%static%iopt_snf, noahmp%static%iopt_tbot, noahmp%static%iopt_stc , &
-         noahmp%static%iopt_trs, &
+         noahmp%static%iopt_trs, noahmp%static%iopt_diag, &
          noahmp%model%xlatin   , noahmp%model%xcoszin   , noahmp%model%iyrlen    , &
          noahmp%model%julian   , noahmp%domain%garea    , &
          noahmp%model%rainn_mp , noahmp%model%rainc_mp  , &
