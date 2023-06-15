@@ -62,7 +62,7 @@ jobs:
           component_module_name: lnd_comp_nuopc
           data_component_name: datm
           dependencies: |
-            fms@2022.04
+            fms@2022.04 precision=32,64
             esmf@${{ matrix.esmf }}+external-parallelio
           dependencies_install_dir: ${{ env.DEP_INSTALL_DIR }}
           mpirun_args: --oversubscribe -np 6 --mca btl_tcp_if_include eth0
