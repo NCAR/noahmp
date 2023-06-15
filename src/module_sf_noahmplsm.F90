@@ -10772,7 +10772,7 @@ end subroutine psn_crop
           if ( present(iz0tlnd) ) then
              if ( iz0tlnd .le. 1 ) then
                 call zilitinkevich_1995(znt,zt,zq,restar,&
-                      ust,vkc,1.0_kind_phys,iz0tlnd,0,0.0)
+                      ust,vkc,1.0_kind_phys,iz0tlnd,0,0.0_kind_phys)
              elseif ( iz0tlnd .eq. 2 ) then
                 call yang_2008(znt,zt,zq,ust,molx,&
                               qstar,restar,visc)
@@ -10787,7 +10787,7 @@ end subroutine psn_crop
 
              !default to zilitinkevich
              call zilitinkevich_1995(znt,zt,zq,restar,&
-                         ust,vkc,1.0_kind_phys,0,0,0.0)
+                         ust,vkc,1.0_kind_phys,0,0,0.0_kind_phys)
           endif
        endif
 
