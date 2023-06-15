@@ -8,7 +8,7 @@
 !! only the data in the noah_mp_modis_parameters section of MPTABLE.TBL and the STAS section of
 !! SOILPARM.TBL are included in this module.
 module noahmp_tables
-
+use machine ,   only : kind_phys
     implicit none
 
     integer, private, parameter :: mvt   = 30 ! use 30 instead of 27
@@ -39,219 +39,219 @@ module noahmp_tables
     integer :: lcz_9_table
     integer :: lcz_10_table
     integer :: lcz_11_table
-    real :: ch2op_table(mvt)       !< maximum intercepted h2o per unit lai+sai (mm)
-    real :: dleaf_table(mvt)       !< characteristic leaf dimension (m)
-    real :: z0mvt_table(mvt)       !< momentum roughness length (m)
-    real :: hvt_table(mvt)         !< top of canopy (m)
-    real :: hvb_table(mvt)         !< bottom of canopy (m)
-    real :: z0mhvt_table(mvt)      !< ratio of z0m to hvt
-    real :: den_table(mvt)         !< tree density (no. of trunks per m2)
-    real :: rc_table(mvt)          !< tree crown radius (m)
-    real :: mfsno_table(mvt)       !< snowmelt curve parameter ()
-    real :: scffac_table(mvt)      !< snow cover factor (m)
-    real :: cbiom_table(mvt)       !< canopy biomass heat capacity parameter (m)
-    real :: saim_table(mvt,12)     !< monthly stem area index, one-sided
-    real :: laim_table(mvt,12)     !< monthly leaf area index, one-sided
-    real :: sla_table(mvt)         !< single-side leaf area per kg [m2/kg]
-    real :: dilefc_table(mvt)      !< coeficient for leaf stress death [1/s]
-    real :: dilefw_table(mvt)      !< coeficient for leaf stress death [1/s]
-    real :: fragr_table(mvt)       !< fraction of growth respiration  !original was 0.3 
-    real :: ltovrc_table(mvt)      !< leaf turnover [1/s]
+    real (kind=kind_phys) :: ch2op_table(mvt)       !< maximum intercepted h2o per unit lai+sai (mm)
+    real (kind=kind_phys) :: dleaf_table(mvt)       !< characteristic leaf dimension (m)
+    real (kind=kind_phys) :: z0mvt_table(mvt)       !< momentum roughness length (m)
+    real (kind=kind_phys) :: hvt_table(mvt)         !< top of canopy (m)
+    real (kind=kind_phys) :: hvb_table(mvt)         !< bottom of canopy (m)
+    real (kind=kind_phys) :: z0mhvt_table(mvt)      !< ratio of z0m to hvt
+    real (kind=kind_phys) :: den_table(mvt)         !< tree density (no. of trunks per m2)
+    real (kind=kind_phys) :: rc_table(mvt)          !< tree crown radius (m)
+    real (kind=kind_phys) :: mfsno_table(mvt)       !< snowmelt curve parameter ()
+    real (kind=kind_phys) :: scffac_table(mvt)      !< snow cover factor (m)
+    real (kind=kind_phys) :: cbiom_table(mvt)       !< canopy biomass heat capacity parameter (m)
+    real (kind=kind_phys) :: saim_table(mvt,12)     !< monthly stem area index, one-sided
+    real (kind=kind_phys) :: laim_table(mvt,12)     !< monthly leaf area index, one-sided
+    real (kind=kind_phys) :: sla_table(mvt)         !< single-side leaf area per kg [m2/kg]
+    real (kind=kind_phys) :: dilefc_table(mvt)      !< coeficient for leaf stress death [1/s]
+    real (kind=kind_phys) :: dilefw_table(mvt)      !< coeficient for leaf stress death [1/s]
+    real (kind=kind_phys) :: fragr_table(mvt)       !< fraction of growth respiration  !original was 0.3 
+    real (kind=kind_phys) :: ltovrc_table(mvt)      !< leaf turnover [1/s]
 
-    real :: c3psn_table(mvt)       !< photosynthetic pathway: 0. = c4, 1. = c3
-    real :: kc25_table(mvt)        !< co2 michaelis-menten constant at 25c (pa)
-    real :: akc_table(mvt)         !< q10 for kc25
-    real :: ko25_table(mvt)        !< o2 michaelis-menten constant at 25c (pa)
-    real :: ako_table(mvt)         !< q10 for ko25
-    real :: vcmx25_table(mvt)      !< maximum rate of carboxylation at 25c (umol co2/m**2/s)
-    real :: avcmx_table(mvt)       !< q10 for vcmx25
-    real :: bp_table(mvt)          !< minimum leaf conductance (umol/m**2/s)
-    real :: mp_table(mvt)          !< slope of conductance-to-photosynthesis relationship
-    real :: qe25_table(mvt)        !< quantum efficiency at 25c (umol co2 / umo photon)
-    real :: aqe_table(mvt)         !< q10 for qe25
-    real :: rmf25_table(mvt)       !< leaf maintenance respiration at 25c (umol co2/m**2/s)
-    real :: rms25_table(mvt)       !< stem maintenance respiration at 25c (umol co2/kg bio/s)
-    real :: rmr25_table(mvt)       !< root maintenance respiration at 25c (umol co2/kg bio/s)
-    real :: arm_table(mvt)         !< q10 for maintenance respiration
-    real :: folnmx_table(mvt)      !< foliage nitrogen concentration when f(n)=1 (%)
-    real :: tmin_table(mvt)        !< minimum temperature for photosynthesis (k)
+    real (kind=kind_phys) :: c3psn_table(mvt)       !< photosynthetic pathway: 0. = c4, 1. = c3
+    real (kind=kind_phys) :: kc25_table(mvt)        !< co2 michaelis-menten constant at 25c (pa)
+    real (kind=kind_phys) :: akc_table(mvt)         !< q10 for kc25
+    real (kind=kind_phys) :: ko25_table(mvt)        !< o2 michaelis-menten constant at 25c (pa)
+    real (kind=kind_phys) :: ako_table(mvt)         !< q10 for ko25
+    real (kind=kind_phys) :: vcmx25_table(mvt)      !< maximum rate of carboxylation at 25c (umol co2/m**2/s)
+    real (kind=kind_phys) :: avcmx_table(mvt)       !< q10 for vcmx25
+    real (kind=kind_phys) :: bp_table(mvt)          !< minimum leaf conductance (umol/m**2/s)
+    real (kind=kind_phys) :: mp_table(mvt)          !< slope of conductance-to-photosynthesis relationship
+    real (kind=kind_phys) :: qe25_table(mvt)        !< quantum efficiency at 25c (umol co2 / umo photon)
+    real (kind=kind_phys) :: aqe_table(mvt)         !< q10 for qe25
+    real (kind=kind_phys) :: rmf25_table(mvt)       !< leaf maintenance respiration at 25c (umol co2/m**2/s)
+    real (kind=kind_phys) :: rms25_table(mvt)       !< stem maintenance respiration at 25c (umol co2/kg bio/s)
+    real (kind=kind_phys) :: rmr25_table(mvt)       !< root maintenance respiration at 25c (umol co2/kg bio/s)
+    real (kind=kind_phys) :: arm_table(mvt)         !< q10 for maintenance respiration
+    real (kind=kind_phys) :: folnmx_table(mvt)      !< foliage nitrogen concentration when f(n)=1 (%)
+    real (kind=kind_phys) :: tmin_table(mvt)        !< minimum temperature for photosynthesis (k)
 
-    real :: xl_table(mvt)          !< leaf/stem orientation index
-    real :: rhol_table(mvt,mband)  !< leaf reflectance: 1=vis, 2=nir
-    real :: rhos_table(mvt,mband)  !< stem reflectance: 1=vis, 2=nir
-    real :: taul_table(mvt,mband)  !< leaf transmittance: 1=vis, 2=nir
-    real :: taus_table(mvt,mband)  !< stem transmittance: 1=vis, 2=nir
+    real (kind=kind_phys) :: xl_table(mvt)          !< leaf/stem orientation index
+    real (kind=kind_phys) :: rhol_table(mvt,mband)  !< leaf reflectance: 1=vis, 2=nir
+    real (kind=kind_phys) :: rhos_table(mvt,mband)  !< stem reflectance: 1=vis, 2=nir
+    real (kind=kind_phys) :: taul_table(mvt,mband)  !< leaf transmittance: 1=vis, 2=nir
+    real (kind=kind_phys) :: taus_table(mvt,mband)  !< stem transmittance: 1=vis, 2=nir
 
-    real :: mrp_table(mvt)         !< microbial respiration parameter (umol co2 /kg c/ s)
-    real :: cwpvt_table(mvt)       !< empirical canopy wind parameter
+    real (kind=kind_phys) :: mrp_table(mvt)         !< microbial respiration parameter (umol co2 /kg c/ s)
+    real (kind=kind_phys) :: cwpvt_table(mvt)       !< empirical canopy wind parameter
 
-    real :: wrrat_table(mvt)       !< wood to non-wood ratio
-    real :: wdpool_table(mvt)      !< wood pool (switch 1 or 0) depending on woody or not [-]
-    real :: tdlef_table(mvt)       !< characteristic t for leaf freezing [k]
+    real (kind=kind_phys) :: wrrat_table(mvt)       !< wood to non-wood ratio
+    real (kind=kind_phys) :: wdpool_table(mvt)      !< wood pool (switch 1 or 0) depending on woody or not [-]
+    real (kind=kind_phys) :: tdlef_table(mvt)       !< characteristic t for leaf freezing [k]
 
-    real :: nroot_table(mvt)       !< number of soil layers with root present
-    real :: rgl_table(mvt)         !< parameter used in radiation stress function
-    real :: rs_table(mvt)          !< minimum stomatal resistance [s m-1]
-    real :: hs_table(mvt)          !< parameter used in vapor pressure deficit function
-    real :: topt_table(mvt)        !< optimum transpiration air temperature [k]
-    real :: rsmax_table(mvt)       !< maximal stomatal resistance [s m-1]
+    real (kind=kind_phys) :: nroot_table(mvt)       !< number of soil layers with root present
+    real (kind=kind_phys) :: rgl_table(mvt)         !< parameter used in radiation stress function
+    real (kind=kind_phys) :: rs_table(mvt)          !< minimum stomatal resistance [s m-1]
+    real (kind=kind_phys) :: hs_table(mvt)          !< parameter used in vapor pressure deficit function
+    real (kind=kind_phys) :: topt_table(mvt)        !< optimum transpiration air temperature [k]
+    real (kind=kind_phys) :: rsmax_table(mvt)       !< maximal stomatal resistance [s m-1]
 
 ! soilparm.tbl parameters
 
     integer :: slcats
 
-    real :: bexp_table(max_soiltyp)   
-    real :: smcdry_table(max_soiltyp)  
-    real :: f1_table(max_soiltyp)     
-    real :: smcmax_table(max_soiltyp)
-    real :: smcref_table(max_soiltyp)  
-    real :: psisat_table(max_soiltyp) 
-    real :: dksat_table(max_soiltyp) 
-    real :: dwsat_table(max_soiltyp)
-    real :: smcwlt_table(max_soiltyp)   
-    real :: quartz_table(max_soiltyp)  
-    real :: bvic_table(max_soiltyp)        !vic model infiltration parameter (-) for opt_run=6
-    real :: axaj_table(max_soiltyp)        !Xinanjiang: Tension water distribution inflection parameter [-] for opt_run=7
-    real :: bxaj_table(max_soiltyp)        !Xinanjiang: Tension water distribution shape parameter [-] for opt_run=7
-    real :: xxaj_table(max_soiltyp)        !Xinanjiang: Free water distribution shape parameter [-] for opt_run=7
-    real :: bdvic_table(max_soiltyp)       !VIC model infiltration parameter (-)
-    real :: gdvic_table(max_soiltyp)       !mean capilary drive (m)
-    real :: bbvic_table(max_soiltyp)       !heterogeniety parameter for DVIC infiltration [-]
+    real (kind=kind_phys) :: bexp_table(max_soiltyp)   
+    real (kind=kind_phys) :: smcdry_table(max_soiltyp)  
+    real (kind=kind_phys) :: f1_table(max_soiltyp)     
+    real (kind=kind_phys) :: smcmax_table(max_soiltyp)
+    real (kind=kind_phys) :: smcref_table(max_soiltyp)  
+    real (kind=kind_phys) :: psisat_table(max_soiltyp) 
+    real (kind=kind_phys) :: dksat_table(max_soiltyp) 
+    real (kind=kind_phys) :: dwsat_table(max_soiltyp)
+    real (kind=kind_phys) :: smcwlt_table(max_soiltyp)   
+    real (kind=kind_phys) :: quartz_table(max_soiltyp)  
+    real (kind=kind_phys) :: bvic_table(max_soiltyp)        !vic model infiltration parameter (-) for opt_run=6
+    real (kind=kind_phys) :: axaj_table(max_soiltyp)        !Xinanjiang: Tension water distribution inflection parameter [-] for opt_run=7
+    real (kind=kind_phys) :: bxaj_table(max_soiltyp)        !Xinanjiang: Tension water distribution shape parameter [-] for opt_run=7
+    real (kind=kind_phys) :: xxaj_table(max_soiltyp)        !Xinanjiang: Free water distribution shape parameter [-] for opt_run=7
+    real (kind=kind_phys) :: bdvic_table(max_soiltyp)       !VIC model infiltration parameter (-)
+    real (kind=kind_phys) :: gdvic_table(max_soiltyp)       !mean capilary drive (m)
+    real (kind=kind_phys) :: bbvic_table(max_soiltyp)       !heterogeniety parameter for DVIC infiltration [-]
 
 ! genparm.tbl parameters
 
-    real :: slope_table(num_slope)                     !< slope factor for soil drainage
+    real (kind=kind_phys) :: slope_table(num_slope)                     !< slope factor for soil drainage
     
-    real :: csoil_table       !< soil heat capacity [j m-3 k-1]
-    real :: refdk_table       !< parameter in the surface runoff parameterization
-    real :: refkdt_table      !< parameter in the surface runoff parameterization
-    real :: frzk_table        !< frozen ground parameter
-    real :: zbot_table        !< depth [m] of lower boundary soil temperature
-    real :: czil_table        !< parameter used in the calculation of the roughness length for heat
+    real (kind=kind_phys) :: csoil_table       !< soil heat capacity [j m-3 k-1]
+    real (kind=kind_phys) :: refdk_table       !< parameter in the surface runoff parameterization
+    real (kind=kind_phys) :: refkdt_table      !< parameter in the surface runoff parameterization
+    real (kind=kind_phys) :: frzk_table        !< frozen ground parameter
+    real (kind=kind_phys) :: zbot_table        !< depth [m] of lower boundary soil temperature
+    real (kind=kind_phys) :: czil_table        !< parameter used in the calculation of the roughness length for heat
 
 ! mptable.tbl radiation parameters
 
-    real :: albsat_table(msc,mband)   !< saturated soil albedos: 1=vis, 2=nir
-    real :: albdry_table(msc,mband)   !< dry soil albedos: 1=vis, 2=nir
-    real :: albice_table(mband)       !< albedo land ice: 1=vis, 2=nir
-    real :: alblak_table(mband)       !< albedo frozen lakes: 1=vis, 2=nir
-    real :: omegas_table(mband)       !< two-stream parameter omega for snow
-    real :: betads_table              !< two-stream parameter betad for snow
-    real :: betais_table              !< two-stream parameter betad for snow
-    real :: eg_table(2)               !< emissivity
+    real (kind=kind_phys) :: albsat_table(msc,mband)   !< saturated soil albedos: 1=vis, 2=nir
+    real (kind=kind_phys) :: albdry_table(msc,mband)   !< dry soil albedos: 1=vis, 2=nir
+    real (kind=kind_phys) :: albice_table(mband)       !< albedo land ice: 1=vis, 2=nir
+    real (kind=kind_phys) :: alblak_table(mband)       !< albedo frozen lakes: 1=vis, 2=nir
+    real (kind=kind_phys) :: omegas_table(mband)       !< two-stream parameter omega for snow
+    real (kind=kind_phys) :: betads_table              !< two-stream parameter betad for snow
+    real (kind=kind_phys) :: betais_table              !< two-stream parameter betad for snow
+    real (kind=kind_phys) :: eg_table(2)               !< emissivity
 
 ! mptable.tbl global parameters
  
-    real :: co2_table                 !< co2 partial pressure
-    real :: o2_table                  !< o2 partial pressure
-    real :: timean_table              !< gridcell mean topgraphic index (global mean)
-    real :: fsatmx_table              !< maximum surface saturated fraction (global mean)
-    real :: z0sno_table               !< snow surface roughness length (m) (0.002)
-    real :: ssi_table                 !< liquid water holding capacity for snowpack (m3/m3) (0.03)
-    real :: snow_ret_fac_table        !< snowpack water release timescale factor (1/s)
-    real :: snow_emis_table           !< surface emissivity
-    real :: swemx_table               !< new snow mass to fully cover old snow (mm)
-    real :: tau0_table                !< tau0 from yang97 eqn. 10a
-    real :: grain_growth_table        !< growth from vapor diffusion yang97 eqn. 10b
-    real :: extra_growth_table        !< extra growth near freezing yang97 eqn. 10c
-    real :: dirt_soot_table           !< dirt and soot term yang97 eqn. 10d
-    real :: bats_cosz_table           !< zenith angle snow albedo adjustment; b in yang97 eqn. 15
-    real :: bats_vis_new_table        !< new snow visible albedo
-    real :: bats_nir_new_table        !< new snow nir albedo
-    real :: bats_vis_age_table        !< age factor for diffuse visible snow albedo yang97 eqn. 17
-    real :: bats_nir_age_table        !< age factor for diffuse nir snow albedo yang97 eqn. 18
-    real :: bats_vis_dir_table        !< cosz factor for direct visible snow albedo yang97 eqn. 15
-    real :: bats_nir_dir_table        !< cosz factor for direct nir snow albedo yang97 eqn. 16
-    real :: rsurf_snow_table          !< surface resistance for snow(s/m)
-    real :: rsurf_exp_table           !< exponent in the shape parameter for soil resistance option 1
+    real (kind=kind_phys) :: co2_table                 !< co2 partial pressure
+    real (kind=kind_phys) :: o2_table                  !< o2 partial pressure
+    real (kind=kind_phys) :: timean_table              !< gridcell mean topgraphic index (global mean)
+    real (kind=kind_phys) :: fsatmx_table              !< maximum surface saturated fraction (global mean)
+    real (kind=kind_phys) :: z0sno_table               !< snow surface roughness length (m) (0.002)
+    real (kind=kind_phys) :: ssi_table                 !< liquid water holding capacity for snowpack (m3/m3) (0.03)
+    real (kind=kind_phys) :: snow_ret_fac_table        !< snowpack water release timescale factor (1/s)
+    real (kind=kind_phys) :: snow_emis_table           !< surface emissivity
+    real (kind=kind_phys) :: swemx_table               !< new snow mass to fully cover old snow (mm)
+    real (kind=kind_phys) :: tau0_table                !< tau0 from yang97 eqn. 10a
+    real (kind=kind_phys) :: grain_growth_table        !< growth from vapor diffusion yang97 eqn. 10b
+    real (kind=kind_phys) :: extra_growth_table        !< extra growth near freezing yang97 eqn. 10c
+    real (kind=kind_phys) :: dirt_soot_table           !< dirt and soot term yang97 eqn. 10d
+    real (kind=kind_phys) :: bats_cosz_table           !< zenith angle snow albedo adjustment; b in yang97 eqn. 15
+    real (kind=kind_phys) :: bats_vis_new_table        !< new snow visible albedo
+    real (kind=kind_phys) :: bats_nir_new_table        !< new snow nir albedo
+    real (kind=kind_phys) :: bats_vis_age_table        !< age factor for diffuse visible snow albedo yang97 eqn. 17
+    real (kind=kind_phys) :: bats_nir_age_table        !< age factor for diffuse nir snow albedo yang97 eqn. 18
+    real (kind=kind_phys) :: bats_vis_dir_table        !< cosz factor for direct visible snow albedo yang97 eqn. 15
+    real (kind=kind_phys) :: bats_nir_dir_table        !< cosz factor for direct nir snow albedo yang97 eqn. 16
+    real (kind=kind_phys) :: rsurf_snow_table          !< surface resistance for snow(s/m)
+    real (kind=kind_phys) :: rsurf_exp_table           !< exponent in the shape parameter for soil resistance option 1
 
 ! mptable.tbl irrigation parameters
 
-    real :: irr_frac_table              ! irrigation Fraction
+    real (kind=kind_phys) :: irr_frac_table              ! irrigation Fraction
  integer :: irr_har_table               ! number of days before harvest date to stop irrigation
-    real :: irr_lai_table               ! Minimum lai to trigger irrigation
-    real :: irr_mad_table               ! management allowable deficit (0-1)
-    real :: filoss_table                ! fraction of flood irrigation loss (0-1)
-    real :: sprir_rate_table            ! mm/h, sprinkler irrigation rate
-    real :: micir_rate_table            ! mm/h, micro irrigation rate
-    real :: firtfac_table               ! flood application rate factor
-    real :: ir_rain_table               ! maximum precipitation to stop irrigation trigger
+    real (kind=kind_phys) :: irr_lai_table               ! Minimum lai to trigger irrigation
+    real (kind=kind_phys) :: irr_mad_table               ! management allowable deficit (0-1)
+    real (kind=kind_phys) :: filoss_table                ! fraction of flood irrigation loss (0-1)
+    real (kind=kind_phys) :: sprir_rate_table            ! mm/h, sprinkler irrigation rate
+    real (kind=kind_phys) :: micir_rate_table            ! mm/h, micro irrigation rate
+    real (kind=kind_phys) :: firtfac_table               ! flood application rate factor
+    real (kind=kind_phys) :: ir_rain_table               ! maximum precipitation to stop irrigation trigger
 
 ! mptable.tbl crop parameters
 
     integer :: default_crop_table          ! Default crop index
     integer :: pltday_table(ncrop)         !< planting date
     integer :: hsday_table(ncrop)          !< harvest date
-    real :: plantpop_table(ncrop)       !< plant density [per ha] - used?
-    real :: irri_table(ncrop)           !< irrigation strategy 0= non-irrigation 1=irrigation (no water-stress)
+    real (kind=kind_phys) :: plantpop_table(ncrop)       !< plant density [per ha] - used?
+    real (kind=kind_phys) :: irri_table(ncrop)           !< irrigation strategy 0= non-irrigation 1=irrigation (no water-stress)
 
-    real :: gddtbase_table(ncrop)       !< base temperature for gdd accumulation [c]
-    real :: gddtcut_table(ncrop)        !< upper temperature for gdd accumulation [c]
-    real :: gdds1_table(ncrop)          !< gdd from seeding to emergence
-    real :: gdds2_table(ncrop)          !< gdd from seeding to initial vegetative 
-    real :: gdds3_table(ncrop)          !< gdd from seeding to  post vegetative
-    real :: gdds4_table(ncrop)          !< gdd from seeding to  intial reproductive
-    real :: gdds5_table(ncrop)          !< gdd from seeding to pysical maturity 
+    real (kind=kind_phys) :: gddtbase_table(ncrop)       !< base temperature for gdd accumulation [c]
+    real (kind=kind_phys) :: gddtcut_table(ncrop)        !< upper temperature for gdd accumulation [c]
+    real (kind=kind_phys) :: gdds1_table(ncrop)          !< gdd from seeding to emergence
+    real (kind=kind_phys) :: gdds2_table(ncrop)          !< gdd from seeding to initial vegetative 
+    real (kind=kind_phys) :: gdds3_table(ncrop)          !< gdd from seeding to  post vegetative
+    real (kind=kind_phys) :: gdds4_table(ncrop)          !< gdd from seeding to  intial reproductive
+    real (kind=kind_phys) :: gdds5_table(ncrop)          !< gdd from seeding to pysical maturity 
 
-    real :: c3psni_table(ncrop)       !photosynthetic pathway: 0. = c4, 1. = c3 ! Zhe Zhang 2020-07-03
-    real :: kc25i_table(ncrop)        !co2 michaelis-menten constant at 25c (pa)
-    real :: akci_table(ncrop)         !q10 for kc25
-    real :: ko25i_table(ncrop)        !o2 michaelis-menten constant at 25c (pa)
-    real :: akoi_table(ncrop)         !q10 for ko25
-    real :: vcmx25i_table(ncrop)      !maximum rate of carboxylation at 25c (umol co2/m**2/s)
-    real :: avcmxi_table(ncrop)       !q10 for vcmx25
-    real :: bpi_table(ncrop)          !minimum leaf conductance (umol/m**2/s)
-    real :: mpi_table(ncrop)          !slope of conductance-to-photosynthesis relationship
-    real :: qe25i_table(ncrop)        !quantum efficiency at 25c (umol co2 / umol photon)
-    real :: folnmxi_table(ncrop)      !foliage nitrogen concentration when
+    real (kind=kind_phys) :: c3psni_table(ncrop)       !photosynthetic pathway: 0. = c4, 1. = c3 ! Zhe Zhang 2020-07-03
+    real (kind=kind_phys) :: kc25i_table(ncrop)        !co2 michaelis-menten constant at 25c (pa)
+    real (kind=kind_phys) :: akci_table(ncrop)         !q10 for kc25
+    real (kind=kind_phys) :: ko25i_table(ncrop)        !o2 michaelis-menten constant at 25c (pa)
+    real (kind=kind_phys) :: akoi_table(ncrop)         !q10 for ko25
+    real (kind=kind_phys) :: vcmx25i_table(ncrop)      !maximum rate of carboxylation at 25c (umol co2/m**2/s)
+    real (kind=kind_phys) :: avcmxi_table(ncrop)       !q10 for vcmx25
+    real (kind=kind_phys) :: bpi_table(ncrop)          !minimum leaf conductance (umol/m**2/s)
+    real (kind=kind_phys) :: mpi_table(ncrop)          !slope of conductance-to-photosynthesis relationship
+    real (kind=kind_phys) :: qe25i_table(ncrop)        !quantum efficiency at 25c (umol co2 / umol photon)
+    real (kind=kind_phys) :: folnmxi_table(ncrop)      !foliage nitrogen concentration when
 
     integer :: c3c4_table(ncrop)           !< photosynthetic pathway:  1. = c3 2. = c4
-    real :: aref_table(ncrop)           !< reference maximum co2 assimulation rate 
-    real :: psnrf_table(ncrop)          !< co2 assimulation reduction factor(0-1) (caused by non-modeling part,e.g.pest,weeds)
-    real :: i2par_table(ncrop)          !< fraction of incoming solar radiation to photosynthetically active radiation
-    real :: tassim0_table(ncrop)        !< minimum temperature for co2 assimulation [c]
-    real :: tassim1_table(ncrop)        !< co2 assimulation linearly increasing until temperature reaches t1 [c]
-    real :: tassim2_table(ncrop)        !< co2 assmilation rate remain at aref until temperature reaches t2 [c]
-    real :: k_table(ncrop)              !< light extinction coefficient
-    real :: epsi_table(ncrop)           !< initial light use efficiency
+    real (kind=kind_phys) :: aref_table(ncrop)           !< reference maximum co2 assimulation rate 
+    real (kind=kind_phys) :: psnrf_table(ncrop)          !< co2 assimulation reduction factor(0-1) (caused by non-modeling part,e.g.pest,weeds)
+    real (kind=kind_phys) :: i2par_table(ncrop)          !< fraction of incoming solar radiation to photosynthetically active radiation
+    real (kind=kind_phys) :: tassim0_table(ncrop)        !< minimum temperature for co2 assimulation [c]
+    real (kind=kind_phys) :: tassim1_table(ncrop)        !< co2 assimulation linearly increasing until temperature reaches t1 [c]
+    real (kind=kind_phys) :: tassim2_table(ncrop)        !< co2 assmilation rate remain at aref until temperature reaches t2 [c]
+    real (kind=kind_phys) :: k_table(ncrop)              !< light extinction coefficient
+    real (kind=kind_phys) :: epsi_table(ncrop)           !< initial light use efficiency
 
-    real :: q10mr_table(ncrop)          !< q10 for maintainance respiration
-    real :: foln_mx_table(ncrop)        !< foliage nitrogen concentration when f(n)=1 (%)
-    real :: lefreez_table(ncrop)        !< characteristic t for leaf freezing [k]
+    real (kind=kind_phys) :: q10mr_table(ncrop)          !< q10 for maintainance respiration
+    real (kind=kind_phys) :: foln_mx_table(ncrop)        !< foliage nitrogen concentration when f(n)=1 (%)
+    real (kind=kind_phys) :: lefreez_table(ncrop)        !< characteristic t for leaf freezing [k]
 
-    real :: dile_fc_table(ncrop,nstage) !< coeficient for temperature leaf stress death [1/s]
-    real :: dile_fw_table(ncrop,nstage) !< coeficient for water leaf stress death [1/s]
-    real :: fra_gr_table(ncrop)         !< fraction of growth respiration
+    real (kind=kind_phys) :: dile_fc_table(ncrop,nstage) !< coeficient for temperature leaf stress death [1/s]
+    real (kind=kind_phys) :: dile_fw_table(ncrop,nstage) !< coeficient for water leaf stress death [1/s]
+    real (kind=kind_phys) :: fra_gr_table(ncrop)         !< fraction of growth respiration
 
-    real :: lf_ovrc_table(ncrop,nstage) !< fraction of leaf turnover  [1/s]
-    real :: st_ovrc_table(ncrop,nstage) !< fraction of stem turnover  [1/s]
-    real :: rt_ovrc_table(ncrop,nstage) !< fraction of root tunrover  [1/s]
-    real :: lfmr25_table(ncrop)         !<  leaf maintenance respiration at 25c [umol co2/m**2  /s]
-    real :: stmr25_table(ncrop)         !<  stem maintenance respiration at 25c [umol co2/kg bio/s]
-    real :: rtmr25_table(ncrop)         !<  root maintenance respiration at 25c [umol co2/kg bio/s]
-    real :: grainmr25_table(ncrop)      !< grain maintenance respiration at 25c [umol co2/kg bio/s]
+    real (kind=kind_phys) :: lf_ovrc_table(ncrop,nstage) !< fraction of leaf turnover  [1/s]
+    real (kind=kind_phys) :: st_ovrc_table(ncrop,nstage) !< fraction of stem turnover  [1/s]
+    real (kind=kind_phys) :: rt_ovrc_table(ncrop,nstage) !< fraction of root tunrover  [1/s]
+    real (kind=kind_phys) :: lfmr25_table(ncrop)         !<  leaf maintenance respiration at 25c [umol co2/m**2  /s]
+    real (kind=kind_phys) :: stmr25_table(ncrop)         !<  stem maintenance respiration at 25c [umol co2/kg bio/s]
+    real (kind=kind_phys) :: rtmr25_table(ncrop)         !<  root maintenance respiration at 25c [umol co2/kg bio/s]
+    real (kind=kind_phys) :: grainmr25_table(ncrop)      !< grain maintenance respiration at 25c [umol co2/kg bio/s]
 
-    real :: lfpt_table(ncrop,nstage)    !< fraction of carbohydrate flux to leaf
-    real :: stpt_table(ncrop,nstage)    !< fraction of carbohydrate flux to stem
-    real :: rtpt_table(ncrop,nstage)    !< fraction of carbohydrate flux to root
-    real :: grainpt_table(ncrop,nstage) !< fraction of carbohydrate flux to grain
-    real :: lfct_table(ncrop,nstage)    ! fraction of carbohydrate translocation from leaf to grain ! Zhe Zhang 2020-07-13
-    real :: stct_table(ncrop,nstage)    !  stem to grain
-    real :: rtct_table(ncrop,nstage)    !  root to grain
-    real :: bio2lai_table(ncrop)        !< leaf are per living leaf biomass [m^2/kg]
+    real (kind=kind_phys) :: lfpt_table(ncrop,nstage)    !< fraction of carbohydrate flux to leaf
+    real (kind=kind_phys) :: stpt_table(ncrop,nstage)    !< fraction of carbohydrate flux to stem
+    real (kind=kind_phys) :: rtpt_table(ncrop,nstage)    !< fraction of carbohydrate flux to root
+    real (kind=kind_phys) :: grainpt_table(ncrop,nstage) !< fraction of carbohydrate flux to grain
+    real (kind=kind_phys) :: lfct_table(ncrop,nstage)    ! fraction of carbohydrate translocation from leaf to grain ! Zhe Zhang 2020-07-13
+    real (kind=kind_phys) :: stct_table(ncrop,nstage)    !  stem to grain
+    real (kind=kind_phys) :: rtct_table(ncrop,nstage)    !  root to grain
+    real (kind=kind_phys) :: bio2lai_table(ncrop)        !< leaf are per living leaf biomass [m^2/kg]
 
 ! tile drainage parameters
-    real    :: tdsmc_fac_table(max_soiltyp)
-    real    :: td_dc_table(max_soiltyp)
+    real (kind=kind_phys)    :: tdsmc_fac_table(max_soiltyp)
+    real (kind=kind_phys)    :: td_dc_table(max_soiltyp)
     integer :: td_depth_table(max_soiltyp)
     integer :: drain_layer_opt_table
-    real    :: td_dcoef_table(max_soiltyp)
-    real    :: td_d_table(max_soiltyp)
-    real    :: td_adepth_table(max_soiltyp)
-    real    :: td_radi_table(max_soiltyp)
-    real    :: td_spac_table(max_soiltyp)
-    real    :: td_ddrain_table(max_soiltyp)
-    real    :: klat_fac_table(max_soiltyp)
+    real (kind=kind_phys)    :: td_dcoef_table(max_soiltyp)
+    real (kind=kind_phys)    :: td_d_table(max_soiltyp)
+    real (kind=kind_phys)    :: td_adepth_table(max_soiltyp)
+    real (kind=kind_phys)    :: td_radi_table(max_soiltyp)
+    real (kind=kind_phys)    :: td_spac_table(max_soiltyp)
+    real (kind=kind_phys)    :: td_ddrain_table(max_soiltyp)
+    real (kind=kind_phys)    :: klat_fac_table(max_soiltyp)
 
 ! mptable.tbl optional parameters
 
@@ -259,60 +259,62 @@ module noahmp_tables
  ! Saxton and Rawls 2006 Pedo-transfer function coefficients
  !------------------------------------------------------------------------------
 
-    real ::  sr2006_theta_1500t_a    !< sand coefficient
-    real ::  sr2006_theta_1500t_b    !< clay coefficient
-    real ::  sr2006_theta_1500t_c    !< orgm coefficient
-    real ::  sr2006_theta_1500t_d    !< sand*orgm coefficient
-    real ::  sr2006_theta_1500t_e    !< clay*orgm coefficient
-    real ::  sr2006_theta_1500t_f    !< sand*clay coefficient
-    real ::  sr2006_theta_1500t_g    !< constant adjustment
+    real (kind=kind_phys) ::  sr2006_theta_1500t_a    !< sand coefficient
+    real (kind=kind_phys) ::  sr2006_theta_1500t_b    !< clay coefficient
+    real (kind=kind_phys) ::  sr2006_theta_1500t_c    !< orgm coefficient
+    real (kind=kind_phys) ::  sr2006_theta_1500t_d    !< sand*orgm coefficient
+    real (kind=kind_phys) ::  sr2006_theta_1500t_e    !< clay*orgm coefficient
+    real (kind=kind_phys) ::  sr2006_theta_1500t_f    !< sand*clay coefficient
+    real (kind=kind_phys) ::  sr2006_theta_1500t_g    !< constant adjustment
 
-    real ::  sr2006_theta_1500_a     !< theta_1500t coefficient
-    real ::  sr2006_theta_1500_b     !< constant adjustment
+    real (kind=kind_phys) ::  sr2006_theta_1500_a     !< theta_1500t coefficient
+    real (kind=kind_phys) ::  sr2006_theta_1500_b     !< constant adjustment
 
-    real ::  sr2006_theta_33t_a      !< sand coefficient
-    real ::  sr2006_theta_33t_b      !< clay coefficient
-    real ::  sr2006_theta_33t_c      !< orgm coefficient
-    real ::  sr2006_theta_33t_d      !< sand*orgm coefficient
-    real ::  sr2006_theta_33t_e      !< clay*orgm coefficient
-    real ::  sr2006_theta_33t_f      !< sand*clay coefficient
-    real ::  sr2006_theta_33t_g      !< constant adjustment
+    real (kind=kind_phys) ::  sr2006_theta_33t_a      !< sand coefficient
+    real (kind=kind_phys) ::  sr2006_theta_33t_b      !< clay coefficient
+    real (kind=kind_phys) ::  sr2006_theta_33t_c      !< orgm coefficient
+    real (kind=kind_phys) ::  sr2006_theta_33t_d      !< sand*orgm coefficient
+    real (kind=kind_phys) ::  sr2006_theta_33t_e      !< clay*orgm coefficient
+    real (kind=kind_phys) ::  sr2006_theta_33t_f      !< sand*clay coefficient
+    real (kind=kind_phys) ::  sr2006_theta_33t_g      !< constant adjustment
 
-    real ::  sr2006_theta_33_a       !< theta_33t*theta_33t coefficient
-    real ::  sr2006_theta_33_b       !< theta_33t coefficient
-    real ::  sr2006_theta_33_c       !< constant adjustment
+    real (kind=kind_phys) ::  sr2006_theta_33_a       !< theta_33t*theta_33t coefficient
+    real (kind=kind_phys) ::  sr2006_theta_33_b       !< theta_33t coefficient
+    real (kind=kind_phys) ::  sr2006_theta_33_c       !< constant adjustment
 
-    real ::  sr2006_theta_s33t_a     !< sand coefficient
-    real ::  sr2006_theta_s33t_b     !< clay coefficient
-    real ::  sr2006_theta_s33t_c     !< orgm coefficient
-    real ::  sr2006_theta_s33t_d     !< sand*orgm coefficient
-    real ::  sr2006_theta_s33t_e     !< clay*orgm coefficient
-    real ::  sr2006_theta_s33t_f     !< sand*clay coefficient
-    real ::  sr2006_theta_s33t_g     !< constant adjustment
+    real (kind=kind_phys) ::  sr2006_theta_s33t_a     !< sand coefficient
+    real (kind=kind_phys) ::  sr2006_theta_s33t_b     !< clay coefficient
+    real (kind=kind_phys) ::  sr2006_theta_s33t_c     !< orgm coefficient
+    real (kind=kind_phys) ::  sr2006_theta_s33t_d     !< sand*orgm coefficient
+    real (kind=kind_phys) ::  sr2006_theta_s33t_e     !< clay*orgm coefficient
+    real (kind=kind_phys) ::  sr2006_theta_s33t_f     !< sand*clay coefficient
+    real (kind=kind_phys) ::  sr2006_theta_s33t_g     !< constant adjustment
 
-    real ::  sr2006_theta_s33_a      !< theta_s33t coefficient
-    real ::  sr2006_theta_s33_b      !< constant adjustment
+    real (kind=kind_phys) ::  sr2006_theta_s33_a      !< theta_s33t coefficient
+    real (kind=kind_phys) ::  sr2006_theta_s33_b      !< constant adjustment
 
-    real ::  sr2006_psi_et_a         !< sand coefficient
-    real ::  sr2006_psi_et_b         !< clay coefficient
-    real ::  sr2006_psi_et_c         !< theta_s33 coefficient
-    real ::  sr2006_psi_et_d         !< sand*theta_s33 coefficient
-    real ::  sr2006_psi_et_e         !< clay*theta_s33 coefficient
-    real ::  sr2006_psi_et_f         !< sand*clay coefficient
-    real ::  sr2006_psi_et_g         !< constant adjustment
+    real (kind=kind_phys) ::  sr2006_psi_et_a         !< sand coefficient
+    real (kind=kind_phys) ::  sr2006_psi_et_b         !< clay coefficient
+    real (kind=kind_phys) ::  sr2006_psi_et_c         !< theta_s33 coefficient
+    real (kind=kind_phys) ::  sr2006_psi_et_d         !< sand*theta_s33 coefficient
+    real (kind=kind_phys) ::  sr2006_psi_et_e         !< clay*theta_s33 coefficient
+    real (kind=kind_phys) ::  sr2006_psi_et_f         !< sand*clay coefficient
+    real (kind=kind_phys) ::  sr2006_psi_et_g         !< constant adjustment
 
-    real ::  sr2006_psi_e_a          !< psi_et*psi_et coefficient
-    real ::  sr2006_psi_e_b          !< psi_et coefficient
-    real ::  sr2006_psi_e_c          !< constant adjustment
+    real (kind=kind_phys) ::  sr2006_psi_e_a          !< psi_et*psi_et coefficient
+    real (kind=kind_phys) ::  sr2006_psi_e_b          !< psi_et coefficient
+    real (kind=kind_phys) ::  sr2006_psi_e_c          !< constant adjustment
 
-    real ::  sr2006_smcmax_a         !< sand adjustment
-    real ::  sr2006_smcmax_b         !< constant adjustment
+    real (kind=kind_phys) ::  sr2006_smcmax_a         !< sand adjustment
+    real (kind=kind_phys) ::  sr2006_smcmax_b         !< constant adjustment
 
 contains
 
-  subroutine read_mp_table_parameters
+  subroutine read_mp_table_parameters(errmsg, errflg)
     implicit none
 
+    character(len=*),     intent(out) :: errmsg
+    integer,              intent(out) :: errflg
 
     ! vegetation parameters
     character(len=256)                     :: dataset_identifier
@@ -321,7 +323,7 @@ contains
     integer                                :: ierr, ik, im
     integer                                :: nveg, isurban, iswater, isbarren, isice, iscrop, eblforest, natural
     integer                                :: lcz_1, lcz_2, lcz_3, lcz_4, lcz_5, lcz_6, lcz_7, lcz_8, lcz_9, lcz_10, lcz_11
-    real, dimension(mvt) ::                   sai_jan, sai_feb, sai_mar, sai_apr, sai_may, sai_jun, sai_jul, sai_aug,        &
+    real (kind=kind_phys), dimension(mvt) ::  sai_jan, sai_feb, sai_mar, sai_apr, sai_may, sai_jun, sai_jul, sai_aug,        &
                                               sai_sep, sai_oct, sai_nov, sai_dec, lai_jan, lai_feb, lai_mar, lai_apr,        &
                                               lai_may, lai_jun, lai_jul, lai_aug, lai_sep, lai_oct, lai_nov, lai_dec,        &
                                               rhol_vis, rhol_nir, rhos_vis, rhos_nir, taul_vis, taul_nir, taus_vis, taus_nir,&
@@ -361,7 +363,7 @@ contains
     character(len=256)                             :: message
     character(len=10)                              :: sltype
     integer                                        :: slcats
-    real, dimension(max_soiltyp)                   :: bb, drysmc, maxsmc, refsmc, satpsi, satdk, satdw, wltsmc, qtz,    &
+    real (kind=kind_phys), dimension(max_soiltyp)  :: bb, drysmc, maxsmc, refsmc, satpsi, satdk, satdw, wltsmc, qtz,    &
                                                       bvic, axaj, bxaj, xxaj, bdvic, bbvic, gdvic, hc
     namelist / noahmp_stas_soil_categories /          sltype, slcats
     namelist / noahmp_soil_stas_parameters /          bb, drysmc, maxsmc, refsmc, satpsi, satdk, satdw, wltsmc, qtz,    &
@@ -370,21 +372,21 @@ contains
                                                       bvic, axaj, bxaj, xxaj, bdvic, bbvic, gdvic
 
     ! general parameters
-    real                       :: csoil_data, refdk_data, refkdt_data, frzk_data, zbot_data, czil_data
-    real, dimension(num_slope) :: slope_data
+    real (kind=kind_phys)                       :: csoil_data, refdk_data, refkdt_data, frzk_data, zbot_data, czil_data
+    real (kind=kind_phys), dimension(num_slope) :: slope_data
     namelist / noahmp_general_parameters /          slope_data, csoil_data, refdk_data, refkdt_data, frzk_data, zbot_data,   &
                                                     czil_data
 
     ! radiation parameters
-    real                   :: betads, betais, eice
-    real, dimension(mband) :: albice, alblak, omegas 
-    real, dimension(2)     :: eg
-    real, dimension(msc)   :: albsat_vis, albsat_nir, albdry_vis, albdry_nir
+    real (kind=kind_phys)                   :: betads, betais, eice
+    real (kind=kind_phys), dimension(mband) :: albice, alblak, omegas 
+    real (kind=kind_phys), dimension(2)     :: eg
+    real (kind=kind_phys), dimension(msc)   :: albsat_vis, albsat_nir, albdry_vis, albdry_nir
     namelist / noahmp_rad_parameters /          albsat_vis, albsat_nir, albdry_vis, albdry_nir, albice, alblak, omegas,      &
                                                 betads, betais, eg, eice
 
     ! global parameters
-    real                                     :: co2, o2, timean, fsatmx, z0sno, ssi, snow_ret_fac ,snow_emis, swemx, tau0,   &
+    real (kind=kind_phys)                    :: co2, o2, timean, fsatmx, z0sno, ssi, snow_ret_fac ,snow_emis, swemx, tau0,   &
                                                 grain_growth, extra_growth, dirt_soot, bats_cosz, bats_vis_new,              &
                                                 bats_nir_new, bats_vis_age, bats_nir_age, bats_vis_dir, bats_nir_dir,        &
                                                 rsurf_snow, rsurf_exp, c2_snowcompact, c3_snowcompact, c4_snowcompact,       &
@@ -401,14 +403,14 @@ contains
 
     ! irrigation parameters
     integer                                  :: irr_har
-    real                                     :: irr_frac, irr_lai, irr_mad, filoss, sprir_rate, micir_rate, firtfac, ir_rain
+    real (kind=kind_phys)                    :: irr_frac, irr_lai, irr_mad, filoss, sprir_rate, micir_rate, firtfac, ir_rain
     namelist / noahmp_irrigation_parameters /   irr_frac, irr_har, irr_lai, irr_mad, filoss, sprir_rate, micir_rate, firtfac,&
                                                 ir_rain
 
     ! crop parameters
     integer                                  :: default_crop
     integer               , dimension(ncrop) :: pltday, hsday
-    real, dimension(ncrop)                   :: plantpop, irri, gddtbase, gddtcut, gdds1, gdds2, gdds3, gdds4, gdds5, c3psni,&
+    real (kind=kind_phys), dimension(ncrop)  :: plantpop, irri, gddtbase, gddtcut, gdds1, gdds2, gdds3, gdds4, gdds5, c3psni,&
                                                 kc25i, akci, ko25i, akoi, avcmxi, vcmx25i, bpi, mpi, folnmxi, qe25i, aref,   &
                                                 psnrf, i2par, tassim0, tassim1, tassim2, k, epsi, q10mr, lefreez,            &
                                                 dile_fc_s1, dile_fc_s2, dile_fc_s3, dile_fc_s4, dile_fc_s5, dile_fc_s6,      &
@@ -449,13 +451,13 @@ contains
     ! tile drainage parameters
     integer                                        :: nsoiltype, drain_layer_opt
     integer               , dimension(max_soiltyp) :: td_depth
-    real, dimension(max_soiltyp)                   :: tdsmc_fac, td_dc, td_dcoef, td_d, td_adepth, td_radi, td_spac,         &
+    real (kind=kind_phys), dimension(max_soiltyp)                   :: tdsmc_fac, td_dc, td_dcoef, td_d, td_adepth, td_radi, td_spac,         &
                                                       td_ddrain, klat_fac
     namelist / noahmp_tiledrain_parameters /          nsoiltype, drain_layer_opt, tdsmc_fac, td_depth, td_dc, td_dcoef, td_d,&
                                                       td_adepth, td_radi, td_spac, td_ddrain, klat_fac
 
     ! optional parameters
-    real                                           :: sr2006_theta_1500t_a, sr2006_theta_1500t_b, sr2006_theta_1500t_c,      &
+    real (kind=kind_phys)                          :: sr2006_theta_1500t_a, sr2006_theta_1500t_b, sr2006_theta_1500t_c,      &
                                                       sr2006_theta_1500t_d, sr2006_theta_1500t_e, sr2006_theta_1500t_f,      &
                                                       sr2006_theta_1500t_g, sr2006_theta_1500_a , sr2006_theta_1500_b,       &
                                                       sr2006_theta_33t_a, sr2006_theta_33t_b, sr2006_theta_33t_c,            &
@@ -781,7 +783,10 @@ rsurf_snow_table     = -1.0e36
        open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if ( ierr /= 0 ) then
-       write(*,'("warning: cannot find file noahmptable.tbl")')
+       errmsg = 'warning: cannot find file noahmptable.tb'
+       errflg = 1
+       return
+!      write(*,'("warning: cannot find file noahmptable.tbl")')
     endif
 
     if ( trim(dataset_identifier) == "usgs" ) then
@@ -909,7 +914,10 @@ rsurf_snow_table     = -1.0e36
        open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if ( ierr /= 0 ) then
-       write(*,'("warning: cannot find file noahmptable.tbl")')
+       errmsg = 'warning: cannot find file noahmptable.tb'
+       errflg = 1
+       return
+!      write(*,'("warning: cannot find file noahmptable.tbl")')
     endif
     read(15, noahmp_stas_soil_categories)
     if ( trim(sltype) == "stas" ) then
@@ -949,7 +957,10 @@ rsurf_snow_table     = -1.0e36
        open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if ( ierr /= 0 ) then
-       write(*,'("warning: cannot find file noahmptable.tbl")')
+       errmsg = 'warning: cannot find file noahmptable.tb'
+       errflg = 1
+       return
+!      write(*,'("warning: cannot find file noahmptable.tbl")')
     endif
     read(15, noahmp_general_parameters)
     close(15)
@@ -971,7 +982,10 @@ rsurf_snow_table     = -1.0e36
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       write(*,'("warning: cannot find file noahmptable.tbl")')
+       errmsg = 'warning: cannot find file noahmptable.tb'
+       errflg = 1
+       return
+!      write(*,'("warning: cannot find file noahmptable.tbl")')
     endif
     read(15,noahmp_rad_parameters)
     close(15)
@@ -997,7 +1011,10 @@ rsurf_snow_table     = -1.0e36
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       write(*,'("warning: cannot find file noahmptable.tbl")')
+       errmsg = 'warning: cannot find file noahmptable.tb'
+       errflg = 1
+       return
+!      write(*,'("warning: cannot find file noahmptable.tbl")')
     endif
     read(15,noahmp_global_parameters)
     close(15)
@@ -1052,7 +1069,10 @@ rsurf_snow_table     = -1.0e36
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       write(*,'("warning: cannot find file noahmptable.tbl")')
+       errmsg = 'warning: cannot find file noahmptable.tb'
+       errflg = 1
+       return
+!      write(*,'("warning: cannot find file noahmptable.tbl")')
     endif
     read(15,noahmp_irrigation_parameters)
     close(15)
@@ -1076,7 +1096,10 @@ rsurf_snow_table     = -1.0e36
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       write(*,'("warning: cannot find file noahmptable.tbl")')
+       errmsg = 'warning: cannot find file noahmptable.tb'
+       errflg = 1
+       return
+!      write(*,'("warning: cannot find file noahmptable.tbl")')
     endif
     read(15,noahmp_crop_parameters)
     close(15)
@@ -1226,7 +1249,10 @@ rsurf_snow_table     = -1.0e36
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       write(*,'("warning: cannot find file noahmptable.tbl")')
+       errmsg = 'warning: cannot find file noahmptable.tb'
+       errflg = 1
+       return
+!      write(*,'("warning: cannot find file noahmptable.tbl")')
     endif
     read(15,noahmp_tiledrain_parameters)
     close(15)
@@ -1252,7 +1278,10 @@ rsurf_snow_table     = -1.0e36
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       write(*,'("warning: cannot find file noahmptable.tbl")')
+       errmsg = 'warning: cannot find file noahmptable.tb'
+       errflg = 1
+       return
+!      write(*,'("warning: cannot find file noahmptable.tbl")')
     endif
     read(15,noahmp_optional_parameters)
     close(15)

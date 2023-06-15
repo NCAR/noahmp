@@ -749,7 +749,7 @@ contains
 ! --------------------------------------------------------------------------------------------------
 ! re-process atmospheric forcing
 
-   call atm (parameters,sfcprs  ,sfctmp   ,q2      ,                            &
+   call atm (parameters,ep_2, epsm1, sfcprs  ,sfctmp   ,q2      ,    &
              prcpconv, prcpnonc,prcpshcv,prcpsnow,prcpgrpl,prcphail, &
              soldn   ,cosz     ,thair   ,qair    ,                   & 
              eair    ,rhoair   ,qprecc  ,qprecl  ,solad   ,solai   , &
@@ -856,7 +856,7 @@ contains
                  emissi ,pah    ,canhs,                           &
 		     shg,shc,shb,evg,evb,ghv,ghb,irg,irc,irb,tr,evc,chleaf,chuc,chv2,chb2 )                                            !out
 
-    qsfcveg  = eah*0.622/(sfcprs - 0.378*eah)
+    qsfcveg  = eah*ep_2/(sfcprs + epsm1*eah)
     qsfcbare = qsfc
     qsfc     = q1
 !jref:end
@@ -960,7 +960,7 @@ contains
 
 !>\ingroup NoahMP_LSM
 !! re-precess atmospheric forcing.
-  subroutine atm (parameters,sfcprs  ,sfctmp   ,q2      ,                             &
+  subroutine atm (parameters,ep_2,epsm1,sfcprs  ,sfctmp   ,q2      ,       &
                   prcpconv,prcpnonc ,prcpshcv,prcpsnow,prcpgrpl,prcphail , &
                   soldn   ,cosz     ,thair   ,qair    ,                    & 
                   eair    ,rhoair   ,qprecc  ,qprecl  ,solad   , solai   , &
@@ -973,6 +973,8 @@ contains
 ! inputs
 
   type (noahmp_parameters), intent(in) :: parameters
+  real (kind=kind_phys)                          , intent(in)  :: ep_2   !<
+  real (kind=kind_phys)                          , intent(in)  :: epsm1  !<
   real (kind=kind_phys)                          , intent(in)  :: sfcprs   !< pressure (pa)
   real (kind=kind_phys)                          , intent(in)  :: sfctmp   !< surface air temperature [k]
   real (kind=kind_phys)                          , intent(in)  :: q2       !< mixing ratio (kg/kg)
@@ -1017,8 +1019,8 @@ contains
 
        qair   = q2                       ! in wrf, driver converts to specific humidity
 
-       eair   = qair*sfcprs / (0.622+0.378*qair)
-       rhoair = (sfcprs-0.378*eair) / (rair*sfctmp)
+       eair   = qair*sfcprs / (ep_2-epsm1*qair)
+       rhoair = (sfcprs+epsm1*eair) / (rair*sfctmp)
 
        if(cosz <= 0.) then 
           swdown = 0.
@@ -2212,7 +2214,7 @@ endif   ! croptype == 0
         latheav = hsub
 	frozen_canopy = .true.
      end if
-     gammav = cpair*sfcprs/(0.622*latheav)
+     gammav = cpair*sfcprs/(ep_2*latheav)
 
      if (tg .gt. tfrz) then
         latheag = hvap
@@ -2221,14 +2223,14 @@ endif   ! croptype == 0
         latheag = hsub
 	frozen_ground = .true.
      end if
-     gammag = cpair*sfcprs/(0.622*latheag)
+     gammag = cpair*sfcprs/(ep_2*latheag)
 
 !     if (sfctmp .gt. tfrz) then
 !        lathea = hvap
 !     else
 !        lathea = hsub
 !     end if
-!     gamma = cpair*sfcprs/(0.622*lathea)
+!     gamma = cpair*sfcprs/(ep_2*lathea)
 
 ! surface temperatures of the ground and canopy and energy fluxes
 
@@ -2335,7 +2337,7 @@ endif   ! croptype == 0
         ts    = fveg * tah       + (1.0 - fveg) * tgb
         cm    = fveg * cmv       + (1.0 - fveg) * cmb      ! better way to average?
         ch    = fveg * chv       + (1.0 - fveg) * chb
-        q1    = fveg * (eah*0.622/(sfcprs - 0.378*eah)) + (1.0 - fveg)*qsfc
+        q1    = fveg * (eah*ep_2/(sfcprs + epsm1*eah)) + (1.0 - fveg)*qsfc
         q2e   = fveg * q2v       + (1.0 - fveg) * q2b
 
 ! effectibe skin temperature
@@ -3602,7 +3604,7 @@ endif   ! croptype == 0
      tmp1 = b*b - c*c
      h = sqrt(tmp1) / avmu
      sigma = tmp0*tmp0 - tmp1
-     if ( abs (sigma) < 1.e-6 ) sigma = sign(1.e-6,sigma)
+     if ( abs (sigma) < 1.e-6 ) sigma = sign(1.e-6_kind_phys,sigma)
      p1 = b + avmu*h
      p2 = b - avmu*h
      p3 = b + tmp0
@@ -4005,7 +4007,7 @@ endif   ! croptype == 0
 
 !jref - consistent surface specific humidity for sfcdif3 and sfcdif4
 
-        qsfc = 0.622*eair/(psfc-0.378*eair)  
+        qsfc = ep_2*eair/(psfc+epsm1*eair)  
 
 ! canopy height
         hcan = parameters%hvt
@@ -4092,11 +4094,11 @@ endif   ! croptype == 0
                        zlvl   ,zpd    ,z0m    ,z0h    ,ur     , & !in
                        mpe    ,iloc   ,jloc   ,                 & !in
 #ifdef CCPP
-                       moz ,mozsgn ,fm ,fh ,fm2 ,fh2 ,errmsg ,errflg ,& !inout
+                       moz ,mozsgn ,fm ,fh ,fm2 ,fh2 ,fv, errmsg ,errflg ,& !inout
 #else
-                       moz    ,mozsgn ,fm     ,fh     ,fm2,fh2, & !inout
+                       moz    ,mozsgn ,fm     ,fh     ,fm2,fh2, fv, & !inout
 #endif
-                       cm     ,ch     ,fv     ,ch2     )          !out
+                       cm     ,ch     ,ch2     )          !out
 #ifdef CCPP
           if (errflg /= 0) return
 #endif
@@ -4191,10 +4193,10 @@ endif   ! croptype == 0
         end if
 
         if (opt_crs == 2) then  ! jarvis
-         call  canres (parameters,parsun,tv    ,btran ,eah    ,sfcprs, & !in
+         call  canres (parameters,ep_2, epsm1,parsun,tv    ,btran ,eah    ,sfcprs, & !in
                        rssun ,psnsun,iloc  ,jloc   )          !out
 
-         call  canres (parameters,parsha,tv    ,btran ,eah    ,sfcprs, & !in
+         call  canres (parameters,ep_2, epsm1,parsha,tv    ,btran ,eah    ,sfcprs, & !in
                        rssha ,psnsha,iloc  ,jloc   )          !out
         end if
      end if
@@ -4246,7 +4248,7 @@ endif   ! croptype == 0
 	end if
 
 ! canopy heat capacity
-        hcv = parameters%cbiom*vaie*cwat + canliq*cwat/denh2o + canice*cice/denice !j/m2/k
+        hcv = fveg*(parameters%cbiom*vaie*cwat + canliq*cwat/denh2o + canice*cice/denice) !j/m2/k
 
         b   = sav-irc-shc-evc-tr+pahv                          !additional w/m2
 !       a   = fveg*(4.*cir*tv**3 + csh + (cev+ctr)*destv) !volumetric heat capacity
@@ -4268,7 +4270,7 @@ endif   ! croptype == 0
         hg = rhoair*cpair*(tg  - tah)   /rahg
 
 ! consistent specific humidity from canopy air vapor pressure
-        qsfc = (0.622*eah)/(sfcprs-0.378*eah)
+        qsfc = (ep_2*eah)/(sfcprs+epsm1*eah)
 
         if ( opt_sfc == 4 ) then
            qfx = (qsfc-qair)*rhoair*caw
@@ -4685,7 +4687,7 @@ endif   ! croptype == 0
 !           z0h = z0m !* exp(-czil*0.4*258.2*sqrt(fv*z0m))
 !       end if
       call thermalz0(parameters,fveg,z0m,z0m,zlvl,zpd,zpd,ustarx,          & !in
-                       vegtyp,0.,ur,csigmaf0,csigmaf1,temptrs,temptrs,temptrs,0, & !in
+                       vegtyp,0._kind_phys,ur,csigmaf0,csigmaf1,temptrs,temptrs,temptrs,0, & !in
                        z0mo,z0h)
 
         if(opt_sfc == 1) then
@@ -4693,11 +4695,11 @@ endif   ! croptype == 0
                        zlvl   ,zpd    ,z0m    ,z0h    ,ur     , & !in
                        mpe    ,iloc   ,jloc   ,                 & !in
 #ifdef CCPP
-                       moz ,mozsgn ,fm ,fh ,fm2 ,fh2 ,errmsg ,errflg ,& !inout
+                       moz ,mozsgn ,fm ,fh ,fm2 ,fh2 ,fv,errmsg ,errflg ,& !inout
 #else
-                       moz ,mozsgn ,fm ,fh ,fm2 ,fh2 ,           & !inout
+                       moz ,mozsgn ,fm ,fh ,fm2 ,fh2 ,fv,           & !inout
 #endif
-                       cm     ,ch     ,fv     ,ch2     )          !out
+                       cm     ,ch     ,ch2     )          !out
 #ifdef CCPP
           if (errflg /= 0) return
 #endif
@@ -4814,7 +4816,7 @@ endif   ! croptype == 0
         else
             estg  = esati
         end if
-        qsfc = 0.622*(estg*rhsur)/(psfc-0.378*(estg*rhsur))
+        qsfc = ep_2*(estg*rhsur)/(psfc+epsm1*(estg*rhsur))
 
         qfx = (qsfc-qair)*cev*gamma/cpair
 
@@ -5041,11 +5043,11 @@ endif   ! croptype == 0
        &             zlvl   ,zpd    ,z0m    ,z0h    ,ur     , & !in
        &             mpe    ,iloc   ,jloc   ,                 & !in
 #ifdef CCPP
-       &             moz    ,mozsgn ,fm     ,fh     ,fm2,fh2,errmsg,errflg, & !inout
+       &             moz    ,mozsgn ,fm     ,fh     ,fm2,fh2,fv,errmsg,errflg, & !inout
 #else
-       &             moz    ,mozsgn ,fm     ,fh     ,fm2,fh2, & !inout
+       &             moz    ,mozsgn ,fm     ,fh     ,fm2,fh2, fv, & !inout
 #endif
-       &             cm     ,ch     ,fv     ,ch2     )          !out
+       &             cm     ,ch     ,ch2     )                      !out
 ! -------------------------------------------------------------------------------------------------
 ! computing surface drag coefficient cm for momentum and ch for heat
 ! -------------------------------------------------------------------------------------------------
@@ -5075,6 +5077,7 @@ endif   ! croptype == 0
     real (kind=kind_phys),              intent(inout) :: fh     !< sen heat stability correction, weighted by prior iters
     real (kind=kind_phys),              intent(inout) :: fm2    !< sen heat stability correction, weighted by prior iters
     real (kind=kind_phys),              intent(inout) :: fh2    !< sen heat stability correction, weighted by prior iters
+    real (kind=kind_phys),              intent(inout) :: fv     !< friction velocity (m/s)
 #ifdef CCPP
     character(len=*),  intent(inout) :: errmsg
     integer,           intent(inout) :: errflg
@@ -5084,7 +5087,6 @@ endif   ! croptype == 0
 
     real (kind=kind_phys),                intent(out) :: cm     !< drag coefficient for momentum
     real (kind=kind_phys),                intent(out) :: ch     !< drag coefficient for heat
-    real (kind=kind_phys),              intent(inout) :: fv     !< friction velocity (m/s)
     real (kind=kind_phys),                intent(out) :: ch2    !< drag coefficient for heat
 
 ! locals
@@ -5529,7 +5531,6 @@ subroutine gfs_stability                                              &
 !  UTN (Unstable Tech Note) : NCEP Office Note 356
 !  STN (Stable Tech Note)   : NCEP Office Note 321
 
-integer, parameter :: kp = kind_phys
 real (kind=kind_phys), parameter :: ca=0.4_kind_phys  ! ca - von karman constant
 
 real(kind=kind_phys), intent(in) :: z1      ! height model level
@@ -5626,14 +5627,14 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
 !  compute stability indices (rb and hlinf)
 
           dtv     = thv1 - tvs
-          adtv    = max(abs(dtv),0.001_kp)
-          dtv     = sign(1.0_kp,dtv) * adtv
+          adtv    = max(abs(dtv),0.001_kind_phys)
+          dtv     = sign(1.0_kind_phys,dtv) * adtv
 
           if(thsfc_loc) then ! Use local potential temperature
-            rb      = max(-5000.0_kp, (grav+grav) * dtv * z1 &
+            rb      = max(-5000.0_kind_phys, (grav+grav) * dtv * z1 &
                    / ((thv1 + tvs) * wind * wind))
           else ! Use potential temperature referenced to 1000 hPa
-            rb      = max(-5000.0_kp, grav * dtv * z1 &
+            rb      = max(-5000.0_kind_phys, grav * dtv * z1 &
                    / (tv1 * wind * wind))
           endif
 
@@ -5641,8 +5642,8 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
           tem2    = one / ztmax                                  ! 1/z0t
           fm      = log((z0max+z1)  * tem1)                      ! neutral phi_m
           fh      = log((ztmax+z1)  * tem2)                      ! neutral phi_h
-          fm10    = log((z0max+10.0_kp) * tem1)                  ! neutral phi_m at 10 meters
-          fh2     = log((ztmax+2.0_kp)  * tem2)                  ! neutral phi_h at 2 meters
+          fm10    = log((z0max+10.0_kind_phys) * tem1)                  ! neutral phi_m at 10 meters
+          fh2     = log((ztmax+2.0_kind_phys)  * tem2)                  ! neutral phi_h at 2 meters
           hlinf   = rb * fm * fm / fh                            ! z/L STN 2.7
           hlinf   = min(max(hlinf,zolmin),zolmax)                ! z/L, xi in STN/UTN
 !
@@ -5650,7 +5651,7 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
 !
           if (dtv >= zero) then
             hl1 = hlinf                                          ! z/L, xi in STN
-            if(hlinf > 0.25_kp) then                             ! z/L > 0.25, do two iterations
+            if(hlinf > 0.25_kind_phys) then                             ! z/L > 0.25, do two iterations
               tem1   = hlinf * z1i                               ! 1/L
               hl0inf = z0max * tem1                              ! z0m/z1, zi_0 in STN
               hltinf = ztmax * tem1                              ! z0t/z1, zi_0 in STN
@@ -5677,7 +5678,7 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
             bb0   = sqrt(one + alpha4 * hlt)                     ! sqrt term of STN 2.16 with z0t
             pm    = aa0 - aa + log( (one+aa)/(one+aa0) )         ! psi_m STN 3.11
             ph    = bb0 - bb + log( (one+bb)/(one+bb0) )         ! psi_h STN 3.11
-            hl110 = hl1 * 10.0_kp * z1i                          ! 10/L
+            hl110 = hl1 * 10.0_kind_phys * z1i                          ! 10/L
             aa    = sqrt(one + alpha4 * hl110)                   ! sqrt term of STN 2.16 with z=10m
             pm10  = aa0 - aa + log( (one+aa)/(one+aa0) )         ! psi_m STN 3.11 with z=10m
             hl12  = (hl1+hl1) * z1i                              ! 2/L
@@ -5691,7 +5692,7 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
           else                          ! dtv < 0 case
 
             olinf = z1 / hlinf                                   ! z/L, xi in UTN
-            tem1  = 50.0_kp * z0max                              ! 50 * z0m, z/L limit for calc methods, see UTN Sec. E
+            tem1  = 50.0_kind_phys * z0max                              ! 50 * z0m, z/L limit for calc methods, see UTN Sec. E
             if(abs(olinf) <= tem1) then                          ! 
               hlinf = -z1 / tem1                                 ! 
               hlinf = max(hlinf, zolmin)
@@ -5699,23 +5700,23 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
 !
 !  get pm and ph
 !
-            if (hlinf >= -0.5_kp) then
+            if (hlinf >= -0.5_kind_phys) then
               hl1   = hlinf
               pm    = (a0  + a1*hl1)  * hl1   / (one+ (b1+b2*hl1)  *hl1)  ! psi_m UTN 2.37
               ph    = (a0p + a1p*hl1) * hl1   / (one+ (b1p+b2p*hl1)*hl1)  ! psi_h UTN 2.38
-              hl110 = hl1 * 10.0_kp * z1i                                 ! 10/L
+              hl110 = hl1 * 10.0_kind_phys * z1i                                 ! 10/L
               pm10  = (a0 + a1*hl110) * hl110/(one+(b1+b2*hl110)*hl110)   ! psi_m UTN 2.37 with z=10m
               hl12  = (hl1+hl1) * z1i                                     ! 2/L
               ph2   = (a0p + a1p*hl12) * hl12/(one+(b1p+b2p*hl12)*hl12)   ! psi_h UTN 2.38 with z=2m
             else                                                          ! z/L < -0.5
               hl1   = -hlinf                                              ! -z/L
               tem1  = one / sqrt(hl1)                                     ! sqrt(-z/L)
-              pm    = log(hl1) + 2.0_kp * sqrt(tem1) - 0.8776_kp          ! UTN 2.64, first three terms
-              ph    = log(hl1) + 0.5_kp * tem1 + 1.386_kp                 ! UTN 2.65, first three terms
-              hl110 = hl1 * 10.0_kp * z1i                                 ! 10/L
-              pm10  = log(hl110) + 2.0_kp/sqrt(sqrt(hl110)) - 0.8776_kp   ! psi_m UTN 2.64 with z=10m
+              pm    = log(hl1) + 2.0_kind_phys * sqrt(tem1) - 0.8776_kind_phys          ! UTN 2.64, first three terms
+              ph    = log(hl1) + 0.5_kind_phys * tem1 + 1.386_kind_phys                 ! UTN 2.65, first three terms
+              hl110 = hl1 * 10.0_kind_phys * z1i                                 ! 10/L
+              pm10  = log(hl110) + 2.0_kind_phys/sqrt(sqrt(hl110)) - 0.8776_kind_phys   ! psi_m UTN 2.64 with z=10m
               hl12  = (hl1+hl1) * z1i                                     ! 2/L
-              ph2   = log(hl12) + 0.5_kp / sqrt(hl12) + 1.386_kp          ! psi_h UTN 2.65 with z=2m
+              ph2   = log(hl12) + 0.5_kind_phys / sqrt(hl12) + 1.386_kind_phys          ! psi_h UTN 2.65 with z=2m
             endif
 
           endif          ! end of if (dtv >= 0 ) then loop
@@ -5728,7 +5729,7 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
           fh2       = fh2 - ph2                                           ! phi_h at 2m
           cm        = ca * ca / (fm * fm)                                 ! momentum exchange coef = k^2/phi_m^2
           ch        = ca * ca / (fm * fh)                                 ! heat exchange coef = k^2/phi_m/phi_h
-          tem1      = 0.00001_kp/z1                                       ! minimum exhange coef (?)
+          tem1      = 0.00001_kind_phys/z1                                       ! minimum exhange coef (?)
           cm        = max(cm, tem1)
           ch        = max(ch, tem1)
           stress    = cm * wind * wind                                    ! surface stress = Cm*U*U
@@ -6128,7 +6129,7 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
 !! air temperature, atmospheric water vapor pressure deficit at the lowest
 !! model level, and soil moisture (preferably unfrozen soil moisture rather
 !! than total).
-  subroutine canres (parameters,par   ,sfctmp,rcsoil ,eah   ,sfcprs , & !in
+  subroutine canres (parameters,ep_2,epsm1,par   ,sfctmp,rcsoil ,eah   ,sfcprs , & !in
                      rc    ,psn   ,iloc   ,jloc  )           !out
 
 ! --------------------------------------------------------------------------------------------------
@@ -6150,6 +6151,8 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
   type (noahmp_parameters), intent(in) :: parameters      !<
     integer,                  intent(in)  :: iloc         !< grid index
     integer,                  intent(in)  :: jloc         !< grid index
+    real (kind=kind_phys),                     intent(in)  :: ep_2   !<
+    real (kind=kind_phys),                     intent(in)  :: epsm1  !<
     real (kind=kind_phys),                     intent(in)  :: par    !< par absorbed per unit sunlit lai (w/m2)
     real (kind=kind_phys),                     intent(in)  :: sfctmp !< canopy air temperature
     real (kind=kind_phys),                     intent(in)  :: sfcprs !< surface pressure (pa)
@@ -6182,7 +6185,7 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
 
 !  compute q2 and q2sat
 
-    q2 = 0.622 *  eah  / (sfcprs - 0.378 * eah) !specific humidity [kg/kg]
+    q2 = ep_2 *  eah  / (sfcprs + epsm1 * eah) !specific humidity [kg/kg]
     q2 = q2 / (1.0 - q2)                        !mixing ratio [kg/kg]
 
     call calhum(parameters,sfctmp, sfcprs, q2sat, dqsdt2)
@@ -10769,13 +10772,13 @@ end subroutine psn_crop
           if ( present(iz0tlnd) ) then
              if ( iz0tlnd .le. 1 ) then
                 call zilitinkevich_1995(znt,zt,zq,restar,&
-                      ust,vkc,1.0,iz0tlnd,0,0.0)
+                      ust,vkc,1.0_kind_phys,iz0tlnd,0,0.0)
              elseif ( iz0tlnd .eq. 2 ) then
                 call yang_2008(znt,zt,zq,ust,molx,&
                               qstar,restar,visc)
              elseif ( iz0tlnd .eq. 3 ) then
                 !original mynn in wrf-arw used this form:
-                call garratt_1992(zt,zq,znt,restar,1.0)
+                call garratt_1992(zt,zq,znt,restar,1.0_kind_phys)
              endif
 
 ! the GFS option is removed along with gfs_z0_lnd
@@ -10784,7 +10787,7 @@ end subroutine psn_crop
 
              !default to zilitinkevich
              call zilitinkevich_1995(znt,zt,zq,restar,&
-                         ust,vkc,1.0,0,0,0.0)
+                         ust,vkc,1.0_kind_phys,0,0,0.0)
           endif
        endif
 
@@ -11519,7 +11522,7 @@ end subroutine psn_crop
 
         x=(1.-16.*zolf)**.25
         !psimk=2*alog(0.5*(1+x))+alog(0.5*(1+x*x))-2.*atan(x)+2.*atan(1.)
-        psimk=2.*alog(0.5*(1+x))+alog(0.5*(1+x*x))-2.*atan(x)+2.*atan1
+        psimk=2.*dlog(0.5*(1+x))+dlog(0.5*(1+x*x))-2.*atan(x)+2.*atan1
 
         ym=(1.-10.*zolf)**onethird
         !psimc=(3./2.)*log((ym**2.+ym+1.)/3.)-sqrt(3.)*atan((2.*ym+1)/sqrt(3.))+4.*atan(1.)/sqrt(3.)
