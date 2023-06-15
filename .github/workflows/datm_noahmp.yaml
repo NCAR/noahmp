@@ -20,6 +20,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         test: [test_datm_lnd]
+        esmf: [8.4.2]
     
     env:
       # set token to access gh command
@@ -34,7 +35,7 @@ jobs:
     steps:
       # test component
       - name: Test Component
-        uses: esmf-org/nuopc-comp-testing@v1.0.0
+        uses: esmf-org/nuopc-comp-testing@feature/v1.2
         with:
           app_install_dir: ${{ env.APP_INSTALL_DIR }}
           artifacts_files: |
@@ -62,6 +63,7 @@ jobs:
           data_component_name: datm
           dependencies: |
             fms@2022.04
-            esmf@8.4.2+external-parallelio
+            esmf@${{ matrix.esmf }}+external-parallelio
           dependencies_install_dir: ${{ env.DEP_INSTALL_DIR }}
+          mpirun_args: --oversubscribe -np 6 --mca btl_tcp_if_include eth0
           test_definition: ${{ env.APP_INSTALL_DIR }}/noahmp/.github/workflows/tests/${{ matrix.test }}.yaml
