@@ -100,7 +100,6 @@ contains
           SnowWaterEquiv = SnowWaterEquiv + SnowIce(LoopInd) + SnowLiqWater(LoopInd)
        enddo
     endif
-
     ! Reset DepthSnowSoilLayer and ThicknessSnowSoilLayer
     do LoopInd = NumSnowLayerNeg+1, 0
        ThicknessSnowSoilLayer(LoopInd) = -ThicknessSnowSoilLayer(LoopInd)

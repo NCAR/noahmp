@@ -43,10 +43,10 @@ contains
   INTEGER,  INTENT(IN   )     ::     ids,ide, jds,jde, kds,kde,  &
        &                             ims,ime, jms,jme, kms,kme,  &
        &                             its,ite, jts,jte, kts,kte
-    REAL,   INTENT(IN)        ::     WTDDT
-    REAL,   INTENT(IN)        ::     XICE_THRESHOLD
+    REAL(kind=kind_noahmp),   INTENT(IN)        ::     WTDDT
+    REAL(kind=kind_noahmp),   INTENT(IN)        ::     XICE_THRESHOLD
     INTEGER,  INTENT(IN   )   ::     ISICE
-    REAL,    DIMENSION( ims:ime, jms:jme )                     , &
+    REAL(kind=kind_noahmp),    DIMENSION( ims:ime, jms:jme )                     , &
          &   INTENT(IN   )    ::                          XLAND, &
                                                            XICE
     INTEGER, DIMENSION( ims:ime, jms:jme )                     , &
@@ -54,10 +54,10 @@ contains
                                                          IVGTYP
     INTEGER, INTENT(IN)       ::     nsoil
     INTEGER, INTENT(IN)       ::     ISURBAN
-    REAL,     DIMENSION( ims:ime , 1:nsoil, jms:jme ), &
+    REAL(kind=kind_noahmp),     DIMENSION( ims:ime , 1:nsoil, jms:jme ), &
          &    INTENT(IN)      ::                        SMOISEQ
-    REAL,     DIMENSION(1:nsoil), INTENT(IN)     ::         DZS
-    REAL,    DIMENSION( ims:ime, jms:jme )                     , &
+    REAL(kind=kind_noahmp),     DIMENSION(1:nsoil), INTENT(IN)     ::         DZS
+    REAL(kind=kind_noahmp),    DIMENSION( ims:ime, jms:jme )                     , &
          &   INTENT(IN)       ::                         FDEPTH, &
                                                            AREA, &
                                                            TOPO, &
@@ -68,12 +68,12 @@ contains
 
 ! IN and OUT 
 
-    REAL,     DIMENSION( ims:ime , 1:nsoil, jms:jme ), &
+    REAL(kind=kind_noahmp),     DIMENSION( ims:ime , 1:nsoil, jms:jme ), &
          &    INTENT(INOUT)   ::                          SMOIS, &
          &                                                SH2OXY 
 
 
-    REAL,    DIMENSION( ims:ime, jms:jme )                     , &
+    REAL(kind=kind_noahmp),    DIMENSION( ims:ime, jms:jme )                     , &
          &   INTENT(INOUT)    ::                            WTD, &
                                                          SMCWTD, &
                                                        DEEPRECH, &
@@ -84,23 +84,23 @@ contains
 
 !OUT
 
-    REAL,    DIMENSION( ims:ime, jms:jme )                     , &
+    REAL(kind=kind_noahmp),    DIMENSION( ims:ime, jms:jme )                     , &
          &   INTENT(OUT)      ::                            QRF, &  !groundwater - river water flux
                                                         QSPRING     !water springing at the surface from groundwater convergence in the column
 
 !LOCAL  
   
   INTEGER                          :: I,J,K  
-  REAL, DIMENSION(       0:NSOIL)  :: ZSOIL !depth of soil layer-bottom [m]
-  REAL,  DIMENSION(      1:NSOIL)  :: SMCEQ  !equilibrium soil water  content [m3/m3]
-  REAL,  DIMENSION(      1:NSOIL)  :: SMC,SH2O
-  REAL                                        :: DELTAT,RCOND,TOTWATER,PSI &
+  REAL(kind=kind_noahmp), DIMENSION(       0:NSOIL)  :: ZSOIL !depth of soil layer-bottom [m]
+  REAL(kind=kind_noahmp),  DIMENSION(      1:NSOIL)  :: SMCEQ  !equilibrium soil water  content [m3/m3]
+  REAL(kind=kind_noahmp),  DIMENSION(      1:NSOIL)  :: SMC,SH2O
+  REAL(kind=kind_noahmp)                                        :: DELTAT,RCOND,TOTWATER,PSI &
                                                 ,WFLUXDEEP,WCNDDEEP,DDZ,SMCWTDMID &
                                                 ,WPLUS,WMINUS
-  REAL,      DIMENSION( ims:ime, jms:jme ), INTENT(OUT)   :: QLAT
+  REAL(kind=kind_noahmp),      DIMENSION( ims:ime, jms:jme ), INTENT(OUT)   :: QLAT
   INTEGER,   DIMENSION( ims:ime, jms:jme )    :: LANDMASK !-1 for water (ice or no ice) and glacial areas, 1 for land where the LSM does its soil moisture calculations.
   
-  REAL :: BEXP,DKSAT,PSISAT,SMCMAX,SMCWLT
+  REAL(kind=kind_noahmp) :: BEXP,DKSAT,PSISAT,SMCMAX,SMCWLT
 
     DELTAT = WTDDT * 60. !timestep in seconds for this calculation
 
@@ -238,31 +238,31 @@ contains
   INTEGER,  INTENT(IN   )   ::     ids,ide, jds,jde, kds,kde,  &
        &                           ims,ime, jms,jme, kms,kme,  &
        &                           its,ite, jts,jte, kts,kte
-  REAL                                  , INTENT(IN) :: DELTAT                                 
+  REAL(kind=kind_noahmp)                                  , INTENT(IN) :: DELTAT
   INTEGER, DIMENSION( ims:ime, jms:jme ), INTENT(IN) :: ISLTYP, LANDMASK
-  REAL,    DIMENSION( ims:ime, jms:jme ), INTENT(IN) :: FDEPTH,WTD,TOPO,AREA
+  REAL(kind=kind_noahmp),    DIMENSION( ims:ime, jms:jme ), INTENT(IN) :: FDEPTH,WTD,TOPO,AREA
 
 !output
-  REAL, DIMENSION( ims:ime , jms:jme ), INTENT(OUT) :: QLAT
+  REAL(kind=kind_noahmp), DIMENSION( ims:ime , jms:jme ), INTENT(OUT) :: QLAT
 
 !local
   INTEGER                              :: I, J, itsh, iteh, jtsh, jteh, nx, ny
-  REAL                                 :: Q, KLAT
+  REAL(kind=kind_noahmp)               :: Q, KLAT
 
 #ifdef MPP_LAND 
   ! halo'ed arrays
-  REAL,    DIMENSION(ims-1:ime+1, jms-1:jme+1) :: KCELL, HEAD
+  REAL(kind=kind_noahmp),    DIMENSION(ims-1:ime+1, jms-1:jme+1) :: KCELL, HEAD
   integer, dimension(ims-1:ime+1, jms-1:jme+1) :: landmask_h
-  real,    dimension(ims-1:ime+1, jms-1:jme+1) :: area_h, qlat_h
+  real(kind=kind_noahmp),    dimension(ims-1:ime+1, jms-1:jme+1) :: area_h, qlat_h
 #else
-  REAL,    DIMENSION(ims:ime, jms:jme) :: KCELL, HEAD
+  REAL(kind=kind_noahmp),    DIMENSION(ims:ime, jms:jme) :: KCELL, HEAD
 #endif
 
-  REAL, DIMENSION(19)      :: KLATFACTOR
+  REAL(kind=kind_noahmp), DIMENSION(19)      :: KLATFACTOR
   DATA KLATFACTOR /2.,3.,4.,10.,10.,12.,14.,20.,24.,28.,40.,48.,2.,0.,10.,0.,20.,2.,2./
 
-  REAL,    PARAMETER :: PI = 3.14159265 
-  REAL,    PARAMETER :: FANGLE = 0.22754493   ! = 0.5*sqrt(0.5*tan(pi/8))
+  REAL(kind=kind_noahmp),    PARAMETER :: PI = 3.14159265 
+  REAL(kind=kind_noahmp),    PARAMETER :: FANGLE = 0.22754493   ! = 0.5*sqrt(0.5*tan(pi/8))
 
 #ifdef MPP_LAND
 ! create halo'ed local copies of tile vars
@@ -386,32 +386,32 @@ contains
 ! input
   INTEGER,                         INTENT(IN) :: NSOIL !no. of soil layers
   INTEGER,                         INTENT(IN) :: ILOC, JLOC
-  REAL,                         INTENT(IN)    :: SMCMAX
-  REAL,                         INTENT(IN)    :: SMCWLT
-  REAL,                         INTENT(IN)    :: PSISAT
-  REAL,                         INTENT(IN)    :: BEXP
-  REAL,  DIMENSION(       0:NSOIL), INTENT(IN) :: ZSOIL !depth of soil layer-bottom [m]
-  REAL,  DIMENSION(       1:NSOIL), INTENT(IN) :: SMCEQ  !equilibrium soil water  content [m3/m3]
-  REAL,  DIMENSION(       1:NSOIL), INTENT(IN) :: DZS ! soil layer thickness [m]
+  REAL(kind=kind_noahmp),                         INTENT(IN)    :: SMCMAX
+  REAL(kind=kind_noahmp),                         INTENT(IN)    :: SMCWLT
+  REAL(kind=kind_noahmp),                         INTENT(IN)    :: PSISAT
+  REAL(kind=kind_noahmp),                         INTENT(IN)    :: BEXP
+  REAL(kind=kind_noahmp),  DIMENSION(       0:NSOIL), INTENT(IN) :: ZSOIL !depth of soil layer-bottom [m]
+  REAL(kind=kind_noahmp),  DIMENSION(       1:NSOIL), INTENT(IN) :: SMCEQ  !equilibrium soil water  content [m3/m3]
+  REAL(kind=kind_noahmp),  DIMENSION(       1:NSOIL), INTENT(IN) :: DZS ! soil layer thickness [m]
 ! input-output
-  REAL                           , INTENT(INOUT) :: TOTWATER
-  REAL                           , INTENT(INOUT) :: WTD
-  REAL                           , INTENT(INOUT) :: SMCWTD
-  REAL, DIMENSION(       1:NSOIL), INTENT(INOUT) :: SMC
-  REAL, DIMENSION(       1:NSOIL), INTENT(INOUT) :: SH2O
+  REAL(kind=kind_noahmp)                           , INTENT(INOUT) :: TOTWATER
+  REAL(kind=kind_noahmp)                           , INTENT(INOUT) :: WTD
+  REAL(kind=kind_noahmp)                           , INTENT(INOUT) :: SMCWTD
+  REAL(kind=kind_noahmp), DIMENSION(       1:NSOIL), INTENT(INOUT) :: SMC
+  REAL(kind=kind_noahmp), DIMENSION(       1:NSOIL), INTENT(INOUT) :: SH2O
 ! output
-  REAL                           , INTENT(OUT) :: QSPRING
+  REAL(kind=kind_noahmp)                           , INTENT(OUT) :: QSPRING
 !local
   INTEGER                                     :: K
   INTEGER                                     :: K1
   INTEGER                                     :: IWTD
   INTEGER                                     :: KWTD
-  REAL                                        :: MAXWATUP, MAXWATDW ,WTDOLD
-  REAL                                        :: WGPMID
-  REAL                                        :: SYIELDDW
-  REAL                                        :: DZUP
-  REAL                                        :: SMCEQDEEP
-  REAL, DIMENSION(       1:NSOIL)             :: SICE
+  REAL(kind=kind_noahmp)                                        :: MAXWATUP, MAXWATDW ,WTDOLD
+  REAL(kind=kind_noahmp)                                        :: WGPMID
+  REAL(kind=kind_noahmp)                                        :: SYIELDDW
+  REAL(kind=kind_noahmp)                                        :: DZUP
+  REAL(kind=kind_noahmp)                                        :: SMCEQDEEP
+  REAL(kind=kind_noahmp), DIMENSION(       1:NSOIL)             :: SICE
 ! -------------------------------------------------------------
 
 

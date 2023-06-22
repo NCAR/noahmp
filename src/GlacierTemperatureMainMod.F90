@@ -58,7 +58,7 @@ contains
     MatLeft3(:) = 0.0
 
     ! compute solar penetration through water, needs more work
-    RadSwPenetrateGrd(NumSnowLayerNeg+1:NumSoilLayer) = 0.0
+    RadSwPenetrateGrd(-NumSnowLayerMax+1:NumSoilLayer) = 0.0
 
     ! adjust DepthSoilTempBottom from glacier ice surface to DepthSoilTempBotToSno from snow surface
     DepthSoilTempBotToSno = DepthSoilTempBottom - SnowDepth

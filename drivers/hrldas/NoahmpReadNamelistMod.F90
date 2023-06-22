@@ -109,7 +109,19 @@ contains
     integer                 :: yend                               = 0
     integer, parameter      :: MAX_SOIL_LEVELS                    = 10     ! maximum soil levels in namelist
     real(kind=kind_noahmp), dimension(MAX_SOIL_LEVELS) :: soil_thick_input ! depth to soil interfaces from namelist [m]
-    
+    ! Snow, Ice, and Aerosol Radiative (SNICAR) model parameters
+    integer                 :: snicar_bandnumber_option           = 1
+    integer                 :: snicar_solarspec_option            = 1
+    integer                 :: snicar_snowoptics_option           = 3
+    integer                 :: snicar_dustoptics_option           = 1
+    integer                 :: snicar_rtsolver_option             = 2
+    integer                 :: snicar_snowshape_option            = 1
+    logical                 :: snicar_use_aerosol                 = .true.
+    logical                 :: snicar_snowbc_intmix               = .true.
+    logical                 :: snicar_snowdust_intmix             = .false.
+    logical                 :: snicar_use_oc                      = .false.
+
+ 
     namelist / NOAHLSM_OFFLINE /    &
 #ifdef WRF_HYDRO
          finemesh,finemesh_factor,forc_typ, snow_assim , GEO_STATIC_FLNM, HRLDAS_ini_typ, &
@@ -136,8 +148,11 @@ contains
          khour, kday, zlvl, hrldas_setup_file,                                            &
          spatial_filename, agdata_flnm, tdinput_flnm,                                     &
          external_veg_filename_template, external_lai_filename_template,                  &
-         xstart, xend, ystart, yend
-
+         xstart, xend, ystart, yend,                                                      &
+         snicar_bandnumber_option,snicar_solarspec_option,snicar_snowoptics_option,       &
+         snicar_dustoptics_option,snicar_rtsolver_option,snicar_snowshape_option,         &
+         snicar_use_aerosol,snicar_snowbc_intmix,snicar_snowdust_intmix,                  &
+         snicar_use_oc
 
     !---------------------------------------------------------------
     !  Initialize namelist variables to dummy values, so we can tell
@@ -396,6 +411,18 @@ contains
     NoahmpIO%yend                              = yend
     NoahmpIO%MAX_SOIL_LEVELS                   = MAX_SOIL_LEVELS
     NoahmpIO%soil_thick_input                  = soil_thick_input 
+    ! SNICAR
+    NoahmpIO%SNICAR_BANDNUMBER_OPT_TABLE       = snicar_bandnumber_option
+    NoahmpIO%SNICAR_SOLARSPEC_OPT_TABLE        = snicar_solarspec_option
+    NoahmpIO%SNICAR_SNOWOPTICS_OPT_TABLE       = snicar_snowoptics_option
+    NoahmpIO%SNICAR_DUSTOPTICS_OPT_TABLE       = snicar_dustoptics_option
+    NoahmpIO%SNICAR_RTSOLVER_OPT_TABLE         = snicar_rtsolver_option
+    NoahmpIO%SNICAR_SNOWSHAPE_OPT_TABLE        = snicar_snowshape_option
+    NoahmpIO%SNICAR_USE_AEROSOL_TABLE          = snicar_use_aerosol
+    NoahmpIO%SNICAR_SNOWBC_INTMIX_TABLE        = snicar_snowbc_intmix
+    NoahmpIO%SNICAR_SNOWDUST_INTMIX_TABLE      = snicar_snowdust_intmix
+    NoahmpIO%SNICAR_USE_OC_TABLE               = snicar_use_oc
+
  
 !---------------------------------------------------------------------
 !  NAMELIST check end

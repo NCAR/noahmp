@@ -342,7 +342,6 @@ contains
     else
        AlbedoSfc = -999.9
     endif
-
     end associate
 
   end subroutine EnergyMain

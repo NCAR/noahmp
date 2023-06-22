@@ -53,9 +53,13 @@ contains
     if ( IndInfilMax == 1) then
 
        ! estimate initial soil hydraulic conductivty and diffusivity (Ki, D(theta) in the equation)
+#ifdef DOUBLE_PREC
+       call SoilDiffusivityConductivityOpt2(noahmp, SoilWatDiffusivity, SoilWatConductivity, &
+                                            SoilMoistureWilt(IndSoil), 0.0d0, IndSoil)
+#else
        call SoilDiffusivityConductivityOpt2(noahmp, SoilWatDiffusivity, SoilWatConductivity, &
                                             SoilMoistureWilt(IndSoil), 0.0, IndSoil)
-
+#endif
        ! Sorptivity based on Eq. 10b from Kutílek, Miroslav, and Jana Valentová (1986)
        ! Sorptivity approximations. Transport in Porous Media 1.1, 57-62.
        SoilSorptivity = sqrt(2.0 * (SoilMoistureSat(IndSoil) - SoilMoistureWilt(IndSoil)) * &

@@ -6,7 +6,8 @@
 include ../../hrldas/user_build_options
 
 OBJS = Machine.o \
-       CheckNanMod.o
+       CheckNanMod.o \
+       PiecewiseLinearInterp1dMod.o
 #      ErrorHandleMod.o
 
 all:	$(OBJS)

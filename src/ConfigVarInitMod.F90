@@ -46,6 +46,10 @@ contains
     noahmp%config%nmlist%OptSoilProperty             = undefined_int
     noahmp%config%nmlist%OptPedotransfer             = undefined_int
     noahmp%config%nmlist%OptGlacierTreatment         = undefined_int
+    noahmp%config%nmlist%OptSnicarSnowShape          = undefined_int
+    noahmp%config%nmlist%OptSnicarRTSolver           = undefined_int
+    noahmp%config%nmlist%FlagSnicarSnowBCIntmix      = .true.
+    noahmp%config%nmlist%FlagSnicarSnowDustIntmix    = .false.
 
     ! config domain variable
     noahmp%config%domain%LandUseDataName             = "MODIFIED_IGBP_MODIS_NOAH"
@@ -54,6 +58,11 @@ contains
     noahmp%config%domain%FlagDynamicCrop             = .false.
     noahmp%config%domain%FlagDynamicVeg              = .false.
     noahmp%config%domain%FlagSoilProcess             = .false.
+    noahmp%config%domain%idx_T_max                   = undefined_int
+    noahmp%config%domain%idx_Tgrd_max                = undefined_int
+    noahmp%config%domain%idx_rhos_max                = undefined_int
+    noahmp%config%domain%NumSnicarRadBand            = undefined_int
+    noahmp%config%domain%idx_Mie_snw_mx              = undefined_int
     noahmp%config%domain%NumSoilTimeStep             = undefined_int
     noahmp%config%domain%NumSnowLayerMax             = undefined_int
     noahmp%config%domain%NumSnowLayerNeg             = undefined_int

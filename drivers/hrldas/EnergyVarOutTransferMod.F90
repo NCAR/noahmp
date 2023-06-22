@@ -38,6 +38,7 @@ contains
               NumSoilLayer    => noahmp%config%domain%NumSoilLayer    ,&
               NumSnowLayerMax => noahmp%config%domain%NumSnowLayerMax ,&
               NumSnowLayerNeg => noahmp%config%domain%NumSnowLayerNeg ,&
+              NumSwRadBand    => noahmp%config%domain%NumSwRadBand    ,&
               IndicatorIceSfc => noahmp%config%domain%IndicatorIceSfc  &
              )
 !-----------------------------------------------------------------------
@@ -143,6 +144,12 @@ contains
     if ( noahmp%energy%state%AlbedoSfc > -999 ) then
        NoahmpIO%ALBEDO(I,J) = noahmp%energy%state%AlbedoSfc
     endif
+
+    NoahmpIO%ALBSOILDIRXY(I,1:NumSwRadBand,J)=noahmp%energy%state%AlbedoSoilDir(1:NumSwRadBand)
+    NoahmpIO%ALBSOILDIFXY(I,1:NumSwRadBand,J)=noahmp%energy%state%AlbedoSoilDif(1:NumSwRadBand)
+
+    NoahmpIO%ALBSNOWDIRXY(I,1:NumSwRadBand,J)=noahmp%energy%state%AlbedoSnowDir(1:NumSwRadBand)
+    NoahmpIO%ALBSNOWDIFXY(I,1:NumSwRadBand,J)=noahmp%energy%state%AlbedoSnowDif(1:NumSwRadBand)
 
     ! New Calculation of total Canopy/Stomatal Conductance Based on Bonan et al. (2011), Inverse of Canopy Resistance (below)
     LeafAreaIndSunlit      = max(noahmp%energy%state%LeafAreaIndSunlit, 0.0)

@@ -24,7 +24,10 @@ contains
 
     associate(                                                         &
               NumSnowLayerMax => noahmp%config%domain%NumSnowLayerMax ,&
-              NumSoilLayer    => noahmp%config%domain%NumSoilLayer     &
+              NumSoilLayer    => noahmp%config%domain%NumSoilLayer    ,&
+              idx_rhos_max    => noahmp%config%domain%idx_rhos_max    ,&
+              idx_Tgrd_max    => noahmp%config%domain%idx_Tgrd_max    ,&
+              idx_T_max       => noahmp%config%domain%idx_T_max        &
              )
 
     ! water state variables
@@ -75,6 +78,7 @@ contains
     noahmp%water%state%PrecipAreaFrac              = undefined_real
     noahmp%water%state%TileDrainFrac               = undefined_real
     noahmp%water%state%FrozenPrecipFrac            = undefined_real
+    noahmp%water%state%SnowRadiusFresh             = undefined_real
 
     if ( .not. allocated(noahmp%water%state%IndexPhaseChange) )     &
        allocate( noahmp%water%state%IndexPhaseChange(-NumSnowLayerMax+1:NumSoilLayer) )
@@ -116,6 +120,8 @@ contains
        allocate( noahmp%water%state%SoilTranspFac(1:NumSoilLayer) )
     if ( .not. allocated(noahmp%water%state%SoilMatPotential) )     &
        allocate( noahmp%water%state%SoilMatPotential(1:NumSoilLayer) )
+    if ( .not. allocated(noahmp%water%state%SnowRadius) )     &
+       allocate( noahmp%water%state%SnowRadius(-NumSnowLayerMax+1:0) )
 
     noahmp%water%state%IndexPhaseChange   (:)      = undefined_int
     noahmp%water%state%SoilSupercoolWater (:)      = undefined_real
@@ -137,6 +143,7 @@ contains
     noahmp%water%state%SoilMoistureEqui   (:)      = undefined_real
     noahmp%water%state%SoilTranspFac      (:)      = undefined_real
     noahmp%water%state%SoilMatPotential   (:)      = undefined_real
+    noahmp%water%state%SnowRadius         (:)      = undefined_real
 
     ! water flux variables
     noahmp%water%flux%PrecipTotRefHeight           = undefined_real
@@ -203,6 +210,8 @@ contains
        allocate( noahmp%water%flux%CompactionSnowMelt(-NumSnowLayerMax+1:0) )
     if ( .not. allocated(noahmp%water%flux%CompactionSnowTot) )     &
        allocate( noahmp%water%flux%CompactionSnowTot(-NumSnowLayerMax+1:0) )
+    if ( .not. allocated(noahmp%water%flux%SnowFreezeRate) )     &
+       allocate( noahmp%water%flux%SnowFreezeRate(-NumSnowLayerMax+1:0) )
     if ( .not. allocated(noahmp%water%flux%TranspWatLossSoil) )     &
        allocate( noahmp%water%flux%TranspWatLossSoil(1:NumSoilLayer) )
     if ( .not. allocated(noahmp%water%flux%TranspWatLossSoilAcc) )  &
@@ -214,6 +223,7 @@ contains
     noahmp%water%flux%CompactionSnowBurden (:)     = undefined_real
     noahmp%water%flux%CompactionSnowMelt   (:)     = undefined_real
     noahmp%water%flux%CompactionSnowTot    (:)     = undefined_real
+    noahmp%water%flux%SnowFreezeRate       (:)     = 0.0
     noahmp%water%flux%TranspWatLossSoil    (:)     = undefined_real
     noahmp%water%flux%TranspWatLossSoilAcc (:)     = undefined_real
     noahmp%water%flux%TranspWatLossSoilMean(:)     = undefined_real
@@ -293,6 +303,12 @@ contains
        allocate( noahmp%water%param%SoilExpCoeffB(1:NumSoilLayer) )
     if ( .not. allocated(noahmp%water%param%SoilMatPotentialSat) )    &
        allocate( noahmp%water%param%SoilMatPotentialSat(1:NumSoilLayer) )
+    if ( .not. allocated(noahmp%water%param%snowage_tau) )    &
+       allocate( noahmp%water%param%snowage_tau(idx_rhos_max,idx_Tgrd_max,idx_T_max) )
+    if ( .not. allocated(noahmp%water%param%snowage_kappa) )    &
+       allocate( noahmp%water%param%snowage_kappa(idx_rhos_max,idx_Tgrd_max,idx_T_max) )
+    if ( .not. allocated(noahmp%water%param%snowage_drdt0) )    &
+       allocate( noahmp%water%param%snowage_drdt0(idx_rhos_max,idx_Tgrd_max,idx_T_max) )
 
     noahmp%water%param%SoilMoistureSat       (:)   = undefined_real
     noahmp%water%param%SoilMoistureWilt      (:)   = undefined_real
@@ -302,6 +318,9 @@ contains
     noahmp%water%param%SoilWatConductivitySat(:)   = undefined_real
     noahmp%water%param%SoilExpCoeffB         (:)   = undefined_real
     noahmp%water%param%SoilMatPotentialSat   (:)   = undefined_real
+    noahmp%water%param%snowage_tau       (:,:,:)   = undefined_real
+    noahmp%water%param%snowage_kappa     (:,:,:)   = undefined_real
+    noahmp%water%param%snowage_drdt0     (:,:,:)   = undefined_real
 
     end associate
 

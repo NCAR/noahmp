@@ -32,7 +32,8 @@ contains
               KDS     =>  NoahmpIO%KDS      ,&
               KDE     =>  NoahmpIO%KDE      ,&
               NSOIL   =>  NoahmpIO%NSOIL    ,&
-              NSNOW   =>  NoahmpIO%NSNOW     &
+              NSNOW   =>  NoahmpIO%NSNOW    ,&
+              NUMRAD  =>  NoahmpIO%NUMRAD    &
              )
 ! -------------------------------------------------
 
@@ -180,6 +181,13 @@ contains
     if ( .not. allocated (NoahmpIO%ZSNSOXY)   ) allocate ( NoahmpIO%ZSNSOXY    (XSTART:XEND,-NSNOW+1:NSOIL,YSTART:YEND) ) ! snow layer depth [m]
     if ( .not. allocated (NoahmpIO%SNICEXY)   ) allocate ( NoahmpIO%SNICEXY    (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) ) ! snow layer ice [mm]
     if ( .not. allocated (NoahmpIO%SNLIQXY)   ) allocate ( NoahmpIO%SNLIQXY    (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) ) ! snow layer liquid water [mm]
+    if ( .not. allocated (NoahmpIO%SNRDSXY)   ) allocate ( NoahmpIO%SNRDSXY    (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) ) ! snow layer effective grain radius [microns, m-6]
+    if ( .not. allocated (NoahmpIO%SNFRXY)    ) allocate ( NoahmpIO%SNFRXY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) ) ! snow layer rate of snow freezing [mm/s]
+
+    if ( .not. allocated (NoahmpIO%ALBSOILDIRXY)) allocate ( NoahmpIO%ALBSOILDIRXY (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! soil albedo (direct)
+    if ( .not. allocated (NoahmpIO%ALBSOILDIFXY)) allocate ( NoahmpIO%ALBSOILDIFXY (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! soil albedo (diffuse)
+    if ( .not. allocated (NoahmpIO%ALBSNOWDIRXY)) allocate ( NoahmpIO%ALBSNOWDIRXY (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! snow albedo (direct)
+    if ( .not. allocated (NoahmpIO%ALBSNOWDIFXY)) allocate ( NoahmpIO%ALBSNOWDIFXY (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! snow albedo (diffuse)
 
     ! irrigation
     if ( .not. allocated (NoahmpIO%IRFRACT) ) allocate ( NoahmpIO%IRFRACT (XSTART:XEND,YSTART:YEND) ) ! irrigation fraction
@@ -316,6 +324,52 @@ contains
     if ( .not. allocated (NoahmpIO%RECHCLIM)   ) allocate ( NoahmpIO%RECHCLIM    (XSTART:XEND,YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%RIVERMASK)  ) allocate ( NoahmpIO%RIVERMASK   (XSTART:XEND,YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%NONRIVERXY) ) allocate ( NoahmpIO%NONRIVERXY  (XSTART:XEND,YSTART:YEND) )
+
+    ! Needed for SNICAR_SNOW_ALBEDO (IOPT_ALB = 3)
+    if ( NoahmpIO%IOPT_ALB == 3 ) then
+       if (NoahmpIO%SNICAR_BANDNUMBER_OPT_TABLE == 1) then
+         NoahmpIO%snicar_numrad_snw=5
+       elseif (NoahmpIO%SNICAR_BANDNUMBER_OPT_TABLE == 2) then
+         NoahmpIO%snicar_numrad_snw=480
+       endif
+       if ( .not. allocated (NoahmpIO%ss_alb_snw_drc)      ) allocate ( NoahmpIO%ss_alb_snw_drc      (NoahmpIO%idx_Mie_snw_mx,NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%asm_prm_snw_drc)     ) allocate ( NoahmpIO%asm_prm_snw_drc     (NoahmpIO%idx_Mie_snw_mx,NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ext_cff_mss_snw_drc) ) allocate ( NoahmpIO%ext_cff_mss_snw_drc (NoahmpIO%idx_Mie_snw_mx,NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ss_alb_snw_dfs)      ) allocate ( NoahmpIO%ss_alb_snw_dfs      (NoahmpIO%idx_Mie_snw_mx,NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%asm_prm_snw_dfs)     ) allocate ( NoahmpIO%asm_prm_snw_dfs     (NoahmpIO%idx_Mie_snw_mx,NoahmpIO%snicar_numrad_snw) )         
+       if ( .not. allocated (NoahmpIO%ext_cff_mss_snw_dfs) ) allocate ( NoahmpIO%ext_cff_mss_snw_dfs (NoahmpIO%idx_Mie_snw_mx,NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ss_alb_bc1)      ) allocate ( NoahmpIO%ss_alb_bc1      (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%asm_prm_bc1)     ) allocate ( NoahmpIO%asm_prm_bc1     (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ext_cff_mss_bc1) ) allocate ( NoahmpIO%ext_cff_mss_bc1 (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ss_alb_bc2)      ) allocate ( NoahmpIO%ss_alb_bc2      (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%asm_prm_bc2)     ) allocate ( NoahmpIO%asm_prm_bc2     (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ext_cff_mss_bc2) ) allocate ( NoahmpIO%ext_cff_mss_bc2 (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ss_alb_oc1)      ) allocate ( NoahmpIO%ss_alb_oc1      (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%asm_prm_oc1)     ) allocate ( NoahmpIO%asm_prm_oc1     (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ext_cff_mss_oc1) ) allocate ( NoahmpIO%ext_cff_mss_oc1 (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ss_alb_oc2)      ) allocate ( NoahmpIO%ss_alb_oc2      (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%asm_prm_oc2)     ) allocate ( NoahmpIO%asm_prm_oc2     (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ext_cff_mss_oc2) ) allocate ( NoahmpIO%ext_cff_mss_oc2 (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ss_alb_dst1)     ) allocate ( NoahmpIO%ss_alb_dst1     (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%asm_prm_dst1)    ) allocate ( NoahmpIO%asm_prm_dst1    (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ext_cff_mss_dst1)) allocate ( NoahmpIO%ext_cff_mss_dst1(NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ss_alb_dst2)     ) allocate ( NoahmpIO%ss_alb_dst2     (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%asm_prm_dst2)    ) allocate ( NoahmpIO%asm_prm_dst2    (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ext_cff_mss_dst2)) allocate ( NoahmpIO%ext_cff_mss_dst2(NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ss_alb_dst3)     ) allocate ( NoahmpIO%ss_alb_dst3     (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%asm_prm_dst3)    ) allocate ( NoahmpIO%asm_prm_dst3    (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ext_cff_mss_dst3)) allocate ( NoahmpIO%ext_cff_mss_dst3(NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ss_alb_dst4)     ) allocate ( NoahmpIO%ss_alb_dst4     (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%asm_prm_dst4)    ) allocate ( NoahmpIO%asm_prm_dst4    (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ext_cff_mss_dst4)) allocate ( NoahmpIO%ext_cff_mss_dst4(NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%flx_wgt_dir)     ) allocate ( NoahmpIO%flx_wgt_dir     (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%flx_wgt_dif)     ) allocate ( NoahmpIO%flx_wgt_dif     (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%snowage_tau)     ) allocate ( NoahmpIO%snowage_tau     (NoahmpIO%idx_rhos_max,NoahmpIO%idx_Tgrd_max,NoahmpIO%idx_T_max) )
+       if ( .not. allocated (NoahmpIO%snowage_kappa)   ) allocate ( NoahmpIO%snowage_kappa   (NoahmpIO%idx_rhos_max,NoahmpIO%idx_Tgrd_max,NoahmpIO%idx_T_max) )
+       if ( .not. allocated (NoahmpIO%snowage_drdt0)   ) allocate ( NoahmpIO%snowage_drdt0   (NoahmpIO%idx_rhos_max,NoahmpIO%idx_Tgrd_max,NoahmpIO%idx_T_max) )
+
+    endif
+
 
     ! Needed for crop model (OPT_CROP=1)
     if ( .not. allocated (NoahmpIO%PGSXY)     ) allocate ( NoahmpIO%PGSXY      (XSTART:XEND,  YSTART:YEND) )
@@ -530,6 +584,12 @@ contains
     NoahmpIO%TSNOXY          = undefined_real
     NoahmpIO%SNICEXY         = undefined_real
     NoahmpIO%SNLIQXY         = undefined_real
+    NoahmpIO%SNRDSXY         = undefined_real
+    NoahmpIO%SNFRXY          = undefined_real
+    NoahmpIO%ALBSOILDIRXY    = undefined_real
+    NoahmpIO%ALBSOILDIFXY    = undefined_real
+    NoahmpIO%ALBSNOWDIRXY    = undefined_real
+    NoahmpIO%ALBSNOWDIFXY    = undefined_real
     NoahmpIO%LFMASSXY        = undefined_real
     NoahmpIO%RTMASSXY        = undefined_real
     NoahmpIO%STMASSXY        = undefined_real
@@ -670,6 +730,43 @@ contains
     NoahmpIO%QSPRINGXY       = undefined_real
     NoahmpIO%QSLATXY         = undefined_real
     NoahmpIO%QLATXY          = undefined_real
+
+    ! SNICAR snow albedo
+    NoahmpIO%ss_alb_snw_drc           = undefined_real
+    NoahmpIO%asm_prm_snw_drc          = undefined_real
+    NoahmpIO%ext_cff_mss_snw_drc      = undefined_real
+    NoahmpIO%ss_alb_snw_dfs           = undefined_real
+    NoahmpIO%asm_prm_snw_dfs          = undefined_real
+    NoahmpIO%ext_cff_mss_snw_dfs      = undefined_real
+    NoahmpIO%ss_alb_bc1               = undefined_real
+    NoahmpIO%asm_prm_bc1              = undefined_real
+    NoahmpIO%ext_cff_mss_bc1          = undefined_real
+    NoahmpIO%ss_alb_bc2               = undefined_real
+    NoahmpIO%asm_prm_bc2              = undefined_real
+    NoahmpIO%ext_cff_mss_bc2          = undefined_real
+    NoahmpIO%ss_alb_oc1               = undefined_real
+    NoahmpIO%asm_prm_oc1              = undefined_real
+    NoahmpIO%ext_cff_mss_oc1          = undefined_real
+    NoahmpIO%ss_alb_oc2               = undefined_real
+    NoahmpIO%asm_prm_oc2              = undefined_real
+    NoahmpIO%ext_cff_mss_oc2          = undefined_real
+    NoahmpIO%ss_alb_dst1              = undefined_real
+    NoahmpIO%asm_prm_dst1             = undefined_real
+    NoahmpIO%ext_cff_mss_dst1         = undefined_real
+    NoahmpIO%ss_alb_dst2              = undefined_real
+    NoahmpIO%asm_prm_dst2             = undefined_real
+    NoahmpIO%ext_cff_mss_dst2         = undefined_real
+    NoahmpIO%ss_alb_dst3              = undefined_real
+    NoahmpIO%asm_prm_dst3             = undefined_real
+    NoahmpIO%ext_cff_mss_dst3         = undefined_real
+    NoahmpIO%ss_alb_dst4              = undefined_real
+    NoahmpIO%asm_prm_dst4             = undefined_real
+    NoahmpIO%ext_cff_mss_dst4         = undefined_real
+    NoahmpIO%flx_wgt_dir              = undefined_real
+    NoahmpIO%flx_wgt_dif              = undefined_real
+    NoahmpIO%snowage_tau              = undefined_real
+    NoahmpIO%snowage_kappa            = undefined_real
+    NoahmpIO%snowage_drdt0            = undefined_real
 
     ! crop model
     NoahmpIO%PGSXY           = undefined_int

@@ -148,6 +148,8 @@ contains
              NoahmpIO%FWETXY(I,J)   = 0.0
              NoahmpIO%SNEQVOXY(I,J) = 0.0
              NoahmpIO%ALBOLDXY(I,J) = 0.65
+             NoahmpIO%ALBSOILDIRXY(I,:,J) = 0.0
+             NoahmpIO%ALBSOILDIFXY(I,:,J) = 0.0
              NoahmpIO%QSNOWXY(I,J)  = 0.0
              NoahmpIO%QRAINXY(I,J)  = 0.0
              NoahmpIO%WSLAKEXY(I,J) = 0.0

@@ -52,9 +52,13 @@ contains
     if ( IndInfilMax == 1 ) then
 
        ! estimate initial soil hydraulic conductivty (Ki in the equation) (m/s)
+#ifdef DOUBLE_PREC
+       call SoilDiffusivityConductivityOpt2(noahmp, SoilWatDiffusivity, SoilWatConductivity, &
+                                            SoilMoistureWilt(IndSoil), 0.0d0, IndSoil)
+#else
        call SoilDiffusivityConductivityOpt2(noahmp, SoilWatDiffusivity, SoilWatConductivity, &
                                             SoilMoistureWilt(IndSoil), 0.0, IndSoil)
-
+#endif
        ! Maximum infiltrability based on the Eq. 6.25. (m/s)
        InfilFacTmp = InfilCapillaryDynVic * (SoilMoistureSat(IndSoil) - SoilMoistureWilt(IndSoil)) * &
                      (-1.0) * DepthSoilLayer(IndSoil)

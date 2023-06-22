@@ -35,6 +35,8 @@ contains
 !   SNICEXY is the frozen content of a snow layer.  Initial estimate based on SNOWH and SNOW
 !   SNLIQXY is the liquid content of a snow layer.  Initialized to 0.0
 !   ZNSNOXY is the layer depth from the surface.  
+!   SNRDSXY is the snow layer effective grain radius [microns, m-6]
+!   SNFRXY  is the snow layer rate of snow freezing [mm/s]
 !------------------------------------------------------------------------------------------
 
     itf = min0(NoahmpIO%ite, (NoahmpIO%ide+1)-1)
@@ -85,6 +87,9 @@ contains
           NoahmpIO%TSNOXY (I,-NoahmpIO%NSNOW+1:0,J) = 0.0
           NoahmpIO%SNICEXY(I,-NoahmpIO%NSNOW+1:0,J) = 0.0
           NoahmpIO%SNLIQXY(I,-NoahmpIO%NSNOW+1:0,J) = 0.0
+          NoahmpIO%SNRDSXY(I,-NoahmpIO%NSNOW+1:0,J) = 0.0
+          NoahmpIO%SNFRXY(I,-NoahmpIO%NSNOW+1:0,J) = 0.0
+
           do IZ = NoahmpIO%ISNOWXY(I,J)+1, 0
              NoahmpIO%TSNOXY(I,IZ,J)  = NoahmpIO%TGXY(I,J)
              NoahmpIO%SNLIQXY(I,IZ,J) = 0.0

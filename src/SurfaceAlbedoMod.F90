@@ -9,6 +9,7 @@ module SurfaceAlbedoMod
   use SnowAgingBatsMod,            only : SnowAgingBats
   use SnowAlbedoBatsMod,           only : SnowAlbedoBats
   use SnowAlbedoClassMod,          only : SnowAlbedoClass
+  use SnowAlbedoSnicarMod,         only : SnowAlbedoSnicar
   use GroundAlbedoMod,             only : GroundAlbedo
   use CanopyRadiationTwoStreamMod, only : CanopyRadiationTwoStream
 
@@ -51,6 +52,8 @@ contains
               AlbedoGrdDif        => noahmp%energy%state%AlbedoGrdDif         ,& ! out, ground albedo (diffuse: vis, nir)
               AlbedoSnowDir       => noahmp%energy%state%AlbedoSnowDir        ,& ! out, snow albedo for direct(1=vis, 2=nir)
               AlbedoSnowDif       => noahmp%energy%state%AlbedoSnowDif        ,& ! out, snow albedo for diffuse(1=vis, 2=nir)
+              FracRadSwAbsSnowDir => noahmp%energy%flux%FracRadSwAbsSnowDir   ,& ! out, direct solar flux factor absorbed by snow [frc] (-NumSnowLayerMax+1:1,NumSwRadBand)
+              FracRadSwAbsSnowDif => noahmp%energy%flux%FracRadSwAbsSnowDif   ,& ! out, diffuse solar flux factor absorbed by snow [frc] (-NumSnowLayerMax+1:1,NumSwRadBand)
               AlbedoSfcDir        => noahmp%energy%state%AlbedoSfcDir         ,& ! out, surface albedo (direct)
               AlbedoSfcDif        => noahmp%energy%state%AlbedoSfcDif         ,& ! out, surface albedo (diffuse)
               CanopySunlitFrac    => noahmp%energy%state%CanopySunlitFrac     ,& ! out, sunlit fraction of canopy
@@ -101,6 +104,8 @@ contains
        RadSwReflVegDif   (IndBand) = 0.0
        RadSwReflGrdDir   (IndBand) = 0.0
        RadSwReflGrdDif   (IndBand) = 0.0
+       FracRadSwAbsSnowDir(:,IndBand) = 0.0
+       FracRadSwAbsSnowDif(:,IndBand) = 0.0
     enddo
     VegAreaIndEff = LeafAreaIndEff + StemAreaIndEff
 
@@ -121,6 +126,7 @@ contains
        ! snow albedos
        if ( OptSnowAlbedo == 1 )  call SnowAlbedoBats(noahmp)
        if ( OptSnowAlbedo == 2 )  call SnowAlbedoClass(noahmp)
+       if ( OptSnowAlbedo == 3 )  call SnowAlbedoSnicar(noahmp)
 
        ! ground surface albedo
        call GroundAlbedo(noahmp)

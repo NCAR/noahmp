@@ -179,9 +179,12 @@ contains
     associate(                                                                 &
               GridIndexI           => noahmp%config%domain%GridIndexI         ,& ! in,  grid index in x-direction
               GridIndexJ           => noahmp%config%domain%GridIndexJ         ,& ! in,  grid index in y-direction
+              OptSnowAlbedo        => noahmp%config%nmlist%OptSnowAlbedo      ,& ! in,  options for ground snow surface albedo
               RadSwDownRefHeight   => noahmp%forcing%RadSwDownRefHeight       ,& ! in,  downward shortwave radiation [W/m2] at reference height
               VegFrac              => noahmp%energy%state%VegFrac             ,& ! in,  greeness vegetation fraction
               RadSwAbsSfc          => noahmp%energy%flux%RadSwAbsSfc          ,& ! in,  total absorbed solar radiation [W/m2]
+              RadSwAbsSnow         => noahmp%energy%flux%RadSwAbsSnow         ,& ! in, total absorbed solar radiation by snow [W/m2]
+              RadSwAbsSnowSoilLayer=> noahmp%energy%flux%RadSwAbsSnowSoilLayer,& ! in, total absorbed solar radiation by snow for each layer [W/m2]
               RadSwReflSfc         => noahmp%energy%flux%RadSwReflSfc         ,& ! in,  total reflected solar radiation [W/m2]
               RadSwReflVeg         => noahmp%energy%flux%RadSwReflVeg         ,& ! in,  reflected solar radiation by vegetation [W/m2]
               RadSwReflGrd         => noahmp%energy%flux%RadSwReflGrd         ,& ! in,  reflected solar radiation by ground [W/m2]
@@ -191,6 +194,7 @@ contains
               HeatLatentGrd        => noahmp%energy%flux%HeatLatentGrd        ,& ! in,  total ground latent heat [W/m2] (+ to atm)
               HeatLatentTransp     => noahmp%energy%flux%HeatLatentTransp     ,& ! in,  latent heat flux from transpiration [W/m2] (+ to atm)
               HeatGroundTot        => noahmp%energy%flux%HeatGroundTot        ,& ! in,  total ground heat flux [W/m2] (+ to soil/snow)
+              SnowCoverFrac        => noahmp%water%state%SnowCoverFrac        ,& ! in,  snow cover fraction
               RadSwAbsVeg          => noahmp%energy%flux%RadSwAbsVeg          ,& ! in,  solar radiation absorbed by vegetation [W/m2]
               RadSwAbsGrd          => noahmp%energy%flux%RadSwAbsGrd          ,& ! in,  solar radiation absorbed by ground [W/m2]
               HeatPrecipAdvSfc     => noahmp%energy%flux%HeatPrecipAdvSfc     ,& ! in,  precipitation advected heat - total [W/m2]
@@ -199,6 +203,7 @@ contains
               HeatPrecipAdvCanopy  => noahmp%energy%flux%HeatPrecipAdvCanopy  ,& ! in,  precipitation advected heat - vegetation net [W/m2]
               HeatLatentIrriEvap   => noahmp%energy%flux%HeatLatentIrriEvap   ,& ! in,  latent heating due to sprinkler evaporation [W/m2]
               HeatCanStorageChg    => noahmp%energy%flux%HeatCanStorageChg    ,& ! in,  canopy heat storage change [W/m2]
+              RadSwPenetrateGrd    => noahmp%energy%flux%RadSwPenetrateGrd    ,& ! out, light penetrating through soil/snow water [W/m2]
               EnergyBalanceError   => noahmp%energy%state%EnergyBalanceError  ,& ! out, error in surface energy balance [W/m2]
               RadSwBalanceError    => noahmp%energy%state%RadSwBalanceError    & ! out, error in shortwave radiation balance [W/m2]
              )
@@ -227,8 +232,19 @@ contains
        stop "Error: Solar radiation budget problem in NoahMP LSM"
     endif
 
+    if ( OptSnowAlbedo == 3 ) then
+       write(*,*) "RadSwAbsGrd                             = ", RadSwAbsGrd
+       write(*,*) "RadSwAbsSnow specific                   = ", RadSwAbsSnow
+       write(*,*) "sum(RadSwAbsSnowSoilLayer) grid         = ", sum(RadSwAbsSnowSoilLayer)   
+       write(*,*) "RadSwAbsSnowSoilLayer grid              = ", RadSwAbsSnowSoilLayer
+       write(*,*) "sum(RadSwAbsSnowSoilLayer)-RadSwAbsSnow = ", sum(RadSwAbsSnowSoilLayer)-RadSwAbsSnow
+       write(*,*) "RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer) grid = ", RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer)
+       if (abs(RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer))>0.0001) stop
+    endif
+
     ! error in surface energy balance should be <0.01 W/m2
     EnergyBalanceError = RadSwAbsVeg + RadSwAbsGrd + HeatPrecipAdvSfc -                     &
+                         sum(RadSwPenetrateGrd) -                                           &
                         (RadLwNetSfc + HeatSensibleSfc + HeatLatentCanopy + HeatLatentGrd + &
                          HeatLatentTransp + HeatGroundTot + HeatLatentIrriEvap + HeatCanStorageChg)
     ! print out diagnostics when error is large
@@ -244,6 +260,7 @@ contains
        write(*,'(a17,F10.4)' ) "Sprinkler:        ", HeatLatentIrriEvap
        write(*,'(a17,F10.4)' ) "Canopy heat storage change: ", HeatCanStorageChg
        write(*,'(a17,4F10.4)') "Precip advected:  ", HeatPrecipAdvSfc,HeatPrecipAdvCanopy,HeatPrecipAdvVegGrd,HeatPrecipAdvBareGrd
+       write(*,*) "Light through soil/snow water:", RadSwPenetrateGrd,sum(RadSwPenetrateGrd) 
        write(*,'(a17,F10.4)' ) "Veg fraction:     ", VegFrac
        stop "Error: Energy budget problem in NoahMP LSM"
     endif

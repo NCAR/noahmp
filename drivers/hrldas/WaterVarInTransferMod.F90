@@ -72,6 +72,8 @@ contains
     noahmp%water%state%IrrigationCntFlood                 = NoahmpIO%IRNUMFI    (I,J)
     noahmp%water%state%SnowIce     (-NumSnowLayerMax+1:0) = NoahmpIO%SNICEXY    (I,-NumSnowLayerMax+1:0,J)
     noahmp%water%state%SnowLiqWater(-NumSnowLayerMax+1:0) = NoahmpIO%SNLIQXY    (I,-NumSnowLayerMax+1:0,J)
+    noahmp%water%state%SnowRadius  (-NumSnowLayerMax+1:0) = NoahmpIO%SNRDSXY    (I,-NumSnowLayerMax+1:0,J) 
+    noahmp%water%flux%SnowFreezeRate(-NumSnowLayerMax+1:0)= NoahmpIO%SNFRXY     (I,-NumSnowLayerMax+1:0,J)
     noahmp%water%state%SoilLiqWater      (1:NumSoilLayer) = NoahmpIO%SH2O       (I,1:NumSoilLayer,J)
     noahmp%water%state%SoilMoisture      (1:NumSoilLayer) = NoahmpIO%SMOIS      (I,1:NumSoilLayer,J)    
     noahmp%water%state%SoilMoistureEqui  (1:NumSoilLayer) = NoahmpIO%SMOISEQ    (I,1:NumSoilLayer,J)
@@ -146,6 +148,9 @@ contains
     noahmp%water%param%DrainWatDepToImperv                = NoahmpIO%TD_D_TABLE(SoilType(1))
     noahmp%water%param%NumSoilLayerRoot                   = NoahmpIO%NROOT_TABLE(VegType)
     noahmp%water%param%SoilDrainSlope                     = NoahmpIO%SLOPE_TABLE(RunoffSlopeType)
+    noahmp%water%param%snowage_tau                        = NoahmpIO%snowage_tau
+    noahmp%water%param%snowage_kappa                      = NoahmpIO%snowage_kappa
+    noahmp%water%param%snowage_drdt0                      = NoahmpIO%snowage_drdt0
 
     do IndexSoilLayer = 1, size(SoilType)
        noahmp%water%param%SoilMoistureSat       (IndexSoilLayer) = NoahmpIO%SMCMAX_TABLE(SoilType(IndexSoilLayer))
