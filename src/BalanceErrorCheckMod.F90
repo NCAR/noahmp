@@ -244,7 +244,7 @@ contains
 
     ! error in surface energy balance should be <0.01 W/m2
     EnergyBalanceError = RadSwAbsVeg + RadSwAbsGrd + HeatPrecipAdvSfc -                     &
-                         sum(RadSwPenetrateGrd) -                                           &
+!                         sum(RadSwPenetrateGrd) -                                           &
                         (RadLwNetSfc + HeatSensibleSfc + HeatLatentCanopy + HeatLatentGrd + &
                          HeatLatentTransp + HeatGroundTot + HeatLatentIrriEvap + HeatCanStorageChg)
     ! print out diagnostics when error is large
