@@ -3,6 +3,7 @@ module NoahmpDriverMainMod
   use Machine
   use NoahmpVarType
   use NoahmpIOVarType
+  use LisNoahmpParamType
   use ConfigVarInitMod
   use EnergyVarInitMod
   use ForcingVarInitMod
@@ -38,8 +39,9 @@ contains
 ! ------------------------------------------------------------------------- 
  
     implicit none 
-    
-    type(NoahmpIO_type), intent(inout)  :: NoahmpIO
+
+    type(LisNoahmpParam_type), intent(in)    :: parameters ! lis/noahmp parameter    
+    type(NoahmpIO_type),       intent(inout) :: NoahmpIO
     
     ! local variables
     type(noahmp_type)                   :: noahmp
@@ -117,16 +119,12 @@ contains
           do I = NoahmpIO%ITS, NoahmpIO%ITE
              if ( (NoahmpIO%XLAND(I,J)-1.5) >= 0.0 ) then  ! Open water point
                 if ( NoahmpIO%XICE(I,J) == 1.0 ) print*,' sea-ice at water point, I=',I,'J=',J
-                NoahmpIO%SMSTAV(I,J) = 1.0
-                NoahmpIO%SMSTOT(I,J) = 1.0
                 do K = 1, NoahmpIO%NSOIL
                    NoahmpIO%SMOIS(I,K,J) = 1.0
                    NoahmpIO%TSLB(I,K,J)  = 273.16
                 enddo
              else
                 if ( NoahmpIO%XICE(I,J) == 1.0 ) then      ! Sea-ice case
-                   NoahmpIO%SMSTAV(I,J) = 1.0
-                   NoahmpIO%SMSTOT(I,J) = 1.0
                    do K = 1, NoahmpIO%NSOIL
                       NoahmpIO%SMOIS(I,K,J) = 1.0
                    enddo
@@ -139,7 +137,7 @@ contains
 
           NoahmpIO%I = I
           if ( NoahmpIO%XICE(I,J) >= NoahmpIO%XICE_THRESHOLD ) then  ! Sea-ice point
-             NoahmpIO%ICE                         = 1
+             NoahmpIO%ICE                        = 1
              NoahmpIO%SH2O(I,1:NoahmpIO%NSOIL,J) = 1.0
              NoahmpIO%LAI (I,J)                  = 0.01
              cycle ILOOP                                             ! Skip any sea-ice points

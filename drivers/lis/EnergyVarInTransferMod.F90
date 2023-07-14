@@ -12,6 +12,7 @@ module EnergyVarInTransferMod
   use Machine
   use NoahmpIOVarType
   use NoahmpVarType
+  use LisNoahmpParamType
 
   implicit none
 
@@ -19,12 +20,13 @@ contains
 
 !=== initialize with input data or table values
 
-  subroutine EnergyVarInTransfer(noahmp, NoahmpIO)
+  subroutine EnergyVarInTransfer(noahmp, NoahmpIO, LISparam)
 
     implicit none
 
-    type(NoahmpIO_type), intent(inout) :: NoahmpIO
-    type(noahmp_type),   intent(inout) :: noahmp
+    type(NoahmpIO_type),       intent(inout) :: NoahmpIO
+    type(noahmp_type),         intent(inout) :: noahmp
+    type(LisNoahmpParam_type), intent(in)    :: LISparam   ! lis/noahmp parameter
 
     ! local loop index
     integer                          :: SoilLayerIndex
@@ -58,8 +60,8 @@ contains
     noahmp%energy%state%ExchCoeffMomSfc                           = NoahmpIO%CMXY    (I,J)
     noahmp%energy%state%TemperatureSoilSnow(-NumSnowLayerMax+1:0) = NoahmpIO%TSNOXY  (I,-NumSnowLayerMax+1:0,J)
     noahmp%energy%state%TemperatureSoilSnow(1:NumSoilLayer)       = NoahmpIO%TSLB    (I,1:NumSoilLayer,J)
-    noahmp%energy%state%PressureAtmosCO2                          = NoahmpIO%CO2_TABLE * noahmp%forcing%PressureAirRefHeight
-    noahmp%energy%state%PressureAtmosO2                           = NoahmpIO%O2_TABLE  * noahmp%forcing%PressureAirRefHeight
+    noahmp%energy%state%PressureAtmosCO2                          = LISparam%CO2 * noahmp%forcing%PressureAirRefHeight
+    noahmp%energy%state%PressureAtmosO2                           = LISparam%O2  * noahmp%forcing%PressureAirRefHeight
     ! vegetation treatment for USGS land types (playa, lava, sand to bare)
     if ( (VegType == 25) .or. (VegType == 26) .or. (VegType == 27) ) then
        noahmp%energy%state%VegFrac       = 0.0
@@ -70,67 +72,67 @@ contains
     noahmp%energy%flux%HeatGroundTotAcc                           = NoahmpIO%ACC_SSOILXY(I,J)
 
     ! energy parameter variables
-    noahmp%energy%param%SoilHeatCapacity                          = NoahmpIO%CSOIL_TABLE
-    noahmp%energy%param%SnowAgeFacBats                            = NoahmpIO%TAU0_TABLE
-    noahmp%energy%param%SnowGrowVapFacBats                        = NoahmpIO%GRAIN_GROWTH_TABLE
-    noahmp%energy%param%SnowSootFacBats                           = NoahmpIO%DIRT_SOOT_TABLE
-    noahmp%energy%param%SnowGrowFrzFacBats                        = NoahmpIO%EXTRA_GROWTH_TABLE
-    noahmp%energy%param%SolarZenithAdjBats                        = NoahmpIO%BATS_COSZ_TABLE
-    noahmp%energy%param%FreshSnoAlbVisBats                        = NoahmpIO%BATS_VIS_NEW_TABLE
-    noahmp%energy%param%FreshSnoAlbNirBats                        = NoahmpIO%BATS_NIR_NEW_TABLE
-    noahmp%energy%param%SnoAgeFacDifVisBats                       = NoahmpIO%BATS_VIS_AGE_TABLE
-    noahmp%energy%param%SnoAgeFacDifNirBats                       = NoahmpIO%BATS_NIR_AGE_TABLE
-    noahmp%energy%param%SzaFacDirVisBats                          = NoahmpIO%BATS_VIS_DIR_TABLE
-    noahmp%energy%param%SzaFacDirNirBats                          = NoahmpIO%BATS_NIR_DIR_TABLE
-    noahmp%energy%param%SnowAlbRefClass                           = NoahmpIO%CLASS_ALB_REF_TABLE
-    noahmp%energy%param%SnowAgeFacClass                           = NoahmpIO%CLASS_SNO_AGE_TABLE
-    noahmp%energy%param%SnowAlbFreshClass                         = NoahmpIO%CLASS_ALB_NEW_TABLE
-    noahmp%energy%param%UpscatterCoeffSnowDir                     = NoahmpIO%BETADS_TABLE
-    noahmp%energy%param%UpscatterCoeffSnowDif                     = NoahmpIO%BETAIS_TABLE
-    noahmp%energy%param%ZilitinkevichCoeff                        = NoahmpIO%CZIL_TABLE
-    noahmp%energy%param%EmissivitySnow                            = NoahmpIO%SNOW_EMIS_TABLE
-    noahmp%energy%param%EmissivitySoilLake                        = NoahmpIO%EG_TABLE
-    noahmp%energy%param%AlbedoLandIce                             = NoahmpIO%ALBICE_TABLE
-    noahmp%energy%param%RoughLenMomSnow                           = NoahmpIO%Z0SNO_TABLE
-    noahmp%energy%param%RoughLenMomSoil                           = NoahmpIO%Z0SOIL_TABLE
-    noahmp%energy%param%RoughLenMomLake                           = NoahmpIO%Z0LAKE_TABLE
-    noahmp%energy%param%EmissivityIceSfc                          = NoahmpIO%EICE_TABLE
-    noahmp%energy%param%ResistanceSoilExp                         = NoahmpIO%RSURF_EXP_TABLE
-    noahmp%energy%param%ResistanceSnowSfc                         = NoahmpIO%RSURF_SNOW_TABLE
+    noahmp%energy%param%SoilHeatCapacity                          = LISparam%CSOIL
+    noahmp%energy%param%SnowAgeFacBats                            = LISparam%TAU0
+    noahmp%energy%param%SnowGrowVapFacBats                        = LISparam%GRAIN_GROWTH
+    noahmp%energy%param%SnowSootFacBats                           = LISparam%DIRT_SOOT
+    noahmp%energy%param%SnowGrowFrzFacBats                        = LISparam%EXTRA_GROWTH
+    noahmp%energy%param%SolarZenithAdjBats                        = LISparam%BATS_COSZ
+    noahmp%energy%param%FreshSnoAlbVisBats                        = LISparam%BATS_VIS_NEW
+    noahmp%energy%param%FreshSnoAlbNirBats                        = LISparam%BATS_NIR_NEW
+    noahmp%energy%param%SnoAgeFacDifVisBats                       = LISparam%BATS_VIS_AGE
+    noahmp%energy%param%SnoAgeFacDifNirBats                       = LISparam%BATS_NIR_AGE
+    noahmp%energy%param%SzaFacDirVisBats                          = LISparam%BATS_VIS_DIR
+    noahmp%energy%param%SzaFacDirNirBats                          = LISparam%BATS_NIR_DIR
+    noahmp%energy%param%SnowAlbRefClass                           = LISparam%CLASS_ALB_REF
+    noahmp%energy%param%SnowAgeFacClass                           = LISparam%CLASS_SNO_AGE
+    noahmp%energy%param%SnowAlbFreshClass                         = LISparam%CLASS_ALB_NEW
+    noahmp%energy%param%UpscatterCoeffSnowDir                     = LISparam%BETADS
+    noahmp%energy%param%UpscatterCoeffSnowDif                     = LISparam%BETAIS
+    noahmp%energy%param%ZilitinkevichCoeff                        = LISparam%CZIL
+    noahmp%energy%param%EmissivitySnow                            = LISparam%SNOW_EMIS
+    noahmp%energy%param%EmissivitySoilLake                        = LISparam%EG
+    noahmp%energy%param%AlbedoLandIce                             = LISparam%ALBICE
+    noahmp%energy%param%RoughLenMomSnow                           = LISparam%Z0SNO
+    noahmp%energy%param%RoughLenMomSoil                           = LISparam%Z0SOIL
+    noahmp%energy%param%RoughLenMomLake                           = LISparam%Z0LAKE
+    noahmp%energy%param%EmissivityIceSfc                          = LISparam%EICE
+    noahmp%energy%param%ResistanceSoilExp                         = LISparam%RSURF_EXP
+    noahmp%energy%param%ResistanceSnowSfc                         = LISparam%RSURF_SNOW
     noahmp%energy%param%VegFracAnnMax                             = NoahmpIO%GVFMAX(I,J) / 100.0
     noahmp%energy%param%VegFracGreen                              = NoahmpIO%VEGFRA(I,J) / 100.0
-    noahmp%energy%param%TreeCrownRadius                           = NoahmpIO%RC_TABLE    (VegType)
-    noahmp%energy%param%HeightCanopyTop                           = NoahmpIO%HVT_TABLE   (VegType)
-    noahmp%energy%param%HeightCanopyBot                           = NoahmpIO%HVB_TABLE   (VegType)
-    noahmp%energy%param%RoughLenMomVeg                            = NoahmpIO%Z0MVT_TABLE (VegType)
-    noahmp%energy%param%CanopyWindExtFac                          = NoahmpIO%CWPVT_TABLE (VegType)
-    noahmp%energy%param%TreeDensity                               = NoahmpIO%DEN_TABLE   (VegType)
-    noahmp%energy%param%CanopyOrientIndex                         = NoahmpIO%XL_TABLE    (VegType)
-    noahmp%energy%param%ConductanceLeafMin                        = NoahmpIO%BP_TABLE    (VegType)
-    noahmp%energy%param%Co2MmConst25C                             = NoahmpIO%KC25_TABLE  (VegType)
-    noahmp%energy%param%O2MmConst25C                              = NoahmpIO%KO25_TABLE  (VegType)
-    noahmp%energy%param%Co2MmConstQ10                             = NoahmpIO%AKC_TABLE   (VegType)
-    noahmp%energy%param%O2MmConstQ10                              = NoahmpIO%AKO_TABLE   (VegType)
-    noahmp%energy%param%RadiationStressFac                        = NoahmpIO%RGL_TABLE   (VegType)
-    noahmp%energy%param%ResistanceStomataMin                      = NoahmpIO%RS_TABLE    (VegType)
-    noahmp%energy%param%ResistanceStomataMax                      = NoahmpIO%RSMAX_TABLE (VegType)
-    noahmp%energy%param%AirTempOptimTransp                        = NoahmpIO%TOPT_TABLE  (VegType)
-    noahmp%energy%param%VaporPresDeficitFac                       = NoahmpIO%HS_TABLE    (VegType)
-    noahmp%energy%param%LeafDimLength                             = NoahmpIO%DLEAF_TABLE (VegType)
-    noahmp%energy%param%HeatCapacCanFac                           = NoahmpIO%CBIOM_TABLE (VegType)
-    noahmp%energy%param%LeafAreaIndexMon (1:12)                   = NoahmpIO%LAIM_TABLE  (VegType,1:12)
-    noahmp%energy%param%StemAreaIndexMon (1:12)                   = NoahmpIO%SAIM_TABLE  (VegType,1:12)
-    noahmp%energy%param%ReflectanceLeaf  (1:NumSwRadBand)         = NoahmpIO%RHOL_TABLE  (VegType,1:NumSwRadBand)
-    noahmp%energy%param%ReflectanceStem  (1:NumSwRadBand)         = NoahmpIO%RHOS_TABLE  (VegType,1:NumSwRadBand)
-    noahmp%energy%param%TransmittanceLeaf(1:NumSwRadBand)         = NoahmpIO%TAUL_TABLE  (VegType,1:NumSwRadBand)
-    noahmp%energy%param%TransmittanceStem(1:NumSwRadBand)         = NoahmpIO%TAUS_TABLE  (VegType,1:NumSwRadBand)
-    noahmp%energy%param%AlbedoSoilSat    (1:NumSwRadBand)         = NoahmpIO%ALBSAT_TABLE(SoilColor,1:NumSwRadBand)
-    noahmp%energy%param%AlbedoSoilDry    (1:NumSwRadBand)         = NoahmpIO%ALBDRY_TABLE(SoilColor,1:NumSwRadBand)
-    noahmp%energy%param%AlbedoLakeFrz    (1:NumSwRadBand)         = NoahmpIO%ALBLAK_TABLE(1:NumSwRadBand)
-    noahmp%energy%param%ScatterCoeffSnow (1:NumSwRadBand)         = NoahmpIO%OMEGAS_TABLE(1:NumSwRadBand)
+    noahmp%energy%param%TreeCrownRadius                           = LISparam%RC
+    noahmp%energy%param%HeightCanopyTop                           = LISparam%HVT
+    noahmp%energy%param%HeightCanopyBot                           = LISparam%HVB
+    noahmp%energy%param%RoughLenMomVeg                            = LISparam%Z0MVT
+    noahmp%energy%param%CanopyWindExtFac                          = LISparam%CWPVT
+    noahmp%energy%param%TreeDensity                               = LISparam%DEN
+    noahmp%energy%param%CanopyOrientIndex                         = LISparam%XL
+    noahmp%energy%param%ConductanceLeafMin                        = LISparam%BP
+    noahmp%energy%param%Co2MmConst25C                             = LISparam%KC25
+    noahmp%energy%param%O2MmConst25C                              = LISparam%KO25
+    noahmp%energy%param%Co2MmConstQ10                             = LISparam%AKC
+    noahmp%energy%param%O2MmConstQ10                              = LISparam%AKO
+    noahmp%energy%param%RadiationStressFac                        = LISparam%RGL
+    noahmp%energy%param%ResistanceStomataMin                      = LISparam%RS
+    noahmp%energy%param%ResistanceStomataMax                      = LISparam%RSMAX
+    noahmp%energy%param%AirTempOptimTransp                        = LISparam%TOPT
+    noahmp%energy%param%VaporPresDeficitFac                       = LISparam%HS
+    noahmp%energy%param%LeafDimLength                             = LISparam%DLEAF
+    noahmp%energy%param%HeatCapacCanFac                           = LISparam%CBIOM
+    noahmp%energy%param%LeafAreaIndexMon                          = LISparam%LAIM
+    noahmp%energy%param%StemAreaIndexMon                          = LISparam%SAIM
+    noahmp%energy%param%ReflectanceLeaf                           = LISparam%RHOL
+    noahmp%energy%param%ReflectanceStem                           = LISparam%RHOS
+    noahmp%energy%param%TransmittanceLeaf                         = LISparam%TAUL
+    noahmp%energy%param%TransmittanceStem                         = LISparam%TAUS
+    noahmp%energy%param%AlbedoSoilSat                             = LISparam%ALBSAT
+    noahmp%energy%param%AlbedoSoilDry                             = LISparam%ALBDRY
+    noahmp%energy%param%AlbedoLakeFrz                             = LISparam%ALBLAK
+    noahmp%energy%param%ScatterCoeffSnow                          = LISparam%OMEGAS
 
     do SoilLayerIndex = 1, size(SoilType)
-       noahmp%energy%param%SoilQuartzFrac(SoilLayerIndex)         = NoahmpIO%QUARTZ_TABLE(SoilType(SoilLayerIndex))
+       noahmp%energy%param%SoilQuartzFrac(SoilLayerIndex)         = LISparam%QUARTZ(SoilType(SoilLayerIndex))
     enddo
 
     ! spatial varying soil input
@@ -141,11 +143,11 @@ contains
     if ( FlagUrban .eqv. .true. ) noahmp%energy%param%SoilHeatCapacity = 3.0e6
 
     if ( CropType > 0 ) then
-       noahmp%energy%param%ConductanceLeafMin                     = NoahmpIO%BPI_TABLE  (CropType)
-       noahmp%energy%param%Co2MmConst25C                          = NoahmpIO%KC25I_TABLE(CropType)
-       noahmp%energy%param%O2MmConst25C                           = NoahmpIO%KO25I_TABLE(CropType)
-       noahmp%energy%param%Co2MmConstQ10                          = NoahmpIO%AKCI_TABLE (CropType)
-       noahmp%energy%param%O2MmConstQ10                           = NoahmpIO%AKOI_TABLE (CropType)
+       noahmp%energy%param%ConductanceLeafMin                     = LISparam%BP
+       noahmp%energy%param%Co2MmConst25C                          = LISparam%KC25
+       noahmp%energy%param%O2MmConst25C                           = LISparam%KO25
+       noahmp%energy%param%Co2MmConstQ10                          = LISparam%AKC
+       noahmp%energy%param%O2MmConstQ10                           = LISparam%AKO
     endif
 
     end associate

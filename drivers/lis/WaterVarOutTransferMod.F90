@@ -64,8 +64,6 @@ contains
                            noahmp%water%flux%Transpiration + noahmp%water%flux%EvapIrriSprinkler
     endif
 
-    NoahmpIO%SMSTAV      (I,J) = 0.0  ! [maintained as Noah consistency] water
-    NoahmpIO%SMSTOT      (I,J) = 0.0  ! [maintained as Noah consistency] water
     NoahmpIO%SFCRUNOFF   (I,J) = NoahmpIO%SFCRUNOFF(I,J) + noahmp%water%flux%RunoffSurface
     NoahmpIO%UDRUNOFF    (I,J) = NoahmpIO%UDRUNOFF (I,J) + noahmp%water%flux%RunoffSubsurface
     NoahmpIO%QTDRAIN     (I,J) = NoahmpIO%QTDRAIN  (I,J) + noahmp%water%flux%TileDrain

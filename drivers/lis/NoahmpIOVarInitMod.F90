@@ -17,12 +17,10 @@ contains
 
 !=== initialize with default values
 
-  subroutine NoahmpIOVarInitDefault(NoahmpIO)
+  subroutine NoahmpIOVarInitDefault()
 
     implicit none
 
-    type(NoahmpIO_type), intent(inout) :: NoahmpIO
-   
 ! ------------------------------------------------- 
     associate(                               &
               XSTART  =>  NoahmpIO%XSTART   ,&
@@ -39,10 +37,12 @@ contains
     ! Input variables
     if ( .not. allocated (NoahmpIO%COSZEN)    ) allocate ( NoahmpIO%COSZEN     (XSTART:XEND,        YSTART:YEND) ) ! cosine zenith angle
     if ( .not. allocated (NoahmpIO%XLAT)      ) allocate ( NoahmpIO%XLAT       (XSTART:XEND,        YSTART:YEND) ) ! latitude [radians] 
+    if ( .not. allocated (NoahmpIO%XLON)      ) allocate ( NoahmpIO%XLON       (XSTART:XEND,        YSTART:YEND) ) ! longitude [radians] 
     if ( .not. allocated (NoahmpIO%DZS)       ) allocate ( NoahmpIO%DZS        (1:NSOIL)                         ) ! thickness of soil layers [m]
     if ( .not. allocated (NoahmpIO%ZSOIL)     ) allocate ( NoahmpIO%ZSOIL      (1:NSOIL)                         ) ! depth to soil interfaces [m] 
     if ( .not. allocated (NoahmpIO%IVGTYP)    ) allocate ( NoahmpIO%IVGTYP     (XSTART:XEND,        YSTART:YEND) ) ! vegetation type
     if ( .not. allocated (NoahmpIO%ISLTYP)    ) allocate ( NoahmpIO%ISLTYP     (XSTART:XEND,        YSTART:YEND) ) ! soil type
+    if ( .not. allocated (NoahmpIO%urban_vegtype)) allocate ( NoahmpIO%urban_vegtype(XSTART:XEND,        YSTART:YEND) ) ! urban veg type
     if ( .not. allocated (NoahmpIO%VEGFRA)    ) allocate ( NoahmpIO%VEGFRA     (XSTART:XEND,        YSTART:YEND) ) ! vegetation fraction []
     if ( .not. allocated (NoahmpIO%TMN)       ) allocate ( NoahmpIO%TMN        (XSTART:XEND,        YSTART:YEND) ) ! deep soil temperature [K]
     if ( .not. allocated (NoahmpIO%XLAND)     ) allocate ( NoahmpIO%XLAND      (XSTART:XEND,        YSTART:YEND) ) ! =2 ocean; =1 land/seaice
@@ -73,7 +73,8 @@ contains
     if ( .not. allocated (NoahmpIO%U_PHY)     ) allocate ( NoahmpIO%U_PHY      (XSTART:XEND,KDS:KDE,YSTART:YEND) ) ! 3D U wind component [m/s]
     if ( .not. allocated (NoahmpIO%V_PHY)     ) allocate ( NoahmpIO%V_PHY      (XSTART:XEND,KDS:KDE,YSTART:YEND) ) ! 3D V wind component [m/s]
     if ( .not. allocated (NoahmpIO%P8W)       ) allocate ( NoahmpIO%P8W        (XSTART:XEND,KDS:KDE,YSTART:YEND) ) ! 3D pressure, valid at interface [Pa]
- 
+    if ( .not. allocated (NoahmpIO%shdfac_monthly)) allocate ( NoahmpIO%shdfac_monthly(XSTART:XEND,12,YSTART:YEND) ) ! monthly vegetation fraction
+
     ! spatial varying parameter map
     if ( NoahmpIO%IOPT_SOIL > 1 ) then
        if ( .not. allocated (NoahmpIO%soilcomp)) allocate ( NoahmpIO%soilcomp (XSTART:XEND,1:2*NSOIL,YSTART:YEND) ) ! Soil sand and clay content [fraction]
@@ -125,8 +126,6 @@ contains
     if ( .not. allocated (NoahmpIO%QFX)      ) allocate ( NoahmpIO%QFX       (XSTART:XEND,        YSTART:YEND) ) ! latent heat flux [kg s-1 m-2]
     if ( .not. allocated (NoahmpIO%LH)       ) allocate ( NoahmpIO%LH        (XSTART:XEND,        YSTART:YEND) ) ! latent heat flux [W m-2]
     if ( .not. allocated (NoahmpIO%GRDFLX)   ) allocate ( NoahmpIO%GRDFLX    (XSTART:XEND,        YSTART:YEND) ) ! ground/snow heat flux [W m-2]
-    if ( .not. allocated (NoahmpIO%SMSTAV)   ) allocate ( NoahmpIO%SMSTAV    (XSTART:XEND,        YSTART:YEND) ) ! soil moisture avail. [not used]
-    if ( .not. allocated (NoahmpIO%SMSTOT)   ) allocate ( NoahmpIO%SMSTOT    (XSTART:XEND,        YSTART:YEND) ) ! total soil water [mm][not used]
     if ( .not. allocated (NoahmpIO%SFCRUNOFF)) allocate ( NoahmpIO%SFCRUNOFF (XSTART:XEND,        YSTART:YEND) ) ! accumulated surface runoff [m]
     if ( .not. allocated (NoahmpIO%UDRUNOFF) ) allocate ( NoahmpIO%UDRUNOFF  (XSTART:XEND,        YSTART:YEND) ) ! accumulated sub-surface runoff [m]
     if ( .not. allocated (NoahmpIO%ALBEDO)   ) allocate ( NoahmpIO%ALBEDO    (XSTART:XEND,        YSTART:YEND) ) ! total grid albedo []
@@ -142,6 +141,7 @@ contains
     if ( .not. allocated (NoahmpIO%SMOIS)    ) allocate ( NoahmpIO%SMOIS     (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! volumetric soil moisture [m3/m3]
     if ( .not. allocated (NoahmpIO%SH2O)     ) allocate ( NoahmpIO%SH2O      (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! volumetric liquid soil moisture [m3/m3]
     if ( .not. allocated (NoahmpIO%TSLB)     ) allocate ( NoahmpIO%TSLB      (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! soil temperature [K]
+    if ( .not. allocated (NoahmpIO%RELSMC)   ) allocate ( NoahmpIO%RELSMC    (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! relative soil moisture
 
     ! INOUT (with no Noah LSM equivalent) (as defined in WRF)
     if ( .not. allocated (NoahmpIO%ISNOWXY)   ) allocate ( NoahmpIO%ISNOWXY    (XSTART:XEND,               YSTART:YEND) ) ! actual no. of snow layers
@@ -176,6 +176,9 @@ contains
     if ( .not. allocated (NoahmpIO%LAI)       ) allocate ( NoahmpIO%LAI        (XSTART:XEND,               YSTART:YEND) ) ! leaf area index
     if ( .not. allocated (NoahmpIO%XSAIXY)    ) allocate ( NoahmpIO%XSAIXY     (XSTART:XEND,               YSTART:YEND) ) ! stem area index
     if ( .not. allocated (NoahmpIO%TAUSSXY)   ) allocate ( NoahmpIO%TAUSSXY    (XSTART:XEND,               YSTART:YEND) ) ! snow age factor
+    if ( .not. allocated (NoahmpIO%rivsto)    ) allocate ( NoahmpIO%rivsto     (XSTART:XEND,               YSTART:YEND) ) ! river storage [m/s]
+    if ( .not. allocated (NoahmpIO%fldsto)    ) allocate ( NoahmpIO%fldsto     (XSTART:XEND,               YSTART:YEND) ) ! flood storage [m/s]
+    if ( .not. allocated (NoahmpIO%fldfrc)    ) allocate ( NoahmpIO%fldfrc     (XSTART:XEND,               YSTART:YEND) ) ! flooded fraction [-]
     if ( .not. allocated (NoahmpIO%TSNOXY)    ) allocate ( NoahmpIO%TSNOXY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) ) ! snow temperature [K]
     if ( .not. allocated (NoahmpIO%ZSNSOXY)   ) allocate ( NoahmpIO%ZSNSOXY    (XSTART:XEND,-NSNOW+1:NSOIL,YSTART:YEND) ) ! snow layer depth [m]
     if ( .not. allocated (NoahmpIO%SNICEXY)   ) allocate ( NoahmpIO%SNICEXY    (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) ) ! snow layer ice [mm]
@@ -297,6 +300,9 @@ contains
     if ( .not. allocated (NoahmpIO%ACC_QINSURXY)) allocate ( NoahmpIO%ACC_QINSURXY (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%ACC_QSEVAXY) ) allocate ( NoahmpIO%ACC_QSEVAXY  (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%ACC_ETRANIXY)) allocate ( NoahmpIO%ACC_ETRANIXY (XSTART:XEND,1:NSOIL,YSTART:YEND) )
+    if ( .not. allocated (NoahmpIO%FGEV_PET)    ) allocate ( NoahmpIO%FGEV_PET     (XSTART:XEND,        YSTART:YEND) )
+    if ( .not. allocated (NoahmpIO%FCEV_PET)    ) allocate ( NoahmpIO%FCEV_PET     (XSTART:XEND,        YSTART:YEND) )
+    if ( .not. allocated (NoahmpIO%FCTR_PET)    ) allocate ( NoahmpIO%FCTR_PET     (XSTART:XEND,        YSTART:YEND) )
 
     ! Needed for MMF_RUNOFF (IOPT_RUN = 5); not part of MP driver in WRF
     if ( .not. allocated (NoahmpIO%MSFTX)      ) allocate ( NoahmpIO%MSFTX       (XSTART:XEND,YSTART:YEND) ) 
@@ -454,13 +460,11 @@ contains
 
     endif
 
-#ifdef WRF_HYDRO
     if ( .not. allocated (NoahmpIO%infxsrt)   ) allocate ( NoahmpIO%infxsrt    (XSTART:XEND,YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%sfcheadrt) ) allocate ( NoahmpIO%sfcheadrt  (XSTART:XEND,YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%soldrain)  ) allocate ( NoahmpIO%soldrain   (XSTART:XEND,YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%qtiledrain)) allocate ( NoahmpIO%qtiledrain (XSTART:XEND,YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%ZWATBLE2D) ) allocate ( NoahmpIO%ZWATBLE2D  (XSTART:XEND,YSTART:YEND) )
-#endif    
 
     !-------------------------------------------------------------------
     ! Initialize variables with default values 
@@ -500,8 +504,6 @@ contains
     NoahmpIO%QSFC            = undefined_real
     NoahmpIO%TSK             = undefined_real
     NoahmpIO%QFX             = undefined_real
-    NoahmpIO%SMSTAV          = undefined_real
-    NoahmpIO%SMSTOT          = undefined_real
     NoahmpIO%SMOIS           = undefined_real
     NoahmpIO%SH2O            = undefined_real
     NoahmpIO%TSLB            = undefined_real
@@ -595,6 +597,9 @@ contains
     NoahmpIO%CANHSXY         = undefined_real
     NoahmpIO%Z0              = undefined_real
     NoahmpIO%ZNT             = undefined_real
+    NoahmpIO%rivsto          = undefined_real
+    NoahmpIO%fldsto          = undefined_real
+    NoahmpIO%fldfrc          = undefined_real
     NoahmpIO%TAUSSXY         = 0.0
     NoahmpIO%DEEPRECHXY      = 0.0
     NoahmpIO%RECHXY          = 0.0
@@ -651,6 +656,9 @@ contains
     NoahmpIO%ACC_ECANXY      = 0.0
     NoahmpIO%ACC_ETRANXY     = 0.0
     NoahmpIO%ACC_EDIRXY      = 0.0
+    NoahmpIO%FGEV_PET        = undefined_real
+    NoahmpIO%FCEV_PET        = undefined_real
+    NoahmpIO%FCTR_PET        = undefined_real
 
     ! MMF Groundwater
     NoahmpIO%TERRAIN         = undefined_real
@@ -840,14 +848,11 @@ contains
     NoahmpIO%soil_update_steps = 1        ! number of model time step to update soil proces
     NoahmpIO%calculate_soil    = .false.  ! index for if do soil process
     NoahmpIO%ITIMESTEP         = 0        ! model time step count
-
-#ifdef WRF_HYDRO
-    NoahmpIO%infxsrt         = 0.0
-    NoahmpIO%sfcheadrt       = 0.0 
-    NoahmpIO%soldrain        = 0.0
-    NoahmpIO%qtiledrain      = 0.0
-    NoahmpIO%ZWATBLE2D       = 0.0
-#endif 
+    NoahmpIO%infxsrt           = 0.0
+    NoahmpIO%sfcheadrt         = 0.0 
+    NoahmpIO%soldrain          = 0.0
+    NoahmpIO%qtiledrain        = 0.0
+    NoahmpIO%ZWATBLE2D         = 0.0
    
     end associate
  
