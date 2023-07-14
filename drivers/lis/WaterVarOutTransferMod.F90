@@ -126,7 +126,10 @@ contains
     NoahmpIO%ACC_ETRANIXY(I,1:NumSoilLayer,J)       = noahmp%water%flux%TranspWatLossSoilAcc(1:NumSoilLayer)
     NoahmpIO%SNICEXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%SnowIce(-NumSnowLayerMax+1:0)
     NoahmpIO%SNLIQXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%SnowLiqWater(-NumSnowLayerMax+1:0)
-
+    NoahmpIO%RELSMC      (I,1:NumSoilLayer,J)       = (NoahmpIO%SMOIS(I,1:NumSoilLayer,J) - &
+                                                       noahmp%water%param%SoilMoistureWilt(1:NumSoilLayer)) / &
+                                                      (noahmp%water%param%SoilMoistureSat(1:NumSoilLayer) - &
+                                                       noahmp%water%param%SoilMoistureWilt(1:NumSoilLayer))
     ! irrigation
     NoahmpIO%IRNUMSI   (I,J) = noahmp%water%state%IrrigationCntSprinkler
     NoahmpIO%IRNUMMI   (I,J) = noahmp%water%state%IrrigationCntMicro

@@ -484,7 +484,6 @@ module NoahmpIOVarType
 ! 2D variables not used in WRF - should be removed?
 !------------------------------------------------------------------------
 
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  XLONG               ! longitude
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TERRAIN             ! terrain height
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  GVFMIN              ! annual minimum in vegetation fraction
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  GVFMAX              ! annual maximum in vegetation fraction
@@ -659,7 +658,7 @@ module NoahmpIOVarType
     integer                                                :: LCZ_9_TABLE               ! urban LCZ 9
     integer                                                :: LCZ_10_TABLE              ! urban LCZ 10
     integer                                                :: LCZ_11_TABLE              ! urban LCZ 11
-    integer                                                ::  URBTYPE_beg              ! urban type start number - 1
+    integer                                                :: URBTYPE_beg               ! urban type start number - 1
     real(kind=kind_noahmp), allocatable, dimension(:)      :: CH2OP_TABLE               ! maximum intercepted h2o per unit lai+sai (mm)
     real(kind=kind_noahmp), allocatable, dimension(:)      :: DLEAF_TABLE               ! characteristic leaf dimension (m)
     real(kind=kind_noahmp), allocatable, dimension(:)      :: Z0MVT_TABLE               ! momentum roughness length (m)

@@ -132,7 +132,7 @@ contains
     noahmp%energy%param%ScatterCoeffSnow                          = LISparam%OMEGAS
 
     do SoilLayerIndex = 1, size(SoilType)
-       noahmp%energy%param%SoilQuartzFrac(SoilLayerIndex)         = LISparam%QUARTZ(SoilType(SoilLayerIndex))
+       noahmp%energy%param%SoilQuartzFrac(SoilLayerIndex)         = LISparam%QUARTZ(SoilLayerIndex)
     enddo
 
     ! spatial varying soil input

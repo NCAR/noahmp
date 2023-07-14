@@ -30,7 +30,7 @@ module NoahmpDriverMainMod
   
 contains  
 
-  subroutine NoahmpDriverMain(NoahmpIO)
+  subroutine NoahmpDriverMain(NoahmpIO, LISparam)
   
 ! ------------------------ Code history -----------------------------------
 ! Original Noah-MP subroutine: noahmplsm
@@ -40,7 +40,7 @@ contains
  
     implicit none 
 
-    type(LisNoahmpParam_type), intent(in)    :: parameters ! lis/noahmp parameter    
+    type(LisNoahmpParam_type), intent(in)    :: LISparam  ! lis/noahmp parameter    
     type(NoahmpIO_type),       intent(inout) :: NoahmpIO
     
     ! local variables
@@ -152,11 +152,11 @@ contains
              call ForcingVarInitDefault (noahmp)
              call ForcingVarInTransfer  (noahmp, NoahmpIO)
              call EnergyVarInitDefault  (noahmp)
-             call EnergyVarInTransfer   (noahmp, NoahmpIO)
+             call EnergyVarInTransfer   (noahmp, NoahmpIO, LISparam)
              call WaterVarInitDefault   (noahmp)
-             call WaterVarInTransfer    (noahmp, NoahmpIO)
+             call WaterVarInTransfer    (noahmp, NoahmpIO, LISparam)
              call BiochemVarInitDefault (noahmp)
-             call BiochemVarInTransfer  (noahmp, NoahmpIO)
+             call BiochemVarInTransfer  (noahmp, NoahmpIO, LISparam)
 
              !---------------------------------------------------------------------
              !  hydrological processes for vegetation in urban model
@@ -166,7 +166,7 @@ contains
              if ( (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISURBAN_TABLE) .or. &
                   (NoahmpIO%IVGTYP(I,J) > NoahmpIO%URBTYPE_beg) ) then
                 if ( (NoahmpIO%SF_URBAN_PHYSICS > 0) .and. (NoahmpIO%IRI_URBAN == 1) ) then
-                   SOLAR_TIME = (NoahmpIO%JULIAN - int(NoahmpIO%JULIAN))*24 + NoahmpIO%XLONG(I,J)/15.0
+                   SOLAR_TIME = (NoahmpIO%JULIAN - int(NoahmpIO%JULIAN))*24 + NoahmpIO%XLON(I,J)/15.0
                    if ( SOLAR_TIME < 0.0 ) SOLAR_TIME = SOLAR_TIME + 24.0
                    call CAL_MON_DAY(int(NoahmpIO%JULIAN), NoahmpIO%YR, JMONTH, JDAY)
                    if ( (SOLAR_TIME >= 21.0) .and. (SOLAR_TIME <= 23.0) .and. &

@@ -182,6 +182,11 @@ contains
        endif
     enddo
 
+    ! PET related, requires modifying NoahMP core source code (TODO)
+    NoahmpIO%FGEV_PET = undefined_real
+    NoahmpIO%FCEV_PET = undefined_real
+    NoahmpIO%FCTR_PET = undefined_real
+
     end associate
 
   end subroutine EnergyVarOutTransfer

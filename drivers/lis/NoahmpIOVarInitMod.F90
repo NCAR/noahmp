@@ -252,7 +252,6 @@ contains
     if ( .not. allocated (NoahmpIO%ZNT)        ) allocate ( NoahmpIO%ZNT         (XSTART:XEND,YSTART:YEND) ) ! roughness length output to WRF 
     if ( .not. allocated (NoahmpIO%QTDRAIN)    ) allocate ( NoahmpIO%QTDRAIN     (XSTART:XEND,YSTART:YEND) ) ! tile drainage (mm)
     if ( .not. allocated (NoahmpIO%TD_FRACTION)) allocate ( NoahmpIO%TD_FRACTION (XSTART:XEND,YSTART:YEND) ) ! tile drainage fraction
-    if ( .not. allocated (NoahmpIO%XLONG)      ) allocate ( NoahmpIO%XLONG       (XSTART:XEND,YSTART:YEND) ) ! longitude
     if ( .not. allocated (NoahmpIO%TERRAIN)    ) allocate ( NoahmpIO%TERRAIN     (XSTART:XEND,YSTART:YEND) ) ! terrain height
     if ( .not. allocated (NoahmpIO%GVFMIN)     ) allocate ( NoahmpIO%GVFMIN      (XSTART:XEND,YSTART:YEND) ) ! annual minimum in vegetation fraction
     if ( .not. allocated (NoahmpIO%GVFMAX)     ) allocate ( NoahmpIO%GVFMAX      (XSTART:XEND,YSTART:YEND) ) ! annual maximum in vegetation fraction
@@ -476,6 +475,7 @@ contains
     NoahmpIO%ISNOWXY         = undefined_int
     NoahmpIO%COSZEN          = undefined_real
     NoahmpIO%XLAT            = undefined_real
+    NoahmpIO%XLON            = undefined_real
     NoahmpIO%DZ8W            = undefined_real
     NoahmpIO%DZS             = undefined_real
     NoahmpIO%ZSOIL           = undefined_real
@@ -540,7 +540,6 @@ contains
     NoahmpIO%FASTCPXY        = undefined_real
     NoahmpIO%LAI             = undefined_real
     NoahmpIO%XSAIXY          = undefined_real
-    NoahmpIO%XLONG           = undefined_real
     NoahmpIO%SEAICE          = undefined_real
     NoahmpIO%SMCWTDXY        = undefined_real
     NoahmpIO%ZSNSOXY         = undefined_real
