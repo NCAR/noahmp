@@ -1,5 +1,5 @@
 #define CCPP
-!>  \file module_sf_noahmp_glacier.f90
+!>  \file module_sf_noahmp_glacier.F90
 !!  This file contains the NoahMP Glacier scheme.
 
 !>\ingroup NoahMP_LSM
@@ -126,7 +126,7 @@ contains
                    thsfc_loc ,prslkix ,prsik1x  ,prslk1x  ,                     &
                    psfc      ,pblhx  ,iz0tlnd   ,itime    ,                     &
                    sigmaf1 ,garea1   ,psi_opt   ,                               & ! in :
-                   ep_1      ,ep_2   ,cp        ,                               &
+                   ep_1      ,ep_2   ,epsm1     ,cp       ,                     &
                    qsnow     ,sneqvo  ,albold   ,cm       ,ch      ,isnow     , & ! in/out : 
                    sneqv     ,smc     ,zsnso    ,snowh    ,snice   ,snliq     , & ! in/out :
                    tg        ,stc     ,sh2o     ,tauss    ,qsfc               , & ! in/out : 
@@ -177,6 +177,7 @@ contains
   real (kind=kind_phys)                           , intent(in)    :: pblhx   !  pbl height
   real (kind=kind_phys)                           , intent(in)    :: ep_1 
   real (kind=kind_phys)                           , intent(in)    :: ep_2 
+  real (kind=kind_phys)                           , intent(in)    :: epsm1  
   real (kind=kind_phys)                           , intent(in)    :: cp 
   integer                                         , intent(in)    :: iz0tlnd !  
   integer                                         , intent(in)    :: itime   !< timestep
@@ -267,7 +268,7 @@ contains
 ! --------------------------------------------------------------------------------------------------
 ! re-process atmospheric forcing
 
-   call atm_glacier (sfcprs ,sfctmp ,q2     ,soldn  ,cosz   ,thair  , & 
+   call atm_glacier (ep_2, epsm1,sfcprs ,sfctmp ,q2     ,soldn  ,cosz   ,thair  , & 
                      qair   ,eair   ,rhoair ,solad  ,solai  ,swdown )
 
    beg_wb = sneqv
@@ -290,7 +291,7 @@ contains
                          tbot      ,zbot    ,zsnso   ,dzsnso  ,sigmaf1 ,garea1  , & !in
                          thsfc_loc ,prslkix ,prsik1x ,prslk1x ,                   & !in
                          psfc      ,pblhx     ,iz0tlnd ,itime ,psi_opt ,          &
-                         ep_1, ep_2, cp,                                          & 
+                         ep_1, ep_2, epsm1, cp,                                   & 
                          tg        ,stc     ,snowh   ,sneqv   ,sneqvo  ,sh2o    , & !inout
                          smc       ,snice   ,snliq   ,albold  ,cm      ,ch      , & !inout
 #ifdef CCPP
@@ -363,7 +364,7 @@ contains
 ! ==================================================================================================
 !>\ingroup NoahMP_LSM
 !! re-process atmospheric forcing
-  subroutine atm_glacier (sfcprs ,sfctmp ,q2     ,soldn  ,cosz   ,thair  , &
+  subroutine atm_glacier (ep_2, epsm1, sfcprs ,sfctmp ,q2     ,soldn  ,cosz   ,thair  , &
                           qair   ,eair   ,rhoair ,solad  ,solai  , &
                           swdown )     
 ! --------------------------------------------------------------------------------------------------
@@ -373,6 +374,8 @@ contains
 ! --------------------------------------------------------------------------------------------------
 ! inputs
 
+  real (kind=kind_phys)                          , intent(in)  :: ep_2 
+  real (kind=kind_phys)                          , intent(in)  :: epsm1 
   real (kind=kind_phys)                          , intent(in)  :: sfcprs !< pressure (pa)
   real (kind=kind_phys)                          , intent(in)  :: sfctmp !< surface air temperature [k]
   real (kind=kind_phys)                          , intent(in)  :: q2     !< mixing ratio (kg/kg)
@@ -399,8 +402,8 @@ contains
 !       qair   = q2 / (1.0+q2)           ! mixing ratio to specific humidity [kg/kg]
        qair   = q2                       ! in wrf, driver converts to specific humidity
 
-       eair   = qair*sfcprs / (0.622+0.378*qair)
-       rhoair = (sfcprs-0.378*eair) / (rair*sfctmp)
+       eair   = qair*sfcprs / (ep_2-epsm1*qair)
+       rhoair = (sfcprs+epsm1*eair) / (rair*sfctmp)
 
        if(cosz <= 0.) then 
           swdown = 0.
@@ -417,14 +420,14 @@ contains
 ! ==================================================================================================
 ! --------------------------------------------------------------------------------------------------
 !>\ingroup NoahMP_LSM
-!! This subroutine 
+!! Compute energy budget (momentum & energy fluxes and phase changes).
   subroutine energy_glacier (nsnow     ,nsoil   ,isnow   ,dt      ,qsnow   ,rhoair  , & !in
                              eair      ,sfcprs  ,qair    ,sfctmp  ,lwdn    ,uu      , & !in
                              vv        ,solad   ,solai   ,cosz    ,zref    ,          & !in
                              tbot      ,zbot    ,zsnso   ,dzsnso  ,sigmaf1 ,garea1  , & !in
                              thsfc_loc ,prslkix ,prsik1x ,prslk1x ,                   & !in
                              psfc      ,pblhx   ,iz0tlnd ,itime   ,psi_opt          , &
-                             ep_1, ep_2, cp,                                          & 
+                             ep_1, ep_2, epsm1,  cp,                                  & 
                              tg        ,stc     ,snowh   ,sneqv   ,sneqvo  ,sh2o    , & !inout
                              smc       ,snice   ,snliq   ,albold  ,cm      ,ch      , & !inout
 #ifdef CCPP
@@ -478,6 +481,7 @@ contains
   real (kind=kind_phys)                              , intent(in)    :: psfc    !< surface pressure
   real (kind=kind_phys)                              , intent(in)    :: ep_1 
   real (kind=kind_phys)                              , intent(in)    :: ep_2 
+  real (kind=kind_phys)                              , intent(in)    :: epsm1 
   real (kind=kind_phys)                              , intent(in)    :: cp 
   integer                                            , intent(in)    :: iz0tlnd !< z0t option
   integer                                            , intent(in)    :: itime   !< integration time
@@ -507,7 +511,7 @@ contains
 #endif
 
 ! outputs
-  integer, dimension(-nsnow+1:nsoil), intent(out)   :: imelt  !< phase change index [1-melt; 2-freeze]
+  integer, dimension(-nsnow+1:nsoil)                 , intent(out)   :: imelt  !< phase change index [1-melt; 2-freeze]
   real (kind=kind_phys)   , dimension(-nsnow+1:    0), intent(out)   :: snicev !< partial volume ice [m3/m3]
   real (kind=kind_phys)   , dimension(-nsnow+1:    0), intent(out)   :: snliqv !< partial volume liq. water [m3/m3]
   real (kind=kind_phys)   , dimension(-nsnow+1:    0), intent(out)   :: epore  !< effective porosity [m3/m3]
@@ -584,7 +588,7 @@ contains
 ! set psychrometric constant
 
      lathea = hsub
-     gamma = cpair*sfcprs/(0.622*lathea)
+     gamma = cpair*sfcprs/(ep_2*lathea)
 
 ! surface temperatures of the ground and energy fluxes
 
@@ -594,7 +598,7 @@ contains
                        eair      ,stc     ,sag     ,snowh   ,lathea  ,sh2o   ,       & !in
                        thsfc_loc ,prslkix ,prsik1x ,prslk1x ,                        &
                        psfc      ,pblhx   ,iz0tlnd ,itime   ,uu      ,vv     ,       &
-                       sigmaf1   ,garea1  ,psi_opt ,ep_1, ep_2, cp,                  & !in
+                       sigmaf1   ,garea1  ,psi_opt ,ep_1, ep_2,  epsm1, cp,          & !in
 #ifdef CCPP
                        cm        ,ch      ,tg      ,qsfc    ,errmsg  ,errflg ,       & !inout
 #else
@@ -650,6 +654,7 @@ contains
   end subroutine energy_glacier
 ! ==================================================================================================
 !>\ingroup NoahMP_LSM
+!! calculate thermal properties of soil, snow, lake, and frozen soil.
   subroutine thermoprop_glacier (nsoil   ,nsnow   ,isnow   ,dzsnso  , & !in
                                  dt      ,snowh   ,snice   ,snliq   , & !in
                                  df      ,hcpct   ,snicev  ,snliqv  ,epore   , & !out
@@ -782,6 +787,7 @@ contains
   end subroutine csnow_glacier
 !===================================================================================================
 !>\ingroup NoahMP_LSM
+!! Compute solar radiation: absorbed & reflected by the ground.
   subroutine radiation_glacier (dt      ,tg      ,sneqvo  ,sneqv   ,cosz   , & !in
                                 qsnow   ,solad   ,solai   ,                  & !in
                                 albold  ,tauss   ,                           & !inout
@@ -1032,7 +1038,7 @@ contains
                            eair      ,stc     ,sag     ,snowh   ,lathea  ,sh2o    ,       & !in
                            thsfc_loc ,prslkix ,prsik1x ,prslk1x ,                         &
                            psfc      ,pblhx   ,iz0tlnd ,itime   ,uu      ,vv     ,        &
-                           sigmaf1   ,garea1  ,psi_opt ,ep_1, ep_2, cp,                   & !in
+                           sigmaf1   ,garea1  ,psi_opt ,ep_1, ep_2, epsm1, cp,            & !in
 #ifdef CCPP
                            cm        ,ch      ,tgb     ,qsfc    ,errmsg  ,errflg  ,       & !inout
 #else
@@ -1090,6 +1096,7 @@ contains
   real (kind=kind_phys)                        , intent(in)    :: psfc    !<
   real (kind=kind_phys)                        , intent(in)    :: ep_1 
   real (kind=kind_phys)                        , intent(in)    :: ep_2 
+  real (kind=kind_phys)                        , intent(in)    :: epsm1 
   real (kind=kind_phys)                        , intent(in)    :: cp 
   integer                                      , intent(in)    :: iz0tlnd !<
   integer                                      , intent(in)    :: itime   !< integration time
@@ -1264,11 +1271,11 @@ contains
         call sfcdif1_glacier(iter   ,zlvl   ,zpd    ,z0h    ,z0m    , & !in
                      qair   ,sfctmp ,h      ,rhoair ,mpe    ,ur     , & !in
 #ifdef CCPP
-       &             moz ,mozsgn ,fm ,fh ,fm2 ,fh2   ,errmsg, errflg, & !inout
+       &             moz ,mozsgn ,fm ,fh ,fm2 ,fh2,fv, errmsg, errflg, & !inout
 #else 
-       &             moz ,mozsgn ,fm ,fh ,fm2 ,fh2                  , & !inout
+       &             moz ,mozsgn ,fm ,fh ,fm2 ,fh2,fv                , & !inout
 #endif
-       &             fv     ,cm     ,ch     ,ch2)                       !out
+       &             cm     ,ch     ,ch2)                               !out
 
 #ifdef CCPP
         if (errflg /= 0) return
@@ -1362,7 +1369,7 @@ contains
         else
             estg  = esati
         end if
-        qsfc = 0.622*(estg*rhsur)/(sfcprs-0.378*(estg*rhsur))
+        qsfc = ep_2*(estg*rhsur)/(sfcprs+epsm1*(estg*rhsur))
         qfx = (qsfc-qair)*cev*gamma/cpair
 
      end do loop3 ! end stability iteration
@@ -1435,7 +1442,7 @@ contains
         else
             estg  = esati
         end if
-        qsfc = 0.622*(estg*rhsur)/(sfcprs-0.378*(estg*rhsur))
+        qsfc = ep_2*(estg*rhsur)/(sfcprs+epsm1*(estg*rhsur))
 
       end do      !sfc_diff3 iter
      end if       !sfc_diff3
@@ -1451,7 +1458,7 @@ contains
           t = tdc(tgb)                              ! mb: recalculate estg
           call esat(t, esatw, esati, dsatw, dsati)
           estg  = esati
-          qsfc = 0.622*(estg*rhsur)/(sfcprs-0.378*(estg*rhsur))
+          qsfc = ep_2*(estg*rhsur)/(sfcprs+epsm1*(estg*rhsur))
           irb = cir * tgb**4 - emg*lwdn
           shb = csh * (tgb        - sfctmp)
           evb = cev * (estg*rhsur - eair )          !estg reevaluate ?
@@ -1462,6 +1469,11 @@ contains
 ! 2m air temperature
      ehb2  = fv*vkc/(log((2.+z0h)/z0h)-fh2)
      cq2b  = ehb2
+! for opt_sfc 3
+     if (opt_sfc ==3) then
+       ehb2  = fv*vkc/fh2
+       cq2b  = ehb2
+     endif
 
      if (opt_sfc == 4) then
        ehb2 = ch2 * wspd1i ! need conductance,z0h from sfcdif4 
@@ -1538,12 +1550,12 @@ contains
   subroutine sfcdif1_glacier(iter   ,zlvl ,zpd    ,z0h    ,z0m , & !in
                      qair   ,sfctmp ,h    ,rhoair ,mpe    ,ur  , & !in
 #ifdef CCPP
-       &             moz    ,mozsgn ,fm   ,fh     ,fm2    ,fh2 , & !inout
-       &             errmsg ,errflg ,                            & !inout
+       &             moz    ,mozsgn ,fm   ,fh     ,fm2    ,fh2 , fv, & !inout
+       &             errmsg ,errflg ,                            &     !inout
 #else
-       &             moz    ,mozsgn ,fm   ,fh     ,fm2    ,fh2 , & !inout
+       &             moz    ,mozsgn ,fm   ,fh     ,fm2    ,fh2 , fv, & !inout
 #endif
-       &             fv     ,cm     ,ch   ,ch2  )                  !out
+       &             cm     ,ch   ,ch2  )                          !out
 ! -------------------------------------------------------------------------------------------------
 ! computing surface drag coefficient cm for momentum and ch for heat
 ! -------------------------------------------------------------------------------------------------
@@ -1569,6 +1581,7 @@ contains
     real (kind=kind_phys),              intent(inout) :: fh     !< sen heat stability correction, weighted by prior iters
     real (kind=kind_phys),              intent(inout) :: fm2    !< sen heat stability correction, weighted by prior iters
     real (kind=kind_phys),              intent(inout) :: fh2    !< sen heat stability correction, weighted by prior iters
+    real (kind=kind_phys),              intent(inout) :: fv     !< friction velocity (m/s)
 
 #ifdef CCPP  
     character(len=*),  intent(inout) :: errmsg
@@ -1576,7 +1589,6 @@ contains
 #endif
 
 ! outputs
-    real (kind=kind_phys),                intent(out) :: fv     !< friction velocity (m/s)
     real (kind=kind_phys),                intent(out) :: cm     !< drag coefficient for momentum
     real (kind=kind_phys),                intent(out) :: ch     !< drag coefficient for heat
     real (kind=kind_phys),                intent(out) :: ch2    !< drag coefficient for heat
@@ -2596,6 +2608,7 @@ end if   ! opt_gla == 1
 ! local
   integer :: iz
   real (kind=kind_phys)    :: bdsnow  !< bulk density of snow (kg/m3)
+  real (kind=kind_phys),parameter :: mwd  = 100.   !< maximum water depth (mm)
 ! ----------------------------------------------------------------------
    snoflow = 0.0
    ponding1 = 0.0
@@ -2639,9 +2652,9 @@ end if   ! opt_gla == 1
 
 !to obtain equilibrium state of snow in glacier region
        
-   if(sneqv > 2000.) then   ! 2000 mm -> maximum water depth
+   if(sneqv > mwd) then   ! 100 mm -> maximum water depth
       bdsnow      = snice(0) / dzsnso(0)
-      snoflow     = (sneqv - 2000.)
+      snoflow     = (sneqv - mwd)
       snice(0)    = snice(0)  - snoflow 
       dzsnso(0)   = dzsnso(0) - snoflow/bdsnow
       snoflow     = snoflow / dt
@@ -3446,6 +3459,7 @@ end if   ! opt_gla == 1
 ! ==================================================================================================
 
 !>\ingroup NoahMP_LSM
+!!
   subroutine noahmp_options_glacier(iopt_alb  ,iopt_snf  ,iopt_tbot, iopt_stc, iopt_gla,&
                                     iopt_sfc, iopt_trs)
 

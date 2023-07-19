@@ -757,6 +757,17 @@ contains
     call ESMF_LogWrite(trim(subname)//' : surface_thermal_roughness_option = '//trim(cvalue), ESMF_LOGMSG_INFO)
     noahmp%static%iopt_trs = noahmp%nmlist%surface_thermal_roughness_option
 
+    ! get surface_diagnose_approach_option
+    call NUOPC_CompAttributeGet(gcomp, name='surface_diagnose_approach_option', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) noahmp%nmlist%surface_diagnose_approach_option
+    else
+       noahmp%nmlist%surface_diagnose_approach_option = 2
+    end if
+    call ESMF_LogWrite(trim(subname)//' : surface_diagnose_approach_option = '//trim(cvalue), ESMF_LOGMSG_INFO)
+    noahmp%static%iopt_diag = noahmp%nmlist%surface_diagnose_approach_option
+
     ! output frequency
     call NUOPC_CompAttributeGet(gcomp, name='output_freq', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return

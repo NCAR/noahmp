@@ -1791,6 +1791,20 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------
+    ! Soil color
+    !----------------------
+
+    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', maxval(noahmp%domain%nit), '.soil_color.tile'
+    call read_tiled_file(filename, 'soil_color', noahmp, field, numrec=1, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    noahmp%model%soilcol(:) = int(ptr(:,1,1))
+    nullify(ptr)
+    call ESMF_FieldDestroy(field, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    !----------------------
     ! Set land-sea mask (dry)
     !----------------------
 
@@ -2128,6 +2142,7 @@ contains
     call fld_add("t1"        ,"forcing air temperature"                                           ,"K"      ,ptr2d=ptr2d, v1r8=noahmp%forc%t1)
     call fld_add("q1"        ,"forcing specific humidity"                                         ,"kg/kg"  ,ptr2d=ptr2d, v1r8=noahmp%forc%q1)
     call fld_add("soiltyp"   ,"soil type"                                                         ,"1"      ,ptr2d=ptr2d, v1i4=noahmp%model%soiltyp)
+    call fld_add("soilcol"   ,"soil color"                                                        ,"1"      ,ptr2d=ptr2d, v1i4=noahmp%model%soilcol)
     call fld_add("vegtype"   ,"vegetation type"                                                   ,"1"      ,ptr2d=ptr2d, v1i4=noahmp%model%vegtype)
     call fld_add("sigmaf"    ,"green vegetation fraction"                                         ,"1"      ,ptr2d=ptr2d, v1r8=noahmp%model%sigmaf) 
     call fld_add("dlwflx"    ,"forcing longwave downward flux"                                    ,"W/m2"   ,ptr2d=ptr2d, v1r8=noahmp%forc%dlwflx)

@@ -53,8 +53,8 @@
   real(kind=kind_phys),parameter:: con_omega  =7.2921e-5_kind_phys                 !< ang vel of earth (\f$s^{-1}\f$)
   real(kind=kind_phys),parameter:: con_p0     =1.01325e5_kind_phys                 !< standard atmospheric pressure (\f$Pa\f$)
 ! real(kind=kind_phys),parameter:: con_solr   =1.36822e+3_kind_phys                ! solar constant    (W/m2)-aer(2001)
-  real(kind=kind_phys),parameter:: con_solr_old =1.3660e+3_kind_phys               !< solar constant (\f$W/m^{2}\f$)-Liu(2002)
-  real(kind=kind_phys),parameter:: con_solr   =1.3608e+3_kind_phys                 !< solar constant (\f$W/m^{2}\f$)-nasa-sorce Tim(2008)
+  real(kind=kind_phys),parameter:: con_solr_2002 =1.3660e+3_kind_phys              !< solar constant (\f$W/m^{2}\f$)-Liu(2002)
+  real(kind=kind_phys),parameter:: con_solr_2008 =1.3608e+3_kind_phys              !< solar constant (\f$W/m^{2}\f$)-nasa-sorce Tim(2008)
 ! real(kind=kind_phys),parameter:: con_solr   =1.36742732e+3_kind_phys             ! solar constant    (W/m2)-gfdl(1989) - OPR as of Jan 2006
   ! Selected geophysics/astronomy constants with kind=kind_dyn
   real(kind=kind_dyn), parameter:: con_g_dyn  =9.80665e+0_kind_dyn                 !< gravity (\f$m/s^{2}\f$)
@@ -139,6 +139,7 @@
   real(kind=kind_phys),parameter:: rhowater   = 1000._kind_phys                    !< density of water (kg/m^3)
   real(kind=kind_phys),parameter:: rhosnow    = 100._kind_phys                     !< density of snow (kg/m^3)
   real(kind=kind_phys),parameter:: rhoair     = 1.28_kind_phys                     !< density of air near surface (kg/m^3)
+  real(kind=kind_phys),parameter:: rholakeice = 0.917e3_kind_phys                  !< density of ice on lake (kg/m^3)
 
 ! Decorrelation length constant (km) for iovr = 4 or 5 and idcor = 0
   real(kind=kind_phys),parameter:: decorr_con = 2.50_kind_phys
