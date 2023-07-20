@@ -17,9 +17,10 @@ contains
 
 !=== initialize with default values
 
-  subroutine NoahmpIOVarInitDefault()
+  subroutine NoahmpIOVarInitDefault(NoahmpIO)
 
     implicit none
+    type(NoahmpIO_type),       intent(inout) :: NoahmpIO
 
 ! ------------------------------------------------- 
     associate(                               &
