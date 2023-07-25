@@ -37,6 +37,7 @@
         use machine,          only: kind_phys
         use set_soilveg_mod,  only: set_soilveg
         use namelist_soilveg
+        use noahmp_tables
 
         implicit none
         integer,              intent(in) :: lsm
@@ -88,6 +89,8 @@
         !--- initialize soil vegetation
         call set_soilveg(me, isot, ivegsrc, nlunit, errmsg, errflg)
 
+        !--- read in noahmp table
+        call read_mp_table_parameters(errmsg, errflg)
 
         ! initialize psih and psim 
 
@@ -124,13 +127,13 @@
   subroutine noahmpdrv_run                                       &
 !...................................
 !  ---  inputs:
-    ( im, km, lsnowl, itime, ps, u1, v1, t1, q1, soiltyp,        &
+    ( im, km, lsnowl, itime, ps, u1, v1, t1, q1, soiltyp,soilcol,&
       vegtype, sigmaf, dlwflx, dswsfc, snet, delt, tg3, cm, ch,  &
-      prsl1, prslk1, prslki, prsik1, zf,pblh, dry, wind, slopetyp,    &
+      prsl1, prslk1, prslki, prsik1, zf,pblh, dry, wind, slopetyp,&
       shdmin, shdmax, snoalb, sfalb, flag_iter,con_g,            &
       idveg, iopt_crs, iopt_btr, iopt_run, iopt_sfc, iopt_frz,   &
-      iopt_inf, iopt_rad, iopt_alb, iopt_snf, iopt_tbot,         &
-      iopt_stc, iopt_trs,xlatin, xcoszin, iyrlen, julian, garea, &
+      iopt_inf, iopt_rad, iopt_alb, iopt_snf, iopt_tbot,iopt_stc,&
+      iopt_trs,iopt_diag,xlatin, xcoszin, iyrlen, julian, garea, &
       rainn_mp, rainc_mp, snow_mp, graupel_mp, ice_mp, rhonewsn1,&
       con_hvap, con_cp, con_jcal, rhoh2o, con_eps, con_epsm1,    &
       con_fvirt, con_rd, con_hfus, thsfc_loc, cpllnd, cpllnd2atm,&
@@ -154,18 +157,55 @@
       sncovr1, qsurf, gflux, drain, evap, hflx, ep, runoff,      &
       cmm, chh, evbs, evcw, sbsno, pah, ecan, etran, edir, snowc,&
       stm, snohf,smcwlt2, smcref2, wet1, t2mmp, q2mp,zvfun,      &
-      ztmax, errmsg, errflg)     
+      ztmax, errmsg, errflg,                                     &
+      canopy_heat_storage_ccpp,                                  &
+      rainfall_ccpp,                                             &
+      sw_absorbed_total_ccpp,                                    &
+      sw_reflected_total_ccpp,                                   &
+      lw_absorbed_total_ccpp,                                    &
+      temperature_bare_grd_ccpp,                                 &
+      temperature_veg_grd_ccpp,                                  &
+      temperature_veg_2m_ccpp,                                   &
+      temperature_bare_2m_ccpp,                                  &
+      spec_humidity_veg_2m_ccpp,                                 &
+      spec_humidity_bare_2m_ccpp,                                &
+      sw_absorbed_veg_ccpp,                                      &
+      sw_absorbed_ground_ccpp,                                   &
+      snowmelt_out_ccpp,                                         &
+      snowmelt_shallow_ccpp,                                     &
+      albedo_direct_snow_ccpp,                                   &
+      albedo_diffuse_snow_ccpp,                                  &
+      ch_vegetated_ccpp,                                         &
+      ch_bare_ground_ccpp,                                       &
+      sensible_heat_grd_veg_ccpp,                                &
+      sensible_heat_leaf_ccpp,                                   &
+      sensible_heat_grd_bar_ccpp,                                &
+      latent_heat_grd_veg_ccpp,                                  &
+      latent_heat_grd_bare_ccpp,                                 &
+      ground_heat_veg_ccpp,                                      &
+      ground_heat_bare_ccpp,                                     &
+      lw_absorbed_grd_veg_ccpp,                                  &
+      lw_absorbed_leaf_ccpp,                                     &
+      lw_absorbed_grd_bare_ccpp,                                 &
+      latent_heat_trans_ccpp,                                    &
+      latent_heat_leaf_ccpp,                                     &
+      ch_leaf_ccpp,                                              &
+      ch_below_canopy_ccpp,                                      &
+      ch_vegetated_2m_ccpp,                                      &
+      ch_bare_ground_2m_ccpp,                                    &
+      precip_adv_heat_veg_ccpp,                                  &
+      precip_adv_heat_grd_v_ccpp,                                &
+      precip_adv_heat_grd_b_ccpp,                                &
+      spec_humid_sfc_veg_ccpp,                                   &
+      spec_humid_sfc_bare_ccpp                                   &
+      )
 
   use machine ,   only : kind_phys
   use funcphys,   only : fpvs
 
-  use sfc_diff,   only : stability
-! use module_sf_noahmplsm
+  use module_sf_noahmplsm,   only : gfs_stability
   use module_sf_noahmp_glacier
-  use noahmp_tables, only : isice_table, co2_table, o2_table,            &
-                            isurban_table, smcref_table, smcdry_table,   &
-                            smcmax_table, co2_table, o2_table,           &
-                            saim_table, laim_table
+  use noahmp_tables
 
   implicit none
       
@@ -199,6 +239,7 @@
   real(kind=kind_phys), dimension(:)     , intent(in)    :: t1         ! layer 1 temperature [K]
   real(kind=kind_phys), dimension(:)     , intent(in)    :: q1         ! layer 1 specific humidity [kg/kg]
   integer             , dimension(:)     , intent(in)    :: soiltyp    ! soil type (integer index)
+  integer             , dimension(:)     , intent(in)    :: soilcol    ! soil color (integer index)
   integer             , dimension(:)     , intent(in)    :: vegtype    ! vegetation type (integer index)
   real(kind=kind_phys), dimension(:)     , intent(in)    :: sigmaf     ! areal fractional cover of green vegetation
   real(kind=kind_phys), dimension(:)     , intent(in)    :: dlwflx     ! downward longwave radiation [W/m2]
@@ -245,6 +286,7 @@
   integer                                , intent(in)    :: iopt_tbot  ! option for lower boundary condition of soil temperature
   integer                                , intent(in)    :: iopt_stc   ! option for snow/soil temperature time scheme (only layer 1)
   integer                                , intent(in)    :: iopt_trs   ! option for thermal roughness scheme
+  integer                                , intent(in)    :: iopt_diag  ! option for surface diagnose approach
   real(kind=kind_phys), dimension(:)     , intent(in)    :: xlatin     ! latitude
   real(kind=kind_phys), dimension(:)     , intent(in)    :: xcoszin    ! cosine of zenith angle
   integer                                , intent(in)    :: iyrlen     ! year length [days]
@@ -361,6 +403,47 @@
   character(len=*)    ,                    intent(out)   :: errmsg
   integer             ,                    intent(out)   :: errflg
 
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: canopy_heat_storage_ccpp ! within-canopy heat [W/m2]
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: rainfall_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: sw_absorbed_total_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: sw_reflected_total_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: lw_absorbed_total_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: temperature_bare_grd_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: temperature_veg_grd_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: temperature_veg_2m_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: temperature_bare_2m_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: spec_humidity_veg_2m_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: spec_humidity_bare_2m_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: sw_absorbed_veg_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: sw_absorbed_ground_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: snowmelt_out_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: snowmelt_shallow_ccpp
+  real(kind=kind_phys), dimension(:,:), intent(out), optional :: albedo_direct_snow_ccpp
+  real(kind=kind_phys), dimension(:,:), intent(out), optional :: albedo_diffuse_snow_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: ch_vegetated_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: ch_bare_ground_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: sensible_heat_grd_veg_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: sensible_heat_leaf_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: sensible_heat_grd_bar_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: latent_heat_grd_veg_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: latent_heat_grd_bare_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: ground_heat_veg_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: ground_heat_bare_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: lw_absorbed_grd_veg_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: lw_absorbed_leaf_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: lw_absorbed_grd_bare_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: latent_heat_trans_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: latent_heat_leaf_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: ch_leaf_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: ch_below_canopy_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: ch_vegetated_2m_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: ch_bare_ground_2m_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: precip_adv_heat_veg_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: precip_adv_heat_grd_v_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: precip_adv_heat_grd_b_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: spec_humid_sfc_veg_ccpp
+  real(kind=kind_phys), dimension(:)  , intent(out), optional :: spec_humid_sfc_bare_ccpp
+
 !
 !  ---  some new options, hard code for now
 !
@@ -370,6 +453,7 @@
   integer    :: iopt_pedo = 1 ! option for pedotransfer function
   integer    :: iopt_crop = 0 ! option for crop model
   integer    :: iopt_gla  = 2 ! option for glacier treatment
+  integer    :: iopt_z0m  = 2 ! option for z0m treatment
 
 !
 !  ---  local inputs to noah-mp and glacier subroutines; listed in order in noah-mp call
@@ -536,6 +620,10 @@
   real (kind=kind_phys)                            :: lai_shaded            !   out | shaded leaf area index [m2/m2]
   real (kind=kind_phys)                            :: leaf_air_resistance   !   out | leaf boundary layer resistance [s/m]
 
+  real (kind=kind_phys)                            :: canopy_heat_storage   !   out | within-canopy heat [W/m2]
+  real (kind=kind_phys)                            :: spec_humid_sfc_veg    !   out | surface specific humidty over vegetation [kg/kg]
+  real (kind=kind_phys)                            :: spec_humid_sfc_bare   !   out | surface specific humidty over bare soil [kg/kg]
+
   real (kind=kind_phys)                            :: ustarx                !  inout |surface friction velocity
   real (kind=kind_phys)                            :: prslkix               !  in exner function
   real (kind=kind_phys)                            :: prsik1x               !  in exner function
@@ -559,6 +647,7 @@
   integer :: soil_category(nsoil)
   integer :: slope_category
   integer :: soil_color_category
+  character(len=256)                     :: dataset_identifier
 
   real (kind=kind_phys) :: spec_humidity_sat      ! saturation specific humidity
   real (kind=kind_phys) :: vapor_pressure_sat     ! saturation vapor pressure
@@ -620,6 +709,8 @@
 !
 !  --- noah-mp input variables (except snow_ice_frac_old done later)
 !
+
+      dataset_identifier    = "modified_igbp_modis_noah"
 
       i_location            = i
       j_location            = -9999
@@ -755,7 +846,9 @@
 
       soil_category       = soiltyp(i)
       slope_category      = slopetyp(i)
-      soil_color_category = 4
+      soil_color_category = soilcol(i)
+!     soil_color_category = 4
+
 
       call transfer_mp_parameters(vegetation_category, soil_category, &
                         slope_category, soil_color_category, crop_type,parameters)
@@ -763,7 +856,8 @@
       call noahmp_options(idveg ,iopt_crs, iopt_btr , iopt_run, iopt_sfc,  &
                                  iopt_frz, iopt_inf , iopt_rad, iopt_alb,  &
                                  iopt_snf, iopt_tbot, iopt_stc, iopt_rsf,  &
-			         iopt_soil,iopt_pedo, iopt_crop,iopt_trs )
+			         iopt_soil,iopt_pedo, iopt_crop,iopt_trs,  &
+                                 iopt_diag,iopt_z0m)
 
       if ( vegetation_category == isice_table )  then
 
@@ -788,7 +882,7 @@
           thsfc_loc            ,prslkix              ,prsik1x              ,prslk1x              , &
           air_pressure_surface ,pblhx                ,iz0tlnd              ,itime                , &
 	  vegetation_frac      ,area_grid            ,psi_opt                                    , &
-          con_fvirt            ,con_eps              ,con_cp                                     , &
+          con_fvirt            ,con_eps              ,con_epsm1            ,con_cp               , &
           snowfall             ,snow_water_equiv_old ,snow_albedo_old      ,                       &
           cm_noahmp            ,ch_noahmp            ,snow_levels          ,snow_water_equiv     , &
           soil_moisture_vol    ,interface_depth      ,snow_depth           ,snow_level_ice       , &
@@ -853,6 +947,7 @@
         vegetation_fraction    = vegetation_frac
         ch_vegetated           = 0.0
         ch_bare_ground         = ch_noahmp
+        canopy_heat_storage    = 0.0
 
       else  ! not glacier
 
@@ -877,7 +972,7 @@
           precip_graupel        ,precip_hail           ,temperature_soil_bot  , &
           co2_air               ,o2_air                ,foliage_nitrogen      , &
           snow_ice_frac_old     ,forcing_height                               , &
-          con_fvirt             ,con_eps               ,con_cp                , &
+          con_fvirt             ,con_eps, con_epsm1    ,con_cp                , &
           snow_albedo_old       ,snow_water_equiv_old                         , &
           temperature_snow_soil ,soil_liquid_vol       ,soil_moisture_vol     , &
           temperature_canopy_air,vapor_pres_canopy_air ,canopy_wet_fraction   , &
@@ -917,12 +1012,13 @@
           latent_heat_leaf      ,ch_leaf               ,ch_below_canopy       , &
           ch_vegetated_2m       ,ch_bare_ground_2m     ,precip_frozen_frac    , &
           precip_adv_heat_veg   ,precip_adv_heat_grd_v ,precip_adv_heat_grd_b , &
-          precip_adv_heat_total ,snow_sublimation      ,lai_sunlit            , &
+          precip_adv_heat_total ,snow_sublimation      ,canopy_heat_storage   , &
+          lai_sunlit            ,lai_shaded            ,leaf_air_resistance   , &
 #ifdef CCPP
-          lai_shaded            ,leaf_air_resistance   ,                        &
+          spec_humid_sfc_veg    ,spec_humid_sfc_bare   ,                        &
           errmsg                ,errflg                )
 #else
-          lai_shaded            ,leaf_air_resistance   )
+          spec_humid_sfc_veg    ,spec_humid_sfc_bare   )
 #endif
         
 #ifdef CCPP
@@ -1012,6 +1108,47 @@
 
       zsnsoxy   (i,:) = interface_depth
 
+      if(present(canopy_heat_storage_ccpp  )) canopy_heat_storage_ccpp  (i)   = canopy_heat_storage
+      if(present(rainfall_ccpp             )) rainfall_ccpp             (i)   = rainfall
+      if(present(sw_absorbed_total_ccpp    )) sw_absorbed_total_ccpp    (i)   = sw_absorbed_total
+      if(present(sw_reflected_total_ccpp   )) sw_reflected_total_ccpp   (i)   = sw_reflected_total
+      if(present(lw_absorbed_total_ccpp    )) lw_absorbed_total_ccpp    (i)   = lw_absorbed_total
+      if(present(temperature_bare_grd_ccpp )) temperature_bare_grd_ccpp (i)   = temperature_bare_grd
+      if(present(temperature_veg_grd_ccpp  )) temperature_veg_grd_ccpp  (i)   = temperature_veg_grd
+      if(present(temperature_veg_2m_ccpp   )) temperature_veg_2m_ccpp   (i)   = temperature_veg_2m
+      if(present(temperature_bare_2m_ccpp  )) temperature_bare_2m_ccpp  (i)   = temperature_bare_2m
+      if(present(spec_humidity_veg_2m_ccpp )) spec_humidity_veg_2m_ccpp (i)   = spec_humidity_veg_2m
+      if(present(spec_humidity_bare_2m_ccpp)) spec_humidity_bare_2m_ccpp(i)   = spec_humidity_bare_2m
+      if(present(sw_absorbed_veg_ccpp      )) sw_absorbed_veg_ccpp      (i)   = sw_absorbed_veg
+      if(present(sw_absorbed_ground_ccpp   )) sw_absorbed_ground_ccpp   (i)   = sw_absorbed_ground
+      if(present(snowmelt_out_ccpp         )) snowmelt_out_ccpp         (i)   = snowmelt_out
+      if(present(snowmelt_shallow_ccpp     )) snowmelt_shallow_ccpp     (i)   = snowmelt_shallow
+      if(present(albedo_direct_snow_ccpp   )) albedo_direct_snow_ccpp   (i,:) = albedo_direct_snow
+      if(present(albedo_diffuse_snow_ccpp  )) albedo_diffuse_snow_ccpp  (i,:) = albedo_diffuse_snow
+      if(present(ch_vegetated_ccpp         )) ch_vegetated_ccpp         (i)   = ch_vegetated
+      if(present(ch_bare_ground_ccpp       )) ch_bare_ground_ccpp       (i)   = ch_bare_ground
+      if(present(sensible_heat_grd_veg_ccpp)) sensible_heat_grd_veg_ccpp(i)   = sensible_heat_grd_veg
+      if(present(sensible_heat_leaf_ccpp   )) sensible_heat_leaf_ccpp   (i)   = sensible_heat_leaf
+      if(present(sensible_heat_grd_bar_ccpp)) sensible_heat_grd_bar_ccpp(i)   = sensible_heat_grd_bar
+      if(present(latent_heat_grd_veg_ccpp  )) latent_heat_grd_veg_ccpp  (i)   = latent_heat_grd_veg
+      if(present(latent_heat_grd_bare_ccpp )) latent_heat_grd_bare_ccpp (i)   = latent_heat_grd_bare
+      if(present(ground_heat_veg_ccpp      )) ground_heat_veg_ccpp      (i)   = ground_heat_veg
+      if(present(ground_heat_bare_ccpp     )) ground_heat_bare_ccpp     (i)   = ground_heat_bare
+      if(present(lw_absorbed_grd_veg_ccpp  )) lw_absorbed_grd_veg_ccpp  (i)   = lw_absorbed_grd_veg
+      if(present(lw_absorbed_leaf_ccpp     )) lw_absorbed_leaf_ccpp     (i)   = lw_absorbed_leaf
+      if(present(lw_absorbed_grd_bare_ccpp )) lw_absorbed_grd_bare_ccpp (i)   = lw_absorbed_grd_bare
+      if(present(latent_heat_trans_ccpp    )) latent_heat_trans_ccpp    (i)   = latent_heat_trans
+      if(present(latent_heat_leaf_ccpp     )) latent_heat_leaf_ccpp     (i)   = latent_heat_leaf
+      if(present(ch_leaf_ccpp              )) ch_leaf_ccpp              (i)   = ch_leaf
+      if(present(ch_below_canopy_ccpp      )) ch_below_canopy_ccpp      (i)   = ch_below_canopy
+      if(present(ch_vegetated_2m_ccpp      )) ch_vegetated_2m_ccpp      (i)   = ch_vegetated_2m
+      if(present(ch_bare_ground_2m_ccpp    )) ch_bare_ground_2m_ccpp    (i)   = ch_bare_ground_2m
+      if(present(precip_adv_heat_veg_ccpp  )) precip_adv_heat_veg_ccpp  (i)   = precip_adv_heat_veg
+      if(present(precip_adv_heat_grd_v_ccpp)) precip_adv_heat_grd_v_ccpp(i)   = precip_adv_heat_grd_v
+      if(present(precip_adv_heat_grd_b_ccpp)) precip_adv_heat_grd_b_ccpp(i)   = precip_adv_heat_grd_b
+      if(present(spec_humid_sfc_veg_ccpp   )) spec_humid_sfc_veg_ccpp   (i)   = spec_humid_sfc_veg
+      if(present(spec_humid_sfc_bare_ccpp  )) spec_humid_sfc_bare_ccpp  (i)   = spec_humid_sfc_bare
+
       wslakexy  (i)   = lake_water         ! not active
       fwetxy    (i)   = canopy_wet_fraction
       taussxy   (i)   = snow_age
@@ -1059,7 +1196,7 @@
 !      if ( .not. do_mynnsfclay) then   !GFS sfcdiff
        if ( iopt_sfc .ne. 4 ) then   !GFS sfcdiff
 
-      call       stability                                                               &
+      call       gfs_stability                                                               &
         (zf(i), zvfun(i), gdx, virtual_temperature, vptemp,wind(i), z0_total, z0h_total, & 
          tvs1, con_g, thsfc_loc,                                                         &
          rb1(i), fm1(i), fh1(i), fm101(i), fh21(i), cm(i), ch(i), stress1(i), ustar1(i))
@@ -1206,10 +1343,12 @@
         parameters%z0mvt  =  z0mvt_table(vegtype)       !momentum roughness length (m)
         parameters%hvt    =    hvt_table(vegtype)       !top of canopy (m)
         parameters%hvb    =    hvb_table(vegtype)       !bottom of canopy (m)
+        parameters%z0mhvt = z0mhvt_table(vegtype)       !momentum roughness length (m)
         parameters%den    =    den_table(vegtype)       !tree density (no. of trunks per m2)
         parameters%rc     =     rc_table(vegtype)       !tree crown radius (m)
         parameters%mfsno  =  mfsno_table(vegtype)       !snowmelt m parameter ()
 	parameters%scffac = scffac_table(vegtype)       !snow cover factor
+        parameters%cbiom  =  cbiom_table(vegtype)       !canopy biomass heat capacity parameter (m)
         parameters%saim   =   saim_table(vegtype,:)     !monthly stem area index, one-sided
         parameters%laim   =   laim_table(vegtype,:)     !monthly leaf area index, one-sided
         parameters%sla    =    sla_table(vegtype)       !single-side leaf area per kg [m2/kg]

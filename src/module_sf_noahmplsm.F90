@@ -8,7 +8,6 @@ module module_sf_noahmplsm
   use  module_wrf_utl
 #endif
 use machine ,   only : kind_phys
-use sfc_diff, only   : stability
 
   implicit none
 
@@ -163,10 +162,19 @@ use sfc_diff, only   : stability
                       !   1 -> liu, et al. 2016
 
   integer :: opt_trs  !< options for thermal roughness scheme
-                      ! **1 -> z0h=z0 
-                      !   2 -> czil 
-                      !   3 -> ec style 
-                      !   4 -> kb inversed
+                      ! **1 -> z0h=z0m
+                      !   2 -> czil = f(canopy height) from Chen09
+                      !   3 -> ec style from TESSEL
+                      !   4 -> kb inverse from Blumel99
+  integer :: opt_diag !< options for surface 2m/q diagnostic approach
+                      !   1 -> external GFS sfc_diag 
+                      ! **2 -> original NoahMP 2-title 
+                      !   3 -> NoahMP 2-title + internal GFS sfc_diag 
+
+  integer :: opt_z0m  !< options for momentum roughness length
+                      ! **1 -> use z0m from MPTABLE
+                      !   2 -> z0m = f(canopy height, LAI/SAI) 
+
 !------------------------------------------------------------------------------------------!
 ! physical constants:                                                                      !
 !------------------------------------------------------------------------------------------!
@@ -211,10 +219,12 @@ use sfc_diff, only   : stability
     real (kind=kind_phys) :: z0mvt              !< momentum roughness length (m)
     real (kind=kind_phys) :: hvt                !< top of canopy (m)
     real (kind=kind_phys) :: hvb                !< bottom of canopy (m)
+    real (kind=kind_phys) :: z0mhvt             !< ratio of z0m to hvt
     real (kind=kind_phys) :: den                !< tree density (no. of trunks per m2)
     real (kind=kind_phys) :: rc                 !< tree crown radius (m)
     real (kind=kind_phys) :: mfsno              !< snowmelt m parameter ()
     real (kind=kind_phys) :: scffac             !< snow cover factor (m)
+    real (kind=kind_phys) :: cbiom              !< canopy biomass heat capacity parameter (m)
     real (kind=kind_phys) :: saim(12)           !< monthly stem area index, one-sided
     real (kind=kind_phys) :: laim(12)           !< monthly leaf area index, one-sided
     real (kind=kind_phys) :: sla                !< single-side leaf area per kg [m2/kg]
@@ -416,7 +426,7 @@ contains
                    pblhx   , iz0tlnd , itime         ,psi_opt                 ,&
 	           prcpconv, prcpnonc, prcpshcv, prcpsnow, prcpgrpl, prcphail, & ! in : forcing
                    tbot    , co2air  , o2air   , foln    , ficeold , zlvl    , & ! in : forcing
-                   ep_1    , ep_2    , cp                                    , & ! in : constants
+                   ep_1    , ep_2    , epsm1   , cp                          , & ! in : constants
                    albold  , sneqvo  ,                                         & ! in/out : 
                    stc     , sh2o    , smc     , tah     , eah     , fwet    , & ! in/out : 
                    canliq  , canice  , tv      , tg      , qsfc, qsnow, qrain, & ! in/out : 
@@ -438,7 +448,8 @@ contains
 		   shg     , shc     , shb     , evg     , evb     , ghv     , & ! out :
 		   ghb     , irg     , irc     , irb     , tr      , evc     , & ! out :
 		   chleaf  , chuc    , chv2    , chb2    , fpice   , pahv    , &
-                   pahg    , pahb    , pah     , esnow   , laisun  , laisha  , rb &
+                   pahg    , pahb    , pah     , esnow   , canhs   , laisun  , &
+                   laisha  , rb      , qsfcveg , qsfcbare                      &
 #ifdef CCPP
                    ,errmsg, errflg)
 #else
@@ -464,6 +475,7 @@ contains
   integer                        , intent(in)    :: jloc   !< grid index
   real (kind=kind_phys)                           , intent(in)    :: ep_1   !<
   real (kind=kind_phys)                           , intent(in)    :: ep_2   !<
+  real (kind=kind_phys)                           , intent(in)    :: epsm1  !<
   real (kind=kind_phys)                           , intent(in)    :: cp     !<
   real (kind=kind_phys)                           , intent(in)    :: dt     !< time step [sec]
   real (kind=kind_phys), dimension(       1:nsoil), intent(in)    :: zsoil  !< layer-bottom depth from soil surf (m)
@@ -582,6 +594,8 @@ contains
   real (kind=kind_phys)                           , intent(out)   :: rb        !< leaf boundary layer resistance (s/m)
   real (kind=kind_phys)                           , intent(out)   :: laisun    !< sunlit leaf area index (m2/m2)
   real (kind=kind_phys)                           , intent(out)   :: laisha    !< shaded leaf area index (m2/m2)
+  real (kind=kind_phys)                           , intent(out)   :: qsfcveg   !< effective spec humid over vegetation 
+  real (kind=kind_phys)                           , intent(out)   :: qsfcbare  !< effective spec humid over bare soil 
 
 !jref:start; output
   real (kind=kind_phys)                           , intent(out)     :: t2mv   !< 2-m air temperature over vegetated part [k]
@@ -719,7 +733,7 @@ contains
   logical                             :: dveg_active !< flag to run dynamic vegetation
   logical                             :: crop_active !< flag to run crop model
 ! add canopy heat storage (C.He added based on GY Niu's communication)
-  real (kind=kind_phys)               :: canhs ! canopy heat storage change w/m2
+  real (kind=kind_phys)   , intent(out)  :: canhs ! canopy heat storage change w/m2
   
   ! intent (out) variables need to be assigned a value.  these normally get assigned values
   ! only if dveg == 2.
@@ -735,7 +749,7 @@ contains
 ! --------------------------------------------------------------------------------------------------
 ! re-process atmospheric forcing
 
-   call atm (parameters,sfcprs  ,sfctmp   ,q2      ,                            &
+   call atm (parameters,ep_2, epsm1, sfcprs  ,sfctmp   ,q2      ,    &
              prcpconv, prcpnonc,prcpshcv,prcpsnow,prcpgrpl,prcphail, &
              soldn   ,cosz     ,thair   ,qair    ,                   & 
              eair    ,rhoair   ,qprecc  ,qprecl  ,solad   ,solai   , &
@@ -818,7 +832,7 @@ contains
                  fveg   ,shdfac, pahv   ,pahg   ,pahb   ,             & !in
                  qsnow  ,dzsnso ,lat    ,canliq ,canice ,iloc, jloc , & !in
                  thsfc_loc, prslkix,prsik1x,prslk1x,garea1,       & !in
-                 pblhx  ,iz0tlnd, itime ,psi_opt, ep_1, ep_2, cp, &
+                 pblhx  ,iz0tlnd, itime ,psi_opt, ep_1, ep_2, epsm1,cp, &
 		 z0wrf  ,z0hwrf ,                                 & !out
                  imelt  ,snicev ,snliqv ,epore  ,t2m    ,fsno   , & !out
                  sav    ,sag    ,qmelt  ,fsa    ,fsr    ,taux   , & !out
@@ -842,7 +856,9 @@ contains
                  emissi ,pah    ,canhs,                           &
 		     shg,shc,shb,evg,evb,ghv,ghb,irg,irc,irb,tr,evc,chleaf,chuc,chv2,chb2 )                                            !out
 
-                 qsfc = q1                         !
+    qsfcveg  = eah*ep_2/(sfcprs + epsm1*eah)
+    qsfcbare = qsfc
+    qsfc     = q1
 !jref:end
 #ifdef CCPP
     if (errflg /= 0) return
@@ -944,7 +960,7 @@ contains
 
 !>\ingroup NoahMP_LSM
 !! re-precess atmospheric forcing.
-  subroutine atm (parameters,sfcprs  ,sfctmp   ,q2      ,                             &
+  subroutine atm (parameters,ep_2,epsm1,sfcprs  ,sfctmp   ,q2      ,       &
                   prcpconv,prcpnonc ,prcpshcv,prcpsnow,prcpgrpl,prcphail , &
                   soldn   ,cosz     ,thair   ,qair    ,                    & 
                   eair    ,rhoair   ,qprecc  ,qprecl  ,solad   , solai   , &
@@ -957,6 +973,8 @@ contains
 ! inputs
 
   type (noahmp_parameters), intent(in) :: parameters
+  real (kind=kind_phys)                          , intent(in)  :: ep_2   !<
+  real (kind=kind_phys)                          , intent(in)  :: epsm1  !<
   real (kind=kind_phys)                          , intent(in)  :: sfcprs   !< pressure (pa)
   real (kind=kind_phys)                          , intent(in)  :: sfctmp   !< surface air temperature [k]
   real (kind=kind_phys)                          , intent(in)  :: q2       !< mixing ratio (kg/kg)
@@ -1001,8 +1019,8 @@ contains
 
        qair   = q2                       ! in wrf, driver converts to specific humidity
 
-       eair   = qair*sfcprs / (0.622+0.378*qair)
-       rhoair = (sfcprs-0.378*eair) / (rair*sfctmp)
+       eair   = qair*sfcprs / (ep_2-epsm1*qair)
+       rhoair = (sfcprs+epsm1*eair) / (rair*sfctmp)
 
        if(cosz <= 0.) then 
           swdown = 0.
@@ -1658,7 +1676,7 @@ endif   ! croptype == 0
                      fveg   ,shdfac, pahv   ,pahg   ,pahb   ,               & !in
                      qsnow  ,dzsnso ,lat    ,canliq ,canice ,iloc   , jloc, & !in
                      thsfc_loc, prslkix,prsik1x,prslk1x,garea1,       & !in
-                     pblhx  , iz0tlnd, itime,psi_opt,ep_1, ep_2, cp,  &
+                     pblhx  , iz0tlnd, itime,psi_opt,ep_1, ep_2, epsm1, cp,  &
 		     z0wrf  ,z0hwrf ,                                 & !out
                      imelt  ,snicev ,snliqv ,epore  ,t2m    ,fsno   , & !out
                      sav    ,sag    ,qmelt  ,fsa    ,fsr    ,taux   , & !out
@@ -1742,6 +1760,7 @@ endif   ! croptype == 0
   real (kind=kind_phys)                              , intent(in)    :: pblhx  !<  pbl height
   real (kind=kind_phys)                              , intent(in)    :: ep_1   !<
   real (kind=kind_phys)                              , intent(in)    :: ep_2   !<
+  real (kind=kind_phys)                              , intent(in)    :: epsm1  !<
   real (kind=kind_phys)                              , intent(in)    :: cp     !<
   integer                                            , intent(in)    :: iz0tlnd !<
   integer                                            , intent(in)    :: itime  !<
@@ -1963,6 +1982,9 @@ endif   ! croptype == 0
   real (kind=kind_phys)                                  :: ezpd
   real (kind=kind_phys)                                  :: aone
 
+  real (kind=kind_phys)                                  :: canopy_density_factor
+  real (kind=kind_phys)                                  :: vai_limited
+
 !jref:end  
 
   real (kind=kind_phys), parameter                   :: mpe    = 1.e-6
@@ -2001,6 +2023,9 @@ endif   ! croptype == 0
     csigmaf1  = 0.0
     csigmaf0  = 0.0
     aone      = 0.0
+    
+    canopy_density_factor = 1.0
+    vai_limited           = 2.0
 
 !
 
@@ -2043,12 +2068,32 @@ endif   ! croptype == 0
 
      zpdg  = snowh
      if(veg) then
-        z0m  = parameters%z0mvt
-        zpd  = 0.65 * parameters%hvt
-        if(snowh.gt.zpd) zpd  = snowh
+
+       if(opt_z0m == 1) then
+
+         z0m  = parameters%z0mvt
+         zpd  = 0.65 * parameters%hvt
+
+       elseif(opt_z0m == 2) then
+
+         z0m = parameters%z0mhvt * parameters%hvt
+         zpd  = 0.65 * parameters%hvt
+         if(vegtyp /= 13) then
+           vai_limited = min(vai, 2.0)
+           canopy_density_factor = (1.0 -  exp(-vai_limited)) / (1.0 - exp(-2.0))
+           z0m  = exp(canopy_density_factor * log(z0m) + (1.0 - canopy_density_factor) * log(z0mg))
+           zpd  = canopy_density_factor * zpd
+         end if
+
+       end if
+
+       if(snowh.gt.zpd) zpd  = snowh
+
      else
+
         z0m  = z0mg
         zpd  = zpdg
+
      end if
 
 ! special case for urban
@@ -2169,7 +2214,7 @@ endif   ! croptype == 0
         latheav = hsub
 	frozen_canopy = .true.
      end if
-     gammav = cpair*sfcprs/(0.622*latheav)
+     gammav = cpair*sfcprs/(ep_2*latheav)
 
      if (tg .gt. tfrz) then
         latheag = hvap
@@ -2178,14 +2223,14 @@ endif   ! croptype == 0
         latheag = hsub
 	frozen_ground = .true.
      end if
-     gammag = cpair*sfcprs/(0.622*latheag)
+     gammag = cpair*sfcprs/(ep_2*latheag)
 
 !     if (sfctmp .gt. tfrz) then
 !        lathea = hvap
 !     else
 !        lathea = hsub
 !     end if
-!     gamma = cpair*sfcprs/(0.622*lathea)
+!     gamma = cpair*sfcprs/(ep_2*lathea)
 
 ! surface temperatures of the ground and canopy and energy fluxes
 
@@ -2205,7 +2250,7 @@ endif   ! croptype == 0
                     foln    ,co2air  ,o2air   ,btran   ,sfcprs  , & !in
                     rhsur   ,iloc    ,jloc    ,q2      ,pahv  ,pahg  , & !in
                     thsfc_loc, prslkix,prsik1x,prslk1x, garea1,        & !in
-                    pblhx   ,iz0tlnd ,itime   ,psi_opt ,ep_1, ep_2, cp, &
+                    pblhx   ,iz0tlnd ,itime   ,psi_opt ,ep_1, ep_2, epsm1, cp, &
                     eah     ,tah     ,tv      ,tgv     ,cmv, ustarx , & !inout
 #ifdef CCPP
                     chv     ,dx      ,dz8w    ,errmsg  ,errflg  , & !inout
@@ -2242,7 +2287,7 @@ endif   ! croptype == 0
                     emg     ,stc     ,df      ,rsurf   ,latheag  , & !in
                     gammag   ,rhsur   ,iloc    ,jloc    ,q2      ,pahb  , & !in
                     thsfc_loc, prslkix,prsik1x,prslk1x,vegtyp,fveg,shdfac,garea1, & !in
-                    pblhx   ,iz0tlnd ,itime   ,psi_opt ,ep_1, ep_2, cp,      &
+                    pblhx   ,iz0tlnd ,itime   ,psi_opt ,ep_1, ep_2, epsm1, cp, &
 #ifdef CCPP
                     tgb     ,cmb     ,chb, ustarx,errmsg  ,errflg   , & !inout
 #else
@@ -2292,7 +2337,7 @@ endif   ! croptype == 0
         ts    = fveg * tah       + (1.0 - fveg) * tgb
         cm    = fveg * cmv       + (1.0 - fveg) * cmb      ! better way to average?
         ch    = fveg * chv       + (1.0 - fveg) * chb
-        q1    = fveg * (eah*0.622/(sfcprs - 0.378*eah)) + (1.0 - fveg)*qsfc
+        q1    = fveg * (eah*ep_2/(sfcprs + epsm1*eah)) + (1.0 - fveg)*qsfc
         q2e   = fveg * q2v       + (1.0 - fveg) * q2b
 
 ! effectibe skin temperature
@@ -3653,7 +3698,7 @@ endif   ! croptype == 0
                        foln    ,co2air  ,o2air   ,btran   ,sfcprs  , & !in
                        rhsur   ,iloc    ,jloc    ,q2      ,pahv    ,pahg     , & !in
                        thsfc_loc, prslkix,prsik1x,prslk1x, garea1,      & !in
-                       pblhx   ,iz0tlnd ,itime   ,psi_opt ,ep_1, ep_2, cp,   &
+                       pblhx   ,iz0tlnd ,itime   ,psi_opt ,ep_1, ep_2, epsm1, cp, &
                        eah     ,tah     ,tv      ,tg      ,cm,ustarx,& !inout
 #ifdef CCPP
                        ch      ,dx      ,dz8w    ,errmsg  ,errflg  , & !inout
@@ -3675,6 +3720,7 @@ endif   ! croptype == 0
 ! -sav + irc[tv] + shc[tv] + evc[tv] + tr[tv] + canhs[tv] = 0
 ! -sag + irg[tg] + shg[tg] + evg[tg] + gh[tg] = 0
 ! --------------------------------------------------------------------------------------------------
+  use funcphys, only : fpvs
   implicit none
 ! --------------------------------------------------------------------------------------------------
 ! input
@@ -3704,6 +3750,7 @@ endif   ! croptype == 0
   real (kind=kind_phys)                           , intent(in)    :: pblhx  !<  pbl height
   real (kind=kind_phys)                           , intent(in)    :: ep_1   !<
   real (kind=kind_phys)                           , intent(in)    :: ep_2   !<
+  real (kind=kind_phys)                           , intent(in)    :: epsm1  !<
   real (kind=kind_phys)                           , intent(in)    :: cp     !<
   integer                                         , intent(in)    :: iz0tlnd !<
   integer                                         , intent(in)    :: itime   !<
@@ -3915,6 +3962,10 @@ endif   ! croptype == 0
 
   real (kind=kind_phys) :: t, tdc       !kelvin to degree celsius with limit -50 to +50
 
+  real(kind=kind_phys) :: evpot   !<the potential evaporation from wet foliage per unit wetted area
+  real(kind=kind_phys) :: fhi, qss, wrk
+  real(kind=kind_phys), parameter :: qmin=1.0e-8
+
   character(len=80) ::  message
 
   tdc(t)   = min( 50., max(-50.,(t-tfrz)) )
@@ -3956,7 +4007,7 @@ endif   ! croptype == 0
 
 !jref - consistent surface specific humidity for sfcdif3 and sfcdif4
 
-        qsfc = 0.622*eair/(psfc-0.378*eair)  
+        qsfc = ep_2*eair/(psfc+epsm1*eair)  
 
 ! canopy height
         hcan = parameters%hvt
@@ -4043,11 +4094,11 @@ endif   ! croptype == 0
                        zlvl   ,zpd    ,z0m    ,z0h    ,ur     , & !in
                        mpe    ,iloc   ,jloc   ,                 & !in
 #ifdef CCPP
-                       moz ,mozsgn ,fm ,fh ,fm2 ,fh2 ,errmsg ,errflg ,& !inout
+                       moz ,mozsgn ,fm ,fh ,fm2 ,fh2 ,fv, errmsg ,errflg ,& !inout
 #else
-                       moz    ,mozsgn ,fm     ,fh     ,fm2,fh2, & !inout
+                       moz    ,mozsgn ,fm     ,fh     ,fm2,fh2, fv, & !inout
 #endif
-                       cm     ,ch     ,fv     ,ch2     )          !out
+                       cm     ,ch     ,ch2     )          !out
 #ifdef CCPP
           if (errflg /= 0) return
 #endif
@@ -4142,10 +4193,10 @@ endif   ! croptype == 0
         end if
 
         if (opt_crs == 2) then  ! jarvis
-         call  canres (parameters,parsun,tv    ,btran ,eah    ,sfcprs, & !in
+         call  canres (parameters,ep_2, epsm1,parsun,tv    ,btran ,eah    ,sfcprs, & !in
                        rssun ,psnsun,iloc  ,jloc   )          !out
 
-         call  canres (parameters,parsha,tv    ,btran ,eah    ,sfcprs, & !in
+         call  canres (parameters,ep_2, epsm1,parsha,tv    ,btran ,eah    ,sfcprs, & !in
                        rssha ,psnsha,iloc  ,jloc   )          !out
         end if
      end if
@@ -4162,8 +4213,17 @@ endif   ! croptype == 0
 
 ! prepare for latent heat flux above veg.
 
+        evpot= fveg*rhoair*cpair*vaie/rb * (estv-eah) / gammav
         caw  = 1./rawc
-        cew  = fwet*vaie/rb
+        if(evpot > 0. .and. fwet > 0.) then
+          if (tv > tfrz) then
+            cew = min(fwet,canliq*latheav/dt/evpot) * vaie/rb
+          else
+            cew = min(fwet,canice*latheav/dt/evpot) * vaie/rb
+          endif
+        else
+          cew= fwet * vaie/rb
+        endif
         ctw  = (1.-fwet)*(laisune/(rb+rssun) + laishae/(rb+rssha))
         cgw  = 1./(rawg+rsurf)
         cond = caw + cew + ctw + cgw
@@ -4188,7 +4248,7 @@ endif   ! croptype == 0
 	end if
 
 ! canopy heat capacity
-        hcv = 0.02*vaie*cwat + canliq*cwat/denh2o + canice*cice/denice !j/m2/k
+        hcv = fveg*(parameters%cbiom*vaie*cwat + canliq*cwat/denh2o + canice*cice/denice) !j/m2/k
 
         b   = sav-irc-shc-evc-tr+pahv                          !additional w/m2
 !       a   = fveg*(4.*cir*tv**3 + csh + (cev+ctr)*destv) !volumetric heat capacity
@@ -4210,7 +4270,7 @@ endif   ! croptype == 0
         hg = rhoair*cpair*(tg  - tah)   /rahg
 
 ! consistent specific humidity from canopy air vapor pressure
-        qsfc = (0.622*eah)/(sfcprs-0.378*eah)
+        qsfc = (ep_2*eah)/(sfcprs+epsm1*eah)
 
         if ( opt_sfc == 4 ) then
            qfx = (qsfc-qair)*rhoair*caw
@@ -4321,6 +4381,34 @@ endif   ! croptype == 0
          q2v = qsfc - ((evc+tr)/fveg+evg)/(latheav*rhoair) * 1./cq2v
       endif
 
+! use sfc_diag to calculate t2mv and q2v for opt_sfc=1&3
+    if(opt_diag ==3) then 
+     if(opt_sfc == 1 .or. opt_sfc == 3) then
+
+       fhi = fh2/fh
+       wrk = 1.0 - fhi
+        if(thsfc_loc) then ! Use local potential temperature
+          t2mv  = tah*wrk + sfctmp*prslkix*fhi - (grav+grav)/cp
+        else ! Use potential temperature referenced to 1000 hPa
+          t2mv  = tah*wrk + sfctmp*fhi - (grav+grav)/cp
+        endif
+
+        if((evc+tr)/fveg+evg >= 0.) then !  for evaporation>0, use inferred qsurf to deduce q2v
+          q2v = qsfc*wrk + max(qmin,qair)*fhi
+        else                   !  for dew formation, use saturated q at tskin
+          qss    = fpvs(tah)
+          qss    = ep_2 * qss / (psfc + epsm1 * qss)
+          q2v= qss*wrk + max(qmin,qair)*fhi
+        endif
+        qss    = fpvs(t2mv)
+        qss    = ep_2 * qss / (psfc + epsm1 * qss)
+        q2v = min(q2v,qss)
+     else
+       errmsg = 'Problem :opt_diag=3 is only applied for opt_sfc=1&3' 
+       errflg = 1
+       return
+     endif
+    endif
 ! update ch for output
      ch = cah
      chleaf = cvh
@@ -4340,7 +4428,7 @@ endif   ! croptype == 0
                         emg     ,stc     ,df      ,rsurf   ,lathea  , & !in
                         gamma   ,rhsur   ,iloc    ,jloc    ,q2      ,pahb  , & !in
                         thsfc_loc, prslkix,prsik1x,prslk1x,vegtyp,fveg,shdfac,garea1,  & !in
-                        pblhx  , iz0tlnd , itime  ,psi_opt,ep_1,ep_2,cp     ,&
+                        pblhx  , iz0tlnd , itime  ,psi_opt,ep_1,ep_2,epsm1,cp  ,&
 #ifdef CCPP
                         tgb     ,cm      ,ch,ustarx,errmsg  ,errflg  , & !inout
 #else
@@ -4359,6 +4447,7 @@ endif   ! croptype == 0
 ! bare soil:
 ! -sab + irb[tg] + shb[tg] + evb[tg] + ghb[tg] = 0
 ! ----------------------------------------------------------------------
+  use funcphys, only : fpvs
   implicit none
 ! ----------------------------------------------------------------------
 ! input
@@ -4396,6 +4485,7 @@ endif   ! croptype == 0
   real (kind=kind_phys),                            intent(in) :: pblhx  !< pbl height (m)
   real (kind=kind_phys),                            intent(in) :: ep_1   !<
   real (kind=kind_phys),                            intent(in) :: ep_2   !<
+  real (kind=kind_phys),                            intent(in) :: epsm1  !<
   real (kind=kind_phys),                            intent(in) :: cp     !<
   integer,                                          intent(in) :: iz0tlnd !<
   integer,                                          intent(in) :: itime  !<
@@ -4544,6 +4634,10 @@ endif   ! croptype == 0
   real (kind=kind_phys)                :: temptrs
 
   real (kind=kind_phys) :: t, tdc     !kelvin to degree celsius with limit -50 to +50
+
+  real(kind=kind_phys) :: fhi, qss, wrk
+  real(kind=kind_phys), parameter :: qmin=1.0e-8
+
   tdc(t)   = min( 50., max(-50.,(t-tfrz)) )
 
 ! -----------------------------------------------------------------
@@ -4601,11 +4695,11 @@ endif   ! croptype == 0
                        zlvl   ,zpd    ,z0m    ,z0h    ,ur     , & !in
                        mpe    ,iloc   ,jloc   ,                 & !in
 #ifdef CCPP
-                       moz ,mozsgn ,fm ,fh ,fm2 ,fh2 ,errmsg ,errflg ,& !inout
+                       moz ,mozsgn ,fm ,fh ,fm2 ,fh2 ,fv,errmsg ,errflg ,& !inout
 #else
-                       moz ,mozsgn ,fm ,fh ,fm2 ,fh2 ,           & !inout
+                       moz ,mozsgn ,fm ,fh ,fm2 ,fh2 ,fv,           & !inout
 #endif
-                       cm     ,ch     ,fv     ,ch2     )          !out
+                       cm     ,ch     ,ch2     )          !out
 #ifdef CCPP
           if (errflg /= 0) return
 #endif
@@ -4722,7 +4816,7 @@ endif   ! croptype == 0
         else
             estg  = esati
         end if
-        qsfc = 0.622*(estg*rhsur)/(psfc-0.378*(estg*rhsur))
+        qsfc = ep_2*(estg*rhsur)/(psfc+epsm1*(estg*rhsur))
 
         qfx = (qsfc-qair)*cev*gamma/cpair
 
@@ -4794,6 +4888,34 @@ endif   ! croptype == 0
      end if
     endif ! 4
 
+! use sfc_diag to calculate t2mv and q2v for opt_sfc=1&3
+    if(opt_diag ==3) then
+     if(opt_sfc == 1 .or. opt_sfc == 3) then
+
+       fhi = fh2/fh
+       wrk = 1.0 - fhi
+        if(thsfc_loc) then ! Use local potential temperature
+          t2mb  = tgb*wrk + sfctmp*prslkix*fhi - (grav+grav)/cp
+        else ! Use potential temperature referenced to 1000 hPa
+          t2mb  = tgb*wrk + sfctmp*fhi - (grav+grav)/cp
+        endif
+
+        if(evb >= 0.) then !  for evaporation>0, use inferred qsurf to deduce q2v
+          q2b = qsfc*wrk + max(qmin,qair)*fhi
+        else                   !  for dew formation, use saturated q at tskin
+          qss    = fpvs(tgb)
+          qss    = ep_2 * qss / (psfc + epsm1 * qss)
+          q2b= qss*wrk + max(qmin,qair)*fhi
+        endif
+        qss    = fpvs(t2mb)
+        qss    = ep_2 * qss / (psfc + epsm1 * qss)
+        q2b = min(q2b,qss)
+     else
+       errmsg = 'Problem :opt_diag=3 is only applied for opt_sfc=1&3'
+       errflg = 1
+       return
+     endif
+    endif
        if (parameters%urban_flag) q2b = qsfc
 
 ! update ch 
@@ -4909,8 +5031,7 @@ endif   ! croptype == 0
 
        tmprb  = cwpc*50. / (1. - exp(-cwpc/2.))
        rb     = tmprb * sqrt(parameters%dleaf/uc)
-       rb     = max(rb,20.0)
-!       rb = 200
+       rb     = min(max(rb, 5.0),50.0) ! limit rb to 5-50, typically rb<50
 
   end subroutine ragrb
 
@@ -4922,11 +5043,11 @@ endif   ! croptype == 0
        &             zlvl   ,zpd    ,z0m    ,z0h    ,ur     , & !in
        &             mpe    ,iloc   ,jloc   ,                 & !in
 #ifdef CCPP
-       &             moz    ,mozsgn ,fm     ,fh     ,fm2,fh2,errmsg,errflg, & !inout
+       &             moz    ,mozsgn ,fm     ,fh     ,fm2,fh2,fv,errmsg,errflg, & !inout
 #else
-       &             moz    ,mozsgn ,fm     ,fh     ,fm2,fh2, & !inout
+       &             moz    ,mozsgn ,fm     ,fh     ,fm2,fh2, fv, & !inout
 #endif
-       &             cm     ,ch     ,fv     ,ch2     )          !out
+       &             cm     ,ch     ,ch2     )                      !out
 ! -------------------------------------------------------------------------------------------------
 ! computing surface drag coefficient cm for momentum and ch for heat
 ! -------------------------------------------------------------------------------------------------
@@ -4956,6 +5077,7 @@ endif   ! croptype == 0
     real (kind=kind_phys),              intent(inout) :: fh     !< sen heat stability correction, weighted by prior iters
     real (kind=kind_phys),              intent(inout) :: fm2    !< sen heat stability correction, weighted by prior iters
     real (kind=kind_phys),              intent(inout) :: fh2    !< sen heat stability correction, weighted by prior iters
+    real (kind=kind_phys),              intent(inout) :: fv     !< friction velocity (m/s)
 #ifdef CCPP
     character(len=*),  intent(inout) :: errmsg
     integer,           intent(inout) :: errflg
@@ -4965,7 +5087,6 @@ endif   ! croptype == 0
 
     real (kind=kind_phys),                intent(out) :: cm     !< drag coefficient for momentum
     real (kind=kind_phys),                intent(out) :: ch     !< drag coefficient for heat
-    real (kind=kind_phys),                intent(out) :: fv     !< friction velocity (m/s)
     real (kind=kind_phys),                intent(out) :: ch2    !< drag coefficient for heat
 
 ! locals
@@ -5120,7 +5241,7 @@ endif   ! croptype == 0
     real (kind=kind_phys), intent(inout) :: akhs
     real (kind=kind_phys), intent(inout) :: rlmo
     real (kind=kind_phys), intent(inout) :: wstar2
-    real (kind=kind_phys),   intent(out) :: ustar
+    real (kind=kind_phys), intent(inout) :: ustar
 
     real (kind=kind_phys)     zz, pslmu, pslms, pslhu, pslhs
     real (kind=kind_phys)     xx, pspmu, yy, pspms, psphu, psphs
@@ -5382,6 +5503,9 @@ endif   ! croptype == 0
     tem2   = max(fveg, 0.1_kind_phys)
     zvfun1 = sqrt(tem1 * tem2)
     gdx    = sqrt(garea1)
+    
+    gdx    = 3000.0   ! this will remove gdx effect
+    zvfun1 = 1.0      ! this will remove zvfun effect
 
     if(thsfc_loc) then            ! Use local potential temperature
       tvs   = tgb * virtfac
@@ -5389,153 +5513,421 @@ endif   ! croptype == 0
       tvs   = tgb/prsik1x * virtfac
     endif
 
-    call stability (zlvlb, zvfun1, gdx, tv1, thv1, ur, z0m, z0h, tvs, grav, thsfc_loc,  &
+    call gfs_stability (zlvlb, zvfun1, gdx, tv1, thv1, ur, z0m, z0h, tvs, grav, thsfc_loc,  &
          rb1, fm,fh,fm10,fh2,cm,ch,stress1,fv)
 
   end subroutine sfcdif3
+
+!== begin gfs_stability ==================================================================================
+
+subroutine gfs_stability                                              &
+!  ---  inputs:
+          ( z1, zvfun, gdx, tv1, thv1, wind, z0max, ztmax, tvs, grav,  &
+            thsfc_loc,                                                 &
+!  ---  outputs:
+            rb, fm, fh, fm10, fh2, cm, ch, stress, ustar)
+
+! Documentation below refers to UTN and STN which are:
+!  UTN (Unstable Tech Note) : NCEP Office Note 356
+!  STN (Stable Tech Note)   : NCEP Office Note 321
+
+real (kind=kind_phys), parameter :: ca=0.4_kind_phys  ! ca - von karman constant
+
+real(kind=kind_phys), intent(in) :: z1      ! height model level
+real(kind=kind_phys), intent(in) :: zvfun   ! vegetation adjustment factor
+real(kind=kind_phys), intent(in) :: gdx     ! grid spatial dimension
+real(kind=kind_phys), intent(in) :: tv1     ! virtual temperature at model level
+real(kind=kind_phys), intent(in) :: thv1    ! virtual potential temperature at model level
+real(kind=kind_phys), intent(in) :: wind    ! wind speed at model level
+real(kind=kind_phys), intent(in) :: z0max   ! momentum roughness length
+real(kind=kind_phys), intent(in) :: ztmax   ! thermal roughness length
+real(kind=kind_phys), intent(in) :: tvs     ! surface virtual temperature
+real(kind=kind_phys), intent(in) :: grav    ! local gravity 
+logical,              intent(in) :: thsfc_loc ! use local theta reference flag
+
+real(kind=kind_phys), intent(out) :: rb     ! bulk richardson number [-]
+real(kind=kind_phys), intent(out) :: fm     ! phi momentum function (UTN 1.1) [-]
+real(kind=kind_phys), intent(out) :: fh     ! phi heat function (UTN 1.2) [-]
+real(kind=kind_phys), intent(out) :: fm10   ! 10-meter phi momentum function [-]
+real(kind=kind_phys), intent(out) :: fh2    ! 2-meter phi heat function [-]
+real(kind=kind_phys), intent(out) :: cm     ! momentum exchange coeficient [-]
+real(kind=kind_phys), intent(out) :: ch     ! heat exchange coeficient [-]
+real(kind=kind_phys), intent(out) :: stress ! surface stress [m2/s2]
+real(kind=kind_phys), intent(out) :: ustar  ! friction velocity [m/s]
+
+!  ---  locals:
+real(kind=kind_phys), parameter :: a0       =   -3.975     ! UTN 2.37
+real(kind=kind_phys), parameter :: a1       =   12.32      ! UTN 2.37
+real(kind=kind_phys), parameter :: b1       =   -7.755     ! UTN 2.37
+real(kind=kind_phys), parameter :: b2       =    6.041     ! UTN 2.37
+real(kind=kind_phys), parameter :: a0p      =   -7.941     ! UTN 2.38
+real(kind=kind_phys), parameter :: a1p      =   24.75      ! UTN 2.38
+real(kind=kind_phys), parameter :: b1p      =   -8.705     ! UTN 2.38
+real(kind=kind_phys), parameter :: b2p      =    7.899     ! UTN 2.38
+
+real(kind=kind_phys), parameter :: alpha    =    5.0       ! alpha in e.g., STN 1.10
+real(kind=kind_phys), parameter :: alpha4   = 4.0 * alpha  ! term in aa
+real(kind=kind_phys), parameter :: xkrefsqr =    0.3       ! baseline maximum z/L
+real(kind=kind_phys), parameter :: xkmin    =    0.05      ! min multiplier for grid size and vegetation
+real(kind=kind_phys), parameter :: xkgdx    = 3000.0       ! critical grid scale for diffusivity[m^0.5]
+real(kind=kind_phys), parameter :: zolmin   =  -10.0       ! minimum z/L
+real(kind=kind_phys), parameter :: zero     =    0.0
+real(kind=kind_phys), parameter :: one      =    1.0
+
+real(kind=kind_phys) :: aa
+real(kind=kind_phys) :: aa0
+real(kind=kind_phys) :: bb
+real(kind=kind_phys) :: bb0
+real(kind=kind_phys) :: dtv
+real(kind=kind_phys) :: adtv
+real(kind=kind_phys) :: hl1
+real(kind=kind_phys) :: hl12
+real(kind=kind_phys) :: pm
+real(kind=kind_phys) :: ph
+real(kind=kind_phys) :: pm10
+real(kind=kind_phys) :: ph2
+real(kind=kind_phys) :: z1i
+real(kind=kind_phys) :: fms
+real(kind=kind_phys) :: fhs
+real(kind=kind_phys) :: hl0
+real(kind=kind_phys) :: hl0inf
+real(kind=kind_phys) :: hlinf
+real(kind=kind_phys) :: hl110
+real(kind=kind_phys) :: hlt
+real(kind=kind_phys) :: hltinf
+real(kind=kind_phys) :: olinf
+real(kind=kind_phys) :: tem1
+real(kind=kind_phys) :: tem2  
+real(kind=kind_phys) :: zolmax
+
+real(kind=kind_phys) xkzo
+
+z1i = one / z1   ! inverse of model height
+
+!
+!  set background diffusivities with one for gdx >= xkgdx and 
+!   as a function of horizontal grid size for gdx < xkgdx 
+!   (i.e., gdx/xkgdx for gdx < xkgdx)
+!
+
+if(gdx >= xkgdx) then
+  xkzo = one
+else
+  xkzo = gdx / xkgdx
+endif
+
+tem1 = tv1 - tvs
+if(tem1 > zero) then   ! for stable case, adjust for vegetation cover
+  tem2 = xkzo * zvfun
+  xkzo = min(max(tem2, xkmin), xkzo)
+endif
+
+zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
+
+!  compute stability indices (rb and hlinf)
+
+          dtv     = thv1 - tvs
+          adtv    = max(abs(dtv),0.001_kind_phys)
+          dtv     = sign(1.0_kind_phys,dtv) * adtv
+
+          if(thsfc_loc) then ! Use local potential temperature
+            rb      = max(-5000.0_kind_phys, (grav+grav) * dtv * z1 &
+                   / ((thv1 + tvs) * wind * wind))
+          else ! Use potential temperature referenced to 1000 hPa
+            rb      = max(-5000.0_kind_phys, grav * dtv * z1 &
+                   / (tv1 * wind * wind))
+          endif
+
+          tem1    = one / z0max                                  ! 1/z0m
+          tem2    = one / ztmax                                  ! 1/z0t
+          fm      = log((z0max+z1)  * tem1)                      ! neutral phi_m
+          fh      = log((ztmax+z1)  * tem2)                      ! neutral phi_h
+          fm10    = log((z0max+10.0_kind_phys) * tem1)                  ! neutral phi_m at 10 meters
+          fh2     = log((ztmax+2.0_kind_phys)  * tem2)                  ! neutral phi_h at 2 meters
+          hlinf   = rb * fm * fm / fh                            ! z/L STN 2.7
+          hlinf   = min(max(hlinf,zolmin),zolmax)                ! z/L, xi in STN/UTN
+!
+!  stable case
+!
+          if (dtv >= zero) then
+            hl1 = hlinf                                          ! z/L, xi in STN
+            if(hlinf > 0.25_kind_phys) then                             ! z/L > 0.25, do two iterations
+              tem1   = hlinf * z1i                               ! 1/L
+              hl0inf = z0max * tem1                              ! z0m/z1, zi_0 in STN
+              hltinf = ztmax * tem1                              ! z0t/z1, zi_0 in STN
+              aa     = sqrt(one + alpha4 * hlinf)                ! sqrt term of STN 2.16 with z
+              aa0    = sqrt(one + alpha4 * hl0inf)               ! sqrt term of STN 2.16 with z0m
+              bb     = aa                                        ! sqrt term of STN 2.16 with z
+              bb0    = sqrt(one + alpha4 * hltinf)               ! sqrt term of STN 2.16 with z0t
+              pm     = aa0 - aa + log( (aa + one)/(aa0 + one) )  ! psi_m STN 3.11
+              ph     = bb0 - bb + log( (bb + one)/(bb0 + one) )  ! psi_h STN 3.11
+              fms    = fm - pm                                   ! phi_m STN 3.10
+              fhs    = fh - ph                                   ! phi_h STN 3.10
+              hl1    = fms * fms * rb / fhs                      ! z/L iteration STN 3.8
+              hl1    = min(hl1, zolmax)                          ! z/L iteration 
+            endif
+!
+!  second iteration
+!
+            tem1  = hl1 * z1i                                    ! 1/L
+            hl0   = z0max * tem1                                 ! z0m/z1
+            hlt   = ztmax * tem1                                 ! z0t/z1
+            aa    = sqrt(one + alpha4 * hl1)                     ! sqrt term of STN 2.16 with z
+            aa0   = sqrt(one + alpha4 * hl0)                     ! sqrt term of STN 2.16 with z0m
+            bb    = aa                                           ! sqrt term of STN 2.16 with z
+            bb0   = sqrt(one + alpha4 * hlt)                     ! sqrt term of STN 2.16 with z0t
+            pm    = aa0 - aa + log( (one+aa)/(one+aa0) )         ! psi_m STN 3.11
+            ph    = bb0 - bb + log( (one+bb)/(one+bb0) )         ! psi_h STN 3.11
+            hl110 = hl1 * 10.0_kind_phys * z1i                          ! 10/L
+            aa    = sqrt(one + alpha4 * hl110)                   ! sqrt term of STN 2.16 with z=10m
+            pm10  = aa0 - aa + log( (one+aa)/(one+aa0) )         ! psi_m STN 3.11 with z=10m
+            hl12  = (hl1+hl1) * z1i                              ! 2/L
+!           aa    = sqrt(one + alpha4 * hl12)
+            bb    = sqrt(one + alpha4 * hl12)                    ! sqrt term of STN 2.16 with z=2m
+            ph2   = bb0 - bb + log( (one+bb)/(one+bb0) )         ! psi_m STN 3.11 with z=2m
+!
+!  unstable case - check for unphysical obukhov length
+!    see steps in UTN Sec. D
+!
+          else                          ! dtv < 0 case
+
+            olinf = z1 / hlinf                                   ! z/L, xi in UTN
+            tem1  = 50.0_kind_phys * z0max                              ! 50 * z0m, z/L limit for calc methods, see UTN Sec. E
+            if(abs(olinf) <= tem1) then                          ! 
+              hlinf = -z1 / tem1                                 ! 
+              hlinf = max(hlinf, zolmin)
+            endif
+!
+!  get pm and ph
+!
+            if (hlinf >= -0.5_kind_phys) then
+              hl1   = hlinf
+              pm    = (a0  + a1*hl1)  * hl1   / (one+ (b1+b2*hl1)  *hl1)  ! psi_m UTN 2.37
+              ph    = (a0p + a1p*hl1) * hl1   / (one+ (b1p+b2p*hl1)*hl1)  ! psi_h UTN 2.38
+              hl110 = hl1 * 10.0_kind_phys * z1i                                 ! 10/L
+              pm10  = (a0 + a1*hl110) * hl110/(one+(b1+b2*hl110)*hl110)   ! psi_m UTN 2.37 with z=10m
+              hl12  = (hl1+hl1) * z1i                                     ! 2/L
+              ph2   = (a0p + a1p*hl12) * hl12/(one+(b1p+b2p*hl12)*hl12)   ! psi_h UTN 2.38 with z=2m
+            else                                                          ! z/L < -0.5
+              hl1   = -hlinf                                              ! -z/L
+              tem1  = one / sqrt(hl1)                                     ! sqrt(-z/L)
+              pm    = log(hl1) + 2.0_kind_phys * sqrt(tem1) - 0.8776_kind_phys          ! UTN 2.64, first three terms
+              ph    = log(hl1) + 0.5_kind_phys * tem1 + 1.386_kind_phys                 ! UTN 2.65, first three terms
+              hl110 = hl1 * 10.0_kind_phys * z1i                                 ! 10/L
+              pm10  = log(hl110) + 2.0_kind_phys/sqrt(sqrt(hl110)) - 0.8776_kind_phys   ! psi_m UTN 2.64 with z=10m
+              hl12  = (hl1+hl1) * z1i                                     ! 2/L
+              ph2   = log(hl12) + 0.5_kind_phys / sqrt(hl12) + 1.386_kind_phys          ! psi_h UTN 2.65 with z=2m
+            endif
+
+          endif          ! end of if (dtv >= 0 ) then loop
+!
+!  finish the exchange coefficient computation to provide fm and fh
+!
+          fm        = fm - pm                                             ! phi_m
+          fh        = fh - ph                                             ! phi_h
+          fm10      = fm10 - pm10                                         ! phi_m at 10m
+          fh2       = fh2 - ph2                                           ! phi_h at 2m
+          cm        = ca * ca / (fm * fm)                                 ! momentum exchange coef = k^2/phi_m^2
+          ch        = ca * ca / (fm * fh)                                 ! heat exchange coef = k^2/phi_m/phi_h
+          tem1      = 0.00001_kind_phys/z1                                       ! minimum exhange coef (?)
+          cm        = max(cm, tem1)
+          ch        = max(ch, tem1)
+          stress    = cm * wind * wind                                    ! surface stress = Cm*U*U
+          ustar     = sqrt(stress)                                        ! friction velocity
+
+      return
+!.................................
+      end subroutine gfs_stability
+!---------------------------------
 
 !== begin thermalz0
 !==================================================================================
 
 !>\ingroup NoahMP_LSM
 ! compute thermal roughness length based on option opt_trs.
-  subroutine thermalz0(parameters,fveg,z0m,z0mg,zlvl,zpd,ezpd,ustarx,          & !in
-                       vegtyp,vaie,ur,csigmaf0,csigmaf1,aone,cdmnv,cdmng,icom, & !in 
-                       z0mt,z0ht)                                                !out
+
+  subroutine thermalz0(parameters,    fveg,          z0m, z0mg,       zlvl,        zpd, ezpd, & !in
+                           ustarx,  vegtyp,         vaie,   ur, c_sigma_f0, c_sigma_f1,   a1, & !in
+                           cdmn_v,  cdmn_g, surface_flag,                                     & !in 
+                          z0m_out, z0h_out )                                                    !out
+
 ! compute thermal roughness length based on option opt_trs.
 ! -------------------------------------------------------------------------------------------------
     implicit none
 ! -------------------------------------------------------------------------------------------------
 ! inputs
 
-  type (noahmp_parameters), intent(in) :: parameters  !<
-    integer , intent(in   ) :: vegtyp                 !< vegetation type
-    integer , intent(in   ) :: icom                   !< 0=bared 1=vege 2=composition
-    real (kind=kind_phys), intent(in   ) :: fveg      !< green vegetation fraction [0.0-1.0]
-    real (kind=kind_phys), intent(in   ) :: z0m       !< z0 momentum (m)
-    real (kind=kind_phys), intent(in   ) :: z0mg      !< z0 momentum, ground (m)
-    real (kind=kind_phys), intent(in   ) :: zlvl      !< reference height  [m]
-    real (kind=kind_phys), intent(in   ) :: zpd       !< zero plane displacement (m)
-    real (kind=kind_phys), intent(in   ) :: ezpd      !< zero plane displacement (m)
-    real (kind=kind_phys), intent(in   ) :: ustarx    !< friction velocity (m/s)
-    real (kind=kind_phys), intent(in   ) :: vaie      !< reference height  [m]
-    real (kind=kind_phys), intent(in   ) :: ur        !< wind speed [m/s]
-    real (kind=kind_phys), intent(inout) :: csigmaf0  !< 
-    real (kind=kind_phys), intent(inout) :: csigmaf1  !< 
-    real (kind=kind_phys), intent(in   ) :: aone      !< 
-    real (kind=kind_phys), intent(in   ) :: cdmnv     !< 
-    real (kind=kind_phys), intent(in   ) :: cdmng     !< 
-    real (kind=kind_phys), intent(out  ) :: z0mt      !< composited z0 momentum (m) 
-    real (kind=kind_phys), intent(out  ) :: z0ht      !< composited z0 momentum (m) 
+  type (noahmp_parameters),intent(in   ) :: parameters   ! parameters data structure
+    integer              , intent(in   ) :: vegtyp       ! vegetation type
+    integer              , intent(in   ) :: surface_flag ! 0=bare 1=vegetation 2=composite
+    real (kind=kind_phys), intent(in   ) :: fveg         ! vegetation fraction [0.0-1.0]
+    real (kind=kind_phys), intent(in   ) :: z0m          ! z0 momentum [m]
+    real (kind=kind_phys), intent(in   ) :: z0mg         ! z0 momentum, ground [m]
+    real (kind=kind_phys), intent(in   ) :: zlvl         ! reference height  [m]
+    real (kind=kind_phys), intent(in   ) :: zpd          ! zero plane displacement [m]
+    real (kind=kind_phys), intent(in   ) :: ezpd         ! grid zero plane displacement [m]
+    real (kind=kind_phys), intent(in   ) :: ustarx       ! friction velocity [m/s]
+    real (kind=kind_phys), intent(in   ) :: vaie         ! exposed LAI + SAI  [m2/m2]
+    real (kind=kind_phys), intent(in   ) :: ur           ! wind speed [m/s]
+    real (kind=kind_phys), intent(in   ) :: a1           ! Blumel 99 eqn 43
+    real (kind=kind_phys), intent(in   ) :: cdmn_v       ! neutral momentum drag coefficient for vegetation
+    real (kind=kind_phys), intent(in   ) :: cdmn_g       ! neutral momentum drag coefficient for bare ground
+    real (kind=kind_phys), intent(inout) :: c_sigma_f0   ! C factor for no vegetation Blumel99 eqn 35
+    real (kind=kind_phys), intent(inout) :: c_sigma_f1   ! C factor for full vegetation Blumel99 eqn 39
+    real (kind=kind_phys), intent(out  ) :: z0m_out      ! output z0 momentum [m]
+    real (kind=kind_phys), intent(out  ) :: z0h_out      ! output z0 heat [m]
 
 ! local
-    real (kind=kind_phys)                :: czil1     ! canopy based czil
-    real (kind=kind_phys)                :: coeffa
-    real (kind=kind_phys)                :: coeffb
-    real (kind=kind_phys)                :: csigmafveg
-    real (kind=kind_phys)                :: gsigma
-    real (kind=kind_phys)                :: sigmaa
-    real (kind=kind_phys)                :: cdmn
-    real (kind=kind_phys)                :: kbsigmafveg
-    real (kind=kind_phys)                :: reyn
-    real (kind=kind_phys)                :: kbsigmaf0
-    real (kind=kind_phys)                :: kbsigmaf1
+    real (kind=kind_phys)                :: czil         ! Zilitinkevich factor
+    real (kind=kind_phys)                :: coeff_a      ! slope of Blumel99 eqn 40               Blumel99 eqn 41
+    real (kind=kind_phys)                :: coeff_b      ! intercept of Blumel99 eqn 40           Blumel99 eqn 42
+    real (kind=kind_phys)                :: c_sigma_fveg ! estimated C factor                     Blumel99 eqn 40
+    real (kind=kind_phys)                :: g_sigma      ! weighting function                     Blumel99 eqn 22
+    real (kind=kind_phys)                :: sigma_a      ! momentum partition factor              Blumel99 eqn 8
+    real (kind=kind_phys)                :: cdmn         ! grid neutral momentum drag coefficient Blumel99 eqn 21
+    real (kind=kind_phys)                :: reyn         ! roughness Reynolds number              Blumel99 eqn 36c
+    real (kind=kind_phys)                :: kb_sigma_f0  ! bare ground  kb^-1                     Blumel99 eqn 36ab
+    real (kind=kind_phys)                :: kb_sigma_f1  ! vegetated kb^-1                        Blumel99 eqn 38
+    real (kind=kind_phys)                :: kb_sigma_fveg! grid estimated kb^-1                   Blumel99 eqn 34
+    
+    integer, parameter :: bare_flag = 0, vegetated_flag = 1, composite_flag = 2
+    integer, parameter :: z0heqz0m  = 1, &
+                          chen09    = 2, &
+                          tessel    = 3, &
+                          blumel99  = 4
+    real (kind=kind_phys), parameter :: blumel_gamma = 0.5, &
+                                        blumel_zeta  = 1.0, &
+                                        viscosity    = 1.5e-5
 
 ! -------------------------------------------------------------------------------------------------
-    czil1     = 0.5
-    coeffa    = 0.0
-    coeffb    = 0.0
-    csigmafveg= 0.0
-    gsigma    = 0.0
-    cdmn      = 0.0
-    reyn      = 0.0
-    sigmaa    = 0.0
-    kbsigmafveg = 0.0
-    kbsigmaf0 = 0.0
-    kbsigmaf1 = 0.0
-    if( icom == 2 )then
-     if (opt_trs == 1) then
-        z0mt  = fveg * z0m      + (1.0 - fveg) * z0mg
-        z0ht = z0mt
-     elseif (opt_trs == 2) then
-        z0mt  = fveg * z0m      + (1.0 - fveg) * z0mg
-        czil1=10.0 ** (- 0.4 * parameters%hvt)
-        z0ht = fveg * z0m*exp(-czil1*0.4*258.2*sqrt(ustarx*z0m))  &
-            +(1.0 - fveg) * z0mg*exp(-czil1*0.4*258.2*sqrt(ustarx*z0mg))
-     elseif (opt_trs == 3) then
-        z0mt  = fveg * z0m      + (1.0 - fveg) * z0mg
-        if (vegtyp.le.5) then
-          z0ht = fveg * z0m    + (1.0 - fveg) * z0mg*0.1
-        else
-         z0ht = fveg * z0m*0.01 + (1.0 - fveg) * z0mg*0.1
-        endif
-     elseif (opt_trs == 4) then
-        coeffa     = (csigmaf0 - csigmaf1)/(1.0 - exp(-1.0*aone))
-        coeffb     = csigmaf0 - coeffa
-        csigmafveg = coeffa * exp(-1.0*aone*fveg) + coeffb
+    czil          = 0.5
+    coeff_a       = 0.0
+    coeff_b       = 0.0
+    c_sigma_fveg  = 0.0
+    g_sigma       = 0.0
+    cdmn          = 0.0
+    reyn          = 0.0
+    sigma_a       = 0.0
+    kb_sigma_fveg = 0.0
+    kb_sigma_f0   = 0.0
+    kb_sigma_f1   = 0.0
 
-        gsigma = fveg**0.5 + fveg*(1.0-fveg)*1.0
-!
-! 0.5 ~ 1.0 for the 0.5 place; 0 ~ 1.0 for the 1.0 place, adjustable empirical
+    surface_flag_select : select case(surface_flag)
+  
+    case (composite_flag) ! calculate grid based z0m and z0h
+
+      if (opt_trs == z0heqz0m) then
+
+        z0m_out = exp(fveg * log(z0m)      + (1.0 - fveg) * log(z0mg))
+        z0h_out = z0m_out
+
+      elseif (opt_trs == chen09) then
+
+        z0m_out = exp(fveg * log(z0m)      + (1.0 - fveg) * log(z0mg))
+        czil    = 10.0 ** (- 0.4 * parameters%hvt)
+
+        reyn = ustarx*z0m_out/viscosity                      ! Blumel99 eqn 36c
+        if (reyn > 2.0) then
+          kb_sigma_f0 = 2.46*reyn**0.25 - log(7.4)           ! Blumel99 eqn 36a
+        else
+          kb_sigma_f0 = - log(0.397)                         ! Blumel99 eqn 36b
+        endif
+
+        z0h_out = exp( fveg        * log(z0m * exp(-czil*0.4*258.2*sqrt(ustarx*z0m))) + &
+                      (1.0 - fveg) * log(max(z0m/exp(kb_sigma_f0),1.0e-6)) )
+
+      elseif (opt_trs == tessel) then
+
+        z0m_out  = exp(fveg * log(z0m)      + (1.0 - fveg) * log(z0mg))
+        if (vegtyp <= 5) then
+          z0h_out = fveg * log(z0m)        + (1.0 - fveg) * log(z0mg * 0.1)
+        else
+          z0h_out = fveg * log(z0m * 0.01) + (1.0 - fveg) * log(z0mg * 0.1)
+        endif
+
+      elseif (opt_trs == blumel99) then
+
+        coeff_a      = (c_sigma_f0 - c_sigma_f1)/(1.0 - exp(-1.0*a1))  ! Blumel99 eqn 41
+        coeff_b      = c_sigma_f0 - coeff_a                            ! Blumel99 eqn 42
+        c_sigma_fveg = coeff_a * exp(-1.0*a1*fveg) + coeff_b           ! Blumel99 eqn 40
+
+! blumel_gamma = 0.5 ~ 1.0 and blumel_zeta = 0 ~ 1.0, adjustable empirical
 ! canopy roughness geometry parameter; currently fveg = 0.78 has the largest
 ! momentum flux; can test the fveg-based average by setting 0.5 to 1.0 and 1.0
-! to 0.0 ! see Blumel; JAM,1998
-!
+! to 0.0 ! see Blumel; JAM,1999
 
-        cdmn   = gsigma*cdmnv + (1.0-gsigma)*cdmng
-        z0mt = (zlvl - ezpd)*exp(-0.4/sqrt(cdmn))
+        g_sigma       = fveg**blumel_gamma + fveg*(1.0-fveg)*blumel_zeta   ! Blumel99 eqn 22
+        cdmn          = g_sigma*cdmn_v + (1.0-g_sigma)*cdmn_g              ! Blumel99 eqn 21
+        z0m_out       = (zlvl - ezpd)*exp(-0.4/sqrt(cdmn))                 ! Blumel99 eqn 24
+        kb_sigma_fveg = c_sigma_fveg/log((zlvl-ezpd)/z0m_out) - &
+                        log((zlvl-ezpd)/z0m_out)                              ! Blumel99 eqn 34
+        z0h_out       = z0m_out/exp(kb_sigma_fveg)
 
-        kbsigmafveg = csigmafveg/log((zlvl-ezpd)/z0mt) - log((zlvl-ezpd)/z0mt)
-        z0ht = z0mt/exp(kbsigmafveg)
-     endif
-
-    elseif( icom == 0 )then
-
-        z0mt = z0mg
-     if (opt_trs == 1) then
-        z0ht = z0mt
-     elseif (opt_trs == 2) then
-        czil1=10.0 ** (- 0.4 * parameters%hvt)
-        z0ht =z0mt*exp(-czil1*0.4*258.2*sqrt(ustarx*z0mt))
-     elseif (opt_trs == 3) then
-      if (vegtyp.le.5) then
-        z0ht = z0mt
-      else
-        z0ht = z0mt*0.01
-      endif
-     elseif (opt_trs == 4) then
-      reyn = ustarx*z0mt/(1.5e-05)
-      if (reyn .gt. 2.0) then
-        kbsigmaf0 = 2.46*reyn**0.25 - log(7.4)
-      else
-        kbsigmaf0 = - log(0.397)
       endif
 
-      z0ht = max(z0mt/exp(kbsigmaf0),1.0e-6)
-      csigmaf0 = log((zlvl-zpd)/z0mt)*(log((zlvl-zpd)/z0mt) + kbsigmaf0)
-     endif
+    case (bare_flag) ! calculate z0m and z0h over bare tile
 
-    elseif( icom == 1 )then
+      z0m_out = z0mg
+     
+      if (opt_trs == z0heqz0m) then
 
-        z0mt = z0m
-       if (opt_trs == 1) then
-         z0ht    = z0mt
-       elseif (opt_trs == 2) then
-         czil1= 10.0 ** (- 0.4 * parameters%hvt)
-         z0ht = z0mt*exp(-czil1*0.4*258.2*sqrt(ustarx*z0mt))
-       elseif (opt_trs == 3) then
-         if (vegtyp.le.5) then
-           z0ht = z0mt
-         else
-           z0ht = z0mt*0.01
-         endif
-        elseif (opt_trs == 4) then
-          sigmaa    = 1.0 - (0.5/(0.5+vaie))*exp(-vaie**2/8.0)
-          kbsigmaf1 = 16.4*(sigmaa*vaie**3)**(-0.25)*sqrt(parameters%dleaf*ur/log((zlvl-zpd)/z0mt))
-          z0ht       = z0mt/exp(kbsigmaf1)
-          csigmaf1  = log((zlvl-zpd)/z0mt)*(log((zlvl-zpd)/z0mt)+kbsigmaf1) ! for output for interpolation
+        z0h_out = z0m_out
+
+      elseif (opt_trs == tessel) then
+
+        if (vegtyp <= 5) then
+          z0h_out = z0m_out
+        else
+          z0h_out = z0m_out * 0.01
         endif
-     endif
+
+      elseif (opt_trs == blumel99 .or. opt_trs == chen09) then
+
+        reyn = ustarx*z0m_out/viscosity                      ! Blumel99 eqn 36c
+        if (reyn > 2.0) then
+          kb_sigma_f0 = 2.46*reyn**0.25 - log(7.4)           ! Blumel99 eqn 36a
+        else
+          kb_sigma_f0 = - log(0.397)                         ! Blumel99 eqn 36b
+        endif
+
+        z0h_out       = max(z0m_out/exp(kb_sigma_f0),1.0e-6)
+        c_sigma_f0 = log((zlvl-zpd)/z0m_out) *  &
+                     (log((zlvl-zpd)/z0m_out) + kb_sigma_f0) ! Blumel99 eqn 35
+
+      endif
+
+    case (vegetated_flag) ! calculate z0m and z0h over vegetated tile
+
+      z0m_out = z0m
+
+      if (opt_trs == z0heqz0m) then
+
+        z0h_out    = z0m_out
+
+      elseif (opt_trs == chen09) then
+
+        czil = 10.0 ** (- 0.4 * parameters%hvt)
+        z0h_out = z0m_out * exp(-czil*0.4*258.2*sqrt(ustarx*z0m_out))
+
+      elseif (opt_trs == tessel) then
+
+        if (vegtyp <= 5) then
+          z0h_out = z0m_out
+        else
+          z0h_out = z0m_out*0.01
+        endif
+
+      elseif (opt_trs == blumel99) then
+
+        sigma_a     = 1.0 - (0.5/(0.5+vaie)) * exp(-vaie**2/8.0)                    ! Blumel99 eqn 8
+        kb_sigma_f1 = 16.4 * (sigma_a*vaie**3)**(-0.25) * &                         ! Blumel99 eqn 38
+                       sqrt(parameters%dleaf*ur/log((zlvl-zpd)/z0m_out))
+        z0h_out        = z0m_out/exp(kb_sigma_f1)
+        c_sigma_f1  = log((zlvl-zpd)/z0m_out)*(log((zlvl-zpd)/z0m_out)+kb_sigma_f1) ! Blumel99 eqn 39
+
+      endif
+
+    end select surface_flag_select
 
   end subroutine thermalz0
 
@@ -5737,7 +6129,7 @@ endif   ! croptype == 0
 !! air temperature, atmospheric water vapor pressure deficit at the lowest
 !! model level, and soil moisture (preferably unfrozen soil moisture rather
 !! than total).
-  subroutine canres (parameters,par   ,sfctmp,rcsoil ,eah   ,sfcprs , & !in
+  subroutine canres (parameters,ep_2,epsm1,par   ,sfctmp,rcsoil ,eah   ,sfcprs , & !in
                      rc    ,psn   ,iloc   ,jloc  )           !out
 
 ! --------------------------------------------------------------------------------------------------
@@ -5759,6 +6151,8 @@ endif   ! croptype == 0
   type (noahmp_parameters), intent(in) :: parameters      !<
     integer,                  intent(in)  :: iloc         !< grid index
     integer,                  intent(in)  :: jloc         !< grid index
+    real (kind=kind_phys),                     intent(in)  :: ep_2   !<
+    real (kind=kind_phys),                     intent(in)  :: epsm1  !<
     real (kind=kind_phys),                     intent(in)  :: par    !< par absorbed per unit sunlit lai (w/m2)
     real (kind=kind_phys),                     intent(in)  :: sfctmp !< canopy air temperature
     real (kind=kind_phys),                     intent(in)  :: sfcprs !< surface pressure (pa)
@@ -5791,8 +6185,8 @@ endif   ! croptype == 0
 
 !  compute q2 and q2sat
 
-    q2 = 0.622 *  eah  / (sfcprs - 0.378 * eah) !specific humidity [kg/kg]
-    q2 = q2 / (1.0 + q2)                        !mixing ratio [kg/kg]
+    q2 = ep_2 *  eah  / (sfcprs + epsm1 * eah) !specific humidity [kg/kg]
+    q2 = q2 / (1.0 - q2)                        !mixing ratio [kg/kg]
 
     call calhum(parameters,sfctmp, sfcprs, q2sat, dqsdt2)
 
@@ -8248,7 +8642,7 @@ endif   ! croptype == 0
 
        call wdfcnd2 (parameters,wdf,wcnd,sh2o(1),sicemax,1)
        infmax = max (infmax,wcnd)
-       infmax = min (infmax,px)
+       infmax = min (infmax,px/dt)
 
        runsrf= max(0., qinsur - infmax)
        pddum = qinsur - runsrf
@@ -8715,7 +9109,8 @@ endif   ! croptype == 0
       fff   = parameters%bexp(iwt) / 3.0 ! calibratable, c.he changed based on gy niu's update
       rsbmx = hk(iwt) * 1.0e3 * exp(3.0) ! mm/s, calibratable, c.he changed based on gy niu's update
 
-      qdis = (1.0-fcrmax)*rsbmx*exp(-parameters%timean)*exp(-fff*(zwt-2.0))
+!      qdis = (1.0-fcrmax)*rsbmx*exp(-parameters%timean)*exp(-fff*(zwt-2.0))
+      qdis = (1.0-fcrmax)*rsbmx*exp(-parameters%timean)*exp(-fff*zwt) ! c.he changed based on gy niu's update
 
 ! matric potential at the layer above the water table
 
@@ -8726,7 +9121,9 @@ endif   ! croptype == 0
 
 ! recharge rate qin to groundwater
 
-      ka  = hk(iwt)
+!      ka  = hk(iwt)
+! harmonic average, c.he changed based on gy niu's update
+      ka  = 2.0*(hk(iwt)*parameters%dksat(iwt)*1.0e3) / (hk(iwt)+parameters%dksat(iwt)*1.0e3)
 
       wh_zwt  = - zwt * 1.e3                          !(mm)
       wh      = smpfz  - znode(iwt)*1.e3              !(mm)
@@ -10023,9 +10420,10 @@ end subroutine psn_crop
 
 !>\ingroup NoahMP_LSM
 !!
-  subroutine noahmp_options(idveg     ,iopt_crs  ,iopt_btr  ,iopt_run  ,iopt_sfc  ,iopt_frz , & 
-                             iopt_inf  ,iopt_rad  ,iopt_alb  ,iopt_snf  ,iopt_tbot, iopt_stc, &
-			     iopt_rsf , iopt_soil, iopt_pedo, iopt_crop ,iopt_trs )
+  subroutine noahmp_options(idveg    , iopt_crs , iopt_btr , iopt_run , iopt_sfc , iopt_frz , & 
+                             iopt_inf, iopt_rad , iopt_alb , iopt_snf , iopt_tbot, iopt_stc , &
+			     iopt_rsf, iopt_soil, iopt_pedo, iopt_crop, iopt_trs , iopt_diag, &
+                             iopt_z0m )
 
   implicit none
 
@@ -10048,6 +10446,8 @@ end subroutine psn_crop
   integer,  intent(in) :: iopt_pedo !< pedo-transfer function (1->saxton and rawls)
   integer,  intent(in) :: iopt_crop !< crop model option (0->none; 1->liu et al.)
   integer,  intent(in) :: iopt_trs  !< thermal roughness scheme option (1->z0h=z0; 2->rb reversed)
+  integer,  intent(in) :: iopt_diag !< surface 2m t/q diagnostic approach 
+  integer,  intent(in) :: iopt_z0m  !< momentum roughness length option
 
 ! -------------------------------------------------------------------------------------------------
 
@@ -10069,6 +10469,8 @@ end subroutine psn_crop
   opt_pedo = iopt_pedo
   opt_crop = iopt_crop
   opt_trs  = iopt_trs
+  opt_diag = iopt_diag
+  opt_z0m  = iopt_z0m
   
   end subroutine noahmp_options
 

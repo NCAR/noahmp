@@ -89,7 +89,8 @@
       integer, dimension(:), intent(in) :: vegtype
 
       logical, intent(in) :: redrag ! reduced drag coeff. flag for high wind over sea (j.han)
-      logical, dimension(:), intent(in) :: flag_iter, wet, dry, icy
+      logical, dimension(:), intent(in) :: flag_iter, dry, icy
+      logical, dimension(:), intent(inout) :: wet
 
       logical, intent(in) :: thsfc_loc ! Flag for reference pressure in theta calculation
 
@@ -164,7 +165,6 @@
 !  ps is in pascals, wind is wind speed,
 !  surface roughness length is converted to m from cm
 !
-
 !       write(0,*)'in sfc_diff, sfc_z0_type=',sfc_z0_type
 
       do i=1,im
