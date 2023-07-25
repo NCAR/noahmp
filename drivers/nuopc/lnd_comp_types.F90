@@ -73,6 +73,7 @@ module lnd_comp_types
     integer                     :: iopt_rsf       ! option for surface resistent to evaporation/sublimation
     integer                     :: iopt_gla       ! option for glacier treatment
     integer                     :: iopt_trs       ! option for surface thermal roughness option
+    integer                     :: iopt_diag      ! option for surface diagnose approach
     logical                     :: do_mynnedmf    ! option for MYNN-EDMF
     logical                     :: do_mynnsfclay  ! option for MYNN surface layer scheme
     character(len=128)          :: errmsg         ! error message
@@ -90,6 +91,7 @@ module lnd_comp_types
      real(kind=r8), allocatable :: u1         (:)   ! u-component of wind (m/s)
      real(kind=r8), allocatable :: v1         (:)   ! v-component of wind (m/s)
      integer      , allocatable :: soiltyp    (:)   ! soil type (integer index)
+     integer      , allocatable :: soilcol    (:)   ! soil color (integer index)
      integer      , allocatable :: vegtype    (:)   ! vegetation type (integer index)
      real(kind=r8), allocatable :: sigmaf     (:)   ! areal fractional cover of green vegetation
      real(kind=r8), allocatable :: emiss      (:)   ! sfc lw emissivity (fraction)
@@ -266,6 +268,7 @@ module lnd_comp_types
      integer                    :: surface_evap_resistance_option
      integer                    :: glacier_option
      integer                    :: surface_thermal_roughness_option
+     integer                    :: surface_diagnose_approach_option
      character*100              :: output_mode                       ! mods of output: all, low or mid 
      integer                    :: output_freq                       ! model output interval
      integer                    :: restart_freq                      ! model restart interval
@@ -380,6 +383,7 @@ contains
     allocate(this%model%u1         (begl:endl))
     allocate(this%model%v1         (begl:endl))
     allocate(this%model%soiltyp    (begl:endl))
+    allocate(this%model%soilcol    (begl:endl))
     allocate(this%model%vegtype    (begl:endl))
     allocate(this%model%sigmaf     (begl:endl))
     allocate(this%model%emiss      (begl:endl))
@@ -546,6 +550,7 @@ contains
     this%model%u1          = 0.0_r8
     this%model%v1          = 0.0_r8
     this%model%soiltyp     = 0
+    this%model%soilcol     = 0
     this%model%vegtype     = 0
     this%model%sigmaf      = 0.0_r8
     this%model%emiss       = 0.0_r8

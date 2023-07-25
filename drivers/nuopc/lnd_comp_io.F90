@@ -586,6 +586,19 @@ contains
     deallocate(flds)
 
     !----------------------
+    ! Soil color
+    !----------------------
+
+    allocate(flds(1))
+    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.soil_color.tile#.nc'
+    flds(1)%short_name = 'soil_color'
+    flds(1)%ptr1r4 => tmpr4
+    call read_tiled_file(noahmp, filename, flds, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    noahmp%model%soilcol = int(tmpr4)
+    deallocate(flds)
+
+    !----------------------
     ! Set land-sea mask (dry)
     !----------------------
 
@@ -1883,6 +1896,7 @@ contains
           call fld_add("snowxy"    , "actual no. of snow layers"                                         , "1"      , histflds, ptr1r8=noahmp%model%snowxy)
           call fld_add("snwdph"    , "snow depth (water equiv) over land"                                , "m"      , histflds, ptr1r8=noahmp%model%snwdph)
           call fld_add("soiltyp"   , "soil type"                                                         , "1"      , histflds, ptr1i4=noahmp%model%soiltyp)
+          call fld_add("soilcol"   , "soil color"                                                        , "1"      , histflds, ptr1i4=noahmp%model%soilcol)
           call fld_add("srflag"    , "snow/rain flag for precipitation"                                  , "1"      , histflds, ptr1r8=noahmp%model%srflag)
           call fld_add("stblcpxy"  , "stable carbon in deep soil"                                        , "g/m2"   , histflds, ptr1r8=noahmp%model%stblcpxy)
           call fld_add("stc"       , "soil temperature"                                                  , "K"      , histflds, ptr2r8=noahmp%model%stc, zaxis="z")
