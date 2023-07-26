@@ -114,7 +114,7 @@ contains
     noahmp%energy%param%Co2MmConstQ10                             = LISparam%AKC
     noahmp%energy%param%O2MmConstQ10                              = LISparam%AKO
     noahmp%energy%param%RadiationStressFac                        = LISparam%RGL
-    noahmp%energy%param%ResistanceStomataMin                      = LISparam%RS
+    noahmp%energy%param%ResistanceStomataMin                      = LISparam%RSMIN
     noahmp%energy%param%ResistanceStomataMax                      = LISparam%RSMAX
     noahmp%energy%param%AirTempOptimTransp                        = LISparam%TOPT
     noahmp%energy%param%VaporPresDeficitFac                       = LISparam%HS

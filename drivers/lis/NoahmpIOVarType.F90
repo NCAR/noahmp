@@ -640,6 +640,7 @@ module NoahmpIOVarType
     ! vegetation parameters
     character(len=256)                                     :: VEG_DATASET_DESCRIPTION_TABLE
     integer                                                :: NVEG_TABLE                ! number of vegetation types
+    integer                                                :: ISURBAN                   ! urban flag
     integer                                                :: ISURBAN_TABLE             ! urban flag
     integer                                                :: ISWATER_TABLE             ! water flag
     integer                                                :: ISBARREN_TABLE            ! barren ground flag

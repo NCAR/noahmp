@@ -81,12 +81,12 @@ contains
     if ( (OptCropModel > 0) .and. (CropType > 0) ) then
        noahmp%biochem%param%DatePlanting            = LISparam%PLTDAY
        noahmp%biochem%param%DateHarvest             = LISparam%HSDAY
-       noahmp%biochem%param%NitrogenConcFoliageMax  = LISparam%FOLNMXI
-       noahmp%biochem%param%QuantumEfficiency25C    = LISparam%QE25I
-       noahmp%biochem%param%CarboxylRateMax25C      = LISparam%VCMX25I
-       noahmp%biochem%param%CarboxylRateMaxQ10      = LISparam%AVCMXI
-       noahmp%biochem%param%PhotosynPathC3          = LISparam%C3PSNI
-       noahmp%biochem%param%SlopeConductToPhotosyn  = LISparam%MPI
+       noahmp%biochem%param%NitrogenConcFoliageMax  = LISparam%FOLNMX
+       noahmp%biochem%param%QuantumEfficiency25C    = LISparam%QE25
+       noahmp%biochem%param%CarboxylRateMax25C      = LISparam%VCMX25
+       noahmp%biochem%param%CarboxylRateMaxQ10      = LISparam%AVCMX
+       noahmp%biochem%param%PhotosynPathC3          = LISparam%C3PSN
+       noahmp%biochem%param%SlopeConductToPhotosyn  = LISparam%MP
        noahmp%biochem%param%RespMaintQ10            = LISparam%Q10MR
        noahmp%biochem%param%RespMaintLeaf25C        = LISparam%LFMR25
        noahmp%biochem%param%RespMaintStem25C        = LISparam%STMR25

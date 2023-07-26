@@ -9,7 +9,7 @@ module NoahmpGroundwaterInitMod
   
 contains
 
-  subroutine NoahmpGroundwaterInitMain(grid, NoahmpIO)
+  subroutine NoahmpGroundwaterInitMain(NoahmpIO)
 
 ! ------------------------ Code history -------------------------------------
 ! Original Noah-MP subroutine: GROUNDWATER_INIT
@@ -18,7 +18,6 @@ contains
 ! ---------------------------------------------------------------------------
 
   use GroundWaterMmfMod, only : LATERALFLOW
-  use module_domain,     only : domain
   
 #if (EM_CORE == 1)
 #ifdef DM_PARALLEL
@@ -30,7 +29,6 @@ contains
     implicit none 
     
     type(NoahmpIO_type), intent(inout) :: NoahmpIO
-    type(domain), target               :: grid  
     
     ! local variables
     logical                                             :: urbanpt_flag ! added to identify urban pixels

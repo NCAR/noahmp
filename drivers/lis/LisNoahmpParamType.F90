@@ -202,7 +202,7 @@ module LisNoahmpParamType
     real(kind=kind_noahmp)      :: LFCT(NSTAGE)        ! fraction of carbohydrate translocation from leaf to grain 
     real(kind=kind_noahmp)      :: STCT(NSTAGE)        ! fraction of carbohydrate translocation from stem to grain
     real(kind=kind_noahmp)      :: RTCT(NSTAGE)        ! fraction of carbohydrate translocation from root to grain
-    real(kind=kind_noahmp)      :: BIO2LAI(NSTAGE)     ! leaf area per living leaf biomass [m2/kg]
+    real(kind=kind_noahmp)      :: BIO2LAI             ! leaf area per living leaf biomass [m2/kg]
 
     ! soil parameters
     real(kind=kind_noahmp)      :: BEXP(NSOIL)         ! soil B parameter
@@ -229,6 +229,7 @@ module LisNoahmpParamType
     real(kind=kind_noahmp)      :: REFKDT              ! Parameter in the surface runoff parameterization
     real(kind=kind_noahmp)      :: KDT                 ! used in compute maximum infiltration rate (in INFIL)
     real(kind=kind_noahmp)      :: FRZX                ! used in compute maximum infiltration rate (in INFIL)
+    real(kind=kind_noahmp)      :: FRZK                ! Frozen ground parameter
     real(kind=kind_noahmp)      :: ZBOT                ! Depth [m] of lower boundary soil temperature
     real(kind=kind_noahmp)      :: CZIL                ! Parameter used in the calculation of the roughness length for heat
     real(kind=kind_noahmp)      :: mxsnalb             ! LIS specific: max snow albedo

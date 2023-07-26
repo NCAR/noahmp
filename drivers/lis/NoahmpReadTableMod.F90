@@ -673,6 +673,7 @@ contains
 
     ! assign values
     NoahmpIO%ISURBAN_TABLE         = ISURBAN
+    NoahmpIO%ISURBAN               = ISURBAN
     NoahmpIO%ISWATER_TABLE         = ISWATER
     NoahmpIO%ISBARREN_TABLE        = ISBARREN
     NoahmpIO%ISICE_TABLE           = ISICE

@@ -21,10 +21,6 @@ module NoahmpDriverMainMod
   use BiochemVarOutTransferMod
   use NoahmpMainMod
   use NoahmpMainGlacierMod
-  use module_ra_gfdleta,  only: cal_mon_day
-#if ( WRF_CHEM == 1 )
-  USE module_data_gocart_dust
-#endif
 
   implicit none
   
@@ -209,5 +205,43 @@ contains
     enddo  JLOOP    ! J loop
               
   end subroutine NoahmpDriverMain
-  
+
+
+! TODO: utility for urban irrigation; need to separate urban-related process out in future
+  subroutine CAL_MON_DAY(JULDAY,julyr,Jmonth,Jday)     
+
+    implicit none
+
+    integer, intent(in)  :: JULDAY,julyr
+    integer, intent(out) :: Jmonth,Jday
+    ! local
+    logical              :: LEAP,NOT_FIND_DATE
+    integer              :: MONTH (12),itmpday,itmpmon,i
+    DATA MONTH/31,28,31,30,31,30,31,31,30,31,30,31/
+! ------------------------------------------------------------------------- 
+
+    NOT_FIND_DATE = .true.
+    itmpday       = JULDAY
+    itmpmon       = 1
+    LEAP          = .false.
+
+    if ( mod(julyr, 4) == 0) then
+      MONTH(2) = 29
+      LEAP     = .true.
+    endif
+
+    i = 1
+    do while(NOT_FIND_DATE)
+       if ( itmpday > MONTH(i) ) then
+         itmpday = itmpday - MONTH(i)
+       else
+         Jday          = itmpday
+         Jmonth        = i
+         NOT_FIND_DATE = .false.
+       endif
+       i = i+1
+    enddo
+
+  end subroutine CAL_MON_DAY
+
 end module NoahmpDriverMainMod  
