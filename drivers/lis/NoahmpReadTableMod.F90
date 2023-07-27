@@ -21,8 +21,8 @@ contains
 
     implicit none
 
-    character(len=256),  intent(in)     :: LANDDATA_name
-    character(len=256),  intent(in)     :: MPTABLE_file 
+    character(len=*),  intent(in)     :: LANDDATA_name
+    character(len=*),  intent(in)     :: MPTABLE_file 
 
     !-------------------------------------------------------
     !=== define key dimensional variables
