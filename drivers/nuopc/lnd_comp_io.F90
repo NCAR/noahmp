@@ -91,7 +91,7 @@ contains
        ! Set file name for initial conditions
        !----------------------
 
-       filename = trim(noahmp%nmlist%input_dir)//'sfc_data.tile#.nc'
+       filename = trim(noahmp%nmlist%input_dir)//'sfc_data.tile*.nc'
        call ESMF_LogWrite(subname//' called for '//trim(filename), ESMF_LOGMSG_INFO)
 
        !----------------------
@@ -177,7 +177,7 @@ contains
        ! Set file name for initial conditions
        !----------------------
 
-       write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.initial.tile#.nc'
+       write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.initial.tile*.nc'
        call ESMF_LogWrite(subname//' called for '//trim(filename), ESMF_LOGMSG_INFO)
 
        !----------------------
@@ -495,7 +495,7 @@ contains
     !----------------------
 
     allocate(flds(1))
-    filename = trim(noahmp%nmlist%input_dir)//'oro_data.tile#.nc'
+    filename = trim(noahmp%nmlist%input_dir)//'oro_data.tile*.nc'
     flds(1)%short_name = 'geolat'
     flds(1)%ptr1r8 => noahmp%model%xlatin
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -510,7 +510,7 @@ contains
     !----------------------
 
     allocate(flds(1))
-    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.soil_type.tile#.nc'
+    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.soil_type.tile*.nc'
     flds(1)%short_name = 'soil_type'
     flds(1)%ptr1r4 => tmpr4
     call read_tiled_file(noahmp, filename, flds, rc=rc)
@@ -523,7 +523,7 @@ contains
     !----------------------
 
     allocate(flds(1))
-    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.vegetation_type.tile#.nc'
+    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.vegetation_type.tile*.nc'
     flds(1)%short_name = 'vegetation_type'
     flds(1)%ptr1r4 => tmpr4
     call read_tiled_file(noahmp, filename, flds, rc=rc)
@@ -536,7 +536,7 @@ contains
     !----------------------
 
     allocate(flds(1))
-    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.slope_type.tile#.nc'
+    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.slope_type.tile*.nc'
     flds(1)%short_name = 'slope_type'
     flds(1)%ptr1r4 => tmpr4
     call read_tiled_file(noahmp, filename, flds, rc=rc)
@@ -549,7 +549,7 @@ contains
     !----------------------
 
     allocate(flds(1))
-    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.substrate_temperature.tile#.nc'
+    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.substrate_temperature.tile*.nc'
     flds(1)%short_name = 'substrate_temperature'
     flds(1)%ptr1r4 => tmpr4
     call read_tiled_file(noahmp, filename, flds, rc=rc)
@@ -562,7 +562,7 @@ contains
     !----------------------
 
     allocate(flds(1))
-    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.maximum_snow_albedo.tile#.nc'
+    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.maximum_snow_albedo.tile*.nc'
     flds(1)%short_name = 'maximum_snow_albedo'
     flds(1)%ptr1r4 => tmpr4
     call read_tiled_file(noahmp, filename, flds, rc=rc)
@@ -575,7 +575,7 @@ contains
     !----------------------
 
     allocate(flds(1))
-    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.vegetation_greenness.tile#.nc'
+    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.vegetation_greenness.tile*.nc'
     flds(1)%short_name = 'vegetation_greenness'
     flds(1)%nrec = 12; flds(1)%ptr2r4 => tmp2r4
     call read_tiled_file(noahmp, filename, flds, rc=rc)
@@ -590,7 +590,7 @@ contains
     !----------------------
 
     allocate(flds(1))
-    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.soil_color.tile#.nc'
+    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.soil_color.tile*.nc'
     flds(1)%short_name = 'soil_color'
     flds(1)%ptr1r4 => tmpr4
     call read_tiled_file(noahmp, filename, flds, rc=rc)
@@ -1498,7 +1498,7 @@ contains
        ! loop over tiles
        do i = 1, noahmp%domain%ntiles
           ! file name for tile
-          sub_str_indx = index(trim(filename), "#", .true.)
+          sub_str_indx = index(trim(filename), "*", .true.)
           write(filename_tile, fmt='(a,i1,a)') trim(filename(:sub_str_indx-1)), i , trim(filename(sub_str_indx+1:))
        
           ! open file

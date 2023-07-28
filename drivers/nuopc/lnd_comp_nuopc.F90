@@ -282,7 +282,7 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        if (isPresent .and. isSet) then
-          noahmp%nmlist%restart_file = trim(cvalue)//'.tile#.nc'
+          noahmp%nmlist%restart_file = trim(cvalue)//'.tile*.nc'
        else
           call ESMF_ClockGet(clock, currTime=currTime, timeStep=timeStep, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -302,7 +302,7 @@ contains
           end if
 
           write(noahmp%nmlist%restart_file, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5,a)') &
-             trim(noahmp%nmlist%case_name)//'.lnd.out.', year, '-', month, '-', day, '-', suffix_sec, '.tile#.nc'
+             trim(noahmp%nmlist%case_name)//'.lnd.out.', year, '-', month, '-', day, '-', suffix_sec, '.tile*.nc'
        end if
 
        call ESMF_LogWrite(trim(subname)//': restart_file = '//trim(noahmp%nmlist%restart_file), ESMF_LOGMSG_INFO)

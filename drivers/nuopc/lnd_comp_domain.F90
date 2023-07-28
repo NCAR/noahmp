@@ -189,7 +189,7 @@ contains
     ! ---------------------
 
     ! read field
-    filename = trim(noahmp%nmlist%input_dir)//'oro_data.tile#.nc'
+    filename = trim(noahmp%nmlist%input_dir)//'oro_data.tile*.nc'
     flds(1)%short_name = 'land_frac'
     flds(1)%ptr1r4 => tmpr4
     call read_tiled_file(noahmp, filename, flds, rc=rc)
@@ -208,7 +208,7 @@ contains
     ! ---------------------
 
     ! read field
-    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C',noahmp%domain%ni, '.vegetation_type.tile#.nc'
+    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C',noahmp%domain%ni, '.vegetation_type.tile*.nc'
     flds(1)%short_name = 'vegetation_type'
     flds(1)%ptr1r4 => tmpr4
     call read_tiled_file(noahmp, filename, flds, rc=rc)
@@ -248,7 +248,7 @@ contains
     ! ---------------------
 
     ! read field
-    filename = trim(noahmp%nmlist%input_dir)//'oro_data.tile#.nc'
+    filename = trim(noahmp%nmlist%input_dir)//'oro_data.tile*.nc'
     flds(1)%short_name = 'orog_raw'
     flds(1)%ptr1r4 => tmpr4
     call read_tiled_file(noahmp, filename, flds, rc=rc)
