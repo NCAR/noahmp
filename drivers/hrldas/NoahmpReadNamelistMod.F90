@@ -120,8 +120,16 @@ contains
     logical                 :: snicar_snowbc_intmix               = .true.
     logical                 :: snicar_snowdust_intmix             = .false.
     logical                 :: snicar_use_oc                      = .false.
+    logical                 :: snicar_aerosol_readtable           = .false.
+    character(len=256)      :: forcing_name_BCPHI  = "BCPHI"
+    character(len=256)      :: forcing_name_BCPHO  = "BCPHO"
+    character(len=256)      :: forcing_name_OCPHI  = "OCPHI"
+    character(len=256)      :: forcing_name_OCPHO  = "OCPHO"
+    character(len=256)      :: forcing_name_DUST1  = "DUST1"
+    character(len=256)      :: forcing_name_DUST2  = "DUST2"
+    character(len=256)      :: forcing_name_DUST3  = "DUST3"
+    character(len=256)      :: forcing_name_DUST4  = "DUST4"
 
- 
     namelist / NOAHLSM_OFFLINE /    &
 #ifdef WRF_HYDRO
          finemesh,finemesh_factor,forc_typ, snow_assim , GEO_STATIC_FLNM, HRLDAS_ini_typ, &
@@ -149,10 +157,12 @@ contains
          spatial_filename, agdata_flnm, tdinput_flnm,                                     &
          external_veg_filename_template, external_lai_filename_template,                  &
          xstart, xend, ystart, yend,                                                      &
-         snicar_bandnumber_option,snicar_solarspec_option,snicar_snowoptics_option,       &
-         snicar_dustoptics_option,snicar_rtsolver_option,snicar_snowshape_option,         &
-         snicar_use_aerosol,snicar_snowbc_intmix,snicar_snowdust_intmix,                  &
-         snicar_use_oc
+         snicar_bandnumber_option, snicar_solarspec_option, snicar_snowoptics_option,     &
+         snicar_dustoptics_option, snicar_rtsolver_option, snicar_snowshape_option,       &
+         snicar_use_aerosol, snicar_snowbc_intmix, snicar_snowdust_intmix,                &
+         snicar_use_oc, snicar_aerosol_readtable, forcing_name_BCPHI, forcing_name_BCPHO, &
+         forcing_name_OCPHI, forcing_name_OCPHO, forcing_name_DUST1, forcing_name_DUST2,  &
+         forcing_name_DUST3, forcing_name_DUST4
 
     !---------------------------------------------------------------
     !  Initialize namelist variables to dummy values, so we can tell
@@ -412,18 +422,26 @@ contains
     NoahmpIO%MAX_SOIL_LEVELS                   = MAX_SOIL_LEVELS
     NoahmpIO%soil_thick_input                  = soil_thick_input 
     ! SNICAR
-    NoahmpIO%SNICAR_BANDNUMBER_OPT_TABLE       = snicar_bandnumber_option
-    NoahmpIO%SNICAR_SOLARSPEC_OPT_TABLE        = snicar_solarspec_option
-    NoahmpIO%SNICAR_SNOWOPTICS_OPT_TABLE       = snicar_snowoptics_option
-    NoahmpIO%SNICAR_DUSTOPTICS_OPT_TABLE       = snicar_dustoptics_option
-    NoahmpIO%SNICAR_RTSOLVER_OPT_TABLE         = snicar_rtsolver_option
-    NoahmpIO%SNICAR_SNOWSHAPE_OPT_TABLE        = snicar_snowshape_option
-    NoahmpIO%SNICAR_USE_AEROSOL_TABLE          = snicar_use_aerosol
-    NoahmpIO%SNICAR_SNOWBC_INTMIX_TABLE        = snicar_snowbc_intmix
-    NoahmpIO%SNICAR_SNOWDUST_INTMIX_TABLE      = snicar_snowdust_intmix
-    NoahmpIO%SNICAR_USE_OC_TABLE               = snicar_use_oc
+    NoahmpIO%SNICAR_BANDNUMBER_OPT             = snicar_bandnumber_option
+    NoahmpIO%SNICAR_SOLARSPEC_OPT              = snicar_solarspec_option
+    NoahmpIO%SNICAR_SNOWOPTICS_OPT             = snicar_snowoptics_option
+    NoahmpIO%SNICAR_DUSTOPTICS_OPT             = snicar_dustoptics_option
+    NoahmpIO%SNICAR_RTSOLVER_OPT               = snicar_rtsolver_option
+    NoahmpIO%SNICAR_SNOWSHAPE_OPT              = snicar_snowshape_option
+    NoahmpIO%SNICAR_USE_AEROSOL                = snicar_use_aerosol
+    NoahmpIO%SNICAR_SNOWBC_INTMIX              = snicar_snowbc_intmix
+    NoahmpIO%SNICAR_SNOWDUST_INTMIX            = snicar_snowdust_intmix
+    NoahmpIO%SNICAR_USE_OC                     = snicar_use_oc
+    NoahmpIO%SNICAR_AEROSOL_READTABLE          = snicar_aerosol_readtable
+    NoahmpIO%forcing_name_BCPHI                = forcing_name_BCPHI
+    NoahmpIO%forcing_name_BCPHO                = forcing_name_BCPHO
+    NoahmpIO%forcing_name_OCPHI                = forcing_name_OCPHI
+    NoahmpIO%forcing_name_OCPHO                = forcing_name_OCPHO
+    NoahmpIO%forcing_name_DUST1                = forcing_name_DUST1
+    NoahmpIO%forcing_name_DUST2                = forcing_name_DUST2
+    NoahmpIO%forcing_name_DUST3                = forcing_name_DUST3
+    NoahmpIO%forcing_name_DUST4                = forcing_name_DUST4
 
- 
 !---------------------------------------------------------------------
 !  NAMELIST check end
 !---------------------------------------------------------------------

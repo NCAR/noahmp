@@ -62,7 +62,6 @@ contains
        endif
        AlbedoGrdDir(IndSwBnd) = AlbedoSoilDir(IndSwBnd)*(1.0-SnowCoverFrac) + AlbedoSnowDir(IndSwBnd)*SnowCoverFrac
        AlbedoGrdDif(IndSwBnd) = AlbedoSoilDif(IndSwBnd)*(1.0-SnowCoverFrac) + AlbedoSnowDif(IndSwBnd)*SnowCoverFrac
-       print *,'snowcover',SnowCoverFrac
     enddo
 
     end associate

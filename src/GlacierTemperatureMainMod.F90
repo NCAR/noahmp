@@ -21,6 +21,7 @@ contains
 ! Original Noah-MP subroutine: TSNOSOI_GLACIER
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! SNICAR: Adding snicar solar fluxes redistribution in snow layer (T.-S. Lin, C. He et al. 2023)
 ! ----------------------------------------------------------------------------------------
 
     implicit none

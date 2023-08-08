@@ -128,10 +128,20 @@ contains
     NoahmpIO%ACC_ETRANIXY(I,1:NumSoilLayer,J)       = noahmp%water%flux%TranspWatLossSoilAcc(1:NumSoilLayer)
     NoahmpIO%SNICEXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%SnowIce(-NumSnowLayerMax+1:0)
     NoahmpIO%SNLIQXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%SnowLiqWater(-NumSnowLayerMax+1:0)
-    NoahmpIO%SNRDSXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%SnowRadius(-NumSnowLayerMax+1:0)
-    NoahmpIO%SNFRXY      (I,-NumSnowLayerMax+1:0,J) = noahmp%water%flux%SnowFreezeRate(-NumSnowLayerMax+1:0)
 
-
+    !SNICAR
+    if (noahmp%config%nmlist%OptSnowAlbedo == 3 )then
+       NoahmpIO%SNRDSXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%SnowRadius(-NumSnowLayerMax+1:0)
+       NoahmpIO%SNFRXY      (I,-NumSnowLayerMax+1:0,J) = noahmp%water%flux%SnowFreezeRate(-NumSnowLayerMax+1:0)
+       NoahmpIO%BCPHIXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassBChydrophi(-NumSnowLayerMax+1:0)
+       NoahmpIO%BCPHOXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassBChydropho(-NumSnowLayerMax+1:0)
+       NoahmpIO%OCPHIXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassOChydrophi(-NumSnowLayerMax+1:0)
+       NoahmpIO%OCPHOXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassOChydropho(-NumSnowLayerMax+1:0)
+       NoahmpIO%DUST1XY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassDust1(-NumSnowLayerMax+1:0)
+       NoahmpIO%DUST2XY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassDust2(-NumSnowLayerMax+1:0)
+       NoahmpIO%DUST3XY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassDust3(-NumSnowLayerMax+1:0)
+       NoahmpIO%DUST4XY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassDust4(-NumSnowLayerMax+1:0)
+    endif
 
     ! irrigation
     NoahmpIO%IRNUMSI   (I,J) = noahmp%water%state%IrrigationCntSprinkler

@@ -854,3 +854,14 @@
  ! GDVIC: mean capilary drive (m) for dynamic VIC runoff
  GDVIC   =    0.050,    0.070,    0.130,    0.200,    0.170,    0.110,    0.260,    0.350,    0.260,    0.300,    0.380,    0.410,    0.500,    0.001,    0.010,    0.001,    0.001,    0.050,    0.020
 /
+
+&noahmp_snicar_parameters
+ DepBChydropho    = 0.0  ! hydrophobic Black Carbon deposition [kg m-2 s-1], assume constant read from table
+ DepBChydrophi    = 0.0  ! hydrophillic Black Carbon deposition [kg m-2 s-1], assume constant read from table
+ DepOChydropho    = 0.0  ! hydrophobic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
+ DepOChydrophi    = 0.0  ! hydrophillic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
+ DepDust1         = 0.0  ! dust species 1 deposition [kg m-2 s-1], assume constant read from table
+ DepDust2         = 0.0  ! dust species 2 deposition [kg m-2 s-1], assume constant read from table
+ DepDust3         = 0.0  ! dust species 3 deposition [kg m-2 s-1], assume constant read from table
+ DepDust4         = 0.0  ! dust species 4 deposition [kg m-2 s-1], assume constant read from table
+/

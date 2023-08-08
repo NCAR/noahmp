@@ -14,7 +14,7 @@ contains
 ! Piecewise linear interpolation method for 1-dimensional data
 ! Original author: John Burkardt, Florida State University, 09/22/2012
 ! Added and modified by Cenlin He (NCAR) in CTSM, 01/27/2022
-! Added in Noah-MP by Tzu-Shun Lin
+! Added in Noah-MP by T.-S. Lin
 ! ----------------------------------------------------------------------------------------
 
     implicit none

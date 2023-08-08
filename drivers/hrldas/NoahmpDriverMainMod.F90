@@ -195,7 +195,6 @@ contains
                  noahmp%config%domain%IndicatorIceSfc = 0   ! land soil point.
                  call NoahmpMain(noahmp)
              endif ! glacial split ends 
- 
              !---------------------------------------------------------------------
              !  Transfer 1-D Noah-MP column variables to 2-D output variables
              !---------------------------------------------------------------------

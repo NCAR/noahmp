@@ -11,6 +11,7 @@ module SnowWaterMainGlacierMod
   use SnowLayerCombineMod,         only : SnowLayerCombine
   use SnowLayerDivideMod,          only : SnowLayerDivide
   use SnowpackHydrologyGlacierMod, only : SnowpackHydrologyGlacier
+  use SnowAerosolSnicarMod
 
   implicit none
 
@@ -37,6 +38,7 @@ contains
               NumSnowLayerMax        => noahmp%config%domain%NumSnowLayerMax        ,& ! in,    maximum number of snow layers
               NumSoilLayer           => noahmp%config%domain%NumSoilLayer           ,& ! in,    number of soil layers
               MainTimeStep           => noahmp%config%domain%MainTimeStep           ,& ! in,    noahmp main time step [s]
+              OptSnowAlbedo          => noahmp%config%nmlist%OptSnowAlbedo          ,& ! in,    options for ground snow surface albedo
               DepthSoilLayer         => noahmp%config%domain%DepthSoilLayer         ,& ! in,    depth [m] of layer-bottom from soil surface
               SnoWatEqvMaxGlacier    => noahmp%water%param%SnoWatEqvMaxGlacier      ,& ! in,    Maximum SWE allowed at glaciers [mm]
               ThicknessSnowSoilLayer => noahmp%config%domain%ThicknessSnowSoilLayer ,& ! inout, thickness of snow/soil layers [m]
@@ -83,6 +85,9 @@ contains
        ThicknessSnowSoilLayer(LoopInd) = 0.0
        DepthSnowSoilLayer(LoopInd)     = 0.0
     enddo
+
+    !SNICAR
+    if ( OptSnowAlbedo == 3 )    call SnowAerosolSnicar(noahmp)
 
     ! to obtain equilibrium state of snow in glacier region
     if ( SnowWaterEquiv > SnoWatEqvMaxGlacier ) then 

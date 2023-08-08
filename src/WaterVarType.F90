@@ -6,6 +6,7 @@ module WaterVarType
 ! ------------------------ Code history -----------------------------------
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! SNICAR: Adding related variables (T.-S. Lin, C. He et al. 2023)
 ! -------------------------------------------------------------------------
 
   use Machine
@@ -80,6 +81,7 @@ module WaterVarType
     real(kind=kind_noahmp), allocatable, dimension(:) :: CompactionSnowBurden  ! rate of snow compaction due to overburden [1/s]
     real(kind=kind_noahmp), allocatable, dimension(:) :: CompactionSnowMelt    ! rate of snow compaction due to melt [1/s]
     real(kind=kind_noahmp), allocatable, dimension(:) :: CompactionSnowTot     ! rate of total snow compaction [fraction/timestep]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: OutflowSnowLayer      ! water flow out of each snow layer [mm/s]
     real(kind=kind_noahmp), allocatable, dimension(:) :: SnowFreezeRate        ! rate of snow freezing [mm/s]
 
   end type flux_type
@@ -158,6 +160,22 @@ module WaterVarType
     real(kind=kind_noahmp), allocatable, dimension(:) :: SoilSupercoolWater    ! supercooled water in soil [kg/m2]
     real(kind=kind_noahmp), allocatable, dimension(:) :: SoilMatPotential      ! soil matric potential [m]
     real(kind=kind_noahmp), allocatable, dimension(:) :: SnowRadius            ! snow effective grain radius [microns, m-6]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassBChydropho        ! mass of hydrophobic Black Carbon in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassBChydrophi        ! mass of hydrophillic Black Carbon in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassOChydropho        ! mass of hydrophobic Organic Carbon in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassOChydrophi        ! mass of hydrophillic Organic Carbon in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust1             ! mass of dust species 1 in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust2             ! mass of dust species 2 in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust3             ! mass of dust species 3 in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust4             ! mass of dust species 4 in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcBChydropho    ! mass concentration of hydrophobic Black Carbon in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcBChydrophi    ! mass concentration of hydrophillic Black Carbon in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcOChydropho    ! mass concentration of hydrophobic Organic Carbon in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcOChydrophi    ! mass concentration of hydrophillic Organic Carbon in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcDust1         ! mass concentration of dust species 1 in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcDust2         ! mass concentration of dust species 2 in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcDust3         ! mass concentration of dust species 3 in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcDust4         ! mass concentration of dust species 4 in snow [kg/kg]
 
   end type state_type
 
@@ -234,7 +252,6 @@ module WaterVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:,:) :: snowage_tau            ! snowage tau from table [hours]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:) :: snowage_kappa          ! snowage kappa from table [unitless]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:) :: snowage_drdt0          ! snowage dr/dt_0 from table [m2/kg/hr]
-
   end type parameter_type
 
 

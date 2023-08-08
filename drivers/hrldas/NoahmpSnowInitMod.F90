@@ -87,9 +87,6 @@ contains
           NoahmpIO%TSNOXY (I,-NoahmpIO%NSNOW+1:0,J) = 0.0
           NoahmpIO%SNICEXY(I,-NoahmpIO%NSNOW+1:0,J) = 0.0
           NoahmpIO%SNLIQXY(I,-NoahmpIO%NSNOW+1:0,J) = 0.0
-          NoahmpIO%SNRDSXY(I,-NoahmpIO%NSNOW+1:0,J) = 0.0
-          NoahmpIO%SNFRXY(I,-NoahmpIO%NSNOW+1:0,J) = 0.0
-
           do IZ = NoahmpIO%ISNOWXY(I,J)+1, 0
              NoahmpIO%TSNOXY(I,IZ,J)  = NoahmpIO%TGXY(I,J)
              NoahmpIO%SNLIQXY(I,IZ,J) = 0.0
@@ -112,6 +109,22 @@ contains
           do IZ = NoahmpIO%ISNOWXY(I,J)+2, NoahmpIO%NSOIL
              NoahmpIO%ZSNSOXY(I,IZ,J) = NoahmpIO%ZSNSOXY(I,IZ-1,J) + DZSNSO(IZ)
           enddo
+
+          !SNICAR, can move out to initial file later
+          if (NoahmpIO%IOPT_ALB == 3 )then
+             NoahmpIO%ALBSOILDIRXY(I,-NoahmpIO%NSNOW+1:0,J) = 0.0
+             NoahmpIO%ALBSOILDIFXY(I,-NoahmpIO%NSNOW+1:0,J) = 0.0
+             NoahmpIO%SNRDSXY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%SNFRXY  (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%BCPHIXY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%BCPHOXY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%OCPHIXY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%OCPHOXY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%DUST1XY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%DUST2XY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%DUST3XY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%DUST4XY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+          endif
 
        enddo ! I
     enddo    ! J

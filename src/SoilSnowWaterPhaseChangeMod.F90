@@ -41,6 +41,7 @@ contains
 
 ! --------------------------------------------------------------------
     associate(                                                                       &
+              OptSnowAlbedo          => noahmp%config%nmlist%OptSnowAlbedo          ,& ! in,  options for ground snow surface albedo
               OptSoilSupercoolWater  => noahmp%config%nmlist%OptSoilSupercoolWater  ,& ! in,    options for soil supercooled liquid water
               NumSoilLayer           => noahmp%config%domain%NumSoilLayer           ,& ! in,    number of soil layers
               NumSnowLayerMax        => noahmp%config%domain%NumSnowLayerMax        ,& ! in,    maximum number of snow layers
@@ -85,7 +86,8 @@ contains
     MeltGroundSnow     = 0.0
     PondSfcThinSnwMelt = 0.0
     HeatLhTotPhsChg    = 0.0
-    SnowFreezeRate(:)  = 0.0
+    if (OptSnowAlbedo == 3) SnowFreezeRate(:)  = 0.0
+
     ! supercooled water content
     do LoopInd = -NumSnowLayerMax+1, NumSoilLayer 
          SoilSupercoolWater(LoopInd) = 0.0
@@ -229,7 +231,9 @@ contains
           ! snow melting rate
           if ( LoopInd < 1 ) then
              MeltGroundSnow = MeltGroundSnow + max(0.0, (MassWatIceInit(LoopInd)-MassWatIceTmp(LoopInd))) / MainTimeStep
-             SnowFreezeRate(LoopInd) = max(0.0, (MassWatIceTmp(LoopInd)-MassWatIceInit(LoopInd))) / MainTimeStep
+             if (OptSnowAlbedo == 3) then
+                SnowFreezeRate(LoopInd) = max(0.0, (MassWatIceTmp(LoopInd)-MassWatIceInit(LoopInd))) / MainTimeStep
+             endif
           endif
        endif
     enddo

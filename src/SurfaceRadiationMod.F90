@@ -16,6 +16,7 @@ contains
 ! Original Noah-MP subroutine: SURRAD
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! SNICAR: Adding snicar solar absorbed by snow layer (T.-S. Lin, C. He et al. 2023)
 ! -------------------------------------------------------------------------
 
     implicit none
@@ -27,14 +28,11 @@ contains
     integer                          :: IndLoop                          ! snow and soil layer loop
     real(kind=kind_noahmp)           :: MinThr                           ! prevents overflow for division by zero
     real(kind=kind_noahmp)           :: RadSwAbsGrdTmp                   ! ground absorbed solar radiation [W/m2]
-    real(kind=kind_noahmp)           :: RadSwAbsSnowTmp                  ! snow absorbed solar radiation [W/m2]
     real(kind=kind_noahmp)           :: RadSwReflSfcNir                  ! surface reflected solar radiation NIR [W/m2]
     real(kind=kind_noahmp)           :: RadSwReflSfcVis                  ! surface reflected solar radiation VIS [W/m2]
     real(kind=kind_noahmp)           :: LeafAreaIndFrac                  ! leaf area fraction of canopy
     real(kind=kind_noahmp)           :: RadSwTranGrdDir                  ! transmitted solar radiation at ground: direct [W/m2]
     real(kind=kind_noahmp)           :: RadSwTranGrdDif                  ! transmitted solar radiation at ground: diffuse [W/m2]
-    real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwTranGrdDirBand ! transmitted solar radiation at ground: direct [W/m2]
-    real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwTranGrdDifBand ! transmitted solar radiation at ground: diffuse [W/m2]
     real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwAbsCanDir  ! direct beam absorbed by canopy [W/m2]
     real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwAbsCanDif  ! diffuse radiation absorbed by canopy [W/m2]
     real(kind=kind_noahmp), allocatable, dimension(:,:) :: FracRadSwAbsSnowDirMean !direct solar flux factor absorbed by snow [frc] scaling (-NumSnowLayerMax+1:1,NumSwRadBand)
@@ -43,6 +41,7 @@ contains
 ! --------------------------------------------------------------------
     associate(                                                                 &
               NumSwRadBand         => noahmp%config%domain%NumSwRadBand       ,& ! in,  number of solar radiation wave bands
+              OptSnowAlbedo        => noahmp%config%nmlist%OptSnowAlbedo      ,& ! in,  options for ground snow surface albedo
               NumSnowLayerMax      => noahmp%config%domain%NumSnowLayerMax    ,& ! in,  maximum number of snow layers 
               NumSnowLayerNeg      => noahmp%config%domain%NumSnowLayerNeg    ,& ! in, actual number of snow layers (negative)
               LeafAreaIndEff       => noahmp%energy%state%LeafAreaIndEff      ,& ! in,  leaf area index, after burying by snow
@@ -79,7 +78,6 @@ contains
               RadSwAbsVeg          => noahmp%energy%flux%RadSwAbsVeg          ,& ! out, solar radiation absorbed by vegetation [W/m2]
               RadSwAbsGrd          => noahmp%energy%flux%RadSwAbsGrd          ,& ! out, solar radiation absorbed by ground [W/m2]
               RadSwAbsSfc          => noahmp%energy%flux%RadSwAbsSfc          ,& ! out, total absorbed solar radiation [W/m2]
-              RadSwAbsSnow         => noahmp%energy%flux%RadSwAbsSnow         ,& ! out, total absorbed solar radiation by snow [W/m2]
               RadSwAbsSnowSoilLayer=> noahmp%energy%flux%RadSwAbsSnowSoilLayer,& ! out, total absorbed solar radiation by snow for each layer [W/m2]
               RadSwReflSfc         => noahmp%energy%flux%RadSwReflSfc         ,& ! out, total reflected solar radiation [W/m2]
               RadSwReflVeg         => noahmp%energy%flux%RadSwReflVeg         ,& ! out, reflected solar radiation by vegetation [W/m2]
@@ -90,10 +88,11 @@ contains
     ! initialization
     if (.not. allocated(RadSwAbsCanDir))          allocate(RadSwAbsCanDir(1:NumSwRadBand))
     if (.not. allocated(RadSwAbsCanDif))          allocate(RadSwAbsCanDif(1:NumSwRadBand))
-    if (.not. allocated(RadSwTranGrdDirBand))     allocate(RadSwTranGrdDirBand(1:NumSwRadBand))
-    if (.not. allocated(RadSwTranGrdDifBand))     allocate(RadSwTranGrdDifBand(1:NumSwRadBand))
-    if (.not. allocated(FracRadSwAbsSnowDirMean)) allocate(FracRadSwAbsSnowDirMean(-NumSnowLayerMax+1:1,1:NumSwRadBand))
-    if (.not. allocated(FracRadSwAbsSnowDifMean)) allocate(FracRadSwAbsSnowDifMean(-NumSnowLayerMax+1:1,1:NumSwRadBand))
+    if (OptSnowAlbedo == 3) then
+       if (.not. allocated(FracRadSwAbsSnowDirMean)) allocate(FracRadSwAbsSnowDirMean(-NumSnowLayerMax+1:1,1:NumSwRadBand))
+       if (.not. allocated(FracRadSwAbsSnowDifMean)) allocate(FracRadSwAbsSnowDifMean(-NumSnowLayerMax+1:1,1:NumSwRadBand))
+       RadSwAbsSnowSoilLayer(:) = 0.0
+    endif
 
     MinThr               = 1.0e-6
     RadSwAbsCanDir       = 0.0
@@ -101,8 +100,6 @@ contains
     RadSwAbsGrd          = 0.0
     RadSwAbsVeg          = 0.0
     RadSwAbsSfc          = 0.0
-    RadSwAbsSnow         = 0.0
-    RadSwAbsSnowSoilLayer(:) = 0.0
     RadSwReflSfc         = 0.0
     RadSwReflVeg         = 0.0
     RadSwReflGrd         = 0.0
@@ -119,9 +116,6 @@ contains
        RadSwTranGrdDir         = RadSwDownDir(IndBand) * RadSwDirTranGrdDir(IndBand)
        RadSwTranGrdDif         = RadSwDownDir(IndBand) * RadSwDifTranGrdDir(IndBand) + &
                                  RadSwDownDif(IndBand) * RadSwDifTranGrdDif(IndBand)
-       RadSwTranGrdDirBand(IndBand) = RadSwDownDir(IndBand) * RadSwDirTranGrdDir(IndBand)
-       RadSwTranGrdDifBand(IndBand) = RadSwDownDir(IndBand) * RadSwDifTranGrdDir(IndBand) + &
-                                      RadSwDownDif(IndBand) * RadSwDifTranGrdDif(IndBand)
 
        ! solar radiation absorbed by ground surface
        RadSwAbsGrdTmp          = RadSwTranGrdDir * (1.0 - AlbedoGrdDir(IndBand)) + &
@@ -129,36 +123,30 @@ contains
        RadSwAbsGrd             = RadSwAbsGrd + RadSwAbsGrdTmp
        RadSwAbsSfc             = RadSwAbsSfc + RadSwAbsGrdTmp
 
-       ! solar radiation absorbed by snow
-       RadSwAbsSnowTmp          = RadSwTranGrdDirBand(IndBand) * (1.0 - AlbedoSnowDir(IndBand)) + &
-                                  RadSwTranGrdDifBand(IndBand) * (1.0 - AlbedoSnowDif(IndBand))
-       RadSwAbsSnow             = RadSwAbsSnow + RadSwAbsSnowTmp
 
-       do IndLoop = -NumSnowLayerMax+1, 1, 1
+       if (OptSnowAlbedo == 3) then
+          do IndLoop = -NumSnowLayerMax+1, 1, 1
 
-          FracRadSwAbsSnowDirMean(IndLoop,IndBand)=FracRadSwAbsSnowDir(IndLoop,IndBand)*SnowCoverFrac+&
+             FracRadSwAbsSnowDirMean(IndLoop,IndBand)=FracRadSwAbsSnowDir(IndLoop,IndBand)*SnowCoverFrac+&
                        ((1.0 - SnowCoverFrac)*(1.0 - AlbedoSoilDir(IndBand))*     &
                        (FracRadSwAbsSnowDir(IndLoop,IndBand)/(1.0 - AlbedoSnowDir(IndBand))))
-          FracRadSwAbsSnowDifMean(IndLoop,IndBand)=FracRadSwAbsSnowDif(IndLoop,IndBand)*SnowCoverFrac+&
+             FracRadSwAbsSnowDifMean(IndLoop,IndBand)=FracRadSwAbsSnowDif(IndLoop,IndBand)*SnowCoverFrac+&
                        ((1.0 - SnowCoverFrac)*(1.0 - AlbedoSoilDif(IndBand))*     &
                        (FracRadSwAbsSnowDif(IndLoop,IndBand)/(1.0 - AlbedoSnowDif(IndBand))))
-
-          RadSwAbsSnowSoilLayer(IndLoop)=RadSwAbsSnowSoilLayer(IndLoop)+                &
-                                     RadSwTranGrdDirBand(IndBand) *             &
-                                     FracRadSwAbsSnowDirMean(IndLoop,IndBand) + &
-                                     RadSwTranGrdDifBand(IndBand) *             &
+             RadSwAbsSnowSoilLayer(IndLoop)=RadSwAbsSnowSoilLayer(IndLoop)+                &
+                                     RadSwTranGrdDir *                                  &
+                                     FracRadSwAbsSnowDirMean(IndLoop,IndBand) +         &
+                                     RadSwTranGrdDif *                                  &
                                      FracRadSwAbsSnowDifMean(IndLoop,IndBand) 
-       enddo
+          enddo
+       endif
     enddo
 
-    if (NumSnowLayerNeg == 0) then
+    if (OptSnowAlbedo == 3 .and. NumSnowLayerNeg == 0) then
        RadSwAbsSnowSoilLayer(:)=0.0
-       RadSwAbsSnowSoilLayer(1)=RadSwAbsGrd!RadSwAbsSnow
+       RadSwAbsSnowSoilLayer(1)=RadSwAbsGrd
     endif
 
-    if (NumSnowLayerNeg == 0 .and. SnowWaterEquiv == 0.0 ) then
-       RadSwAbsSnow=0.0
-    endif
 
 
     ! partition visible canopy absorption to sunlit and shaded fractions
@@ -189,10 +177,11 @@ contains
     ! deallocate local arrays to avoid memory leaks
     deallocate(RadSwAbsCanDir)
     deallocate(RadSwAbsCanDif)
-    deallocate(RadSwTranGrdDirBand)
-    deallocate(RadSwTranGrdDifBand)
-    deallocate(FracRadSwAbsSnowDirMean)
-    deallocate(FracRadSwAbsSnowDifMean)
+
+    if (OptSnowAlbedo == 3) then
+       deallocate(FracRadSwAbsSnowDirMean)
+       deallocate(FracRadSwAbsSnowDifMean)
+    endif
 
     end associate
 

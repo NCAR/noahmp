@@ -17,6 +17,7 @@ contains
 ! Original Noah-MP subroutine: None (embedded in NOAHMP_SFLX)
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! SNICAR: Adding snicar solar radiation check (T.-S. Lin, C. He et al. 2023)
 ! -------------------------------------------------------------------------
 
     implicit none
@@ -183,7 +184,6 @@ contains
               RadSwDownRefHeight   => noahmp%forcing%RadSwDownRefHeight       ,& ! in,  downward shortwave radiation [W/m2] at reference height
               VegFrac              => noahmp%energy%state%VegFrac             ,& ! in,  greeness vegetation fraction
               RadSwAbsSfc          => noahmp%energy%flux%RadSwAbsSfc          ,& ! in,  total absorbed solar radiation [W/m2]
-              RadSwAbsSnow         => noahmp%energy%flux%RadSwAbsSnow         ,& ! in, total absorbed solar radiation by snow [W/m2]
               RadSwAbsSnowSoilLayer=> noahmp%energy%flux%RadSwAbsSnowSoilLayer,& ! in, total absorbed solar radiation by snow for each layer [W/m2]
               RadSwReflSfc         => noahmp%energy%flux%RadSwReflSfc         ,& ! in,  total reflected solar radiation [W/m2]
               RadSwReflVeg         => noahmp%energy%flux%RadSwReflVeg         ,& ! in,  reflected solar radiation by vegetation [W/m2]
@@ -232,19 +232,17 @@ contains
        stop "Error: Solar radiation budget problem in NoahMP LSM"
     endif
 
-    if ( OptSnowAlbedo == 3 ) then
-       write(*,*) "RadSwAbsGrd                             = ", RadSwAbsGrd
-       write(*,*) "RadSwAbsSnow specific                   = ", RadSwAbsSnow
-       write(*,*) "sum(RadSwAbsSnowSoilLayer) grid         = ", sum(RadSwAbsSnowSoilLayer)   
-       write(*,*) "RadSwAbsSnowSoilLayer grid              = ", RadSwAbsSnowSoilLayer
-       write(*,*) "sum(RadSwAbsSnowSoilLayer)-RadSwAbsSnow = ", sum(RadSwAbsSnowSoilLayer)-RadSwAbsSnow
-       write(*,*) "RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer) grid = ", RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer)
-       if (abs(RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer))>0.0001) stop
+    !SNICAR
+    if ( OptSnowAlbedo == 3 .and. abs(RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer))>0.0001) then
+       write(*,*) "RadSwAbsGrd gridmean                            = ", RadSwAbsGrd
+       write(*,*) "sum(RadSwAbsSnowSoilLayer) gridmean             = ", sum(RadSwAbsSnowSoilLayer)   
+       write(*,*) "RadSwAbsSnowSoilLayer gridmean                  = ", RadSwAbsSnowSoilLayer
+       write(*,*) "RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer) gridmean = ", RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer)
+       stop
     endif
 
     ! error in surface energy balance should be <0.01 W/m2
     EnergyBalanceError = RadSwAbsVeg + RadSwAbsGrd + HeatPrecipAdvSfc -                     &
-!                         sum(RadSwPenetrateGrd) -                                           &
                         (RadLwNetSfc + HeatSensibleSfc + HeatLatentCanopy + HeatLatentGrd + &
                          HeatLatentTransp + HeatGroundTot + HeatLatentIrriEvap + HeatCanStorageChg)
     ! print out diagnostics when error is large

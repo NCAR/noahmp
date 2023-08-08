@@ -38,18 +38,17 @@ module SnowRadiationSnicarMod
 
 contains
 
-  subroutine SnowRadiationSnicar(noahmp,flg_slr_in,flg_snw_ice)
+  subroutine SnowRadiationSnicar(noahmp,flg_slr_in)
 
 ! ------------------------ Code history -----------------------------------
 ! Original CTSM subroutine: SNICAR_RT
+! Refactered code: T.-S. Lin, C. He, et al. (2023)
 ! -------------------------------------------------------------------------
 
     implicit none
 
     type(noahmp_type), intent(inout)   :: noahmp
     integer,           intent(in)      :: flg_slr_in              ! flag: =1 for direct-beam incident flux,=2 for diffuse incident flux
-    integer,           intent(in)      :: flg_snw_ice             ! 1 is land case, 2 is seaice case
-
 ! local variables
     integer                            :: i,idb,igb
     integer                            :: j                       ! aerosol number index [idx]
@@ -115,8 +114,7 @@ contains
     real(kind=kind_noahmp)             :: argmax = 10.0           ! maximum argument of exponential
     real(kind=kind_noahmp)             :: wvl_ct5(1:5)            ! band center wavelength (um) for 5-band case
     real(kind=kind_noahmp)             :: wvl_ct480(1:480)        ! band center wavelength (um) for 480-band case, computed below
-    real(kind=kind_noahmp)             :: h2osno_lcl              ! total column snow mass [kg/m2]
-    real(kind=kind_noahmp), parameter  :: min_snw = 1.0E-30       ! minimum snow mass required for SNICAR RT calculation [kg m-2] !samlin, may need to change this
+    real(kind=kind_noahmp)             :: SnowWaterEquivMin       ! minimum snow mass required for SNICAR RT calculation [kg m-2] !samlin, may need to change this
     real(kind=kind_noahmp)             :: SnowRadiusMin  = 54.526 ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
     real(kind=kind_noahmp)             :: diam_ice                ! effective snow grain diameter (SSA-equivalent) unit: microns
     real(kind=kind_noahmp)             :: fs_sphd                 ! shape factor for spheroid snow
@@ -304,7 +302,8 @@ contains
     real(kind=kind_noahmp)                              :: difgauswt(1:8)          ! Gaussian integration coefficients/weights
 
 ! --------------------------------------------------------------------
-    associate(                                                                          &   
+    associate(                                                                          &  
+              IndicatorIceSfc        => noahmp%config%domain%IndicatorIceSfc           ,& ! in, indicator for ice surface/point (1=sea ice, 0=non-ice, -1=land ice)
               OptSnicarSnowShape     => noahmp%config%nmlist%OptSnicarSnowShape        ,& ! in, Snow shape type: 
                                                                                           !     1=sphere; 2=spheroid; 3=hexagonal plate; 4=koch snowflake
                                                                                           !     currently only assuming same shapes for all snow layers
@@ -317,6 +316,12 @@ contains
               FlagSnicarSnowDustIntmix => noahmp%config%nmlist%FlagSnicarSnowDustIntmix,& ! in,option to activate dust-snow internal mixing in SNICAR (He et al. 2017 JC)
                                                                                           !     .false. -> external mixing for all dust
                                                                                           !     .true.  -> internal mixing for all dust
+              FlagSnicarUseAerosol   => noahmp%config%nmlist%FlagSnicarUseAerosol      ,& ! option to turn on/off aerosol deposition flux effect in snow in SNICAR
+                                                                                          !     .false. -> without aerosol deposition flux effect
+                                                                                          !     .true.  -> with aerosol deposition flux effect
+              FlagSnicarUseOC        => noahmp%config%nmlist%FlagSnicarUseOC           ,& ! option to activate OC in snow in SNICAR
+                                                                                          !     .false. -> without organic carbon in snow
+                                                                                          !     .true.  -> with organic carbon in snow
               NumSnicarRadBand       => noahmp%config%domain%NumSnicarRadBand          ,& ! in, wavelength bands used in SNICAR snow albedo calculation
               NumSwRadBand           => noahmp%config%domain%NumSwRadBand              ,& ! in, number of shortwave radiation bands 
               NumSnowLayerMax        => noahmp%config%domain%NumSnowLayerMax           ,& ! in, maximum number of snow layers
@@ -328,6 +333,7 @@ contains
               SnowRadius             => noahmp%water%state%SnowRadius                  ,& ! in, effective grain radius [microns, m-6]
               AlbedoSoilDif          => noahmp%energy%state%AlbedoSoilDif              ,& ! in, soil albedo (diffuse)
               AlbedoSoilDir          => noahmp%energy%state%AlbedoSoilDir              ,& ! in, soil albedo (direct)
+              AlbedoLandIce          => noahmp%energy%param%AlbedoLandIce              ,& ! in,  albedo land ice: 1=vis, 2=nir
               flx_wgt_dir            => noahmp%energy%param%flx_wgt_dir                ,& ! in, downward solar radiation spectral weights (direct)
               flx_wgt_dif            => noahmp%energy%param%flx_wgt_dif                ,& ! in, downward solar radiation spectral weights (diffuse)
               ss_alb_snw_drc         => noahmp%energy%param%ss_alb_snw_drc             ,& ! in, Mie single scatter albedos for direct-beam ice
@@ -360,6 +366,14 @@ contains
               ss_alb_dst4            => noahmp%energy%param%ss_alb_dst4                ,& ! in, Mie single scatter albedos for hydrophillic BC
               asm_prm_dst4           => noahmp%energy%param%asm_prm_dst4               ,& ! in, asymmetry parameter for hydrophillic BC
               ext_cff_mss_dst4       => noahmp%energy%param%ext_cff_mss_dst4           ,& ! in, mass extinction coefficient for hydrophillic BC [m2/kg]
+              MassConcBChydropho     => noahmp%water%state%MassConcBChydropho          ,& ! in, mass concentration of hydrophobic Black Carbon in snow [kg/kg]
+              MassConcBChydrophi     => noahmp%water%state%MassConcBChydrophi          ,& ! in, mass concentration of hydrophillic Black Carbon in snow [kg/kg]
+              MassConcOChydropho     => noahmp%water%state%MassConcOChydropho          ,& ! in, mass concentration of hydrophobic Organic Carbon in snow [kg/kg]
+              MassConcOChydrophi     => noahmp%water%state%MassConcOChydrophi          ,& ! in, mass concentration of hydrophillic Organic Carbon in snow [kg/kg]
+              MassConcDust1          => noahmp%water%state%MassConcDust1               ,& ! in, mass concentration of dust species 1 in snow [kg/kg]
+              MassConcDust2          => noahmp%water%state%MassConcDust2               ,& ! in, mass concentration of dust species 2 in snow [kg/kg]
+              MassConcDust3          => noahmp%water%state%MassConcDust3               ,& ! in, mass concentration of dust species 3 in snow [kg/kg]
+              MassConcDust4          => noahmp%water%state%MassConcDust4               ,& ! in, mass concentration of dust species 4 in snow [kg/kg]
               AlbedoSnowDir          => noahmp%energy%state%AlbedoSnowDir              ,& ! out, snow albedo for direct(1=vis, 2=nir)
               AlbedoSnowDif          => noahmp%energy%state%AlbedoSnowDif              ,& ! out, snow albedo for diffuse(1=vis, 2=nir)
               FracRadSwAbsSnowDir    => noahmp%energy%flux%FracRadSwAbsSnowDir         ,& ! out, direct solar flux factor absorbed by snow [frc] (-NumSnowLayerMax+1:1,NumSwRadBand)
@@ -541,24 +555,24 @@ contains
        flx_abs_lcl(LoopInd,:)   = 0.0
     enddo
 
-    ! set snow/ice mass to be used for RT:
-    if (flg_snw_ice == 1) then !snowsoil
-       h2osno_lcl = SnowWaterEquiv!sum(SnowLiqWater(:))+sum(SnowIce(:))!SnowWaterEquiv !this create some issue
-    else
-       h2osno_lcl = SnowIce(0)!sea ice
+
+    ! set threshold for precision
+    if (NumSnicarRadBand == 480) then 
+       SnowWaterEquivMin = 1.0E-1
+    elseif (NumSnicarRadBand == 5) then
+       SnowWaterEquivMin = 1.0E-3
     endif
 
     ! Qualifier for computing snow RT: 
     ! minimum amount of snow on ground. 
     ! Otherwise, set snow albedo to zero
-    if (h2osno_lcl >= min_snw) then
-       if (flg_snw_ice == 1) then
+    if (SnowWaterEquiv >= SnowWaterEquivMin) then
        ! If there is snow, but zero snow layers, we must create a layer locally.
        ! This layer is presumed to have the fresh snow effective radius.
           if (NumSnowLayerNeg > -1) then
              flg_nosnl         =  1
              snl_lcl           =  -1
-             h2osno_ice_lcl(0) =  h2osno_lcl
+             h2osno_ice_lcl(0) =  SnowWaterEquiv
              h2osno_liq_lcl(0) =  0.0
              snw_rds_lcl(0)    =  nint(SnowRadiusMin)
           else
@@ -571,36 +585,46 @@ contains
 
           SnowLayerBottom = 0
           SnowLayerTop = snl_lcl + 1
-       else !sea ice
-          flg_nosnl         = 0
-          snl_lcl           = -1
-          h2osno_liq_lcl(:) = SnowLiqWater(:)
-          h2osno_ice_lcl(:) = SnowIce(:)
-          snw_rds_lcl(:)    = nint(SnowRadius(:))
-          SnowLayerBottom   = 0
-          SnowLayerTop      = 0
-       endif
 
        ! Set local aerosol array
-       do LoopInd=1,NumSnicarAerosol
-          mss_cnc_aer_lcl(:,LoopInd) = 0.0!mss_cnc_aer_in(:,LoopInd) !need to read from dep fluxes
-       enddo
+       if (FlagSnicarUseAerosol == .true.) then
+          mss_cnc_aer_lcl(:,1) = MassConcBChydrophi(:)
+          mss_cnc_aer_lcl(:,2) = MassConcBChydropho(:)
+          if (FlagSnicarUseOC == .true.) then
+             mss_cnc_aer_lcl(:,3) = MassConcOChydrophi(:)
+             mss_cnc_aer_lcl(:,4) = MassConcOChydropho(:)
+          else
+             mss_cnc_aer_lcl(:,3) = 0.0
+             mss_cnc_aer_lcl(:,4) = 0.0
+          endif
+          mss_cnc_aer_lcl(:,5) = MassConcDust1(:)
+          mss_cnc_aer_lcl(:,6) = MassConcDust2(:)
+          mss_cnc_aer_lcl(:,7) = MassConcDust3(:)
+          mss_cnc_aer_lcl(:,8) = MassConcDust4(:)
+       else
+          mss_cnc_aer_lcl(:,:) = 0.0
+       endif
 
        ! Set spectral underlying surface albedos to their corresponding VIS or NIR albedos
-       if (flg_slr_in == 1) then
-          albsfc_lcl(1:(nir_bnd_bgn-1))       = AlbedoSoilDir(1)  
-          albsfc_lcl(nir_bnd_bgn:nir_bnd_end) = AlbedoSoilDir(2) 
-       elseif (flg_slr_in == 2) then
-          albsfc_lcl(1:(nir_bnd_bgn-1))       = AlbedoSoilDif(1) 
-          albsfc_lcl(nir_bnd_bgn:nir_bnd_end) = AlbedoSoilDif(2) 
+       if (IndicatorIceSfc == 0) then
+          if (flg_slr_in == 1) then
+             albsfc_lcl(1:(nir_bnd_bgn-1))       = AlbedoSoilDir(1)  
+             albsfc_lcl(nir_bnd_bgn:nir_bnd_end) = AlbedoSoilDir(2) 
+          elseif (flg_slr_in == 2) then
+             albsfc_lcl(1:(nir_bnd_bgn-1))       = AlbedoSoilDif(1) 
+             albsfc_lcl(nir_bnd_bgn:nir_bnd_end) = AlbedoSoilDif(2) 
+          endif
+       elseif (IndicatorIceSfc == -1) then !land ice
+          albsfc_lcl(1:(nir_bnd_bgn-1))       = AlbedoLandIce(1)
+          albsfc_lcl(nir_bnd_bgn:nir_bnd_end) = AlbedoLandIce(2)
        endif
+
             ! Error check for snow grain size:
        do i=SnowLayerTop,SnowLayerBottom,1
           if ((snw_rds_lcl(i) < snw_rds_min_tbl) .or. (snw_rds_lcl(i) > snw_rds_max_tbl)) then
              write (*,*) "SNICAR ERROR: snow grain radius of ", snw_rds_lcl(i), " out of bounds."
-             write (*,*) "flg_snw_ice= ", flg_snw_ice
              write (*,*)  "snl= ", snl_lcl
-             write (*,*) "h2osno_total= ", h2osno_lcl
+             write (*,*) "h2osno_total= ", SnowWaterEquiv
              stop
           endif
        enddo
@@ -920,6 +944,8 @@ contains
                       ! for BC-snow internal mixing enhancement in albedo reduction (He et al. 2018 ACP)
 
                       do ibb=1,16
+                         print *, i,ibb,bcint_d0,mss_cnc_aer_lcl(i,1),bcint_d2(ibb),bcint_d1(ibb)
+
                          enh_omg_bcint_tmp(ibb) = bcint_d0(ibb) * &
                          ( (mss_cnc_aer_lcl(i,1)*1.0E9*1.7/den_bc + bcint_d2(ibb)) **bcint_d1(ibb) )
                          ! adjust enhancment factor for BC effective size from 0.1um to Re_bc (He et al. 2018 GRL Eqs.1a,1b)
@@ -1233,16 +1259,16 @@ contains
                    err_idx = err_idx + 1
                 elseif((trip == 1).and.(flg_dover == 4).and.(err_idx >= 20)) then
                    flg_dover = 0
-                   write(*,*) "SNICAR ERROR: FOUND A WORMHOLE. STUCK IN INFINITE LOOP! Called from: ", flg_snw_ice
+                   write(*,*) "SNICAR ERROR: FOUND A WORMHOLE. STUCK IN INFINITE LOOP!"
                    write(*,*) "SNICAR STATS: L_snw(0)= ", L_snw(0)
                    write(*,*) "SNICAR STATS: snw_rds_lcl(0)= ", snw_rds_lcl(0)
-                   write(*,*) "SNICAR STATS: h2osno= ", h2osno_lcl, " snl= ", snl_lcl
-                   write(*,*) "SNICAR STATS: soot1(0)= ", mss_cnc_aer_lcl(0,1)
-                   write(*,*) "SNICAR STATS: soot2(0)= ", mss_cnc_aer_lcl(0,2)
-                   write(*,*) "SNICAR STATS: dust1(0)= ", mss_cnc_aer_lcl(0,3)
-                   write(*,*) "SNICAR STATS: dust2(0)= ", mss_cnc_aer_lcl(0,4)
-                   write(*,*) "SNICAR STATS: dust3(0)= ", mss_cnc_aer_lcl(0,5)
-                   write(*,*) "SNICAR STATS: dust4(0)= ", mss_cnc_aer_lcl(0,6)
+                   write(*,*) "SNICAR STATS: h2osno= ", SnowWaterEquiv, " snl= ", snl_lcl
+                   write(*,*) "SNICAR STATS: BCphi(0)= ", mss_cnc_aer_lcl(0,1)
+                   write(*,*) "SNICAR STATS: BCpho(0)= ", mss_cnc_aer_lcl(0,2)
+                   write(*,*) "SNICAR STATS: dust1(0)= ", mss_cnc_aer_lcl(0,5)
+                   write(*,*) "SNICAR STATS: dust2(0)= ", mss_cnc_aer_lcl(0,6)
+                   write(*,*) "SNICAR STATS: dust3(0)= ", mss_cnc_aer_lcl(0,7)
+                   write(*,*) "SNICAR STATS: dust4(0)= ", mss_cnc_aer_lcl(0,8)
                 else
                    flg_dover = 0
                 endif
@@ -1312,8 +1338,14 @@ contains
 
                       ! Delta-Eddington solution expressions
                       ! Eq. 50: Briegleb and Light 2007; alpha and gamma for direct radiation
-                      alp = cp75*ws*mu_not*((c1 + gs*(c1-ws))/(c1 - lm*lm*mu_not*mu_not))
-                      gam = cp5*ws*((c1 + c3*gs*(c1-ws)*mu_not*mu_not)/(c1-lm*lm*mu_not*mu_not))
+                      !print *,'debug',cp75,ws,mu_not,c1,gs,lm,lm*lm*mu_not*mu_not
+                      if (c1 - lm*lm*mu_not*mu_not /= 0.0) then
+                         alp = cp75*ws*mu_not*((c1 + gs*(c1-ws))/(c1 - lm*lm*mu_not*mu_not))
+                         gam = cp5*ws*((c1 + c3*gs*(c1-ws)*mu_not*mu_not)/(c1-lm*lm*mu_not*mu_not))
+                      else
+                         alp = 0.0
+                         gam = 0.0
+                      endif
                       apg = alp + gam
                       amg = alp - gam
                       rdir(i) = apg*rdif_a(i) +  amg*(tdif_a(i)*trnlay(i) - c1)
@@ -1396,19 +1428,28 @@ contains
 
                 ! set the underlying ground albedo == albedo of near-IR
                 ! unless bnd_idx < nir_bnd_bgn, for visible
-                if (flg_slr_in == 1) then
-                   rupdir(snl_btm_itf) = AlbedoSoilDir(2)
-                   rupdif(snl_btm_itf) = AlbedoSoilDir(2)
-                   if (LoopInd < nir_bnd_bgn) then
-                      rupdir(snl_btm_itf) = AlbedoSoilDir(1)
-                      rupdif(snl_btm_itf) = AlbedoSoilDir(1)
+                if (IndicatorIceSfc == 0) then
+                   if (flg_slr_in == 1) then
+                      rupdir(snl_btm_itf) = AlbedoSoilDir(2)
+                      rupdif(snl_btm_itf) = AlbedoSoilDir(2)
+                      if (LoopInd < nir_bnd_bgn) then
+                         rupdir(snl_btm_itf) = AlbedoSoilDir(1)
+                         rupdif(snl_btm_itf) = AlbedoSoilDir(1)
+                      endif
+                   elseif (flg_slr_in == 2) then
+                      rupdir(snl_btm_itf) = AlbedoSoilDif(2)
+                      rupdif(snl_btm_itf) = AlbedoSoilDif(2)
+                      if (LoopInd < nir_bnd_bgn) then
+                         rupdir(snl_btm_itf) = AlbedoSoilDif(1)
+                         rupdif(snl_btm_itf) = AlbedoSoilDif(1)
+                      endif
                    endif
-                elseif (flg_slr_in == 2) then
-                   rupdir(snl_btm_itf) = AlbedoSoilDif(2)
-                   rupdif(snl_btm_itf) = AlbedoSoilDif(2)
+                elseif (IndicatorIceSfc == -1) then !land ice
+                   rupdir(snl_btm_itf) = AlbedoLandIce(2)
+                   rupdif(snl_btm_itf) = AlbedoLandIce(2)
                    if (LoopInd < nir_bnd_bgn) then
-                      rupdir(snl_btm_itf) = AlbedoSoilDif(1)
-                      rupdif(snl_btm_itf) = AlbedoSoilDif(1)
+                      rupdir(snl_btm_itf) = AlbedoLandIce(1)
+                      rupdif(snl_btm_itf) = AlbedoLandIce(1)
                    endif
                 endif
 
@@ -1495,17 +1536,19 @@ contains
 
                    ! ERROR check: negative absorption
                    if (flx_abs_lcl(i,LoopInd) < -0.00001) then
-                      write (*,"(a,e13.6,i,i)") "SNICAR ERROR: negative absoption : ", &
-                            flx_abs_lcl(i,LoopInd),i,LoopInd
+                      write (*,"(a,e13.6,i,i,i,i)") "SNICAR ERROR: negative absoption : ", &
+                            flx_abs_lcl(i,LoopInd),i,LoopInd,SnowLayerTop,SnowLayerBottom
                       write(*,*) "SNICAR_AD STATS: L_snw(0)= ", L_snw(0)
                       write(*,*) "SNICAR_AD STATS: snw_rds_lcl(0)= ", snw_rds_lcl(0)
-                      write(*,*) "SNICAR_AD STATS: h2osno= ", h2osno_lcl, " snl= ", snl_lcl
-                      write(*,*) "SNICAR_AD STATS: soot1(0)= ", mss_cnc_aer_lcl(0,1)
-                      write(*,*) "SNICAR_AD STATS: soot2(0)= ", mss_cnc_aer_lcl(0,2)
-                      write(*,*) "SNICAR_AD STATS: dust1(0)= ", mss_cnc_aer_lcl(0,3)
-                      write(*,*) "SNICAR_AD STATS: dust2(0)= ", mss_cnc_aer_lcl(0,4)
-                      write(*,*) "SNICAR_AD STATS: dust3(0)= ", mss_cnc_aer_lcl(0,5)
-                      write(*,*) "SNICAR_AD STATS: dust4(0)= ", mss_cnc_aer_lcl(0,6)
+                      write(*,*) "SNICAR_AD STATS: coszen= ",  CosSolarZenithAngle
+                      write(*,*) 'SNICAR_AD STATS: wavelength=', wvl_ct480(LoopInd)
+                      write(*,*) "SNICAR_AD STATS: h2osno= ", SnowWaterEquiv, " snl= ", snl_lcl
+                      write(*,*) "SNICAR_AD STATS: BCphi(0)= ", mss_cnc_aer_lcl(0,1)
+                      write(*,*) "SNICAR_AD STATS: BCpho(0)= ", mss_cnc_aer_lcl(0,2)
+                      write(*,*) "SNICAR_AD STATS: dust1(0)= ", mss_cnc_aer_lcl(0,5)
+                      write(*,*) "SNICAR_AD STATS: dust2(0)= ", mss_cnc_aer_lcl(0,6)
+                      write(*,*) "SNICAR_AD STATS: dust3(0)= ", mss_cnc_aer_lcl(0,7)
+                      write(*,*) "SNICAR_AD STATS: dust4(0)= ", mss_cnc_aer_lcl(0,8)
                       stop
                     endif
                 enddo
@@ -1578,11 +1621,11 @@ contains
               write (*,*) "SNICAR STATS: bnd_idx= ",LoopInd
               write (*,*) "SNICAR STATS: albout_lcl(bnd)= ",albout_lcl(LoopInd), &
                        " albsfc_lcl(bnd_idx)= ",albsfc_lcl(LoopInd)
-              write (*,*) "SNICAR STATS: h2osno_total= ", h2osno_lcl, " snl= ", snl_lcl
+              write (*,*) "SNICAR STATS: h2osno_total= ", SnowWaterEquiv, " snl= ", snl_lcl
               write (*,*) "SNICAR STATS: coszen= ", CosSolarZenithAngle, " flg_slr= ", flg_slr_in
-              write (*,*) "SNICAR STATS: soot(-2)= ", mss_cnc_aer_lcl(-2,1)
-              write (*,*) "SNICAR STATS: soot(-1)= ", mss_cnc_aer_lcl(-1,1)
-              write (*,*) "SNICAR STATS: soot(0)= ", mss_cnc_aer_lcl(0,1)
+              write (*,*) "SNICAR STATS: BCphi(-2)= ", mss_cnc_aer_lcl(-2,1)
+              write (*,*) "SNICAR STATS: BCphi(-1)= ", mss_cnc_aer_lcl(-1,1)
+              write (*,*) "SNICAR STATS: BCphi(0)= ", mss_cnc_aer_lcl(0,1)
 
               write (*,*) "SNICAR STATS: L_snw(-2)= ", L_snw(-2)
               write (*,*) "SNICAR STATS: L_snw(-1)= ", L_snw(-1)
@@ -1598,7 +1641,7 @@ contains
        enddo ! loop over all snow spectral bands
 
        ! Weight output NIR albedo appropriately
-       ! for 5- and 3-band cases cenlin
+       ! for 5- and 3-band cases
        if (NumSnicarRadBand <= 5) then
           if (flg_slr_in == 1) then
               AlbedoSnowDir(1) = albout_lcl(1)
@@ -1720,16 +1763,20 @@ contains
 
 
     ! If snow < minimum_snow, but > 0, and there is sun, set albedo to underlying surface albedo
-    elseif ((h2osno_lcl < min_snw) .and. (h2osno_lcl > 0.0) ) then
+    elseif ((SnowWaterEquiv < SnowWaterEquivMin) .and. (SnowWaterEquiv > 0.0) ) then
 
-       if (flg_slr_in == 1) then
-          AlbedoSnowDir(1) = AlbedoSoilDir(1) 
-          AlbedoSnowDir(2) = AlbedoSoilDir(2) 
-       elseif (flg_slr_in == 2) then
-          AlbedoSnowDif(1) = AlbedoSoilDif(1)
-          AlbedoSnowDif(2) = AlbedoSoilDif(2)
+       if (IndicatorIceSfc == 0) then
+          if (flg_slr_in == 1) then
+             AlbedoSnowDir(1) = AlbedoSoilDir(1) 
+             AlbedoSnowDir(2) = AlbedoSoilDir(2) 
+          elseif (flg_slr_in == 2) then
+             AlbedoSnowDif(1) = AlbedoSoilDif(1)
+             AlbedoSnowDif(2) = AlbedoSoilDif(2)
+          endif
+       elseif (IndicatorIceSfc == -1) then !land ice
+          AlbedoSnowDif(1) = AlbedoLandIce(1)
+          AlbedoSnowDif(2) = AlbedoLandIce(2)
        endif
-
     ! There is either zero snow, or no sun
     else
 

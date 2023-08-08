@@ -23,6 +23,7 @@ contains
 ! Original Noah-MP subroutine: ALBEDO
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! SNICAR: Adding snicar snow albedo (T.-S. Lin, C. He et al. 2023)
 ! -------------------------------------------------------------------------
 
     implicit none

@@ -6,6 +6,7 @@ module ConfigVarType
 ! ------------------------ Code history -----------------------------------
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! SNICAR: Adding related variables (T.-S. Lin, C. He et al. 2023)
 ! -------------------------------------------------------------------------
 
   use Machine
@@ -121,6 +122,7 @@ module ConfigVarType
     integer :: OptGlacierTreatment         ! options for glacier treatment
                                               ! 1 -> include phase change of ice (default)
                                               ! 2 -> ice treatment more like original Noah
+    !SNICAR
     integer :: OptSnicarSnowShape          ! options for snow grain shape in SNICAR (He et al. 2017 JC)
                                               ! 1 -> sphere
                                               ! 2 -> spheroid
@@ -131,7 +133,15 @@ module ConfigVarType
                                               ! 2 -> Adding-doubling 2-stream (Dang et al.2019)
     logical :: FlagSnicarSnowBCIntmix      ! flag to determine SNICAR, false->external mixing for all BC  ; true->internal mixing for hydrophilic BC
     logical :: FlagSnicarSnowDustIntmix    ! flag to determine SNICAR, false->external mixing for all dust; true->internal mixing for all dust
-
+    logical :: FlagSnicarUseAerosol        ! option to turn on/off aerosol deposition flux effect in snow in SNICAR
+                                             !  .false. -> without aerosol deposition flux effect
+                                             !  .true.  -> with aerosol deposition flux effect
+    logical :: FlagSnicarUseOC             ! option to activate OC in snow in SNICAR
+                                             !  .false. -> without organic carbon in snow
+                                             !  .true.  -> with organic carbon in snow
+    logical :: FlagSnicarAerosolReadTable  ! option to read aerosol deposition fluxes from table or not
+                                             !  .false. -> data read from NetCDF forcing file
+                                             !  .true.  -> data read from table
    end type namelist_type
 
 

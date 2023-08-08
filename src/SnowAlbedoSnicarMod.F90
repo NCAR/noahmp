@@ -6,7 +6,7 @@ module SnowAlbedoSnicarMod
   use NoahmpVarType
   use ConstantDefineMod
   use SnowFreshRadiusMod,     only : SnowFreshRadius
-  use SnowAgeSnicarMod,       only : SnowAgeSnicar
+  use SnowAgingSnicarMod,     only : SnowAgingSnicar
   use SnowRadiationSnicarMod, only : SnowRadiationSnicar
 
   implicit none
@@ -16,7 +16,7 @@ contains
   subroutine SnowAlbedoSnicar(noahmp)
 
 ! ------------------------ Code history -----------------------------------
-! Original code: Cenlin He and CTSM team 
+! code: T.-S. Lin, C. He, et al. (2023)
 ! -------------------------------------------------------------------------
 
     implicit none
@@ -25,7 +25,6 @@ contains
 
 ! local variable
     integer                          :: flg_slr_in          ! flag: 1 for direct-beam incident flux, 2 for diffuse incident flux
-    integer                          :: flg_snw_ice         ! flag: 1 is land case, 2 is seaice case
 ! --------------------------------------------------------------------
     associate(                                                                 &
               NumSwRadBand        => noahmp%config%domain%NumSwRadBand        ,& ! in,  number of solar radiation wave bands
@@ -41,15 +40,13 @@ contains
 
     ! snow radius
     call SnowFreshRadius(noahmp)
-    call SnowAgeSnicar(noahmp)
-
-    flg_snw_ice = 1 !Land
+    call SnowAgingSnicar(noahmp)
 
     flg_slr_in = 1 !Direct
-    call SnowRadiationSnicar(noahmp,flg_slr_in,flg_snw_ice) 
+    call SnowRadiationSnicar(noahmp,flg_slr_in) 
 
     flg_slr_in = 2 !Diffuse
-    call SnowRadiationSnicar(noahmp,flg_slr_in,flg_snw_ice)
+    call SnowRadiationSnicar(noahmp,flg_slr_in)
     
     end associate
 

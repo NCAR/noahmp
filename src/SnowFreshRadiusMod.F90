@@ -14,6 +14,7 @@ contains
 
 ! ------------------------ Code history -----------------------------------
 ! Original CTSM function: FreshSnowRadius
+! Refactered code: T.-S. Lin, C. He, et al. (2023)
 ! Description: 
 ! Returns fresh snow grain radius, which is linearly dependent on temperature.
 ! This is implemented to remedy an outstanding bias that SNICAR has in initial
@@ -39,8 +40,8 @@ contains
              )
 ! ----------------------------------------------------------------------
 
-    Tmin=ConstFreezePoint-30.0
-    Tmax=ConstFreezePoint
+    Tmin = ConstFreezePoint-30.0
+    Tmax = ConstFreezePoint
 
     if ( FreshSnowRadiusMax <= SnowRadiusMin )then
         SnowRadiusFresh = SnowRadiusMin

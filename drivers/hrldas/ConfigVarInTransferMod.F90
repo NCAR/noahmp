@@ -59,10 +59,6 @@ contains
     noahmp%config%nmlist%OptRunoffSurface            = NoahmpIO%IOPT_RUNSRF
     noahmp%config%nmlist%OptRunoffSubsurface         = NoahmpIO%IOPT_RUNSUB
     noahmp%config%nmlist%OptGlacierTreatment         = NoahmpIO%IOPT_GLA
-    noahmp%config%nmlist%OptSnicarSnowShape          = NoahmpIO%SNICAR_SNOWSHAPE_OPT_TABLE
-    noahmp%config%nmlist%OptSnicarRTSolver           = NoahmpIO%SNICAR_RTSOLVER_OPT_TABLE
-    noahmp%config%nmlist%FlagSnicarSnowBCIntmix      = NoahmpIO%SNICAR_SNOWBC_INTMIX_TABLE
-    noahmp%config%nmlist%FlagSnicarSnowDustIntmix    = NoahmpIO%SNICAR_SNOWDUST_INTMIX_TABLE
 
     ! config domain variable
     noahmp%config%domain%SurfaceType                 = 1
@@ -96,11 +92,23 @@ contains
     noahmp%config%domain%IndexEBLForest              = NoahmpIO%EBLFOREST_TABLE
     noahmp%config%domain%RunoffSlopeType             = NoahmpIO%SLOPETYP
     noahmp%config%domain%DepthSoilTempBottom         = NoahmpIO%ZBOT_TABLE
-    noahmp%config%domain%idx_T_max                   = NoahmpIO%idx_T_max
-    noahmp%config%domain%idx_Tgrd_max                = NoahmpIO%idx_Tgrd_max
-    noahmp%config%domain%idx_rhos_max                = NoahmpIO%idx_rhos_max
-    noahmp%config%domain%NumSnicarRadBand            = NoahmpIO%snicar_numrad_snw
-    noahmp%config%domain%idx_Mie_snw_mx              = NoahmpIO%idx_Mie_snw_mx
+
+    !SNICAR
+    if (noahmp%config%nmlist%OptSnowAlbedo == 3 )then
+       noahmp%config%nmlist%OptSnicarSnowShape          = NoahmpIO%SNICAR_SNOWSHAPE_OPT
+       noahmp%config%nmlist%OptSnicarRTSolver           = NoahmpIO%SNICAR_RTSOLVER_OPT
+       noahmp%config%nmlist%FlagSnicarSnowBCIntmix      = NoahmpIO%SNICAR_SNOWBC_INTMIX
+       noahmp%config%nmlist%FlagSnicarSnowDustIntmix    = NoahmpIO%SNICAR_SNOWDUST_INTMIX
+       noahmp%config%nmlist%FlagSnicarUseAerosol        = NoahmpIO%SNICAR_USE_AEROSOL
+       noahmp%config%nmlist%FlagSnicarUseOC             = NoahmpIO%SNICAR_USE_OC                
+       noahmp%config%nmlist%FlagSnicarAerosolReadTable  = NoahmpIO%SNICAR_AEROSOL_READTABLE     
+
+       noahmp%config%domain%idx_T_max                   = NoahmpIO%idx_T_max
+       noahmp%config%domain%idx_Tgrd_max                = NoahmpIO%idx_Tgrd_max
+       noahmp%config%domain%idx_rhos_max                = NoahmpIO%idx_rhos_max
+       noahmp%config%domain%NumSnicarRadBand            = NoahmpIO%snicar_numrad_snw
+       noahmp%config%domain%idx_Mie_snw_mx              = NoahmpIO%idx_Mie_snw_mx
+    endif
 
     ! the following initialization cannot be done in ConfigVarInitMod
     ! because the NumSoilLayer and NumSnowLayerMax are initialized with input values in this module

@@ -6,6 +6,7 @@ module EnergyVarType
 ! ------------------------ Code history -----------------------------------
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! SNICAR: Adding related variables (T.-S. Lin, C. He et al. 2023)
 ! -------------------------------------------------------------------------
 
   use Machine
@@ -45,7 +46,6 @@ module EnergyVarType
     real(kind=kind_noahmp) :: RadSwAbsVeg                 ! solar radiation absorbed by vegetation [W/m2]
     real(kind=kind_noahmp) :: RadSwAbsGrd                 ! solar radiation absorbed by ground [W/m2]
     real(kind=kind_noahmp) :: RadSwAbsSfc                 ! total absorbed solar radiation [W/m2]
-    real(kind=kind_noahmp) :: RadSwAbsSnow                ! solar radiation absorbed by snow [W/m2]
     real(kind=kind_noahmp) :: RadSwReflSfc                ! total reflected solar radiation [W/m2]
     real(kind=kind_noahmp) :: RadSwReflVeg                ! reflected solar radiation by vegetation [W/m2]
     real(kind=kind_noahmp) :: RadSwReflGrd                ! reflected solar radiation by ground [W/m2]

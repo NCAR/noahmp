@@ -145,8 +145,11 @@ contains
        NoahmpIO%ALBEDO(I,J) = noahmp%energy%state%AlbedoSfc
     endif
 
-    NoahmpIO%ALBSOILDIRXY(I,1:NumSwRadBand,J)=noahmp%energy%state%AlbedoSoilDir(1:NumSwRadBand)
-    NoahmpIO%ALBSOILDIFXY(I,1:NumSwRadBand,J)=noahmp%energy%state%AlbedoSoilDif(1:NumSwRadBand)
+    !SNICAR
+    if (noahmp%config%nmlist%OptSnowAlbedo == 3 )then
+       NoahmpIO%ALBSOILDIRXY(I,1:NumSwRadBand,J)=noahmp%energy%state%AlbedoSoilDir(1:NumSwRadBand)
+       NoahmpIO%ALBSOILDIFXY(I,1:NumSwRadBand,J)=noahmp%energy%state%AlbedoSoilDif(1:NumSwRadBand)
+    endif
 
     NoahmpIO%ALBSNOWDIRXY(I,1:NumSwRadBand,J)=noahmp%energy%state%AlbedoSnowDir(1:NumSwRadBand)
     NoahmpIO%ALBSNOWDIFXY(I,1:NumSwRadBand,J)=noahmp%energy%state%AlbedoSnowDif(1:NumSwRadBand)

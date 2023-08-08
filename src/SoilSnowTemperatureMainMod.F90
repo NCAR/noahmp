@@ -21,6 +21,7 @@ contains
 ! Original Noah-MP subroutine: TSNOSOI
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! SNICAR: Adding snicar solar fluxes redistribution in snow layer (T.-S. Lin, C. He et al. 2023)
 ! ----------------------------------------------------------------------------------------
 
     implicit none
@@ -74,7 +75,6 @@ contains
           endif
        enddo
     endif
-    !print *, 'penswrad',RadSwPenetrateGrd(-NumSnowLayerMax+1:1)
 
     ! adjust DepthSoilTempBottom from soil surface to DepthSoilTempBotToSno from snow surface
     DepthSoilTempBotToSno = DepthSoilTempBottom - SnowDepth
