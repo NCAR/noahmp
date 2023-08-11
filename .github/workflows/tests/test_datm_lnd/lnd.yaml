@@ -135,4 +135,4 @@ config:
           output_freq:
             values: 10800
           has_export:
-            values: 'false'
+            values: .false.
