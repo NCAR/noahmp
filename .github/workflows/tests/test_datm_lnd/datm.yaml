@@ -54,22 +54,6 @@ config:
             values: 3
           ScalarFieldName:
             values: cpl_scalars
-          case_name:
-            values: comp.test
-          stop_n:
-            values: 1
-          stop_option:
-            values: ndays
-          stop_tod:
-            values: 0
-          stop_ymd:
-            values: -999
-          restart_n:
-            values: 1
-          restart_option:
-            values: never
-          restart_ymd:
-            values: -999
   nuopc:
     name: datm.streams
     content:
