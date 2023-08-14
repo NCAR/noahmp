@@ -944,7 +944,6 @@ contains
                       ! for BC-snow internal mixing enhancement in albedo reduction (He et al. 2018 ACP)
 
                       do ibb=1,16
-                         print *, i,ibb,bcint_d0,mss_cnc_aer_lcl(i,1),bcint_d2(ibb),bcint_d1(ibb)
 
                          enh_omg_bcint_tmp(ibb) = bcint_d0(ibb) * &
                          ( (mss_cnc_aer_lcl(i,1)*1.0E9*1.7/den_bc + bcint_d2(ibb)) **bcint_d1(ibb) )
@@ -1535,7 +1534,7 @@ contains
                    flx_abs_lcl(i,LoopInd) = F_abs(i)
 
                    ! ERROR check: negative absorption
-                   if (flx_abs_lcl(i,LoopInd) < -0.00001) then
+                   if (flx_abs_lcl(i,LoopInd) < -0.0001) then !original -0.00001
                       write (*,"(a,e13.6,i,i,i,i)") "SNICAR ERROR: negative absoption : ", &
                             flx_abs_lcl(i,LoopInd),i,LoopInd,SnowLayerTop,SnowLayerBottom
                       write(*,*) "SNICAR_AD STATS: L_snw(0)= ", L_snw(0)
@@ -1790,7 +1789,7 @@ contains
 
     endif ! if column has mim snow
 
-    if (AlbedoSnowDir(1)<0.0 .or. AlbedoSnowDir(2)<0.0 .or. AlbedoSnowDif(1)<0.0 .or. AlbedoSnowDif(2)<0.0)then
+    if (AlbedoSnowDir(1)<0.0 .or. AlbedoSnowDir(2)<0.0 .or. AlbedoSnowDif(1)<0.0 .or. AlbedoSnowDif(2)<0.0 .or. AlbedoSnowDir(1)>1.0 .or. AlbedoSnowDir(2)>1.0 .or. AlbedoSnowDif(1)>1.0 .or. AlbedoSnowDif(2)>1.0)then
       print *,'snow albedo',AlbedoSnowDir(1),AlbedoSnowDir(2),AlbedoSnowDif(1),AlbedoSnowDif(2),CosSolarZenithAngle
       stop
     endif

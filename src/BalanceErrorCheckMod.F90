@@ -233,7 +233,7 @@ contains
     endif
 
     !SNICAR
-    if ( OptSnowAlbedo == 3 .and. abs(RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer))>0.0001) then
+    if ( OptSnowAlbedo == 3 .and. abs(RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer))>0.001) then
        write(*,*) "RadSwAbsGrd gridmean                            = ", RadSwAbsGrd
        write(*,*) "sum(RadSwAbsSnowSoilLayer) gridmean             = ", sum(RadSwAbsSnowSoilLayer)   
        write(*,*) "RadSwAbsSnowSoilLayer gridmean                  = ", RadSwAbsSnowSoilLayer

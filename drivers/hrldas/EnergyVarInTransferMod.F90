@@ -134,7 +134,6 @@ contains
     if (noahmp%config%nmlist%OptSnowAlbedo == 3 )then
        noahmp%energy%state%AlbedoSoilDir       (1:NumSwRadBand)                      = NoahmpIO%ALBSOILDIRXY(I,1:NumSwRadBand,J)
        noahmp%energy%state%AlbedoSoilDif       (1:NumSwRadBand)                      = NoahmpIO%ALBSOILDIFXY(I,1:NumSwRadBand,J)
-
        noahmp%energy%param%flx_wgt_dif         (1:NumSnicarRadBand)                  = NoahmpIO%flx_wgt_dif(1:NumSnicarRadBand)
        noahmp%energy%param%flx_wgt_dir         (1:NumSnicarRadBand)                  = NoahmpIO%flx_wgt_dir(1:NumSnicarRadBand)
        noahmp%energy%param%ss_alb_snw_drc      (1:idx_Mie_snw_mx,1:NumSnicarRadBand) = NoahmpIO%ss_alb_snw_drc      (1:idx_Mie_snw_mx,1:NumSnicarRadBand)
