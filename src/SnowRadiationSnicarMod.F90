@@ -1534,7 +1534,7 @@ contains
                    flx_abs_lcl(i,LoopInd) = F_abs(i)
 
                    ! ERROR check: negative absorption
-                   if (flx_abs_lcl(i,LoopInd) < -0.0001) then !original -0.00001
+                   if (flx_abs_lcl(i,LoopInd) < -0.0001) then !original -0.00001, but not work for Koch snowflake
                       write (*,"(a,e13.6,i,i,i,i)") "SNICAR ERROR: negative absoption : ", &
                             flx_abs_lcl(i,LoopInd),i,LoopInd,SnowLayerTop,SnowLayerBottom
                       write(*,*) "SNICAR_AD STATS: L_snw(0)= ", L_snw(0)

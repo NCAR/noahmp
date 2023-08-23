@@ -207,8 +207,6 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ZSNSOXY             ! snow layer depth [m]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  SNICEXY             ! snow layer ice [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  SNLIQXY             ! snow layer liquid water [mm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSNOWDIRXY        ! snow albedo (direct)
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSNOWDIFXY        ! snow albedo (diffuse)
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  LFMASSXY            ! leaf mass [g/m2]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RTMASSXY            ! mass of fine roots [g/m2]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  STMASSXY            ! stem mass [g/m2]
@@ -471,6 +469,11 @@ module NoahmpIOVarType
     character(len=256)                                     ::  forcing_name_DUST2
     character(len=256)                                     ::  forcing_name_DUST3
     character(len=256)                                     ::  forcing_name_DUST4
+
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSNOWDIRXY        ! snow albedo (direct)
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSNOWDIFXY        ! snow albedo (diffuse)
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIRXY         ! surface albedo (direct)
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIFXY         ! surface albedo (diffuse)
 
 !------------------------------------------------------------------------
 ! Needed for TILE DRAINAGE IF IOPT_TDRN = 1 OR 2

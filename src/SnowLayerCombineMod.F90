@@ -253,6 +253,7 @@ contains
                       MassDust2(K)              = MassDust2(K-1) 
                       MassDust3(K)              = MassDust3(K-1) 
                       MassDust4(K)              = MassDust4(K-1) 
+                      SnowRadius(K)             = SnowRadius(K-1)
                    endif
 
                 enddo

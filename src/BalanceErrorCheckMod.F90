@@ -17,7 +17,6 @@ contains
 ! Original Noah-MP subroutine: None (embedded in NOAHMP_SFLX)
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
-! SNICAR: Adding snicar solar radiation check (T.-S. Lin, C. He et al. 2023)
 ! -------------------------------------------------------------------------
 
     implicit none
@@ -170,6 +169,7 @@ contains
 ! Original Noah-MP subroutine: ERROR
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! SNICAR: Adding snicar solar radiation check (T.-S. Lin, C. He et al. 2023)
 ! -------------------------------------------------------------------------
 
     implicit none
@@ -233,7 +233,7 @@ contains
     endif
 
     !SNICAR
-    if ( OptSnowAlbedo == 3 .and. abs(RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer))>0.001) then
+    if ( OptSnowAlbedo == 3 .and. abs(RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer))>0.001) then !original check is 0.0001, precision issue
        write(*,*) "RadSwAbsGrd gridmean                            = ", RadSwAbsGrd
        write(*,*) "sum(RadSwAbsSnowSoilLayer) gridmean             = ", sum(RadSwAbsSnowSoilLayer)   
        write(*,*) "RadSwAbsSnowSoilLayer gridmean                  = ", RadSwAbsSnowSoilLayer

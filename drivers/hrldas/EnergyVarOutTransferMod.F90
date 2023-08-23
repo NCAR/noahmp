@@ -151,6 +151,8 @@ contains
        NoahmpIO%ALBSOILDIFXY(I,1:NumSwRadBand,J)=noahmp%energy%state%AlbedoSoilDif(1:NumSwRadBand)
     endif
 
+    NoahmpIO%ALBSFCDIRXY(I,1:NumSwRadBand,J)=noahmp%energy%state%AlbedoSfcDir(1:NumSwRadBand)
+    NoahmpIO%ALBSFCDIFXY(I,1:NumSwRadBand,J)=noahmp%energy%state%AlbedoSfcDif(1:NumSwRadBand)
     NoahmpIO%ALBSNOWDIRXY(I,1:NumSwRadBand,J)=noahmp%energy%state%AlbedoSnowDir(1:NumSwRadBand)
     NoahmpIO%ALBSNOWDIFXY(I,1:NumSwRadBand,J)=noahmp%energy%state%AlbedoSnowDif(1:NumSwRadBand)
 

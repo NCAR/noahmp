@@ -182,9 +182,6 @@ contains
     if ( .not. allocated (NoahmpIO%SNICEXY)   ) allocate ( NoahmpIO%SNICEXY    (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) ) ! snow layer ice [mm]
     if ( .not. allocated (NoahmpIO%SNLIQXY)   ) allocate ( NoahmpIO%SNLIQXY    (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) ) ! snow layer liquid water [mm]
 
-    if ( .not. allocated (NoahmpIO%ALBSNOWDIRXY)) allocate ( NoahmpIO%ALBSNOWDIRXY (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! snow albedo (direct)
-    if ( .not. allocated (NoahmpIO%ALBSNOWDIFXY)) allocate ( NoahmpIO%ALBSNOWDIFXY (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! snow albedo (diffuse)
-
     ! irrigation
     if ( .not. allocated (NoahmpIO%IRFRACT) ) allocate ( NoahmpIO%IRFRACT (XSTART:XEND,YSTART:YEND) ) ! irrigation fraction
     if ( .not. allocated (NoahmpIO%SIFRACT) ) allocate ( NoahmpIO%SIFRACT (XSTART:XEND,YSTART:YEND) ) ! sprinkler irrigation fraction
@@ -385,15 +382,20 @@ contains
        if ( .not. allocated (NoahmpIO%MassConcDUST2XY)    )  allocate ( NoahmpIO%MassConcDUST2XY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%MassConcDUST3XY)    )  allocate ( NoahmpIO%MassConcDUST3XY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%MassConcDUST4XY)    )  allocate ( NoahmpIO%MassConcDUST4XY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepBChydrophoXY)    )  allocate ( NoahmpIO%DepBChydrophoXY     (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepBChydrophiXY)    )  allocate ( NoahmpIO%DepBChydrophiXY     (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepOChydrophoXY)    )  allocate ( NoahmpIO%DepOChydrophoXY     (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepOChydrophiXY)    )  allocate ( NoahmpIO%DepOChydrophiXY     (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepDust1XY)         )  allocate ( NoahmpIO%DepDust1XY          (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepDust2XY)         )  allocate ( NoahmpIO%DepDust2XY          (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepDust3XY)         )  allocate ( NoahmpIO%DepDust3XY          (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepDust4XY)         )  allocate ( NoahmpIO%DepDust4XY          (XSTART:XEND,YSTART:YEND) )
     endif
-    if ( .not. allocated (NoahmpIO%DepBChydrophoXY)    )  allocate ( NoahmpIO%DepBChydrophoXY     (XSTART:XEND,YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%DepBChydrophiXY)    )  allocate ( NoahmpIO%DepBChydrophiXY     (XSTART:XEND,YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%DepOChydrophoXY)    )  allocate ( NoahmpIO%DepOChydrophoXY     (XSTART:XEND,YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%DepOChydrophiXY)    )  allocate ( NoahmpIO%DepOChydrophiXY     (XSTART:XEND,YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%DepDust1XY)         )  allocate ( NoahmpIO%DepDust1XY          (XSTART:XEND,YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%DepDust2XY)         )  allocate ( NoahmpIO%DepDust2XY          (XSTART:XEND,YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%DepDust3XY)         )  allocate ( NoahmpIO%DepDust3XY          (XSTART:XEND,YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%DepDust4XY)         )  allocate ( NoahmpIO%DepDust4XY          (XSTART:XEND,YSTART:YEND) )
+
+    if ( .not. allocated (NoahmpIO%ALBSNOWDIRXY)) allocate ( NoahmpIO%ALBSNOWDIRXY (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! snow albedo (direct)
+    if ( .not. allocated (NoahmpIO%ALBSNOWDIFXY)) allocate ( NoahmpIO%ALBSNOWDIFXY (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! snow albedo (diffuse)
+    if ( .not. allocated (NoahmpIO%ALBSFCDIRXY))  allocate ( NoahmpIO%ALBSFCDIRXY  (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! surface albedo (direct)
+    if ( .not. allocated (NoahmpIO%ALBSFCDIFXY))  allocate ( NoahmpIO%ALBSFCDIFXY  (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! surface albedo (diffuse)
 
     ! Needed for crop model (OPT_CROP=1)
     if ( .not. allocated (NoahmpIO%PGSXY)     ) allocate ( NoahmpIO%PGSXY      (XSTART:XEND,  YSTART:YEND) )
