@@ -106,14 +106,14 @@ contains
                                                 BETADS, BETAIS, EG, EICE
 
     ! global parameters
-    real(kind=kind_noahmp)                   :: CO2, O2, TIMEAN, FSATMX, Z0SNO, SSI, SNOW_RET_FAC ,SNOW_EMIS, SWEMX, TAU0,   &
+    real(kind=kind_noahmp)                   :: CO2, O2, TIMEAN, FSATMX, WCAP, Z0SNO, SSI, SNOW_RET_FAC ,SNOW_EMIS, SWEMX, TAU0,   &
                                                 GRAIN_GROWTH, EXTRA_GROWTH, DIRT_SOOT, BATS_COSZ, BATS_VIS_NEW,              &
                                                 BATS_NIR_NEW, BATS_VIS_AGE, BATS_NIR_AGE, BATS_VIS_DIR, BATS_NIR_DIR,        &
                                                 RSURF_SNOW, RSURF_EXP, C2_SNOWCOMPACT, C3_SNOWCOMPACT, C4_SNOWCOMPACT,       &
                                                 C5_SNOWCOMPACT, DM_SNOWCOMPACT, ETA0_SNOWCOMPACT, SNLIQMAXFRAC, SWEMAXGLA,   &
                                                 WSLMAX, ROUS, CMIC, SNOWDEN_MAX, CLASS_ALB_REF, CLASS_SNO_AGE, CLASS_ALB_NEW,&
                                                 PSIWLT, Z0SOIL, Z0LAKE
-    namelist / noahmp_global_parameters /       CO2, O2, TIMEAN, FSATMX, Z0SNO, SSI, SNOW_RET_FAC ,SNOW_EMIS, SWEMX, TAU0,   &
+    namelist / noahmp_global_parameters /       CO2, O2, TIMEAN, FSATMX, WCAP, Z0SNO, SSI, SNOW_RET_FAC ,SNOW_EMIS, SWEMX, TAU0,   &
                                                 GRAIN_GROWTH, EXTRA_GROWTH, DIRT_SOOT, BATS_COSZ, BATS_VIS_NEW,              &
                                                 BATS_NIR_NEW, BATS_VIS_AGE, BATS_NIR_AGE, BATS_VIS_DIR, BATS_NIR_DIR,        &
                                                 RSURF_SNOW, RSURF_EXP, C2_SNOWCOMPACT, C3_SNOWCOMPACT, C4_SNOWCOMPACT,       &
@@ -485,6 +485,7 @@ contains
     NoahmpIO%O2_TABLE               = undefined_real
     NoahmpIO%TIMEAN_TABLE           = undefined_real
     NoahmpIO%FSATMX_TABLE           = undefined_real
+    NoahmpIO%WCAP_TABLE             = undefined_real
     NoahmpIO%Z0SNO_TABLE            = undefined_real
     NoahmpIO%SSI_TABLE              = undefined_real
     NoahmpIO%SNOW_RET_FAC_TABLE     = undefined_real
@@ -881,6 +882,7 @@ contains
     NoahmpIO%O2_TABLE               = O2
     NoahmpIO%TIMEAN_TABLE           = TIMEAN
     NoahmpIO%FSATMX_TABLE           = FSATMX
+    NoahmpIO%WCAP_TABLE             = WCAP
     NoahmpIO%Z0SNO_TABLE            = Z0SNO
     NoahmpIO%SSI_TABLE              = SSI
     NoahmpIO%SNOW_RET_FAC_TABLE     = SNOW_RET_FAC
