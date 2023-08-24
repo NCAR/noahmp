@@ -44,6 +44,7 @@ module NoahmpIOVarType
     integer                                                ::  IOPT_BTR            ! soil moisture factor for stomatal resistance (1-> Noah; 2-> CLM; 3-> SSiB)
     integer                                                ::  IOPT_RUNSRF         ! surface runoff and groundwater (1->SIMGM; 2->SIMTOP; 3->Schaake96; 4->BATS)
     integer                                                ::  IOPT_RUNSUB         ! subsurface runoff option
+    integer                                                ::  IOPT_WETLAND        ! wetland model option
     integer                                                ::  IOPT_SFC            ! surface layer drag coeff (CH & CM) (1->M-O; 2->Chen97)
     integer                                                ::  IOPT_FRZ            ! supercooled liquid water (1-> NY06; 2->Koren99)
     integer                                                ::  IOPT_INF            ! frozen soil permeability (1-> NY06; 2->Koren99)
@@ -192,6 +193,8 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  CMXY                ! bulk momentum drag coefficient
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  CHXY                ! bulk sensible heat exchange coefficient
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FWETXY              ! wetted or snowed fraction of the canopy (-)
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FSATXY              ! saturated fraction of the grid (-)
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  WSURFXY             ! wetland water storage
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SNEQVOXY            ! snow mass at last time step(mm h2o)
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ALBOLDXY            ! snow albedo at last time step (-)
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QSNOWXY             ! snowfall on the ground [mm/s]
@@ -360,6 +363,8 @@ module NoahmpIOVarType
 !------------------------------------------------------------------------
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_FRACTION         ! tile drainage fraction
 
+
+
 !------------------------------------------------------------------------
 ! Needed for crop model (OPT_CROP=1)
 !------------------------------------------------------------------------
@@ -370,6 +375,13 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    :: HARVEST              ! harvest day
     real(kind=kind_noahmp), allocatable, dimension(:,:)    :: SEASON_GDD           ! seasonal GDD
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  :: CROPTYPE             ! crop type
+
+!------------------------------------------------------------------------
+! Needed for wetland model (OPT_WETLAND=1)
+!------------------------------------------------------------------------
+
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: FSATMX               ! maximum saturated fraction
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: WCAP                 ! maximum wetland capacity
 
 !------------------------------------------------------------------------
 ! Single- and Multi-layer Urban Models
@@ -757,6 +769,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp)                                 :: O2_TABLE                  ! o2 partial pressure
     real(kind=kind_noahmp)                                 :: TIMEAN_TABLE              ! gridcell mean topgraphic index (global mean)
     real(kind=kind_noahmp)                                 :: FSATMX_TABLE              ! maximum surface saturated fraction (global mean)
+    real(kind=kind_noahmp)                                 :: WCAP_TABLE                ! maximum surface wetland capacity
     real(kind=kind_noahmp)                                 :: Z0SNO_TABLE               ! snow surface roughness length (m) (0.002)
     real(kind=kind_noahmp)                                 :: SSI_TABLE                 ! liquid water holding capacity for snowpack (m3/m3) (0.03)
     real(kind=kind_noahmp)                                 :: SNOW_RET_FAC_TABLE        ! snowpack water release timescale factor (1/s)

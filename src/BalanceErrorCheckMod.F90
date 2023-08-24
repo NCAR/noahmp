@@ -35,6 +35,7 @@ contains
               CanopyIce              => noahmp%water%state%CanopyIce                ,& ! in,  canopy intercepted ice [mm]
               SnowWaterEquiv         => noahmp%water%state%SnowWaterEquiv           ,& ! in,  snow water equivalent [mm]
               SoilMoisture           => noahmp%water%state%SoilMoisture             ,& ! in,  total soil moisture [m3/m3]
+              WaterStorageWetland    => noahmp%water%state%WaterStorageWetland      ,& ! in,  water storage in wetland [mm]
               WaterStorageAquifer    => noahmp%water%state%WaterStorageAquifer      ,& ! in,  water storage in aquifer [mm]
               WaterStorageTotBeg     => noahmp%water%state%WaterStorageTotBeg        & ! out, total water storage [mm] at the beginning
              )
@@ -42,7 +43,7 @@ contains
 
     ! compute total water storage before NoahMP processes
     if ( SurfaceType == 1 ) then  ! soil
-       WaterStorageTotBeg = CanopyLiqWater + CanopyIce + SnowWaterEquiv + WaterStorageAquifer
+       WaterStorageTotBeg = CanopyLiqWater + CanopyIce + SnowWaterEquiv + WaterStorageAquifer + WaterStorageWetland
        do LoopInd = 1, NumSoilLayer
           WaterStorageTotBeg = WaterStorageTotBeg + SoilMoisture(LoopInd) * ThicknessSnowSoilLayer(LoopInd) * 1000.0
        enddo
@@ -87,6 +88,7 @@ contains
               SnowWaterEquiv          => noahmp%water%state%SnowWaterEquiv           ,& ! in,    snow water equivalent [mm]
               SoilMoisture            => noahmp%water%state%SoilMoisture             ,& ! in,    total soil moisture [m3/m3]
               WaterStorageAquifer     => noahmp%water%state%WaterStorageAquifer      ,& ! in,    water storage in aquifer [mm]
+              WaterStorageWetland     => noahmp%water%state%WaterStorageWetland      ,& ! in,  water storage in wetland [mm]
               WaterStorageTotBeg      => noahmp%water%state%WaterStorageTotBeg       ,& ! in,    total water storage [mm] at the beginning
               PrecipTotRefHeight      => noahmp%water%flux%PrecipTotRefHeight        ,& ! in,    total precipitation [mm/s] at reference height
               EvapCanopyNet           => noahmp%water%flux%EvapCanopyNet             ,& ! in,    evaporation of intercepted water [mm/s]
@@ -116,7 +118,7 @@ contains
     ! only water balance check for every soil timestep
     ! Error in water balance should be < 0.1 mm
     if ( SurfaceType == 1 ) then   ! soil
-       WaterStorageTotEnd = CanopyLiqWater + CanopyIce + SnowWaterEquiv + WaterStorageAquifer
+       WaterStorageTotEnd = CanopyLiqWater + CanopyIce + SnowWaterEquiv + WaterStorageAquifer + WaterStorageWetland
        do LoopInd = 1, NumSoilLayer
           WaterStorageTotEnd = WaterStorageTotEnd + SoilMoisture(LoopInd) * ThicknessSnowSoilLayer(LoopInd) * 1000.0
        enddo
@@ -143,11 +145,11 @@ contains
              write(*, &
                   '("  GridIndexI  GridIndexJ  SfcWaterTotChgAcc  PrecipTotRefHeightAcc  IrrigationRateMicro       &
                        IrrigationRateFlood  EvapCanopyNetAcc  EvapGroundNetAcc  TranspirationAcc  RunoffSurface    &
-                       RunoffSubsurface  WaterTableDepth  TileDrain")')
-             write(*,'(i6,i6,f10.3,10f10.5)') GridIndexI, GridIndexJ, SfcWaterTotChgAcc, PrecipTotAcc,             &
+                       RunoffSubsurface  WaterTableDepth  TileDrain WaterStorageWetland ")')
+             write(*,'(i6,i6,f10.3,11f10.5)') GridIndexI, GridIndexJ, SfcWaterTotChgAcc, PrecipTotAcc,             &
                                               IrrigationRateMicro*1000.0, IrrigationRateFlood*1000.0,              &
                                               EvapCanopyNetAcc, EvapGroundNetAcc, TranspirationAcc, RunoffSurface, &
-                                              RunoffSubsurface, WaterTableDepth, TileDrain
+                                              RunoffSubsurface, WaterTableDepth, TileDrain, WaterStorageWetland
              stop "Error: Water budget problem in NoahMP LSM"
           endif
 #endif

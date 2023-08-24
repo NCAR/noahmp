@@ -123,6 +123,7 @@ module WaterVarType
     real(kind=kind_noahmp) :: WaterStorageAquifer        ! water storage in aquifer [mm]
     real(kind=kind_noahmp) :: WaterStorageSoilAqf        ! water storage in aquifer + saturated soil [mm]
     real(kind=kind_noahmp) :: WaterStorageLake           ! water storage in lake (can be negative) [mm] 
+    real(kind=kind_noahmp) :: WaterStorageWetland        ! water storage in wetland [mm] ! Zhe Zhang 2023
     real(kind=kind_noahmp) :: WaterHeadSfc               ! surface water head [mm]
     real(kind=kind_noahmp) :: IrrigationFracGrid         ! total irrigation fraction from input for a grid
     real(kind=kind_noahmp) :: PrecipAreaFrac             ! fraction of the gridcell that receives precipitation
@@ -201,6 +202,7 @@ module WaterVarType
     real(kind=kind_noahmp) :: BaseflowCoeff              ! baseflow coefficient [mm/s]
     real(kind=kind_noahmp) :: GridTopoIndex              ! gridcell mean topgraphic index (global mean)
     real(kind=kind_noahmp) :: SoilSfcSatFracMax          ! maximum surface soil saturated fraction (global mean)
+    real(kind=kind_noahmp) :: WetlandCapMax              ! maximum wetland capacity
     real(kind=kind_noahmp) :: SpecYieldGw                ! specific yield [-] for Niu et al. 2007 groundwater scheme
     real(kind=kind_noahmp) :: MicroPoreContent           ! microprore content (0.0-1.0), 0.0: close to free drainage
     real(kind=kind_noahmp) :: WaterStorageLakeMax        ! maximum lake water storage [mm]

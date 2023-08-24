@@ -47,7 +47,7 @@
  ISCROP       =  2  ! crop land type in USGS
  EBLFOREST    = 13  ! evergreen broadleaf forest land type in USGS
  NATURAL      =  5  ! natural vegation type in urban pixel in USGS
- URBTYPE_beg  = 50  ! land type number above which are urban (e.g., LCZ)
+ URBTYPE_beg  = 40  ! land type number above which are urban (e.g., LCZ)
  LCZ_1        = 51  ! urban local climate zone (LCZ) type 1: compact highrise
  LCZ_2        = 52  ! urban local climate zone (LCZ) type 2: compact midrise
  LCZ_3        = 53  ! urban local climate zone (LCZ) type 3: compact lowrise
@@ -243,7 +243,7 @@
  ISCROP       = 12  ! crop land type in MODIS
  EBLFOREST    =  2  ! evergreen broadleaf forest land type in MODIS
  NATURAL      = 14  ! natural vegation type in urban pixel in MODIS
- URBTYPE_beg  = 50  ! land type number above which are urban (e.g., LCZ)
+ URBTYPE_beg  = 40  ! land type number above which are urban (e.g., LCZ)
  LCZ_1        = 51  ! urban local climate zone (LCZ) type 1: compact highrise
  LCZ_2        = 52  ! urban local climate zone (LCZ) type 2: compact midrise
  LCZ_3        = 53  ! urban local climate zone (LCZ) type 3: compact lowrise
@@ -428,6 +428,7 @@
  ! runoff parameters used for SIMTOP and SIMGM
  TIMEAN           = 10.5        ! gridcell mean topgraphic index (global mean)
  FSATMX           = 0.38        ! maximum surface saturated fraction (global mean) 
+ WCAP             = 0.10        ! maximum wetland capacity (tunable) 
  ROUS             = 0.20        ! specific yield [-] for Niu et al. 2007 groundwater scheme (OptRunoffSubsurface=1)
  CMIC             = 0.80        ! microprore content (0.0-1.0), 0.0: close to free drainage
  ! parameters for snow processes
