@@ -154,6 +154,8 @@ contains
     if ( .not. allocated (NoahmpIO%CMXY)      ) allocate ( NoahmpIO%CMXY       (XSTART:XEND,               YSTART:YEND) ) ! bulk momentum drag coefficient
     if ( .not. allocated (NoahmpIO%CHXY)      ) allocate ( NoahmpIO%CHXY       (XSTART:XEND,               YSTART:YEND) ) ! bulk sensible heat exchange coefficient
     if ( .not. allocated (NoahmpIO%FWETXY)    ) allocate ( NoahmpIO%FWETXY     (XSTART:XEND,               YSTART:YEND) ) ! wetted or snowed fraction of the canopy (-)
+    if ( .not. allocated (NoahmpIO%FSATXY)    ) allocate ( NoahmpIO%FSATXY     (XSTART:XEND,               YSTART:YEND) ) ! saturated fraction of the grid (-)
+    if ( .not. allocated (NoahmpIO%WSURFXY)   ) allocate ( NoahmpIO%WSURFXY    (XSTART:XEND,               YSTART:YEND) ) ! wetland water storage [mm]
     if ( .not. allocated (NoahmpIO%SNEQVOXY)  ) allocate ( NoahmpIO%SNEQVOXY   (XSTART:XEND,               YSTART:YEND) ) ! snow mass at last time step(mm h2o)
     if ( .not. allocated (NoahmpIO%ALBOLDXY)  ) allocate ( NoahmpIO%ALBOLDXY   (XSTART:XEND,               YSTART:YEND) ) ! snow albedo at last time step (-)
     if ( .not. allocated (NoahmpIO%QSNOWXY)   ) allocate ( NoahmpIO%QSNOWXY    (XSTART:XEND,               YSTART:YEND) ) ! snowfall on the ground [mm/s]
@@ -324,6 +326,10 @@ contains
     if ( .not. allocated (NoahmpIO%HARVEST)   ) allocate ( NoahmpIO%HARVEST    (XSTART:XEND,  YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%SEASON_GDD)) allocate ( NoahmpIO%SEASON_GDD (XSTART:XEND,  YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%CROPTYPE)  ) allocate ( NoahmpIO%CROPTYPE   (XSTART:XEND,5,YSTART:YEND) )
+    
+    ! Needed for wetland model (OPT_WETLAND=1)
+    if ( .not. allocated (NoahmpIO%FSATMX)  ) allocate ( NoahmpIO%FSATMX   (XSTART:XEND,  YSTART:YEND) )
+    if ( .not. allocated (NoahmpIO%WCAP)    ) allocate ( NoahmpIO%WCAP     (XSTART:XEND,  YSTART:YEND) )
 
     ! Single- and Multi-layer Urban Models
     if ( NoahmpIO%SF_URBAN_PHYSICS > 0 )  then
@@ -519,6 +525,8 @@ contains
     NoahmpIO%CMXY            = undefined_real
     NoahmpIO%CHXY            = undefined_real
     NoahmpIO%FWETXY          = undefined_real
+    NoahmpIO%FSATXY          = undefined_real
+    NoahmpIO%WSURFXY         = undefined_real
     NoahmpIO%SNEQVOXY        = undefined_real
     NoahmpIO%ALBOLDXY        = undefined_real
     NoahmpIO%QSNOWXY         = undefined_real
@@ -678,6 +686,10 @@ contains
     NoahmpIO%HARVEST         = undefined_real
     NoahmpIO%SEASON_GDD      = undefined_real
     NoahmpIO%CROPTYPE        = undefined_real
+
+    ! wetland model
+    NoahmpIO%FSATMX          = undefined_real
+    NoahmpIO%WCAP            = undefined_real
 
     ! tile drainage
     NoahmpIO%QTDRAIN         = 0.0

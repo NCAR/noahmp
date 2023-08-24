@@ -43,7 +43,8 @@ contains
               SoilType        => noahmp%config%domain%SoilType        ,&
               FlagUrban       => noahmp%config%domain%FlagUrban       ,&
               RunoffSlopeType => noahmp%config%domain%RunoffSlopeType ,&
-              NumSnowLayerNeg => noahmp%config%domain%NumSnowLayerNeg  &
+              NumSnowLayerNeg => noahmp%config%domain%NumSnowLayerNeg ,&
+              OptWetlandModel => noahmp%config%nmlist%OptWetlandModel  &
              )
 ! -------------------------------------------------------------------------
 
@@ -77,6 +78,8 @@ contains
     noahmp%water%state%SoilMoistureEqui  (1:NumSoilLayer) = NoahmpIO%SMOISEQ    (I,1:NumSoilLayer,J)
     noahmp%water%state%RechargeGwDeepWT                   = 0.0
     noahmp%water%state%RechargeGwShallowWT                = 0.0
+    noahmp%water%state%SoilSaturateFrac                   = NoahmpIO%FSATXY     (I,J)
+    noahmp%water%state%WaterStorageWetland                = NoahmpIO%WSURFXY    (I,J)
 #ifdef WRF_HYDRO
     noahmp%water%state%WaterTableHydro                    = NoahmpIO%ZWATBLE2D  (I,J)
     noahmp%water%state%WaterHeadSfc                       = NoahmpIO%sfcheadrt  (I,J)
@@ -111,6 +114,7 @@ contains
     noahmp%water%param%GroundFrzCoeff                     = NoahmpIO%FRZK_TABLE
     noahmp%water%param%GridTopoIndex                      = NoahmpIO%TIMEAN_TABLE
     noahmp%water%param%SoilSfcSatFracMax                  = NoahmpIO%FSATMX_TABLE
+    noahmp%water%param%WetlandCapMax                      = NoahmpIO%WCAP_TABLE
     noahmp%water%param%SpecYieldGw                        = NoahmpIO%ROUS_TABLE
     noahmp%water%param%MicroPoreContent                   = NoahmpIO%CMIC_TABLE
     noahmp%water%param%WaterStorageLakeMax                = NoahmpIO%WSLMAX_TABLE
@@ -157,6 +161,12 @@ contains
        noahmp%water%param%SoilExpCoeffB         (IndexSoilLayer) = NoahmpIO%BEXP_TABLE  (SoilType(IndexSoilLayer))
        noahmp%water%param%SoilMatPotentialSat   (IndexSoilLayer) = NoahmpIO%PSISAT_TABLE(SoilType(IndexSoilLayer))
     enddo
+
+    ! spatial varying wetland parameters from input
+    if ( OptWetlandModel == 2 ) then
+       noahmp%water%param%SoilSfcSatFracMax      = NoahmpIO%FSATMX(I,J)
+       noahmp%water%param%WetlandCapMax          = NoahmpIO%WCAP(I,J)
+    endif 
    
     ! spatial varying soil texture and properties directly from input
     if ( noahmp%config%nmlist%OptSoilProperty == 4 ) then
