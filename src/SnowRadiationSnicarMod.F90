@@ -574,7 +574,7 @@ contains
              snl_lcl           =  -1
              h2osno_ice_lcl(0) =  SnowWaterEquiv
              h2osno_liq_lcl(0) =  0.0
-             snw_rds_lcl(0)    =  nint(SnowRadiusMin)
+             snw_rds_lcl(0)    =  nint(SnowRadius(0))!nint(SnowRadiusMin)
           else
              flg_nosnl         =  0
              snl_lcl           =  NumSnowLayerNeg

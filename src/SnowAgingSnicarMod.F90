@@ -261,7 +261,7 @@ contains
     !   set SnowRadius to fresh snow grain size:
 
     if (NumSnowLayerNeg == 0 .and. ((SnowfallGround > 0.0) .or. (SnowWaterEquiv > 0.0) .or. (SnowDepth > 0.0))) then
-       SnowRadius(SnowLayerBottom) = SnowRadiusMin
+       SnowRadius(SnowLayerBottom) = SnowRadiusFresh!SnowRadiusMin
     endif
 
     deallocate(TemperatureGradient)
