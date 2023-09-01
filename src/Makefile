@@ -263,14 +263,15 @@ SnowAgingSnicarMod.o:                 ../utility/Machine.o NoahmpVarType.o Const
 SnowAlbedoBatsMod.o:                  ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SnowAlbedoClassMod.o:                 ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SnowAlbedoSnicarMod.o:                ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
-                                      SnowFreshRadiusMod.o SnowAgingSnicarMod.o SnowRadiationSnicarMod.o
+                                      SnowRadiationSnicarMod.o
 SnowFreshRadiusMod.o:                 ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SnowInputSnicarMod.o:                 ../utility/Machine.o ../drivers/hrldas/NoahmpIOVarType.o
 SnowRadiationSnicarMod.o:             ../utility/Machine.o ../utility/PiecewiseLinearInterp1dMod.o \
                                       NoahmpVarType.o ConstantDefineMod.o
 SurfaceAlbedoMod.o:                   ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       SnowAgingBatsMod.o SnowAlbedoBatsMod.o SnowAlbedoClassMod.o \
-                                      SnowAlbedoSnicarMod.o GroundAlbedoMod.o CanopyRadiationTwoStreamMod.o
+                                      SnowAlbedoSnicarMod.o GroundAlbedoMod.o CanopyRadiationTwoStreamMod.o \
+                                      SnowAgingSnicarMod.o SnowRadiationSnicarMod.o
 SurfaceRadiationMod.o:                ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 EnergyMainMod.o:                      ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       GroundThermalPropertyMod.o SurfaceEnergyFluxVegetatedMod.o \

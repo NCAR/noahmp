@@ -12,6 +12,8 @@ module SurfaceAlbedoMod
   use SnowAlbedoSnicarMod,         only : SnowAlbedoSnicar
   use GroundAlbedoMod,             only : GroundAlbedo
   use CanopyRadiationTwoStreamMod, only : CanopyRadiationTwoStream
+  use SnowFreshRadiusMod,          only : SnowFreshRadius
+  use SnowAgingSnicarMod,          only : SnowAgingSnicar
 
   implicit none
 
@@ -109,6 +111,12 @@ contains
        FracRadSwAbsSnowDif(:,IndBand) = 0.0
     enddo
     VegAreaIndEff = LeafAreaIndEff + StemAreaIndEff
+
+    if ( OptSnowAlbedo == 3 ) then
+    ! snow radius
+       call SnowFreshRadius(noahmp)
+       call SnowAgingSnicar(noahmp)
+    endif
 
     ! solar radiation process is only done if there is light
     if ( CosSolarZenithAngle > 0 ) then

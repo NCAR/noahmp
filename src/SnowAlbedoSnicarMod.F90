@@ -5,8 +5,6 @@ module SnowAlbedoSnicarMod
   use Machine
   use NoahmpVarType
   use ConstantDefineMod
-  use SnowFreshRadiusMod,     only : SnowFreshRadius
-  use SnowAgingSnicarMod,     only : SnowAgingSnicar
   use SnowRadiationSnicarMod, only : SnowRadiationSnicar
 
   implicit none
@@ -37,10 +35,6 @@ contains
     ! initialization
     AlbedoSnowDir(1:NumSwRadBand) = 0.0
     AlbedoSnowDif(1:NumSwRadBand) = 0.0
-
-    ! snow radius
-    call SnowFreshRadius(noahmp)
-    call SnowAgingSnicar(noahmp)
 
     flg_slr_in = 1 !Direct
     call SnowRadiationSnicar(noahmp,flg_slr_in) 
