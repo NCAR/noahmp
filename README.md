@@ -1,4 +1,4 @@
-![image](https://user-images.githubusercontent.com/43385564/236596277-45d492e7-79fd-4006-83e2-3044106afd94.png)
+![noahmp_logo_update](https://github.com/NCAR/noahmp/assets/43385564/1fb47fc2-99bd-4360-9ed0-6d5656c29626)
 
 
 [![DOI](https://zenodo.org/badge/236657733.svg)](https://zenodo.org/badge/latestdoi/236657733)
