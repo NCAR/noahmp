@@ -271,7 +271,7 @@ SnowRadiationSnicarMod.o:             ../utility/Machine.o ../utility/PiecewiseL
 SurfaceAlbedoMod.o:                   ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       SnowAgingBatsMod.o SnowAlbedoBatsMod.o SnowAlbedoClassMod.o \
                                       SnowAlbedoSnicarMod.o GroundAlbedoMod.o CanopyRadiationTwoStreamMod.o \
-                                      SnowAgingSnicarMod.o SnowRadiationSnicarMod.o
+                                      SnowAgingSnicarMod.o SnowFreshRadiusMod.o
 SurfaceRadiationMod.o:                ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 EnergyMainMod.o:                      ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       GroundThermalPropertyMod.o SurfaceEnergyFluxVegetatedMod.o \
@@ -358,7 +358,8 @@ SnowWaterMainGlacierMod.o:               ../utility/Machine.o NoahmpVarType.o Co
                                          SnowpackHydrologyGlacierMod.o SnowAerosolSnicarMod.o 
 SnowpackHydrologyGlacierMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o SnowLayerCombineMod.o
 SurfaceAlbedoGlacierMod.o:               ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o SnowAgingBatsMod.o \
-                                         SnowAlbedoBatsMod.o SnowAlbedoClassMod.o GroundAlbedoGlacierMod.o SnowAlbedoSnicarMod.o
+                                         SnowAlbedoBatsMod.o SnowAlbedoClassMod.o GroundAlbedoGlacierMod.o SnowAlbedoSnicarMod.o \
+                                         SnowAgingSnicarMod.o SnowFreshRadiusMod.o
 SurfaceEmissivityGlacierMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SurfaceEnergyFluxGlacierMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                          VaporPressureSaturationMod.o ResistanceBareGroundMostMod.o

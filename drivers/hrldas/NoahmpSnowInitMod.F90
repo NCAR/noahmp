@@ -112,8 +112,8 @@ contains
 
           !SNICAR, can move out to initial file later
           if (NoahmpIO%IOPT_ALB == 3 )then
-             NoahmpIO%ALBSOILDIRXY(I,-NoahmpIO%NSNOW+1:0,J) = 0.0
-             NoahmpIO%ALBSOILDIFXY(I,-NoahmpIO%NSNOW+1:0,J) = 0.0
+             NoahmpIO%ALBSOILDIRXY(I,:,J) = 0.0
+             NoahmpIO%ALBSOILDIFXY(I,:,J) = 0.0
              NoahmpIO%SNRDSXY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
              NoahmpIO%SNFRXY  (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
              NoahmpIO%BCPHIXY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0

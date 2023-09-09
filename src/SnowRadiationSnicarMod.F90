@@ -1789,9 +1789,18 @@ contains
 
     endif ! if column has mim snow
 
-    if (AlbedoSnowDir(1)<0.0 .or. AlbedoSnowDir(2)<0.0 .or. AlbedoSnowDif(1)<0.0 .or. AlbedoSnowDif(2)<0.0 .or. AlbedoSnowDir(1)>1.0 .or. AlbedoSnowDir(2)>1.0 .or. AlbedoSnowDif(1)>1.0 .or. AlbedoSnowDif(2)>1.0)then
-      print *,'snow albedo',AlbedoSnowDir(1),AlbedoSnowDir(2),AlbedoSnowDif(1),AlbedoSnowDif(2),CosSolarZenithAngle
-      stop
+    if (flg_slr_in == 1) then
+       if (AlbedoSnowDir(1)<0.0 .or. AlbedoSnowDir(2)<0.0 .or. AlbedoSnowDir(1)>1.0 .or. AlbedoSnowDir(2)>1.0)then
+          print *,'snow albedo',flg_slr_in,AlbedoSnowDir(1),AlbedoSnowDir(2),CosSolarZenithAngle
+          stop
+       endif
+    endif
+
+    if (flg_slr_in == 2) then
+       if (AlbedoSnowDif(1)<0.0 .or. AlbedoSnowDif(2)<0.0 .or. AlbedoSnowDif(1)>1.0 .or. AlbedoSnowDif(2)>1.0)then
+          print *,'snow albedo',flg_slr_in,AlbedoSnowDif(1),AlbedoSnowDif(2),CosSolarZenithAngle
+          stop
+       endif
     endif
 
     end associate

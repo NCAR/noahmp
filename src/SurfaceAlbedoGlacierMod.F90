@@ -10,6 +10,8 @@ module SurfaceAlbedoGlacierMod
   use SnowAlbedoClassMod,            only : SnowAlbedoClass
   use GroundAlbedoGlacierMod,        only : GroundAlbedoGlacier
   use SnowAlbedoSnicarMod,           only : SnowAlbedoSnicar
+  use SnowFreshRadiusMod,          only : SnowFreshRadius
+  use SnowAgingSnicarMod,          only : SnowAgingSnicar
 
   implicit none
 
@@ -59,6 +61,12 @@ contains
        FracRadSwAbsSnowDir(:,IndBand) = 0.0
        FracRadSwAbsSnowDif(:,IndBand) = 0.0
     enddo
+
+    if ( OptSnowAlbedo == 3 ) then
+    ! snow radius
+       call SnowFreshRadius(noahmp)
+       call SnowAgingSnicar(noahmp)
+    endif
 
     ! solar radiation process is only done if there is light
     if ( CosSolarZenithAngle > 0 ) then
