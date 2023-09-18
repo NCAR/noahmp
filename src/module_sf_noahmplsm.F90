@@ -11522,7 +11522,7 @@ end subroutine psn_crop
 
         x=(1.-16.*zolf)**.25
         !psimk=2*alog(0.5*(1+x))+alog(0.5*(1+x*x))-2.*atan(x)+2.*atan(1.)
-        psimk=2.*dlog(0.5*(1+x))+dlog(0.5*(1+x*x))-2.*atan(x)+2.*atan1
+        psimk=2.*log(0.5*(1+x))+log(0.5*(1+x*x))-2.*atan(x)+2.*atan1
 
         ym=(1.-10.*zolf)**onethird
         !psimc=(3./2.)*log((ym**2.+ym+1.)/3.)-sqrt(3.)*atan((2.*ym+1)/sqrt(3.))+4.*atan(1.)/sqrt(3.)
