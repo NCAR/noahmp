@@ -1048,6 +1048,7 @@ contains
     character(cl)               :: zaxis_name
     character(cl), allocatable  :: fieldNameList(:)
     character(cl)               :: filename_tile
+    logical                     :: file_exists
     logical                     :: flag_soil_levels
     logical                     :: flag_snow_levels
     logical                     :: flag_snso_levels
@@ -1064,6 +1065,29 @@ contains
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(trim(subname)//' called for '//trim(filename), ESMF_LOGMSG_INFO)
+
+    !----------------------
+    ! Remove existing file
+    !----------------------
+
+    if (localPet == 0) then
+       ! loop over tiles
+       do i = 1, noahmp%domain%ntiles
+          ! file name for tile
+          sub_str_indx = index(trim(filename), "*", .true.)
+          write(filename_tile, fmt='(a,i1,a)') trim(filename(:sub_str_indx-1)), i , trim(filename(sub_str_indx+1:))
+
+          ! check file and delete
+          inquire(file=trim(filename_tile), exist=file_exists)
+          if (file_exists) then
+             call ESMF_LogWrite(trim(subname)//' deleting '//trim(filename_tile), ESMF_LOGMSG_INFO)
+             call system('rm -f '//trim(filename_tile))
+          end if
+       end do
+    end if
+
+    call ESMF_VMBarrier(vm, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------
     ! Create field bundles
