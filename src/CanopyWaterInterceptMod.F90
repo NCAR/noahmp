@@ -79,7 +79,7 @@ contains
 
     ! ----------------------- canopy liquid water ------------------------------
     ! maximum canopy water
-    CanopyLiqWaterMax =  CanopyLiqHoldCap * (LeafAreaIndEff + StemAreaIndEff)
+    CanopyLiqWaterMax =  VegFrac * CanopyLiqHoldCap * (LeafAreaIndEff + StemAreaIndEff)
 
     ! average rain interception and throughfall
     if ( (LeafAreaIndEff+StemAreaIndEff) > 0.0 ) then
@@ -102,7 +102,7 @@ contains
 
     ! ----------------------- canopy ice ------------------------------
     ! maximum canopy ice
-    CanopyIceMax = 6.6 * (0.27 + 46.0/SnowfallDensity) * (LeafAreaIndEff + StemAreaIndEff)
+    CanopyIceMax = VegFrac * 6.6 * (0.27 + 46.0/SnowfallDensity) * (LeafAreaIndEff + StemAreaIndEff)
 
     ! average snow interception and throughfall
     if ( (LeafAreaIndEff+StemAreaIndEff) > 0.0 ) then

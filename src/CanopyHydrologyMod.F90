@@ -31,6 +31,7 @@ contains
               LeafAreaIndEff    => noahmp%energy%state%LeafAreaIndEff    ,& ! in,    leaf area index, after burying by snow
               StemAreaIndEff    => noahmp%energy%state%StemAreaIndEff    ,& ! in,    stem area index, after burying by snow
               FlagFrozenCanopy  => noahmp%energy%state%FlagFrozenCanopy  ,& ! in,    used to define latent heat pathway
+              VegFrac           => noahmp%energy%state%VegFrac           ,& ! in,    greeness vegetation fraction
               SnowfallDensity   => noahmp%water%state%SnowfallDensity    ,& ! in,    bulk density of snowfall [kg/m3]
               CanopyLiqHoldCap  => noahmp%water%param%CanopyLiqHoldCap   ,& ! in,    maximum intercepted liquid water per unit veg area index [mm]
               CanopyLiqWater    => noahmp%water%state%CanopyLiqWater     ,& ! inout, intercepted canopy liquid water [mm]
@@ -67,7 +68,7 @@ contains
 
     ! canopy liquid water
     ! maximum canopy intercepted water
-    CanopyLiqWaterMax =  CanopyLiqHoldCap * (LeafAreaIndEff + StemAreaIndEff)
+    CanopyLiqWaterMax =  VegFrac * CanopyLiqHoldCap * (LeafAreaIndEff + StemAreaIndEff)
 
     ! canopy evaporation, transpiration, and dew
     if ( FlagFrozenCanopy .eqv. .false. ) then    ! Barlage: change to FlagFrozenCanopy
@@ -92,7 +93,7 @@ contains
 
     ! canopy ice 
     ! maximum canopy intercepted ice
-    CanopyIceMax = 6.6 * (0.27 + 46.0/SnowfallDensity) * (LeafAreaIndEff + StemAreaIndEff)
+    CanopyIceMax = VegFrac * 6.6 * (0.27 + 46.0/SnowfallDensity) * (LeafAreaIndEff + StemAreaIndEff)
 
     ! canopy sublimation and frost
     SublimCanopyIce = min( CanopyIce/MainTimeStep, SublimCanopyIce )
