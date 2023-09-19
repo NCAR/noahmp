@@ -53,6 +53,7 @@ contains
               VaporPresDeficitFac     => noahmp%energy%param%VaporPresDeficitFac     ,& ! in,  Parameter used in vapor pressure deficit function
               TemperatureCanopy       => noahmp%energy%state%TemperatureCanopy       ,& ! in,  vegetation temperature [K]
               PressureVaporCanAir     => noahmp%energy%state%PressureVaporCanAir     ,& ! in,  canopy air vapor pressure [Pa]
+              VegFrac                 => noahmp%energy%state%VegFrac                 ,& ! in,  greeness vegetation fraction
               RadPhotoActAbsSunlit    => noahmp%energy%flux%RadPhotoActAbsSunlit     ,& ! in,  average absorbed par for sunlit leaves [W/m2]
               RadPhotoActAbsShade     => noahmp%energy%flux%RadPhotoActAbsShade      ,& ! in,  average absorbed par for shaded leaves [W/m2]
               ResistanceStomataSunlit => noahmp%energy%state%ResistanceStomataSunlit ,& ! out, sunlit leaf stomatal resistance [s/m]
@@ -67,8 +68,8 @@ contains
     ResistanceTemp       = 0.0
     ResistanceVapDef     = 0.0
     ResistanceStomataTmp = 0.0
-    if ( IndexShade == 0 ) RadPhotoActAbsTmp = RadPhotoActAbsSunlit  ! Sunlit case
-    if ( IndexShade == 1 ) RadPhotoActAbsTmp = RadPhotoActAbsShade   ! Shaded case
+    if ( IndexShade == 0 ) RadPhotoActAbsTmp = RadPhotoActAbsSunlit / max(VegFrac,1.0e-6) ! Sunlit case
+    if ( IndexShade == 1 ) RadPhotoActAbsTmp = RadPhotoActAbsShade  / max(VegFrac,1.0e-6) ! Shaded case
 
     ! compute MixingRatioTmp and MixingRatioSat
     SpecHumidityTmp = 0.622 * PressureVaporCanAir / (PressureAirRefHeight - 0.378*PressureVaporCanAir) ! specific humidity
