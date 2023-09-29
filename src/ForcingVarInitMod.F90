@@ -47,6 +47,9 @@ contains
     noahmp%forcing%DepDust3                 = undefined_real
     noahmp%forcing%DepDust4                 = undefined_real
 
+    noahmp%forcing%VisFrac                  = undefined_real
+    noahmp%forcing%DirFrac                  = undefined_real
+
   end subroutine ForcingVarInitDefault
 
 end module ForcingVarInitMod

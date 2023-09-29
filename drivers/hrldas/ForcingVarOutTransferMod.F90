@@ -37,6 +37,10 @@ contains
     NoahmpIO%FORCWLSM  (I,J) = sqrt(noahmp%forcing%WindEastwardRefHeight**2 + &
                                     noahmp%forcing%WindNorthwardRefHeight**2)
 
+    NoahmpIO%DirFrac   (I,J) = noahmp%forcing%DirFrac
+    NoahmpIO%VisFrac   (I,J) = noahmp%forcing%VisFrac
+
+
     end associate
 
   end subroutine ForcingVarOutTransfer

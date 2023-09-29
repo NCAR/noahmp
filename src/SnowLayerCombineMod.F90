@@ -83,7 +83,8 @@ contains
              endif
 
           else
-             if ( NumSnowLayerOld < -1 ) then    ! MB/KM: change to NumSnowLayerNeg
+!             if ( NumSnowLayerOld < -1 ) then    ! MB/KM: change to NumSnowLayerNeg !samlin
+             if ( NumSnowLayerNeg < -1 ) then    ! MB/KM: change to NumSnowLayerNeg !samlin
                 SnowLiqWater(J-1)           = SnowLiqWater(J-1) + SnowLiqWater(J)
                 SnowIce(J-1)                = SnowIce(J-1) + SnowIce(J)
                 ThicknessSnowSoilLayer(J-1) = ThicknessSnowSoilLayer(J-1) + ThicknessSnowSoilLayer(J)

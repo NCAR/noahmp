@@ -397,6 +397,9 @@ contains
     if ( .not. allocated (NoahmpIO%ALBSFCDIRXY))  allocate ( NoahmpIO%ALBSFCDIRXY  (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! surface albedo (direct)
     if ( .not. allocated (NoahmpIO%ALBSFCDIFXY))  allocate ( NoahmpIO%ALBSFCDIFXY  (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! surface albedo (diffuse)
 
+    if ( .not. allocated (NoahmpIO%VisFrac) )     allocate ( NoahmpIO%VisFrac      (XSTART:XEND,YSTART:YEND) )
+    if ( .not. allocated (NoahmpIO%DirFrac) )     allocate ( NoahmpIO%DirFrac      (XSTART:XEND,YSTART:YEND) )
+
     ! Needed for crop model (OPT_CROP=1)
     if ( .not. allocated (NoahmpIO%PGSXY)     ) allocate ( NoahmpIO%PGSXY      (XSTART:XEND,  YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%CROPCAT)   ) allocate ( NoahmpIO%CROPCAT    (XSTART:XEND,  YSTART:YEND) )

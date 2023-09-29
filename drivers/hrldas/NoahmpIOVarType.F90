@@ -474,6 +474,8 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSNOWDIFXY        ! snow albedo (diffuse)
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIRXY         ! surface albedo (direct)
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIFXY         ! surface albedo (diffuse)
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  VisFrac             ! fraction of visible band
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  DirFrac             ! fraction of direct band
 
 !------------------------------------------------------------------------
 ! Needed for TILE DRAINAGE IF IOPT_TDRN = 1 OR 2

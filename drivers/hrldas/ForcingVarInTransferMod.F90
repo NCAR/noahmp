@@ -62,6 +62,9 @@ contains
     noahmp%forcing%PrecipNonConvRefHeight  = noahmp%forcing%PrecipNonConvRefHeight + PrecipOtherRefHeight
     noahmp%forcing%PrecipSnowRefHeight     = noahmp%forcing%PrecipSnowRefHeight + PrecipOtherRefHeight * NoahmpIO%SR(I,J)
 
+    noahmp%forcing%DirFrac                 = NoahmpIO%DirFrac(I,J)
+    noahmp%forcing%VisFrac                 = NoahmpIO%VisFrac(I,J)
+
     !SNICAR
     if (noahmp%config%nmlist%OptSnowAlbedo == 3 )then
        if (noahmp%config%nmlist%FlagSnicarAerosolReadTable == .true.) then 

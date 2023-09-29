@@ -41,6 +41,8 @@ module ForcingVarType
     real(kind=kind_noahmp) :: DepDust3                ! dust species 3 deposition [kg m-2 s-1]
     real(kind=kind_noahmp) :: DepDust4                ! dust species 4 deposition [kg m-2 s-1]
 
+    real(kind=kind_noahmp) :: VisFrac                 ! fraction of visible band radiation
+    real(kind=kind_noahmp) :: DirFrac                 ! fraction of direct raidation
   end type forcing_type
 
 end module ForcingVarType
