@@ -217,16 +217,6 @@ Model Fields Used for Coupling
      - noahmp%forc%v1
      - bottom layer meridional wind
      -
-   * - inst_zonal_wind_height_lowest_from_phys (`Sa_ua`)
-     - m s-1 
-     - noahmp%forc%u1
-     - bottom layer zonal wind
-     - used if coupled with active atmosphere
-   * - inst_merid_wind_height_lowest_from_phys (`Sa_va`)
-     - m s-1 
-     - noahmp%forc%v1
-     - bottom layer meridional wind
-     - used if coupled with  active atmosphere
    * - inst_exner_function_height_lowest (`Sa_exner`)
      - 1 
      - noahmp%forc%prslk1

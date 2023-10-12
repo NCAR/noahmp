@@ -106,8 +106,6 @@ contains
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_qa')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_u')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_v')
-    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_ua')
-    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_va')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_exner')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_ustar')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_swdn')
@@ -315,11 +313,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, 'Sa_u'      , noahmp%forc%u1, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, 'Sa_ua'     , noahmp%forc%u1, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, 'Sa_v'      , noahmp%forc%v1, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, 'Sa_va'     , noahmp%forc%v1, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, 'Sa_exner'  , noahmp%forc%prslk1, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
