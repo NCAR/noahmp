@@ -6656,7 +6656,7 @@ ENDIF   ! CROPTYPE == 0
                 SNICE(J+1) = SNICE(J+1) + SNICE(J)
                 DZSNSO(J+1) = DZSNSO(J+1) + DZSNSO(J)
              ELSE
-               IF (ISNOW_OLD < -1) THEN    ! MB/KM: change to ISNOW
+               IF (ISNOW < -1) THEN    ! MB/KM: change to ISNOW
                 SNLIQ(J-1) = SNLIQ(J-1) + SNLIQ(J)
                 SNICE(J-1) = SNICE(J-1) + SNICE(J)
                 DZSNSO(J-1) = DZSNSO(J-1) + DZSNSO(J)
