@@ -1447,7 +1447,7 @@ ENDIF   ! CROPTYPE == 0
 ! --------------------------- liquid water ------------------------------
 ! maximum canopy water
 
-      MAXLIQ =  parameters%CH2OP * (ELAI+ ESAI)
+      MAXLIQ =  FVEG * parameters%CH2OP * (ELAI+ ESAI)
 
 ! average interception and throughfall
 
@@ -1477,7 +1477,7 @@ ENDIF   ! CROPTYPE == 0
 ! --------------------------- canopy ice ------------------------------
 ! for canopy ice
 
-      MAXSNO = 6.6*(0.27+46.0/BDFALL) * (ELAI+ ESAI)
+      MAXSNO = FVEG * 6.6*(0.27+46.0/BDFALL) * (ELAI+ ESAI)
 
       IF((ELAI+ ESAI) .GT. 0.0) THEN
          QINTS = FVEG * SNOW * FP
@@ -3935,21 +3935,21 @@ ENDIF   ! CROPTYPE == 0
      IF(ITER == 1) THEN
         IF (OPT_CRS == 1) then  ! Ball-Berry
          CALL STOMATA (parameters,VEGTYP,MPE   ,PARSUN ,FOLN  ,ILOC  , JLOC , & !in       
-                       TV    ,ESTV  ,EAH    ,SFCTMP,SFCPRS, & !in
+                       TV    ,ESTV  ,EAH    ,SFCTMP,SFCPRS, FVEG, & !in
                        O2AIR ,CO2AIR,IGS    ,BTRAN ,RB    , & !in
                        RSSUN ,PSNSUN)                         !out
 
          CALL STOMATA (parameters,VEGTYP,MPE   ,PARSHA ,FOLN  ,ILOC  , JLOC , & !in
-                       TV    ,ESTV  ,EAH    ,SFCTMP,SFCPRS, & !in
+                       TV    ,ESTV  ,EAH    ,SFCTMP,SFCPRS, FVEG, & !in
                        O2AIR ,CO2AIR,IGS    ,BTRAN ,RB    , & !in
                        RSSHA ,PSNSHA)                         !out
         END IF
 
         IF (OPT_CRS == 2) then  ! Jarvis
-         CALL  CANRES (parameters,PARSUN,TV    ,BTRAN ,EAH    ,SFCPRS, & !in
+         CALL  CANRES (parameters,PARSUN,TV    ,BTRAN ,EAH    ,SFCPRS, FVEG, & !in
                        RSSUN ,PSNSUN,ILOC  ,JLOC   )          !out
 
-         CALL  CANRES (parameters,PARSHA,TV    ,BTRAN ,EAH    ,SFCPRS, & !in
+         CALL  CANRES (parameters,PARSHA,TV    ,BTRAN ,EAH    ,SFCPRS, FVEG, & !in
                        RSSHA ,PSNSHA,ILOC  ,JLOC   )          !out
         END IF
 
@@ -5003,7 +5003,7 @@ ENDIF   ! CROPTYPE == 0
 !== begin stomata ==================================================================================
 
   SUBROUTINE STOMATA (parameters,VEGTYP  ,MPE     ,APAR    ,FOLN    ,ILOC    , JLOC, & !in
-                      TV      ,EI      ,EA      ,SFCTMP  ,SFCPRS  , & !in
+                      TV      ,EI      ,EA      ,SFCTMP  ,SFCPRS  , FVEG, & !in
                       O2      ,CO2     ,IGS     ,BTRAN   ,RB      , & !in
                       RS      ,PSN     )                              !out
 ! --------------------------------------------------------------------------------------------------
@@ -5017,7 +5017,7 @@ ENDIF   ! CROPTYPE == 0
 
       REAL, INTENT(IN)    :: IGS    !growing season index (0=off, 1=on)
       REAL, INTENT(IN)    :: MPE    !prevents division by zero errors
-
+      REAL, INTENT(IN)    :: FVEG   !vegetation greeness fraction
       REAL, INTENT(IN)    :: TV     !foliage temperature (k)
       REAL, INTENT(IN)    :: EI     !vapor pressure inside leaf (sat vapor press at tv) (pa)
       REAL, INTENT(IN)    :: EA     !vapor pressure of canopy air (pa)
@@ -5076,6 +5076,7 @@ ENDIF   ! CROPTYPE == 0
 ! initialize RS=RSMAX and PSN=0 because will only do calculations
 ! for APAR > 0, in which case RS <= RSMAX and PSN >= 0
 
+         APAR = APAR / max(FVEG,1.0e-6)   ! scaling APAR back to stand scale
          CF = SFCPRS/(8.314*SFCTMP)*1.0e06
          RS = 1.0/parameters%BP * CF
          PSN = 0.0
@@ -5135,7 +5136,7 @@ ENDIF   ! CROPTYPE == 0
 
 !== begin canres ===================================================================================
 
-  SUBROUTINE CANRES (parameters,PAR   ,SFCTMP,RCSOIL ,EAH   ,SFCPRS , & !in
+  SUBROUTINE CANRES (parameters,PAR   ,SFCTMP,RCSOIL ,EAH   ,SFCPRS , FVEG, & !in
                      RC    ,PSN   ,ILOC   ,JLOC  )           !out
 
 ! --------------------------------------------------------------------------------------------------
@@ -5162,7 +5163,7 @@ ENDIF   ! CROPTYPE == 0
     REAL,                     INTENT(IN)  :: SFCPRS !surface pressure (pa)
     REAL,                     INTENT(IN)  :: EAH    !water vapor pressure (pa)
     REAL,                     INTENT(IN)  :: RCSOIL !soil moisture stress factor
-
+    REAL,                     INTENT(IN)  :: FVEG   !vegetation greeness fraction
 !outputs
 
     REAL,                     INTENT(OUT) :: RC     !canopy resistance per unit LAI
@@ -5186,6 +5187,7 @@ ENDIF   ! CROPTYPE == 0
     RCS    = 0.0
     RCT    = 0.0
     RCQ    = 0.0
+    PAR    = PAR / max(FVEG,1.0e-6)   ! scaling PAR back to stand scale
 
 !  compute Q2 and Q2SAT
 
@@ -6315,7 +6317,7 @@ ENDIF   ! CROPTYPE == 0
 ! --------------------------- liquid water ------------------------------
 ! maximum canopy water
 
-      MAXLIQ =  parameters%CH2OP * (ELAI+ ESAI)
+      MAXLIQ =  FVEG * parameters%CH2OP * (ELAI+ ESAI)
 
 ! evaporation, transpiration, and dew
 
@@ -6343,7 +6345,7 @@ ENDIF   ! CROPTYPE == 0
 ! --------------------------- canopy ice ------------------------------
 ! for canopy ice
 
-      MAXSNO = 6.6*(0.27+46.0/BDFALL) * (ELAI+ ESAI)
+      MAXSNO = FVEG * 6.6*(0.27+46.0/BDFALL) * (ELAI+ ESAI)
 
       QSUBC = MIN(CANICE/DT,QSUBC) 
       CANICE= MAX(0.0,CANICE + (QFROC-QSUBC)*DT)
