@@ -3505,7 +3505,7 @@ ILOOP : DO I = its, ite
     QFX(I,J)      = FRC_URB2D(I,J) * LH_KINEMATIC_URB &
                        + (1-FRC_URB2D(I,J))* QFX(I,J)                                  ![kg/m/m/s] 
     LH(I,J)       = FRC_URB2D(I,J) * LH_URB  + (1-FRC_URB2D(I,J)) * LH(I,J)            ![W/m/m]   
-    GRDFLX(I,J)   = FRC_URB2D(I,J) * (G_URB) + (1-FRC_URB2D(I,J)) * GRDFLX(I,J)        ![W/m/m]  
+    GRDFLX(I,J)   = FRC_URB2D(I,J) * (G_URB*(-1.0)) + (1-FRC_URB2D(I,J)) * GRDFLX(I,J) ![W/m/m] positive: downward direction
     TSK(I,J)      = FRC_URB2D(I,J) * TS_URB  + (1-FRC_URB2D(I,J)) * TSK(I,J)           ![K]    
 !    Q1            = QSFC(I,J)/(1.0+QSFC(I,J))                                         
 !    Q1            = FRC_URB2D(I,J) * QS_URB  + (1-FRC_URB2D(I,J)) * Q1                 ![-]
@@ -3734,7 +3734,7 @@ IF((SF_URBAN_PHYSICS == 2).OR.(SF_URBAN_PHYSICS == 3))THEN
 
 ! rename *_urb to sh_urb2d,lh_urb2d,g_urb2d,rn_urb2d
 
-    grdflx(i,j)   = (1.-frc_urb2d(i,j))*grdflx_rural(i,j)+ frc_urb2d(i,j)*grdflx_urb(i,j)
+    grdflx(i,j)   = (1.-frc_urb2d(i,j))*grdflx_rural(i,j)+ frc_urb2d(i,j)*grdflx_urb(i,j)*(-1.0) ! positive: downward direction
     qfx(i,j)      = (1.-frc_urb2d(i,j))*qfx_rural(i,j)   + qfx_urb(i,j)
     lh(i,j)       = qfx(i,j)*xlv
     hfx(i,j)      = hfx_urb(i,j)                         + (1-frc_urb2d(i,j))*hfx_rural(i,j)      ![W/m/m]
