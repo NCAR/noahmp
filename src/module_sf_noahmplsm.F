@@ -5067,6 +5067,8 @@ ENDIF   ! CROPTYPE == 0
       REAL :: J           !electron transport (umol co2/m2/s)
       REAL :: CEA         !constrain ea or else model blows up
       REAL :: CF          !s m2/umol -> s/m
+      REAL :: APAR_scale  !APAR scaled by FVEG from grid level to stand scale
+
 
       F1(AB,BC) = AB**((BC-25.0)/10.0)
       F2(AB) = 1.0 + EXP((-2.2E05+710.0*(AB+273.16))/(8.314*(AB+273.16)))
@@ -5076,16 +5078,16 @@ ENDIF   ! CROPTYPE == 0
 ! initialize RS=RSMAX and PSN=0 because will only do calculations
 ! for APAR > 0, in which case RS <= RSMAX and PSN >= 0
 
-         APAR = APAR / max(FVEG,1.0e-6)   ! scaling APAR back to stand scale
+         APAR_scale = APAR / max(FVEG,1.0e-6)   ! scaling APAR back to stand scale
          CF = SFCPRS/(8.314*SFCTMP)*1.0e06
          RS = 1.0/parameters%BP * CF
          PSN = 0.0
 
-         IF (APAR .LE. 0.0) RETURN
+         IF (APAR_scale .LE. 0.0) RETURN
 
          FNF = MIN( FOLN/MAX(MPE,parameters%FOLNMX), 1.0 )
          TC  = TV-TFRZ
-         PPF = 4.6*APAR
+         PPF = 4.6*APAR_scale
          J   = PPF*parameters%QE25
          KC  = parameters%KC25 * F1(parameters%AKC,TC)
          KO  = parameters%KO25 * F1(parameters%AKO,TC)
@@ -5175,9 +5177,10 @@ ENDIF   ! CROPTYPE == 0
     REAL                                  :: RCS
     REAL                                  :: RCT
     REAL                                  :: FF
-    REAL                                  :: Q2     !water vapor mixing ratio (kg/kg)
-    REAL                                  :: Q2SAT  !saturation Q2
-    REAL                                  :: DQSDT2 !d(Q2SAT)/d(T)
+    REAL                                  :: Q2        !water vapor mixing ratio (kg/kg)
+    REAL                                  :: Q2SAT     !saturation Q2
+    REAL                                  :: DQSDT2    !d(Q2SAT)/d(T)
+    REAL                                  :: PAR_scale !PAR scaled by FVEG from grid level to stand scale
 
 ! RSMIN, RSMAX, TOPT, RGL, HS are canopy stress parameters set in REDPRM
 ! ----------------------------------------------------------------------
@@ -5187,7 +5190,7 @@ ENDIF   ! CROPTYPE == 0
     RCS    = 0.0
     RCT    = 0.0
     RCQ    = 0.0
-    PAR    = PAR / max(FVEG,1.0e-6)   ! scaling PAR back to stand scale
+    PAR_scale = PAR / max(FVEG,1.0e-6)   ! scaling PAR back to stand scale
 
 !  compute Q2 and Q2SAT
 
@@ -5198,7 +5201,7 @@ ENDIF   ! CROPTYPE == 0
 
 ! contribution due to incoming solar radiation
 
-    FF  = 2.0 * PAR / parameters%RGL                
+    FF  = 2.0 * PAR_scale / parameters%RGL                
     RCS = (FF + parameters%RSMIN / parameters%RSMAX) / (1.0+ FF)
     RCS = MAX (RCS,0.0001)
 
