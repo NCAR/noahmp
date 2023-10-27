@@ -115,7 +115,7 @@ contains
     integer                 :: snicar_snowoptics_option           = 3
     integer                 :: snicar_dustoptics_option           = 1
     integer                 :: snicar_rtsolver_option             = 2
-    integer                 :: snicar_snowshape_option            = 1
+    integer                 :: snicar_snowshape_option            = 3
     logical                 :: snicar_use_aerosol                 = .true.
     logical                 :: snicar_snowbc_intmix               = .true.
     logical                 :: snicar_snowdust_intmix             = .false.
