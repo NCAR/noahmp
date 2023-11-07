@@ -856,12 +856,16 @@
 /
 
 &noahmp_snicar_parameters
- DepBChydropho    = 0.0  ! hydrophobic Black Carbon deposition [kg m-2 s-1], assume constant read from table
- DepBChydrophi    = 0.0  ! hydrophillic Black Carbon deposition [kg m-2 s-1], assume constant read from table
- DepOChydropho    = 0.0  ! hydrophobic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
- DepOChydrophi    = 0.0  ! hydrophillic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
- DepDust1         = 0.0  ! dust species 1 deposition [kg m-2 s-1], assume constant read from table
- DepDust2         = 0.0  ! dust species 2 deposition [kg m-2 s-1], assume constant read from table
- DepDust3         = 0.0  ! dust species 3 deposition [kg m-2 s-1], assume constant read from table
- DepDust4         = 0.0  ! dust species 4 deposition [kg m-2 s-1], assume constant read from table
+ SnowRadiusMin      = 54.526  ! minimum allowed snow effective radius (also cold "fresh snow" value), can't be lower than 30.0 [microns]
+ FreshSnowRadiusMax = 204.526 ! maximum warm fresh snow effective radius [microns]
+ SnowRadiusRefrz    = 1000.0  ! Effective radius of re-frozen snow [microns]
+ DepBChydropho      = 0.0     ! hydrophobic Black Carbon deposition [kg m-2 s-1], assume constant read from table
+ DepBChydrophi      = 0.0     ! hydrophillic Black Carbon deposition [kg m-2 s-1], assume constant read from table
+ DepOChydropho      = 0.0     ! hydrophobic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
+ DepOChydrophi      = 0.0     ! hydrophillic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
+ DepDust1           = 0.0     ! dust species 1 deposition [kg m-2 s-1], assume constant read from table
+ DepDust2           = 0.0     ! dust species 2 deposition [kg m-2 s-1], assume constant read from table
+ DepDust3           = 0.0     ! dust species 3 deposition [kg m-2 s-1], assume constant read from table
+ DepDust4           = 0.0     ! dust species 4 deposition [kg m-2 s-1], assume constant read from table
+ DepDust5           = 0.0     ! dust species 5 deposition [kg m-2 s-1], assume constant read from table
 /

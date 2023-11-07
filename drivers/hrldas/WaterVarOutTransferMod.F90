@@ -141,6 +141,7 @@ contains
        NoahmpIO%DUST2XY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassDust2(-NumSnowLayerMax+1:0)
        NoahmpIO%DUST3XY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassDust3(-NumSnowLayerMax+1:0)
        NoahmpIO%DUST4XY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassDust4(-NumSnowLayerMax+1:0)
+       NoahmpIO%DUST5XY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassDust5(-NumSnowLayerMax+1:0)
        NoahmpIO%MassConcBCPHIXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassConcBChydrophi(-NumSnowLayerMax+1:0)
        NoahmpIO%MassConcBCPHOXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassConcBChydropho(-NumSnowLayerMax+1:0)
        NoahmpIO%MassConcOCPHIXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassConcOChydrophi(-NumSnowLayerMax+1:0)
@@ -149,7 +150,7 @@ contains
        NoahmpIO%MassConcDUST2XY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassConcDust2(-NumSnowLayerMax+1:0)
        NoahmpIO%MassConcDUST3XY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassConcDust3(-NumSnowLayerMax+1:0)
        NoahmpIO%MassConcDUST4XY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassConcDust4(-NumSnowLayerMax+1:0)
-
+       NoahmpIO%MassConcDUST5XY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassConcDust5(-NumSnowLayerMax+1:0)
     endif
 
     ! irrigation

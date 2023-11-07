@@ -168,6 +168,7 @@ module WaterVarType
     real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust2             ! mass of dust species 2 in snow [kg m-2]
     real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust3             ! mass of dust species 3 in snow [kg m-2]
     real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust4             ! mass of dust species 4 in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust5             ! mass of dust species 5 in snow [kg m-2]
     real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcBChydropho    ! mass concentration of hydrophobic Black Carbon in snow [kg/kg]
     real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcBChydrophi    ! mass concentration of hydrophillic Black Carbon in snow [kg/kg]
     real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcOChydropho    ! mass concentration of hydrophobic Organic Carbon in snow [kg/kg]
@@ -176,6 +177,7 @@ module WaterVarType
     real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcDust2         ! mass concentration of dust species 2 in snow [kg/kg]
     real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcDust3         ! mass concentration of dust species 3 in snow [kg/kg]
     real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcDust4         ! mass concentration of dust species 4 in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcDust5         ! mass concentration of dust species 5 in snow [kg/kg]
 
   end type state_type
 
@@ -240,6 +242,9 @@ module WaterVarType
     real(kind=kind_noahmp) :: SoilMatPotentialWilt       ! soil metric potential for wilting point [m]
     real(kind=kind_noahmp) :: SnowMeltFac                ! snowmelt m parameter in snow cover fraction calculation
     real(kind=kind_noahmp) :: SnowCoverFac               ! snow cover factor [m] (originally hard-coded 2.5*z0 in SCF formulation)
+    real(kind=kind_noahmp) :: SnowRadiusMin              ! minimum allowed snow effective radius for SNICAR (also cold "fresh snow" value) [microns]
+    real(kind=kind_noahmp) :: FreshSnowRadiusMax         ! maximum warm fresh snow effective radius [microns]
+    real(kind=kind_noahmp) :: SnowRadiusRefrz            ! Effective radius of re-frozen snow [microns]
 
     real(kind=kind_noahmp), allocatable, dimension(:)     :: SoilMoistureSat        ! saturated value of soil moisture [m3/m3]
     real(kind=kind_noahmp), allocatable, dimension(:)     :: SoilMoistureWilt       ! wilting point soil moisture [m3/m3]

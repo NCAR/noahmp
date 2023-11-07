@@ -56,7 +56,7 @@ contains
     integer                            :: ng                      ! gaussian integration index
     integer                            :: ngmax = 8               ! maxmimum gaussian integration index
     integer                            :: trip                    ! flag: =1 to redo RT calculation if result is unrealistic
-    integer                            :: NumSnicarAerosol = 8    ! number of aerosol species in snowpack
+    integer                            :: NumSnicarAerosol = 9    ! number of aerosol species in snowpack
     integer                            :: SnowLayerTop            ! top snow layer index [idx]
     integer                            :: SnowLayerBottom         ! bottom snow layer index [idx]
     integer                            :: LoopInd                 ! do loop/array indices
@@ -115,7 +115,6 @@ contains
     real(kind=kind_noahmp)             :: wvl_ct5(1:5)            ! band center wavelength (um) for 5-band case
     real(kind=kind_noahmp)             :: wvl_ct480(1:480)        ! band center wavelength (um) for 480-band case, computed below
     real(kind=kind_noahmp)             :: SnowWaterEquivMin       ! minimum snow mass required for SNICAR RT calculation [kg m-2] !samlin, may need to change this
-    real(kind=kind_noahmp)             :: SnowRadiusMin  = 54.526 ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
     real(kind=kind_noahmp)             :: diam_ice                ! effective snow grain diameter (SSA-equivalent) unit: microns
     real(kind=kind_noahmp)             :: fs_sphd                 ! shape factor for spheroid snow
     real(kind=kind_noahmp)             :: fs_hex                  ! shape factor for reference hexagonal snow
@@ -345,27 +344,30 @@ contains
               ss_alb_bc1             => noahmp%energy%param%ss_alb_bc1                 ,& ! in, Mie single scatter albedos for hydrophillic BC
               asm_prm_bc1            => noahmp%energy%param%asm_prm_bc1                ,& ! in, asymmetry parameter for hydrophillic BC
               ext_cff_mss_bc1        => noahmp%energy%param%ext_cff_mss_bc1            ,& ! in, mass extinction coefficient for hydrophillic BC [m2/kg]
-              ss_alb_bc2             => noahmp%energy%param%ss_alb_bc2                 ,& ! in, Mie single scatter albedos for hydrophillic BC
-              asm_prm_bc2            => noahmp%energy%param%asm_prm_bc2                ,& ! in, asymmetry parameter for hydrophillic BC
-              ext_cff_mss_bc2        => noahmp%energy%param%ext_cff_mss_bc2            ,& ! in, mass extinction coefficient for hydrophillic BC [m2/kg]
-              ss_alb_oc1             => noahmp%energy%param%ss_alb_oc1                 ,& ! in, Mie single scatter albedos for hydrophillic BC
-              asm_prm_oc1            => noahmp%energy%param%asm_prm_oc1                ,& ! in, asymmetry parameter for hydrophillic BC
-              ext_cff_mss_oc1        => noahmp%energy%param%ext_cff_mss_oc1            ,& ! in, mass extinction coefficient for hydrophillic BC [m2/kg]
-              ss_alb_oc2             => noahmp%energy%param%ss_alb_oc2                 ,& ! in, Mie single scatter albedos for hydrophillic BC
-              asm_prm_oc2            => noahmp%energy%param%asm_prm_oc2                ,& ! in, asymmetry parameter for hydrophillic BC
-              ext_cff_mss_oc2        => noahmp%energy%param%ext_cff_mss_oc2            ,& ! in, mass extinction coefficient for hydrophillic BC [m2/kg]
-              ss_alb_dst1            => noahmp%energy%param%ss_alb_dst1                ,& ! in, Mie single scatter albedos for hydrophillic BC
-              asm_prm_dst1           => noahmp%energy%param%asm_prm_dst1               ,& ! in, asymmetry parameter for hydrophillic BC
-              ext_cff_mss_dst1       => noahmp%energy%param%ext_cff_mss_dst1           ,& ! in, mass extinction coefficient for hydrophillic BC [m2/kg]
-              ss_alb_dst2            => noahmp%energy%param%ss_alb_dst2                ,& ! in, Mie single scatter albedos for hydrophillic BC
-              asm_prm_dst2           => noahmp%energy%param%asm_prm_dst2               ,& ! in, asymmetry parameter for hydrophillic BC
-              ext_cff_mss_dst2       => noahmp%energy%param%ext_cff_mss_dst2           ,& ! in, mass extinction coefficient for hydrophillic BC [m2/kg]
-              ss_alb_dst3            => noahmp%energy%param%ss_alb_dst3                ,& ! in, Mie single scatter albedos for hydrophillic BC
-              asm_prm_dst3           => noahmp%energy%param%asm_prm_dst3               ,& ! in, asymmetry parameter for hydrophillic BC
-              ext_cff_mss_dst3       => noahmp%energy%param%ext_cff_mss_dst3           ,& ! in, mass extinction coefficient for hydrophillic BC [m2/kg]
-              ss_alb_dst4            => noahmp%energy%param%ss_alb_dst4                ,& ! in, Mie single scatter albedos for hydrophillic BC
-              asm_prm_dst4           => noahmp%energy%param%asm_prm_dst4               ,& ! in, asymmetry parameter for hydrophillic BC
-              ext_cff_mss_dst4       => noahmp%energy%param%ext_cff_mss_dst4           ,& ! in, mass extinction coefficient for hydrophillic BC [m2/kg]
+              ss_alb_bc2             => noahmp%energy%param%ss_alb_bc2                 ,& ! in, Mie single scatter albedos for hydrophobic BC
+              asm_prm_bc2            => noahmp%energy%param%asm_prm_bc2                ,& ! in, asymmetry parameter for hydrophobic BC
+              ext_cff_mss_bc2        => noahmp%energy%param%ext_cff_mss_bc2            ,& ! in, mass extinction coefficient for hydrophobic BC [m2/kg]
+              ss_alb_oc1             => noahmp%energy%param%ss_alb_oc1                 ,& ! in, Mie single scatter albedos for hydrophillic OC
+              asm_prm_oc1            => noahmp%energy%param%asm_prm_oc1                ,& ! in, asymmetry parameter for hydrophillic OC
+              ext_cff_mss_oc1        => noahmp%energy%param%ext_cff_mss_oc1            ,& ! in, mass extinction coefficient for hydrophillic OC [m2/kg]
+              ss_alb_oc2             => noahmp%energy%param%ss_alb_oc2                 ,& ! in, Mie single scatter albedos for hydrophobic OC
+              asm_prm_oc2            => noahmp%energy%param%asm_prm_oc2                ,& ! in, asymmetry parameter for hydrophobic OC
+              ext_cff_mss_oc2        => noahmp%energy%param%ext_cff_mss_oc2            ,& ! in, mass extinction coefficient for hydrophobic OC [m2/kg]
+              ss_alb_dst1            => noahmp%energy%param%ss_alb_dst1                ,& ! in, Mie single scatter albedos for dust species 1
+              asm_prm_dst1           => noahmp%energy%param%asm_prm_dst1               ,& ! in, asymmetry parameter for dust species 1
+              ext_cff_mss_dst1       => noahmp%energy%param%ext_cff_mss_dst1           ,& ! in, mass extinction coefficient for dust species 1 [m2/kg]
+              ss_alb_dst2            => noahmp%energy%param%ss_alb_dst2                ,& ! in, Mie single scatter albedos for dust species 2
+              asm_prm_dst2           => noahmp%energy%param%asm_prm_dst2               ,& ! in, asymmetry parameter for dust species 2
+              ext_cff_mss_dst2       => noahmp%energy%param%ext_cff_mss_dst2           ,& ! in, mass extinction coefficient for dust species 2 [m2/kg]
+              ss_alb_dst3            => noahmp%energy%param%ss_alb_dst3                ,& ! in, Mie single scatter albedos for dust species 3
+              asm_prm_dst3           => noahmp%energy%param%asm_prm_dst3               ,& ! in, asymmetry parameter for dust species 3
+              ext_cff_mss_dst3       => noahmp%energy%param%ext_cff_mss_dst3           ,& ! in, mass extinction coefficient for dust species 3 [m2/kg]
+              ss_alb_dst4            => noahmp%energy%param%ss_alb_dst4                ,& ! in, Mie single scatter albedos for dust species 4
+              asm_prm_dst4           => noahmp%energy%param%asm_prm_dst4               ,& ! in, asymmetry parameter for dust species 4
+              ext_cff_mss_dst4       => noahmp%energy%param%ext_cff_mss_dst4           ,& ! in, mass extinction coefficient for dust species 4 [m2/kg]
+              ss_alb_dst5            => noahmp%energy%param%ss_alb_dst5                ,& ! in, Mie single scatter albedos for dust species 5
+              asm_prm_dst5           => noahmp%energy%param%asm_prm_dst5               ,& ! in, asymmetry parameter for dust species 5
+              ext_cff_mss_dst5       => noahmp%energy%param%ext_cff_mss_dst5           ,& ! in, mass extinction coefficient for dust species 5 [m2/kg]
               MassConcBChydropho     => noahmp%water%state%MassConcBChydropho          ,& ! in, mass concentration of hydrophobic Black Carbon in snow [kg/kg]
               MassConcBChydrophi     => noahmp%water%state%MassConcBChydrophi          ,& ! in, mass concentration of hydrophillic Black Carbon in snow [kg/kg]
               MassConcOChydropho     => noahmp%water%state%MassConcOChydropho          ,& ! in, mass concentration of hydrophobic Organic Carbon in snow [kg/kg]
@@ -374,6 +376,7 @@ contains
               MassConcDust2          => noahmp%water%state%MassConcDust2               ,& ! in, mass concentration of dust species 2 in snow [kg/kg]
               MassConcDust3          => noahmp%water%state%MassConcDust3               ,& ! in, mass concentration of dust species 3 in snow [kg/kg]
               MassConcDust4          => noahmp%water%state%MassConcDust4               ,& ! in, mass concentration of dust species 4 in snow [kg/kg]
+              MassConcDust5          => noahmp%water%state%MassConcDust5               ,& ! in, mass concentration of dust species 5 in snow [kg/kg]
               AlbedoSnowDir          => noahmp%energy%state%AlbedoSnowDir              ,& ! out, snow albedo for direct(1=vis, 2=nir)
               AlbedoSnowDif          => noahmp%energy%state%AlbedoSnowDif              ,& ! out, snow albedo for diffuse(1=vis, 2=nir)
               FracRadSwAbsSnowDir    => noahmp%energy%flux%FracRadSwAbsSnowDir         ,& ! out, direct solar flux factor absorbed by snow [frc] (-NumSnowLayerMax+1:1,NumSwRadBand)
@@ -574,7 +577,7 @@ contains
              snl_lcl           =  -1
              h2osno_ice_lcl(0) =  SnowWaterEquiv
              h2osno_liq_lcl(0) =  0.0
-             snw_rds_lcl(0)    =  nint(SnowRadius(0))!nint(SnowRadiusMin)
+             snw_rds_lcl(0)    =  nint(SnowRadius(0))
           else
              flg_nosnl         =  0
              snl_lcl           =  NumSnowLayerNeg
@@ -601,6 +604,7 @@ contains
           mss_cnc_aer_lcl(:,6) = MassConcDust2(:)
           mss_cnc_aer_lcl(:,7) = MassConcDust3(:)
           mss_cnc_aer_lcl(:,8) = MassConcDust4(:)
+          mss_cnc_aer_lcl(:,9) = MassConcDust5(:)
        else
           mss_cnc_aer_lcl(:,:) = 0.0
        endif
@@ -924,6 +928,10 @@ contains
                 ss_alb_aer_lcl(8)      = ss_alb_dst4(LoopInd)
                 asm_prm_aer_lcl(8)     = asm_prm_dst4(LoopInd)
                 ext_cff_mss_aer_lcl(8) = ext_cff_mss_dst4(LoopInd)
+                ! aerosol species 9 optical properties, dust size5
+                ss_alb_aer_lcl(9)      = ss_alb_dst5(LoopInd)
+                asm_prm_aer_lcl(9)     = asm_prm_dst5(LoopInd)
+                ext_cff_mss_aer_lcl(9) = ext_cff_mss_dst5(LoopInd)
 
                 ! Start BC/dust-snow internal mixing for wavelength<=1.2um
                 if (NumSnicarRadBand == 5)   wvl_doint = wvl_ct5(LoopInd)
@@ -988,7 +996,8 @@ contains
                    ! all dust size bins here.
 
                    tot_dst_snw_conc = (mss_cnc_aer_lcl(i,5) + mss_cnc_aer_lcl(i,6) + &
-                                      mss_cnc_aer_lcl(i,7) + mss_cnc_aer_lcl(i,8)) * 1.0E6 !kg/kg->ppm
+                                       mss_cnc_aer_lcl(i,7) + mss_cnc_aer_lcl(i,8) + &
+                                       mss_cnc_aer_lcl(i,9)) * 1.0E6 !kg/kg->ppm
 
                    if ( FlagSnicarSnowDustIntmix .and. (tot_dst_snw_conc > 0.0) ) then
                       do idb=1,6
@@ -1005,9 +1014,9 @@ contains
                       ss_alb_snw_lcl(i) = max(0.5, min(ss_alb_snw_lcl(i),1.0))
 
                       ! reset all dust optics to zero  since it is accounted by updated snow ss_alb above
-                      ss_alb_aer_lcl(5:8)      = 0.0
-                      asm_prm_aer_lcl(5:8)     = 0.0
-                      ext_cff_mss_aer_lcl(5:8) = 0.0
+                      ss_alb_aer_lcl(5:9)      = 0.0
+                      asm_prm_aer_lcl(5:9)     = 0.0
+                      ext_cff_mss_aer_lcl(5:9) = 0.0
                    endif ! end if dust-snow internal mixing
 
                 endif ! end if BC/dust-snow internal mixing (bands<1.2um)
@@ -1268,6 +1277,7 @@ contains
                    write(*,*) "SNICAR STATS: dust2(0)= ", mss_cnc_aer_lcl(0,6)
                    write(*,*) "SNICAR STATS: dust3(0)= ", mss_cnc_aer_lcl(0,7)
                    write(*,*) "SNICAR STATS: dust4(0)= ", mss_cnc_aer_lcl(0,8)
+                   write(*,*) "SNICAR STATS: dust5(0)= ", mss_cnc_aer_lcl(0,9)
                 else
                    flg_dover = 0
                 endif
@@ -1548,6 +1558,7 @@ contains
                       write(*,*) "SNICAR_AD STATS: dust2(0)= ", mss_cnc_aer_lcl(0,6)
                       write(*,*) "SNICAR_AD STATS: dust3(0)= ", mss_cnc_aer_lcl(0,7)
                       write(*,*) "SNICAR_AD STATS: dust4(0)= ", mss_cnc_aer_lcl(0,8)
+                      write(*,*) "SNICAR_AD STATS: dust5(0)= ", mss_cnc_aer_lcl(0,9)
                       stop
                     endif
                 enddo

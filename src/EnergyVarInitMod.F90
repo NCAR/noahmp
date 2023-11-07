@@ -471,6 +471,12 @@ contains
           allocate( noahmp%energy%param%asm_prm_dst4(1:NumSnicarRadBand) )
        if ( .not. allocated(noahmp%energy%param%ext_cff_mss_dst4) )    &
           allocate( noahmp%energy%param%ext_cff_mss_dst4(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ss_alb_dst5) )    &
+          allocate( noahmp%energy%param%ss_alb_dst5(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%asm_prm_dst5) )    &
+          allocate( noahmp%energy%param%asm_prm_dst5(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ext_cff_mss_dst5) )    &
+          allocate( noahmp%energy%param%ext_cff_mss_dst5(1:NumSnicarRadBand) )
 
        noahmp%energy%param%flx_wgt_dir           (:)       = undefined_real
        noahmp%energy%param%flx_wgt_dif           (:)       = undefined_real
@@ -504,6 +510,9 @@ contains
        noahmp%energy%param%ss_alb_dst4           (:)       = undefined_real
        noahmp%energy%param%asm_prm_dst4          (:)       = undefined_real
        noahmp%energy%param%ext_cff_mss_dst4      (:)       = undefined_real
+       noahmp%energy%param%ss_alb_dst5           (:)       = undefined_real
+       noahmp%energy%param%asm_prm_dst5          (:)       = undefined_real
+       noahmp%energy%param%ext_cff_mss_dst5      (:)       = undefined_real
     endif
 
     end associate

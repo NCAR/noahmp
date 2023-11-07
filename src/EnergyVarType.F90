@@ -330,6 +330,9 @@ module EnergyVarType
     real(kind=kind_noahmp), allocatable, dimension(:) ::  ss_alb_dst4          ! Mie single scatter albedos for dust species 4
     real(kind=kind_noahmp), allocatable, dimension(:) ::  asm_prm_dst4         ! asymmetry parameter for dust species 4
     real(kind=kind_noahmp), allocatable, dimension(:) ::  ext_cff_mss_dst4     ! mass extinction coefficient for dust species 4 [m2/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) ::  ss_alb_dst5          ! Mie single scatter albedos for dust species 5
+    real(kind=kind_noahmp), allocatable, dimension(:) ::  asm_prm_dst5         ! asymmetry parameter for dust species 5
+    real(kind=kind_noahmp), allocatable, dimension(:) ::  ext_cff_mss_dst5     ! mass extinction coefficient for dust species 5 [m2/kg]
 
   end type parameter_type
 

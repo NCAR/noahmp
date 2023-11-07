@@ -32,6 +32,7 @@ contains
     real(kind=kind_noahmp), parameter :: scvng_fct_mlt_dst2  = 0.02    ! scavenging factor for dust species 2 inclusion in meltwater  [frc]
     real(kind=kind_noahmp), parameter :: scvng_fct_mlt_dst3  = 0.01    ! scavenging factor for dust species 3 inclusion in meltwater  [frc]
     real(kind=kind_noahmp), parameter :: scvng_fct_mlt_dst4  = 0.01    ! scavenging factor for dust species 4 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp), parameter :: scvng_fct_mlt_dst5  = 0.01    ! scavenging factor for dust species 5 inclusion in meltwater  [frc]
     real(kind=kind_noahmp)            :: FluxInBChydrophi              ! flux of hydrophilic BC into   layer [kg/s]
     real(kind=kind_noahmp)            :: FluxOutBChydrophi             ! flux of hydrophilic BC out of layer [kg/s]
     real(kind=kind_noahmp)            :: FluxInBChydropho              ! flux of hydrophobic BC into   layer [kg/s]
@@ -48,6 +49,8 @@ contains
     real(kind=kind_noahmp)            :: FluxOutDust3                  ! flux of dust species 3 out of layer [kg/s]
     real(kind=kind_noahmp)            :: FluxInDust4                   ! flux of dust species 4 into   layer [kg/s]
     real(kind=kind_noahmp)            :: FluxOutDust4                  ! flux of dust species 4 out of layer [kg/s]
+    real(kind=kind_noahmp)            :: FluxInDust5                   ! flux of dust species 5 into   layer [kg/s]
+    real(kind=kind_noahmp)            :: FluxOutDust5                  ! flux of dust species 5 out of layer [kg/s]
 
 ! --------------------------------------------------------------------
     associate(                                                                          &
@@ -65,6 +68,7 @@ contains
               DepDust2               => noahmp%forcing%DepDust2                        ,& ! in, dust species 2 deposition [kg m-2 s-1]
               DepDust3               => noahmp%forcing%DepDust3                        ,& ! in, dust species 3 deposition [kg m-2 s-1]
               DepDust4               => noahmp%forcing%DepDust4                        ,& ! in, dust species 4 deposition [kg m-2 s-1]
+              DepDust5               => noahmp%forcing%DepDust5                        ,& ! in, dust species 5 deposition [kg m-2 s-1]
               MassBChydropho         => noahmp%water%state%MassBChydropho              ,& ! inout, mass of hydrophobic Black Carbon in snow [kg m-2]
               MassBChydrophi         => noahmp%water%state%MassBChydrophi              ,& ! inout, mass of hydrophillic Black Carbon in snow [kg m-2]
               MassOChydropho         => noahmp%water%state%MassOChydropho              ,& ! inout, mass of hydrophobic Organic Carbon in snow [kg m-2]
@@ -73,6 +77,7 @@ contains
               MassDust2              => noahmp%water%state%MassDust2                   ,& ! inout, mass of dust species 2 in snow [kg m-2]
               MassDust3              => noahmp%water%state%MassDust3                   ,& ! inout, mass of dust species 3 in snow [kg m-2]
               MassDust4              => noahmp%water%state%MassDust4                   ,& ! inout, mass of dust species 4 in snow [kg m-2]
+              MassDust5              => noahmp%water%state%MassDust5                   ,& ! inout, mass of dust species 5 in snow [kg m-2]
               MassConcBChydropho     => noahmp%water%state%MassConcBChydropho          ,& ! inout, mass concentration of hydrophobic Black Carbon in snow [kg/kg]
               MassConcBChydrophi     => noahmp%water%state%MassConcBChydrophi          ,& ! inout, mass concentration of hydrophillic Black Carbon in snow [kg/kg]
               MassConcOChydropho     => noahmp%water%state%MassConcOChydropho          ,& ! inout, mass concentration of hydrophobic Organic Carbon in snow [kg/kg]
@@ -80,7 +85,8 @@ contains
               MassConcDust1          => noahmp%water%state%MassConcDust1               ,& ! inout, mass concentration of dust species 1 in snow [kg/kg]
               MassConcDust2          => noahmp%water%state%MassConcDust2               ,& ! inout, mass concentration of dust species 2 in snow [kg/kg]
               MassConcDust3          => noahmp%water%state%MassConcDust3               ,& ! inout, mass concentration of dust species 3 in snow [kg/kg]
-              MassConcDust4          => noahmp%water%state%MassConcDust4                & ! inout, mass concentration of dust species 4 in snow [kg/kg]
+              MassConcDust4          => noahmp%water%state%MassConcDust4               ,& ! inout, mass concentration of dust species 4 in snow [kg/kg]
+              MassConcDust5          => noahmp%water%state%MassConcDust5                & ! inout, mass concentration of dust species 5 in snow [kg/kg]
 )
 ! ----------------------------------------------------------------------
 
@@ -92,6 +98,7 @@ contains
     FluxInDust2      = 0.0
     FluxInDust3      = 0.0
     FluxInDust4      = 0.0
+    FluxInDust5      = 0.0
 
     do LoopInd = -NumSnowLayerMax+1, 0
        SnowMass = SnowLiqWater(LoopInd) + SnowIce(LoopInd)
@@ -105,6 +112,7 @@ contains
           MassDust2(LoopInd)      =  MassDust2 (LoopInd)      + FluxInDust2 * MainTimeStep
           MassDust3(LoopInd)      =  MassDust3 (LoopInd)      + FluxInDust3 * MainTimeStep
           MassDust4(LoopInd)      =  MassDust4 (LoopInd)      + FluxInDust4 * MainTimeStep
+          MassDust5(LoopInd)      =  MassDust5 (LoopInd)      + FluxInDust5 * MainTimeStep
 
           !BCPHO
           FluxOutBChydropho = OutflowSnowLayer(LoopInd)*scvng_fct_mlt_sf* &
@@ -194,6 +202,17 @@ contains
           end if
           FluxInDust4 = FluxOutDust4
 
+          !Dust 5
+          FluxOutDust5 = OutflowSnowLayer(LoopInd)*scvng_fct_mlt_sf* &
+                              scvng_fct_mlt_dst5*(MassDust5(LoopInd)/SnowMass)
+          if (FluxOutDust5 * MainTimeStep > MassDust5(LoopInd)) then
+             FluxOutDust5 = MassDust5(LoopInd) / MainTimeStep
+             MassDust5(LoopInd) = 0.0
+          else
+             MassDust5(LoopInd) = MassDust5(LoopInd) - FluxOutDust5 * MainTimeStep
+          end if
+          FluxInDust5 = FluxOutDust5
+
        endif
     enddo
 
@@ -206,6 +225,7 @@ contains
        MassDust2(NumSnowLayerNeg+1)      =  MassDust2 (NumSnowLayerNeg+1)      +  DepDust2 * MainTimeStep
        MassDust3(NumSnowLayerNeg+1)      =  MassDust3 (NumSnowLayerNeg+1)      +  DepDust3 * MainTimeStep
        MassDust4(NumSnowLayerNeg+1)      =  MassDust4 (NumSnowLayerNeg+1)      +  DepDust4 * MainTimeStep
+       MassDust5(NumSnowLayerNeg+1)      =  MassDust5 (NumSnowLayerNeg+1)      +  DepDust5 * MainTimeStep
     endif
 
     do LoopInd = -NumSnowLayerMax+1, 0
@@ -221,6 +241,7 @@ contains
           MassConcDust2(LoopInd)      =  MassDust2(LoopInd) / SnowMass
           MassConcDust3(LoopInd)      =  MassDust3(LoopInd) / SnowMass
           MassConcDust4(LoopInd)      =  MassDust4(LoopInd) / SnowMass
+          MassConcDust5(LoopInd)      =  MassDust5(LoopInd) / SnowMass
        else
           MassConcBChydropho(LoopInd) =  0.0
           MassConcBChydrophi(LoopInd) =  0.0
@@ -230,6 +251,7 @@ contains
           MassConcDust2(LoopInd)      =  0.0
           MassConcDust3(LoopInd)      =  0.0
           MassConcDust4(LoopInd)      =  0.0
+          MassConcDust5(LoopInd)      =  0.0
 
           MassBChydropho(LoopInd)     =  0.0
           MassBChydrophi(LoopInd)     =  0.0
@@ -239,6 +261,7 @@ contains
           MassDust2(LoopInd)          =  0.0
           MassDust3(LoopInd)          =  0.0
           MassDust4(LoopInd)          =  0.0
+          MassDust5(LoopInd)          =  0.0
        endif
 
     enddo

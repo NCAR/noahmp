@@ -420,6 +420,9 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  ss_alb_dst4                   ! Mie single scatter albedos for dust species 4
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  asm_prm_dst4                  ! asymmetry parameter for dust species 4
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  ext_cff_mss_dst4              ! mass extinction coefficient for dust species 4 [m2/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:)      ::  ss_alb_dst5                   ! Mie single scatter albedos for dust species 5
+    real(kind=kind_noahmp), allocatable, dimension(:)      ::  asm_prm_dst5                  ! asymmetry parameter for dust species 5
+    real(kind=kind_noahmp), allocatable, dimension(:)      ::  ext_cff_mss_dst5              ! mass extinction coefficient for dust species 5 [m2/kg]
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  flx_wgt_dir                   ! downward direct solar radiation spectral weights for wavelength band
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  flx_wgt_dif                   ! downward diffuse solar radiation spectral weights for wavelength band 
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  snowage_tau                   ! Snow aging parameters retrieved from lookup table [hour]      
@@ -437,6 +440,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  DUST2XY                       ! mass of dust species 2 in snow [kg/m2]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  DUST3XY                       ! mass of dust species 3 in snow [kg/m2]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  DUST4XY                       ! mass of dust species 4 in snow [kg/m2]
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  DUST5XY                       ! mass of dust species 5 in snow [kg/m2]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  MassConcBCPHIXY               ! mass concentration of hydrophillic Black Carbon in snow [kg/kg]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  MassConcBCPHOXY               ! mass concentration of hydrophobic Black Carbon in snow [kg/kg]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  MassConcOCPHIXY               ! mass concentration of hydrophillic Organic Carbon in snow [kg/kg]
@@ -445,6 +449,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  MassConcDUST2XY               ! mass concentration of dust species 2 in snow [kg/kg]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  MassConcDUST3XY               ! mass concentration of dust species 3 in snow [kg/kg]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  MassConcDUST4XY               ! mass concentration of dust species 4 in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  MassConcDUST5XY               ! mass concentration of dust species 5 in snow [kg/kg]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  DepBChydrophoXY               ! hydrophobic Black Carbon deposition [kg m-2 s-1]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  DepBChydrophiXY               ! hydrophillic Black Carbon deposition [kg m-2 s-1]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  DepOChydrophoXY               ! hydrophobic Organic Carbon deposition [kg m-2 s-1]
@@ -453,6 +458,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  DepDust2XY                    ! dust species 2 deposition [kg m-2 s-1]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  DepDust3XY                    ! dust species 3 deposition [kg m-2 s-1]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  DepDust4XY                    ! dust species 4 deposition [kg m-2 s-1]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  DepDust5XY                    ! dust species 5 deposition [kg m-2 s-1]
     real(kind=kind_noahmp)                                 ::  DepBChydropho_TABLE           ! hydrophobic Black Carbon deposition [kg m-2 s-1], assume constant read from table
     real(kind=kind_noahmp)                                 ::  DepBChydrophi_TABLE           ! hydrophillic Black Carbon deposition [kg m-2 s-1], assume constant read from table
     real(kind=kind_noahmp)                                 ::  DepOChydropho_TABLE           ! hydrophobic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
@@ -461,6 +467,10 @@ module NoahmpIOVarType
     real(kind=kind_noahmp)                                 ::  DepDust2_TABLE                ! dust species 2 deposition [kg m-2 s-1], assume constant read from table
     real(kind=kind_noahmp)                                 ::  DepDust3_TABLE                ! dust species 3 deposition [kg m-2 s-1], assume constant read from table
     real(kind=kind_noahmp)                                 ::  DepDust4_TABLE                ! dust species 4 deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)                                 ::  DepDust5_TABLE                ! dust species 5 deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)                                 ::  SnowRadiusMin_TABLE           ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
+    real(kind=kind_noahmp)                                 ::  FreshSnowRadiusMax_TABLE      ! maximum warm fresh snow effective radius [microns]
+    real(kind=kind_noahmp)                                 ::  SnowRadiusRefrz_TABLE         ! effective radius of re-frozen snow [microns]
     character(len=256)                                     ::  forcing_name_BCPHI
     character(len=256)                                     ::  forcing_name_BCPHO
     character(len=256)                                     ::  forcing_name_OCPHI
@@ -469,7 +479,7 @@ module NoahmpIOVarType
     character(len=256)                                     ::  forcing_name_DUST2
     character(len=256)                                     ::  forcing_name_DUST3
     character(len=256)                                     ::  forcing_name_DUST4
-
+    character(len=256)                                     ::  forcing_name_DUST5
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSNOWDIRXY        ! snow albedo (direct)
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSNOWDIFXY        ! snow albedo (diffuse)
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIRXY         ! surface albedo (direct)
@@ -667,6 +677,7 @@ module NoahmpIOVarType
     logical                                                ::  update_lai, update_veg
     integer                                                ::  spinup_loop
     logical                                                ::  reset_spinup_date
+    logical                                                ::  reset_spinup_datea
 
 !---------------------------------------------------------------------
 !  File naming, parallel

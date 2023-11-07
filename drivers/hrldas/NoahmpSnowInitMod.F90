@@ -124,6 +124,7 @@ contains
              NoahmpIO%DUST2XY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
              NoahmpIO%DUST3XY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
              NoahmpIO%DUST4XY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%DUST5XY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
           endif
 
        enddo ! I

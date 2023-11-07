@@ -68,11 +68,9 @@ contains
     real(kind=kind_noahmp)           :: TemperatureSnowLayerTop              ! temperature at upper layer boundary [K]
     real(kind=kind_noahmp)           :: TemperatureSnowLayerBottom           ! temperature at lower layer boundary [K]
     real(kind=kind_noahmp)           :: SnowDensity                          ! snow density [kg m-3]
-    real(kind=kind_noahmp)           :: SnowRadiusMin     = 54.526           ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
     real(kind=kind_noahmp)           :: SnowRadiusMax     = 1500             ! maximum allowed snow effective radius [microns]
     real(kind=kind_noahmp), parameter:: C1_liq_Brun89     = 0.0              ! constant for liquid water grain growth [m3 s-1], from Brun89: zeroed to accomodate dry snow aging
     real(kind=kind_noahmp), parameter:: C2_liq_Brun89     = 4.22e-13         ! Constant for liquid water grain growth [m3 s-1], from Brun89: corrected for LWC in units of percent, should move to table
-    real(kind=kind_noahmp), parameter:: SnowRadiusRefrz   = 1000.0           ! Effective radius of re-frozen snow (microns), should move to table
     real(kind=kind_noahmp), parameter:: xdrdt             = 1.0              ! Arbitrary factor applied to snow aging rate (-) tuning factor, should move to table
     real(kind=kind_noahmp)           :: dr                                   ! incremental change in snow effective radius [um]
     real(kind=kind_noahmp)           :: dr_wet                               ! incremental change in snow effective radius from wet growth [um]
@@ -102,6 +100,8 @@ contains
               idx_T_max              => noahmp%config%domain%idx_T_max                 ,& ! in, maxiumum temperature index used in aging lookup table [idx]
               idx_Tgrd_max           => noahmp%config%domain%idx_Tgrd_max              ,& ! in, maxiumum temperature gradient index used in aging lookup table [idx]   
               idx_rhos_max           => noahmp%config%domain%idx_rhos_max              ,& ! in, maxiumum snow density index used in aging lookup table [idx]
+              SnowRadiusMin          => noahmp%water%param%SnowRadiusMin               ,& ! in, minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
+              SnowRadiusRefrz        => noahmp%water%param%SnowRadiusRefrz             ,& ! in, effective radius of re-frozen snow [microns]
               snowage_tau            => noahmp%water%param%snowage_tau                 ,& ! in, snowage tau from table [hours]
               snowage_kappa          => noahmp%water%param%snowage_kappa               ,& ! in, snowage kappa from table [unitless]
               snowage_drdt0          => noahmp%water%param%snowage_drdt0               ,& ! in, snowage dr/dt_0 from table [m2 kg-1 hr-1]

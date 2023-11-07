@@ -277,6 +277,7 @@ contains
                       NoahmpIO%MassConcDUST2XY (I,IZ,J)  = NoahmpIO%DUST2XY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
                       NoahmpIO%MassConcDUST3XY (I,IZ,J)  = NoahmpIO%DUST3XY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
                       NoahmpIO%MassConcDUST4XY (I,IZ,J)  = NoahmpIO%DUST4XY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
+                      NoahmpIO%MassConcDUST5XY (I,IZ,J)  = NoahmpIO%DUST5XY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
                    else
                       NoahmpIO%MassConcBCPHIXY (I,IZ,J)  = 0.0
                       NoahmpIO%MassConcBCPHOXY (I,IZ,J)  = 0.0
@@ -286,6 +287,7 @@ contains
                       NoahmpIO%MassConcDUST2XY (I,IZ,J)  = 0.0
                       NoahmpIO%MassConcDUST3XY (I,IZ,J)  = 0.0
                       NoahmpIO%MassConcDUST4XY (I,IZ,J)  = 0.0
+                      NoahmpIO%MassConcDUST5XY (I,IZ,J)  = 0.0
                    endif
                 enddo
              enddo

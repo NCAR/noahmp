@@ -46,6 +46,7 @@ contains
     noahmp%forcing%DepDust2                 = undefined_real
     noahmp%forcing%DepDust3                 = undefined_real
     noahmp%forcing%DepDust4                 = undefined_real
+    noahmp%forcing%DepDust5                 = undefined_real
 
     noahmp%forcing%VisFrac                  = undefined_real
     noahmp%forcing%DirFrac                  = undefined_real

@@ -71,6 +71,9 @@ contains
               ss_alb_dst4             => NoahmpIO%ss_alb_dst4              ,& ! out, Mie single scatter albedos for dust species 4
               asm_prm_dst4            => NoahmpIO%asm_prm_dst4             ,& ! out, asymmetry parameter for dust species 4
               ext_cff_mss_dst4        => NoahmpIO%ext_cff_mss_dst4         ,& ! out, mass extinction coefficient for dust species 4 [m2/kg]
+              ss_alb_dst5             => NoahmpIO%ss_alb_dst5              ,& ! out, Mie single scatter albedos for dust species 5
+              asm_prm_dst5            => NoahmpIO%asm_prm_dst5             ,& ! out, asymmetry parameter for dust species 5
+              ext_cff_mss_dst5        => NoahmpIO%ext_cff_mss_dst5         ,& ! out, mass extinction coefficient for dust species 5 [m2/kg]
               flx_wgt_dir             => NoahmpIO%flx_wgt_dir              ,& ! out, downward direct solar radiation spectral weights for wavelength band
               flx_wgt_dif             => NoahmpIO%flx_wgt_dif              ,& ! out, downward diffuse solar radiation spectral weights for wavelength band
               snowage_tau             => NoahmpIO%snowage_tau              ,& ! out, Snow aging parameters retrieved from lookup table [hour]
@@ -482,6 +485,31 @@ contains
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
 
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_sah_dif_mlw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_sah_dif_mlw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_sah_dif_mlw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
           elseif (snicar_dust_optics == 2) then  ! San Juan Mountains, CO (Skiles et al, 2017)
             ! dust species 1 Mie parameters
             name = "ss_alb_dust01_col_dif_mlw"
@@ -583,6 +611,31 @@ contains
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
 
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_col_dif_mlw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_col_dif_mlw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_col_dif_mlw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
           elseif (snicar_dust_optics == 3) then  ! Greenland (Polashenski et al., 2015, central absorptivity)
             ! dust species 1 Mie parameters
             name = "ss_alb_dust01_gre_dif_mlw"
@@ -680,6 +733,31 @@ contains
             iret = nf90_inq_varid(ncid,  name,  varid)
             if (iret == 0) then
               ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst4, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_gre_dif_mlw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_gre_dif_mlw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_gre_dif_mlw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
             else
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
@@ -1055,6 +1133,31 @@ contains
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
 
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_sah_dif_mls"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_sah_dif_mls"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_sah_dif_mls"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
           elseif (snicar_dust_optics == 2) then  ! San Juan Mountains, CO (Skiles et al, 2017)
             ! dust species 1 Mie parameters
             name = "ss_alb_dust01_col_dif_mls"
@@ -1156,6 +1259,31 @@ contains
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
 
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_col_dif_mls"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_col_dif_mls"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_col_dif_mls"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
           elseif (snicar_dust_optics == 3) then  ! Greenland (Polashenski et al., 2015, central absorptivity)
             ! dust species 1 Mie parameters
             name = "ss_alb_dust01_gre_dif_mls"
@@ -1253,6 +1381,31 @@ contains
             iret = nf90_inq_varid(ncid,  name,  varid)
             if (iret == 0) then
               ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst4, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_gre_dif_mls"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_gre_dif_mls"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_gre_dif_mls"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
             else
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
@@ -1628,6 +1781,31 @@ contains
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
 
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_sah_dif_saw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_sah_dif_saw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_sah_dif_saw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
           elseif (snicar_dust_optics == 2) then  ! San Juan Mountains, CO (Skiles et al, 2017)
             ! dust species 1 Mie parameters
             name = "ss_alb_dust01_col_dif_saw"
@@ -1729,6 +1907,31 @@ contains
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
 
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_col_dif_saw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_col_dif_saw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_col_dif_saw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
           elseif (snicar_dust_optics == 3) then  ! Greenland (Polashenski et al., 2015, central absorptivity)
             ! dust species 1 Mie parameters
             name = "ss_alb_dust01_gre_dif_saw"
@@ -1826,6 +2029,31 @@ contains
             iret = nf90_inq_varid(ncid,  name,  varid)
             if (iret == 0) then
               ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst4, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_gre_dif_saw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_gre_dif_saw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_gre_dif_saw"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
             else
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
@@ -2201,6 +2429,31 @@ contains
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
 
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_sah_dif_sas"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_sah_dif_sas"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_sah_dif_sas"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
           elseif (snicar_dust_optics == 2) then  ! San Juan Mountains, CO (Skiles et al, 2017)
             ! dust species 1 Mie parameters
             name = "ss_alb_dust01_col_dif_sas"
@@ -2302,6 +2555,31 @@ contains
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
 
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_col_dif_sas"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_col_dif_sas"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_col_dif_sas"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
           elseif (snicar_dust_optics == 3) then  ! Greenland (Polashenski et al., 2015, central absorptivity)
             ! dust species 1 Mie parameters
             name = "ss_alb_dust01_gre_dif_sas"
@@ -2399,6 +2677,31 @@ contains
             iret = nf90_inq_varid(ncid,  name,  varid)
             if (iret == 0) then
               ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst4, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_gre_dif_sas"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_gre_dif_sas"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_gre_dif_sas"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
             else
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
@@ -2774,6 +3077,31 @@ contains
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
 
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_sah_dif_smm"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_sah_dif_smm"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_sah_dif_smm"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
           elseif (snicar_dust_optics == 2) then  ! San Juan Mountains, CO (Skiles et al, 2017)
             ! dust species 1 Mie parameters
             name = "ss_alb_dust01_col_dif_smm"
@@ -2875,6 +3203,31 @@ contains
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
 
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_col_dif_smm"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_col_dif_smm"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_col_dif_smm"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
           elseif (snicar_dust_optics == 3) then  ! Greenland (Polashenski et al., 2015, central absorptivity)
             ! dust species 1 Mie parameters
             name = "ss_alb_dust01_gre_dif_smm"
@@ -2972,6 +3325,31 @@ contains
             iret = nf90_inq_varid(ncid,  name,  varid)
             if (iret == 0) then
               ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst4, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_gre_dif_smm"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_gre_dif_smm"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_gre_dif_smm"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
             else
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
@@ -3347,6 +3725,31 @@ contains
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
 
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_sah_dif_hmn"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_sah_dif_hmn"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_sah_dif_hmn"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
           elseif (snicar_dust_optics == 2) then  ! San Juan Mountains, CO (Skiles et al, 2017)
             ! dust species 1 Mie parameters
             name = "ss_alb_dust01_col_dif_hmn"
@@ -3448,6 +3851,31 @@ contains
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
 
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_col_dif_hmn"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_col_dif_hmn"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_col_dif_hmn"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
           elseif (snicar_dust_optics == 3) then  ! Greenland (Polashenski et al., 2015, central absorptivity)
             ! dust species 1 Mie parameters
             name = "ss_alb_dust01_gre_dif_hmn"
@@ -3545,6 +3973,31 @@ contains
             iret = nf90_inq_varid(ncid,  name,  varid)
             if (iret == 0) then
               ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst4, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            ! dust species 5 Mie parameters
+            name = "ss_alb_dust05_gre_dif_hmn"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "asm_prm_dust05_gre_dif_hmn"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+            else
+              write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+            endif
+
+            name = "ext_cff_mss_dust05_gre_dif_hmn"
+            iret = nf90_inq_varid(ncid,  name,  varid)
+            if (iret == 0) then
+              ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
             else
               write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
             endif
@@ -3910,6 +4363,31 @@ contains
            write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
          endif
 
+         ! dust species 5 Mie parameters
+         name = "ss_alb_dust05_sah"
+         iret = nf90_inq_varid(ncid,  name,  varid)
+         if (iret == 0) then
+           ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+         else
+           write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+         endif
+
+         name = "asm_prm_dust05_sah"
+         iret = nf90_inq_varid(ncid,  name,  varid)
+         if (iret == 0) then
+           ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+         else
+           write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+         endif
+
+         name = "ext_cff_mss_dust05_sah"
+         iret = nf90_inq_varid(ncid,  name,  varid)
+         if (iret == 0) then
+           ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+         else
+           write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+         endif
+
        elseif (snicar_dust_optics == 2) then  ! San Juan Mountains, CO (Skiles et al, 2017)
          ! dust species 1 Mie parameters
          name = "ss_alb_dust01_col"
@@ -4011,6 +4489,30 @@ contains
            write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
          endif
 
+         ! dust species 5 Mie parameters
+         name = "ss_alb_dust05_col"
+         iret = nf90_inq_varid(ncid,  name,  varid)
+         if (iret == 0) then
+           ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+         else
+           write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+         endif
+
+         name = "asm_prm_dust05_col"
+         iret = nf90_inq_varid(ncid,  name,  varid)
+         if (iret == 0) then
+           ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+         else
+           write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+         endif
+
+         name = "ext_cff_mss_dust05_col"
+         iret = nf90_inq_varid(ncid,  name,  varid)
+         if (iret == 0) then
+           ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+         else
+           write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+         endif
 
        elseif (snicar_dust_optics == 3) then  ! Greenland (Polashenski et al., 2015, central absorptivity)
          ! dust species 1 Mie parameters
@@ -4109,6 +4611,31 @@ contains
          iret = nf90_inq_varid(ncid,  name,  varid)
          if (iret == 0) then
            ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst4, start=(/1/), count=(/snicar_numrad_snw/))
+         else
+           write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+         endif
+
+         ! dust species 5 Mie parameters
+         name = "ss_alb_dust05_gre"
+         iret = nf90_inq_varid(ncid,  name,  varid)
+         if (iret == 0) then
+           ierr = nf90_get_var(ncid, varid, ss_alb_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+         else
+           write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+         endif
+
+         name = "asm_prm_dust05_gre"
+         iret = nf90_inq_varid(ncid,  name,  varid)
+         if (iret == 0) then
+           ierr = nf90_get_var(ncid, varid, asm_prm_dst5, start=(/1/), count=(/snicar_numrad_snw/))
+         else
+           write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
+         endif
+
+         name = "ext_cff_mss_dust05_gre"
+         iret = nf90_inq_varid(ncid,  name,  varid)
+         if (iret == 0) then
+           ierr = nf90_get_var(ncid, varid, ext_cff_mss_dst5, start=(/1/), count=(/snicar_numrad_snw/))
          else
            write(*,*) "MODULE_HRLDAS_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file."
          endif

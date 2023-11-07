@@ -55,6 +55,7 @@ contains
               MassDust2              => noahmp%water%state%MassDust2                ,& ! inout, mass of dust species 2 in snow [kg m-2]
               MassDust3              => noahmp%water%state%MassDust3                ,& ! inout, mass of dust species 3 in snow [kg m-2]
               MassDust4              => noahmp%water%state%MassDust4                ,& ! inout, mass of dust species 4 in snow [kg m-2]
+              MassDust5              => noahmp%water%state%MassDust5                ,& ! inout, mass of dust species 5 in snow [kg m-2]
               SnowRadius             => noahmp%water%state%SnowRadius               ,& ! inout, effective grain radius [microns, m-6]
               PondSfcThinSnwComb     => noahmp%water%state%PondSfcThinSnwComb       ,& ! out,   surface ponding [mm] from liquid in thin snow layer combination
               PondSfcThinSnwTrans    => noahmp%water%state%PondSfcThinSnwTrans       & ! out,   surface ponding [mm] from thin snow liquid during transition from multilayer to no layer
@@ -77,9 +78,10 @@ contains
                 MassOChydropho(J+1)         = MassOChydropho(J+1) +  MassOChydropho(J)
                 MassOChydrophi(J+1)         = MassOChydrophi(J+1) +  MassOChydrophi(J)
                 MassDust1(J+1)              = MassDust1(J+1) +  MassDust1(J)
-                MassDust2(J+1)              = MassDust2(J+1) +  MassDust3(J)
-                MassDust3(J+1)              = MassDust3(J+1) +  MassDust4(J)
+                MassDust2(J+1)              = MassDust2(J+1) +  MassDust2(J)
+                MassDust3(J+1)              = MassDust3(J+1) +  MassDust3(J)
                 MassDust4(J+1)              = MassDust4(J+1) +  MassDust4(J)
+                MassDust5(J+1)              = MassDust5(J+1) +  MassDust5(J)
              endif
 
           else
@@ -95,9 +97,10 @@ contains
                    MassOChydropho(J-1)         = MassOChydropho(J-1) +  MassOChydropho(J)
                    MassOChydrophi(J-1)         = MassOChydrophi(J-1) +  MassOChydrophi(J)
                    MassDust1(J-1)              = MassDust1(J-1) +  MassDust1(J)
-                   MassDust2(J-1)              = MassDust2(J-1) +  MassDust3(J)
-                   MassDust3(J-1)              = MassDust3(J-1) +  MassDust4(J)
+                   MassDust2(J-1)              = MassDust2(J-1) +  MassDust2(J)
+                   MassDust3(J-1)              = MassDust3(J-1) +  MassDust3(J)
                    MassDust4(J-1)              = MassDust4(J-1) +  MassDust4(J)
+                   MassDust5(J-1)              = MassDust5(J-1) +  MassDust5(J)
                 endif
 
              else
@@ -129,6 +132,7 @@ contains
                    MassDust2(J)      = 0.0        
                    MassDust3(J)      = 0.0     
                    MassDust4(J)      = 0.0  
+                   MassDust5(J)      = 0.0
                 endif
 
              endif ! if(NumSnowLayerOld < -1)
@@ -154,6 +158,7 @@ contains
                    MassDust2(I)              = MassDust2(I-1)
                    MassDust3(I)              = MassDust3(I-1)
                    MassDust4(I)              = MassDust4(I-1)
+                   MassDust5(I)              = MassDust5(I-1)
                    SnowRadius(I)             = SnowRadius(I-1)
                 endif
 
@@ -228,6 +233,7 @@ contains
                 MassDust2(J)              = MassDust2(J) +  MassDust2(L)
                 MassDust3(J)              = MassDust3(J) +  MassDust3(L)
                 MassDust4(J)              = MassDust4(J) +  MassDust4(L)
+                MassDust5(J)              = MassDust5(J) +  MassDust5(L)
                 SnowRadius(J)             = (SnowRadius(J) * (SnowLiqWater(J) + SnowIce(J)) + SnowRadius(L) * (SnowLiqWater(L) + SnowIce(L)) ) / &
                                             (SnowLiqWater(J) + SnowIce(J) + SnowLiqWater(L) + SnowIce(L))
              endif
@@ -254,6 +260,7 @@ contains
                       MassDust2(K)              = MassDust2(K-1) 
                       MassDust3(K)              = MassDust3(K-1) 
                       MassDust4(K)              = MassDust4(K-1) 
+                      MassDust5(K)              = MassDust5(K-1)
                       SnowRadius(K)             = SnowRadius(K-1)
                    endif
 

@@ -118,8 +118,8 @@ contains
     integer                 :: snicar_snowshape_option            = 3
     logical                 :: snicar_use_aerosol                 = .true.
     logical                 :: snicar_snowbc_intmix               = .true.
-    logical                 :: snicar_snowdust_intmix             = .false.
-    logical                 :: snicar_use_oc                      = .false.
+    logical                 :: snicar_snowdust_intmix             = .true.
+    logical                 :: snicar_use_oc                      = .true.
     logical                 :: snicar_aerosol_readtable           = .false.
     character(len=256)      :: forcing_name_BCPHI  = "BCPHI"
     character(len=256)      :: forcing_name_BCPHO  = "BCPHO"
@@ -129,6 +129,7 @@ contains
     character(len=256)      :: forcing_name_DUST2  = "DUST2"
     character(len=256)      :: forcing_name_DUST3  = "DUST3"
     character(len=256)      :: forcing_name_DUST4  = "DUST4"
+    character(len=256)      :: forcing_name_DUST5  = "DUST5"
 
     namelist / NOAHLSM_OFFLINE /    &
 #ifdef WRF_HYDRO
@@ -162,7 +163,7 @@ contains
          snicar_use_aerosol, snicar_snowbc_intmix, snicar_snowdust_intmix,                &
          snicar_use_oc, snicar_aerosol_readtable, forcing_name_BCPHI, forcing_name_BCPHO, &
          forcing_name_OCPHI, forcing_name_OCPHO, forcing_name_DUST1, forcing_name_DUST2,  &
-         forcing_name_DUST3, forcing_name_DUST4
+         forcing_name_DUST3, forcing_name_DUST4, forcing_name_DUST5
 
     !---------------------------------------------------------------
     !  Initialize namelist variables to dummy values, so we can tell
@@ -441,6 +442,7 @@ contains
     NoahmpIO%forcing_name_DUST2                = forcing_name_DUST2
     NoahmpIO%forcing_name_DUST3                = forcing_name_DUST3
     NoahmpIO%forcing_name_DUST4                = forcing_name_DUST4
+    NoahmpIO%forcing_name_DUST5                = forcing_name_DUST5
 
 !---------------------------------------------------------------------
 !  NAMELIST check end

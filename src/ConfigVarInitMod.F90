@@ -89,9 +89,9 @@ contains
        noahmp%config%nmlist%OptSnicarSnowShape          = undefined_int
        noahmp%config%nmlist%OptSnicarRTSolver           = undefined_int
        noahmp%config%nmlist%FlagSnicarSnowBCIntmix      = .true.
-       noahmp%config%nmlist%FlagSnicarSnowDustIntmix    = .false.
+       noahmp%config%nmlist%FlagSnicarSnowDustIntmix    = .true.
        noahmp%config%nmlist%FlagSnicarUseAerosol        = .true. 
-       noahmp%config%nmlist%FlagSnicarUseOC             = .false.
+       noahmp%config%nmlist%FlagSnicarUseOC             = .true.
        noahmp%config%nmlist%FlagSnicarAerosolReadTable  = .false.
        noahmp%config%domain%idx_T_max                   = undefined_int
        noahmp%config%domain%idx_Tgrd_max                = undefined_int

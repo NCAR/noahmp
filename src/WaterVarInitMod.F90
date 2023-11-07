@@ -331,6 +331,8 @@ contains
        allocate( noahmp%water%state%MassDust3(-NumSnowLayerMax+1:0) )
        if ( .not. allocated(noahmp%water%state%MassDust4) )     &
        allocate( noahmp%water%state%MassDust4(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassDust5) )     &
+       allocate( noahmp%water%state%MassDust5(-NumSnowLayerMax+1:0) )
 
        if ( .not. allocated(noahmp%water%state%MassConcBChydropho) )     &
        allocate( noahmp%water%state%MassConcBChydropho(-NumSnowLayerMax+1:0) )
@@ -348,6 +350,8 @@ contains
        allocate( noahmp%water%state%MassConcDust3(-NumSnowLayerMax+1:0) )
        if ( .not. allocated(noahmp%water%state%MassConcDust4) )     &
        allocate( noahmp%water%state%MassConcDust4(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassConcDust5) )     &
+       allocate( noahmp%water%state%MassConcDust5(-NumSnowLayerMax+1:0) )
 
        noahmp%water%state%SnowRadiusFresh             = undefined_real
        noahmp%water%state%SnowRadius        (:)       = undefined_real
@@ -358,7 +362,8 @@ contains
        noahmp%water%state%MassDust1         (:)       = undefined_real       
        noahmp%water%state%MassDust2         (:)       = undefined_real       
        noahmp%water%state%MassDust3         (:)       = undefined_real      
-       noahmp%water%state%MassDust4         (:)       = undefined_real       
+       noahmp%water%state%MassDust4         (:)       = undefined_real     
+       noahmp%water%state%MassDust5         (:)       = undefined_real
        noahmp%water%state%MassConcBChydropho(:)       = undefined_real
        noahmp%water%state%MassConcBChydrophi(:)       = undefined_real
        noahmp%water%state%MassConcOChydropho(:)       = undefined_real
@@ -367,7 +372,7 @@ contains
        noahmp%water%state%MassConcDust2     (:)       = undefined_real
        noahmp%water%state%MassConcDust3     (:)       = undefined_real
        noahmp%water%state%MassConcDust4     (:)       = undefined_real
-
+       noahmp%water%state%MassConcDust5     (:)       = undefined_real
 
        if ( .not. allocated(noahmp%water%flux%SnowFreezeRate) )     &
        allocate( noahmp%water%flux%SnowFreezeRate(-NumSnowLayerMax+1:0) )
@@ -384,6 +389,9 @@ contains
        noahmp%water%param%snowage_tau       (:,:,:)   = undefined_real
        noahmp%water%param%snowage_kappa     (:,:,:)   = undefined_real
        noahmp%water%param%snowage_drdt0     (:,:,:)   = undefined_real
+       noahmp%water%param%SnowRadiusMin               = undefined_real
+       noahmp%water%param%FreshSnowRadiusMax          = undefined_real
+       noahmp%water%param%SnowRadiusRefrz             = undefined_real
 
     endif
 

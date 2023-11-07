@@ -76,6 +76,7 @@ contains
           noahmp%forcing%DepDust2                = NoahmpIO%DepDust2_TABLE
           noahmp%forcing%DepDust3                = NoahmpIO%DepDust3_TABLE
           noahmp%forcing%DepDust4                = NoahmpIO%DepDust4_TABLE
+          noahmp%forcing%DepDust5                = NoahmpIO%DepDust5_TABLE
        else
           noahmp%forcing%DepBChydropho           = NoahmpIO%DepBChydrophoXY(I,J)
           noahmp%forcing%DepBChydrophi           = NoahmpIO%DepBChydrophiXY(I,J)
@@ -85,6 +86,7 @@ contains
           noahmp%forcing%DepDust2                = NoahmpIO%DepDust2XY(I,J)
           noahmp%forcing%DepDust3                = NoahmpIO%DepDust3XY(I,J)
           noahmp%forcing%DepDust4                = NoahmpIO%DepDust4XY(I,J)
+          noahmp%forcing%DepDust5                = NoahmpIO%DepDust5XY(I,J)
        endif
     endif
 

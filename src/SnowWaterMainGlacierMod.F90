@@ -58,6 +58,7 @@ contains
               MassDust2              => noahmp%water%state%MassDust2                ,& ! inout, mass of dust species 2 in snow [kg m-2]
               MassDust3              => noahmp%water%state%MassDust3                ,& ! inout, mass of dust species 3 in snow [kg m-2]
               MassDust4              => noahmp%water%state%MassDust4                ,& ! inout, mass of dust species 4 in snow [kg m-2]
+              MassDust5              => noahmp%water%state%MassDust5                ,& ! inout, mass of dust species 5 in snow [kg m-2]
               GlacierExcessFlow      => noahmp%water%flux%GlacierExcessFlow         ,& ! out,   glacier excess flow [mm/s]
               PondSfcThinSnwComb     => noahmp%water%state%PondSfcThinSnwComb       ,& ! out,   surface ponding [mm] from liquid in thin snow layer combination
               PondSfcThinSnwTrans    => noahmp%water%state%PondSfcThinSnwTrans       & ! out,   surface ponding [mm] from thin snow liquid during transition from multilayer to no layer
@@ -104,6 +105,7 @@ contains
           MassDust2(LoopInd)              = 0.0
           MassDust3(LoopInd)              = 0.0
           MassDust4(LoopInd)              = 0.0
+          MassDust5(LoopInd)              = 0.0
        endif
 
     enddo
@@ -126,6 +128,7 @@ contains
           MassDust2(0)            = MassDust2(0) * GlacierExcessRemainFrac
           MassDust3(0)            = MassDust3(0) * GlacierExcessRemainFrac
           MassDust4(0)            = MassDust4(0) * GlacierExcessRemainFrac
+          MassDust5(0)            = MassDust5(0) * GlacierExcessRemainFrac
        endif
 
     endif

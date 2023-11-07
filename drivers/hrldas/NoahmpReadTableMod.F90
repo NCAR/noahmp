@@ -205,9 +205,12 @@ contains
                                                       sr2006_smcmax_b
     ! SNICAR
     real(kind=kind_noahmp)                   ::       DepBChydropho,DepBChydrophi,DepOChydropho,DepOChydrophi,               &
-                                                      DepDust1,DepDust2,DepDust3,DepDust4
+                                                      DepDust1,DepDust2,DepDust3,DepDust4,DepDust5,                          &
+                                                      SnowRadiusMin,FreshSnowRadiusMax,SnowRadiusRefrz
     namelist / noahmp_snicar_parameters /             DepBChydropho,DepBChydrophi,DepOChydropho,DepOChydrophi,               &
-                                                      DepDust1,DepDust2,DepDust3,DepDust4 
+                                                      DepDust1,DepDust2,DepDust3,DepDust4,DepDust5,                          &
+                                                      SnowRadiusMin,FreshSnowRadiusMax,SnowRadiusRefrz
+
     !--------------------------------------------------
     !=== allocate multi-dim input table variables
     !--------------------------------------------------
@@ -654,7 +657,11 @@ contains
     NoahmpIO%DepDust2_TABLE             = undefined_real
     NoahmpIO%DepDust3_TABLE             = undefined_real
     NoahmpIO%DepDust4_TABLE             = undefined_real
-  
+    NoahmpIO%DepDust5_TABLE             = undefined_real
+    NoahmpIO%SnowRadiusMin_TABLE        = undefined_real
+    NoahmpIO%FreshSnowRadiusMax_TABLE   = undefined_real
+    NoahmpIO%SnowRadiusRefrz_TABLE      = undefined_real
+
     !---------------------------------------------------------------
     ! transfer values from table to input variables
     !---------------------------------------------------------------
@@ -1213,6 +1220,10 @@ contains
     NoahmpIO%DepDust2_TABLE           = DepDust2
     NoahmpIO%DepDust3_TABLE           = DepDust3
     NoahmpIO%DepDust4_TABLE           = DepDust4
+    NoahmpIO%DepDust5_TABLE           = DepDust5
+    NoahmpIO%SnowRadiusMin_TABLE      = SnowRadiusMin
+    NoahmpIO%FreshSnowRadiusMax_TABLE = FreshSnowRadiusMax
+    NoahmpIO%SnowRadiusRefrz_TABLE    = SnowRadiusRefrz
 
   end subroutine NoahmpReadTable
 

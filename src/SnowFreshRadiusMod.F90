@@ -30,12 +30,12 @@ contains
 ! local variable
     real(kind=kind_noahmp)           :: Tmin                                 ! start of linear ramp
     real(kind=kind_noahmp)           :: Tmax                                 ! start of linear ramp
-    real(kind=kind_noahmp)           :: SnowRadiusMin     = 54.526           ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
-    real(kind=kind_noahmp)           :: FreshSnowRadiusMax = 204.526         ! maximum warm fresh snow effective radius [microns]
 
 ! --------------------------------------------------------------------
     associate(                                                                        &
-              TemperatureAirRefHeight => noahmp%forcing%TemperatureAirRefHeight      ,& ! in,    air temperature [K] at reference height
+              TemperatureAirRefHeight => noahmp%forcing%TemperatureAirRefHeight      ,& ! in,  air temperature [K] at reference height
+              SnowRadiusMin           => noahmp%water%param%SnowRadiusMin            ,& ! in,  minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
+              FreshSnowRadiusMax      => noahmp%water%param%FreshSnowRadiusMax       ,& ! in,  maximum warm fresh snow effective radius [microns]
               SnowRadiusFresh         => noahmp%water%state%SnowRadiusFresh           & ! out, fresh snow radius [microns]
              )
 ! ----------------------------------------------------------------------

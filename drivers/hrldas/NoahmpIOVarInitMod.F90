@@ -357,6 +357,9 @@ contains
        if ( .not. allocated (NoahmpIO%ss_alb_dst4)     )     allocate ( NoahmpIO%ss_alb_dst4         (NoahmpIO%snicar_numrad_snw) )
        if ( .not. allocated (NoahmpIO%asm_prm_dst4)    )     allocate ( NoahmpIO%asm_prm_dst4        (NoahmpIO%snicar_numrad_snw) )
        if ( .not. allocated (NoahmpIO%ext_cff_mss_dst4))     allocate ( NoahmpIO%ext_cff_mss_dst4    (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ss_alb_dst5)     )     allocate ( NoahmpIO%ss_alb_dst5         (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%asm_prm_dst5)    )     allocate ( NoahmpIO%asm_prm_dst5        (NoahmpIO%snicar_numrad_snw) )
+       if ( .not. allocated (NoahmpIO%ext_cff_mss_dst5))     allocate ( NoahmpIO%ext_cff_mss_dst5    (NoahmpIO%snicar_numrad_snw) )
        if ( .not. allocated (NoahmpIO%flx_wgt_dir)     )     allocate ( NoahmpIO%flx_wgt_dir         (NoahmpIO%snicar_numrad_snw) )
        if ( .not. allocated (NoahmpIO%flx_wgt_dif)     )     allocate ( NoahmpIO%flx_wgt_dif         (NoahmpIO%snicar_numrad_snw) )
        if ( .not. allocated (NoahmpIO%snowage_tau)     )     allocate ( NoahmpIO%snowage_tau         (NoahmpIO%idx_rhos_max,NoahmpIO%idx_Tgrd_max,NoahmpIO%idx_T_max) )
@@ -374,6 +377,7 @@ contains
        if ( .not. allocated (NoahmpIO%DUST2XY)    )          allocate ( NoahmpIO%DUST2XY             (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%DUST3XY)    )          allocate ( NoahmpIO%DUST3XY             (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%DUST4XY)    )          allocate ( NoahmpIO%DUST4XY             (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DUST5XY)    )          allocate ( NoahmpIO%DUST5XY             (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%MassConcBCPHIXY)    )  allocate ( NoahmpIO%MassConcBCPHIXY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%MassConcBCPHOXY)    )  allocate ( NoahmpIO%MassConcBCPHOXY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%MassConcOCPHIXY)    )  allocate ( NoahmpIO%MassConcOCPHIXY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
@@ -382,6 +386,7 @@ contains
        if ( .not. allocated (NoahmpIO%MassConcDUST2XY)    )  allocate ( NoahmpIO%MassConcDUST2XY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%MassConcDUST3XY)    )  allocate ( NoahmpIO%MassConcDUST3XY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%MassConcDUST4XY)    )  allocate ( NoahmpIO%MassConcDUST4XY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%MassConcDUST5XY)    )  allocate ( NoahmpIO%MassConcDUST5XY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%DepBChydrophoXY)    )  allocate ( NoahmpIO%DepBChydrophoXY     (XSTART:XEND,YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%DepBChydrophiXY)    )  allocate ( NoahmpIO%DepBChydrophiXY     (XSTART:XEND,YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%DepOChydrophoXY)    )  allocate ( NoahmpIO%DepOChydrophoXY     (XSTART:XEND,YSTART:YEND) )
@@ -390,6 +395,7 @@ contains
        if ( .not. allocated (NoahmpIO%DepDust2XY)         )  allocate ( NoahmpIO%DepDust2XY          (XSTART:XEND,YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%DepDust3XY)         )  allocate ( NoahmpIO%DepDust3XY          (XSTART:XEND,YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%DepDust4XY)         )  allocate ( NoahmpIO%DepDust4XY          (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepDust5XY)         )  allocate ( NoahmpIO%DepDust5XY          (XSTART:XEND,YSTART:YEND) )
     endif
 
     if ( .not. allocated (NoahmpIO%ALBSNOWDIRXY)) allocate ( NoahmpIO%ALBSNOWDIRXY (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! snow albedo (direct)
@@ -788,6 +794,9 @@ contains
        NoahmpIO%ss_alb_dst4              = undefined_real
        NoahmpIO%asm_prm_dst4             = undefined_real
        NoahmpIO%ext_cff_mss_dst4         = undefined_real
+       NoahmpIO%ss_alb_dst5              = undefined_real
+       NoahmpIO%asm_prm_dst5             = undefined_real
+       NoahmpIO%ext_cff_mss_dst5         = undefined_real
        NoahmpIO%flx_wgt_dir              = undefined_real
        NoahmpIO%flx_wgt_dif              = undefined_real
        NoahmpIO%snowage_tau              = undefined_real
@@ -805,6 +814,7 @@ contains
        NoahmpIO%DUST2XY                  = undefined_real
        NoahmpIO%DUST3XY                  = undefined_real
        NoahmpIO%DUST4XY                  = undefined_real
+       NoahmpIO%DUST5XY                  = undefined_real
        NoahmpIO%MassConcBCPHOXY          = undefined_real
        NoahmpIO%MassConcBCPHIXY          = undefined_real
        NoahmpIO%MassConcOCPHOXY          = undefined_real
@@ -813,15 +823,17 @@ contains
        NoahmpIO%MassConcDUST2XY          = undefined_real
        NoahmpIO%MassConcDUST3XY          = undefined_real
        NoahmpIO%MassConcDUST4XY          = undefined_real
+       NoahmpIO%MassConcDUST5XY          = undefined_real
+       NoahmpIO%DepBChydrophoXY          = undefined_real
+       NoahmpIO%DepBChydrophiXY          = undefined_real
+       NoahmpIO%DepOChydrophoXY          = undefined_real
+       NoahmpIO%DepOChydrophiXY          = undefined_real
+       NoahmpIO%DepDust1XY               = undefined_real
+       NoahmpIO%DepDust2XY               = undefined_real
+       NoahmpIO%DepDust3XY               = undefined_real
+       NoahmpIO%DepDust4XY               = undefined_real
+       NoahmpIO%DepDust5XY               = undefined_real
     endif
-    NoahmpIO%DepBChydrophoXY          = undefined_real
-    NoahmpIO%DepBChydrophiXY          = undefined_real
-    NoahmpIO%DepOChydrophoXY          = undefined_real
-    NoahmpIO%DepOChydrophiXY          = undefined_real
-    NoahmpIO%DepDust1XY               = undefined_real
-    NoahmpIO%DepDust2XY               = undefined_real
-    NoahmpIO%DepDust3XY               = undefined_real
-    NoahmpIO%DepDust4XY               = undefined_real
 
     ! crop model
     NoahmpIO%PGSXY           = undefined_int

@@ -40,6 +40,7 @@ contains
     real(kind=kind_noahmp)           :: MassDust2Extra                       ! extra mass of dust species 2 in snow [kg m-2] to be divided compared to allowed layer thickness
     real(kind=kind_noahmp)           :: MassDust3Extra                       ! extra mass of dust species 3 in snow [kg m-2] to be divided compared to allowed layer thickness
     real(kind=kind_noahmp)           :: MassDust4Extra                       ! extra mass of dust species 4 in snow [kg m-2] to be divided compared to allowed layer thickness
+    real(kind=kind_noahmp)           :: MassDust5Extra                       ! extra mass of dust species 5 in snow [kg m-2] to be divided compared to allowed layer thickness
     real(kind=kind_noahmp), allocatable, dimension(:) :: SnowThickTmp        ! snow layer thickness [m]
     real(kind=kind_noahmp), allocatable, dimension(:) :: SnowIceTmp          ! partial volume of ice [m3/m3]
     real(kind=kind_noahmp), allocatable, dimension(:) :: SnowLiqTmp          ! partial volume of liquid water [m3/m3]
@@ -52,6 +53,7 @@ contains
     real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust2Tmp        ! mass of dust species 2 in snow [kg m-2]
     real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust3Tmp        ! mass of dust species 3 in snow [kg m-2]
     real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust4Tmp        ! mass of dust species 4 in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust5Tmp        ! mass of dust species 5 in snow [kg m-2]
     real(kind=kind_noahmp), allocatable, dimension(:) :: SnowRadiusTmp       ! effective grain radius [microns, m-6]
 
 ! --------------------------------------------------------------------
@@ -71,6 +73,7 @@ contains
               MassDust2              => noahmp%water%state%MassDust2                ,& ! inout, mass of dust species 2 in snow [kg m-2]
               MassDust3              => noahmp%water%state%MassDust3                ,& ! inout, mass of dust species 3 in snow [kg m-2]
               MassDust4              => noahmp%water%state%MassDust4                ,& ! inout, mass of dust species 4 in snow [kg m-2]
+              MassDust5              => noahmp%water%state%MassDust5                ,& ! inout, mass of dust species 5 in snow [kg m-2]
               SnowRadius             => noahmp%water%state%SnowRadius                & ! inout, effective grain radius [microns, m-6]
              )
 ! ----------------------------------------------------------------------
@@ -90,6 +93,7 @@ contains
        if (.not. allocated(MassDust2Tmp)      ) allocate(MassDust2Tmp      (1:NumSnowLayerMax))
        if (.not. allocated(MassDust3Tmp)      ) allocate(MassDust3Tmp      (1:NumSnowLayerMax))
        if (.not. allocated(MassDust4Tmp)      ) allocate(MassDust4Tmp      (1:NumSnowLayerMax))
+       if (.not. allocated(MassDust5Tmp)      ) allocate(MassDust5Tmp      (1:NumSnowLayerMax))
        if (.not. allocated(SnowRadiusTmp)     ) allocate(SnowRadiusTmp     (1:NumSnowLayerMax))
     endif
 
@@ -107,6 +111,7 @@ contains
        MassDust2Tmp      (:) = 0.0
        MassDust3Tmp      (:) = 0.0
        MassDust4Tmp      (:) = 0.0
+       MassDust5Tmp      (:) = 0.0
        SnowRadiusTmp     (:) = 0.0
     endif
 
@@ -126,6 +131,7 @@ contains
              MassDust2Tmp(LoopInd)       = MassDust2(LoopInd+NumSnowLayerNeg)
              MassDust3Tmp(LoopInd)       = MassDust3(LoopInd+NumSnowLayerNeg)
              MassDust4Tmp(LoopInd)       = MassDust4(LoopInd+NumSnowLayerNeg)
+             MassDust5Tmp(LoopInd)       = MassDust5(LoopInd+NumSnowLayerNeg)
              SnowRadiusTmp(LoopInd)      = SnowRadius(LoopInd+NumSnowLayerNeg)
           endif
 
@@ -164,6 +170,8 @@ contains
              MassDust3Tmp(2)       = MassDust3Tmp(1)
              MassDust4Tmp(1)       = MassDust4Tmp(1)/2.0
              MassDust4Tmp(2)       = MassDust4Tmp(1)
+             MassDust5Tmp(1)       = MassDust5Tmp(1)/2.0
+             MassDust5Tmp(2)       = MassDust5Tmp(1)
              SnowRadiusTmp(2)      = SnowRadiusTmp(1)
           endif
 
@@ -186,6 +194,7 @@ contains
              MassDust2Extra       = SnowFracExtra * MassDust2Tmp(1)
              MassDust3Extra       = SnowFracExtra * MassDust3Tmp(1)
              MassDust4Extra       = SnowFracExtra * MassDust4Tmp(1)
+             MassDust5Extra       = SnowFracExtra * MassDust5Tmp(1)
           endif
 
           SnowFracExtra        = 0.05 / SnowThickTmp(1)
@@ -202,6 +211,7 @@ contains
              MassDust2Tmp(1)      = SnowFracExtra * MassDust2Tmp(1)
              MassDust3Tmp(1)      = SnowFracExtra * MassDust3Tmp(1)
              MassDust4Tmp(1)      = SnowFracExtra * MassDust4Tmp(1)
+             MassDust5Tmp(1)      = SnowFracExtra * MassDust5Tmp(1)
 
              MassBChydrophoTmp(2) = MassBChydrophoTmp(2) + MassBChydrophoExtra
              MassBChydrophiTmp(2) = MassBChydrophiTmp(2) + MassBChydrophiExtra
@@ -211,6 +221,7 @@ contains
              MassDust2Tmp(2)      = MassDust2Tmp(2) + MassDust2Extra
              MassDust3Tmp(2)      = MassDust3Tmp(2) + MassDust3Extra
              MassDust4Tmp(2)      = MassDust4Tmp(2) + MassDust4Extra
+             MassDust5Tmp(2)      = MassDust5Tmp(2) + MassDust5Extra
              SnowRadiusTmp(2)     = (SnowRadiusTmp(2) * (SnowLiqTmp(2) + SnowIceTmp(2)) + SnowRadiusTmp(1) * (SnowLiqExtra + SnowIceExtra) ) / &
                                     (SnowLiqTmp(2) + SnowIceTmp(2) + SnowLiqExtra + SnowIceExtra) 
           endif
@@ -256,6 +267,8 @@ contains
                 MassDust3Tmp(3)       = MassDust3Tmp(2)
                 MassDust4Tmp(2)       = MassDust4Tmp(2) / 2.0
                 MassDust4Tmp(3)       = MassDust4Tmp(2)
+                MassDust5Tmp(2)       = MassDust5Tmp(2) / 2.0
+                MassDust5Tmp(3)       = MassDust5Tmp(2)
                 SnowRadiusTmp(3)      = SnowRadiusTmp(2)
              endif
 
@@ -279,6 +292,7 @@ contains
              MassDust2Extra       = SnowFracExtra * MassDust2Tmp(2)
              MassDust3Extra       = SnowFracExtra * MassDust3Tmp(2)
              MassDust4Extra       = SnowFracExtra * MassDust4Tmp(2)
+             MassDust5Extra       = SnowFracExtra * MassDust5Tmp(2)
           endif
 
           SnowFracExtra    = 0.2 / SnowThickTmp(2)
@@ -295,6 +309,7 @@ contains
              MassDust2Tmp(2)      = SnowFracExtra * MassDust2Tmp(2)
              MassDust3Tmp(2)      = SnowFracExtra * MassDust3Tmp(2)
              MassDust4Tmp(2)      = SnowFracExtra * MassDust4Tmp(2)
+             MassDust5Tmp(2)      = SnowFracExtra * MassDust5Tmp(2)
 
              MassBChydrophoTmp(3) = MassBChydrophoTmp(3) + MassBChydrophoExtra
              MassBChydrophiTmp(3) = MassBChydrophiTmp(3) + MassBChydrophiExtra
@@ -304,6 +319,7 @@ contains
              MassDust2Tmp(3)      = MassDust2Tmp(3) + MassDust2Extra
              MassDust3Tmp(3)      = MassDust3Tmp(3) + MassDust3Extra
              MassDust4Tmp(3)      = MassDust4Tmp(3) + MassDust4Extra
+             MassDust5Tmp(3)      = MassDust5Tmp(3) + MassDust5Extra
              SnowRadiusTmp(3)     = (SnowRadiusTmp(3) * (SnowLiqTmp(3) + SnowIceTmp(3)) + SnowRadiusTmp(2) * (SnowLiqExtra + SnowIceExtra) ) / &
                                     (SnowLiqTmp(3) + SnowIceTmp(3) + SnowLiqExtra + SnowIceExtra)
           endif
@@ -332,6 +348,7 @@ contains
           MassDust2(LoopInd)              = MassDust2Tmp(LoopInd-NumSnowLayerNeg)
           MassDust3(LoopInd)              = MassDust3Tmp(LoopInd-NumSnowLayerNeg)
           MassDust4(LoopInd)              = MassDust4Tmp(LoopInd-NumSnowLayerNeg)
+          MassDust5(LoopInd)              = MassDust5Tmp(LoopInd-NumSnowLayerNeg)
           SnowRadius(LoopInd)             = SnowRadiusTmp(LoopInd-NumSnowLayerNeg)
        endif
 
@@ -352,6 +369,7 @@ contains
        deallocate(MassDust2Tmp      )
        deallocate(MassDust3Tmp      )
        deallocate(MassDust4Tmp      )
+       deallocate(MassDust5Tmp      )
        deallocate(SnowRadiusTmp     )
     endif
 
