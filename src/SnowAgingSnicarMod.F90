@@ -70,8 +70,8 @@ contains
     real(kind=kind_noahmp)           :: SnowDensity                          ! snow density [kg m-3]
     real(kind=kind_noahmp)           :: SnowRadiusMax     = 1500             ! maximum allowed snow effective radius [microns]
     real(kind=kind_noahmp), parameter:: C1_liq_Brun89     = 0.0              ! constant for liquid water grain growth [m3 s-1], from Brun89: zeroed to accomodate dry snow aging
-    real(kind=kind_noahmp), parameter:: C2_liq_Brun89     = 4.22e-13         ! Constant for liquid water grain growth [m3 s-1], from Brun89: corrected for LWC in units of percent, should move to table
-    real(kind=kind_noahmp), parameter:: xdrdt             = 1.0              ! Arbitrary factor applied to snow aging rate (-) tuning factor, should move to table
+    real(kind=kind_noahmp), parameter:: C2_liq_Brun89     = 4.22e-13         ! Constant for liquid water grain growth [m3 s-1], from Brun89: corrected for LWC in units of percent
+    real(kind=kind_noahmp), parameter:: xdrdt             = 1.0              ! Arbitrary factor applied to snow aging rate (-) tuning factor
     real(kind=kind_noahmp)           :: dr                                   ! incremental change in snow effective radius [um]
     real(kind=kind_noahmp)           :: dr_wet                               ! incremental change in snow effective radius from wet growth [um]
     real(kind=kind_noahmp)           :: dr_fresh                             ! difference between fresh snow r_e and current r_e [um]
