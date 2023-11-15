@@ -1,13 +1,12 @@
-![image](https://user-images.githubusercontent.com/43385564/236596277-45d492e7-79fd-4006-83e2-3044106afd94.png)
+![noahmp_logo_update](https://github.com/NCAR/noahmp/assets/43385564/1fb47fc2-99bd-4360-9ed0-6d5656c29626)
 
 
 [![DOI](https://zenodo.org/badge/236657733.svg)](https://zenodo.org/badge/latestdoi/236657733)
 
 
-# Noah-MP Community Model Repository
+# Noah-MP<sup>®</sup> Community Model Repository
 
-
-Noah-MP is a widely-used state-of-the-art land surface model used in many research and operational weather/climate models (e.g., HRLDAS, WRF, MPAS, WRF-Hydro/NWM, NOAA/UFS, NASA/LIS, etc.).
+Noah-MP<sup>®</sup> is a widely-used state-of-the-art land surface model used in many research and operational weather/climate models (e.g., HRLDAS, WRF, MPAS, WRF-Hydro/NWM, NOAA/UFS, NASA/LIS, etc.).
 
 This is the official Noah-MP land surface model unified repository for code downloading and contribution. Noah-MP is a community open-source model developed with the contributions from the entire scientific community. For development, maintenance, and release of the community Noah-MP GitHub code, please contact: Cenlin He (cenlinhe@ucar.edu) and Fei Chen (feichen@ucar.edu).
 
@@ -27,7 +26,7 @@ Technical documentation freely available at http://dx.doi.org/10.5065/ew8g-yr95
 
 **Original Noah-MP model description paper**:   Niu, G. Y., Yang, Z. L., Mitchell, K. E., Chen, F., Ek, M. B., Barlage, M., ... & Xia, Y. (2011). The community Noah land surface model with multiparameterization options (Noah‐MP): 1. Model description and evaluation with local‐scale measurements. Journal of Geophysical Research: Atmospheres, 116(D12).
 
-**Noah-MP version 5.0 model description paper**:  He, C., Valayamkunnath, P., Barlage, M., Chen, F., Gochis, D., Cabell, R., Schneider, T., Rasmussen, R., Niu, G.-Y., Yang, Z.-L., Niyogi, D., and Ek, M.: Modernizing the open-source community Noah-MP land surface model (version 5.0) with enhanced modularity, interoperability, and applicability, EGUsphere [preprint], https://doi.org/10.5194/egusphere-2023-675, 2023.
+**Noah-MP version 5.0 model description paper**:  He, C., Valayamkunnath, P., Barlage, M., Chen, F., Gochis, D., Cabell, R., Schneider, T., Rasmussen, R., Niu, G.-Y., Yang, Z.-L., Niyogi, D., and Ek, M.: Modernizing the open-source community Noah with multi-parameterization options (Noah-MP) land surface model (version 5.0) with enhanced modularity, interoperability, and applicability, Geosci. Model Dev., 16, 5131–5151, https://doi.org/10.5194/gmd-16-5131-2023, 2023.
 
 
 ## Noah-MP GitHub structure
