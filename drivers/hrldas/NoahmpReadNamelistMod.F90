@@ -74,6 +74,7 @@ contains
     integer                 :: btr_option                         = 1
     integer                 :: surface_runoff_option              = 3
     integer                 :: subsurface_runoff_option           = 3
+    integer                 :: wetland_option                     = 0 
     integer                 :: surface_drag_option                = 1
     integer                 :: supercooled_water_option           = 1
     integer                 :: frozen_soil_option                 = 1
@@ -125,7 +126,7 @@ contains
          btr_option, surface_drag_option, supercooled_water_option,        &
          frozen_soil_option, radiative_transfer_option, snow_albedo_option,               &
          snow_thermal_conductivity, surface_runoff_option, subsurface_runoff_option,      &
-         pcp_partition_option, tbot_option, temp_time_scheme_option,                      &
+         wetland_option, pcp_partition_option, tbot_option, temp_time_scheme_option,      &
          glacier_option, surface_resistance_option,                                       &
          irrigation_option, irrigation_method, dvic_infiltration_option,                  &
          tile_drainage_option,soil_data_option, pedotransfer_option, crop_option,         &
@@ -325,6 +326,7 @@ contains
     NoahmpIO%IOPT_BTR                          = btr_option
     NoahmpIO%IOPT_RUNSRF                       = surface_runoff_option
     NoahmpIO%IOPT_RUNSUB                       = subsurface_runoff_option
+    NoahmpIO%IOPT_WETLAND                      = wetland_option
     NoahmpIO%IOPT_SFC                          = surface_drag_option
     NoahmpIO%IOPT_FRZ                          = supercooled_water_option
     NoahmpIO%IOPT_INF                          = frozen_soil_option

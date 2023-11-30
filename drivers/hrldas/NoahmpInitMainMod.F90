@@ -146,6 +146,8 @@ contains
              NoahmpIO%CMXY(I,J)     = 0.0
              NoahmpIO%CHXY(I,J)     = 0.0
              NoahmpIO%FWETXY(I,J)   = 0.0
+             NoahmpIO%FSATXY(I,J)   = 0.0
+             NoahmpIO%WSURFXY(I,J)  = 0.0 
              NoahmpIO%SNEQVOXY(I,J) = 0.0
              NoahmpIO%ALBOLDXY(I,J) = 0.65
              NoahmpIO%QSNOWXY(I,J)  = 0.0
@@ -187,13 +189,8 @@ contains
                 NoahmpIO%LAI(I,J)      = 0.0
                 NoahmpIO%LAI(I,J)      = max(NoahmpIO%LAI(I,J), 0.05)                       ! at least start with 0.05 for arbitrary initialization (v3.7)
                 NoahmpIO%XSAIXY(I,J)   = max(0.1*NoahmpIO%LAI(I,J), 0.05)                   ! MB: arbitrarily initialize SAI using input LAI (v3.7)
-                if ( NoahmpIO%SF_URBAN_PHYSICS == 0 ) then
-                   NoahmpIO%LFMASSXY(I,J) = NoahmpIO%LAI(I,J) * 1000.0 / &
-                                            max(NoahmpIO%SLA_TABLE(NoahmpIO%IVGTYP(I,J)),1.0)  ! use LAI to initialize (v3.7)
-                else
-                   NoahmpIO%LFMASSXY(I,J) = NoahmpIO%LAI(I,J) * 1000.0 / &
-                                            max(NoahmpIO%SLA_TABLE(NoahmpIO%NATURAL_TABLE),1.0)! use LAI to initialize (v3.7)
-                endif
+                NoahmpIO%LFMASSXY(I,J) = NoahmpIO%LAI(I,J) * 1000.0 / &
+                                         max(NoahmpIO%SLA_TABLE(NoahmpIO%IVGTYP(I,J)),1.0)  ! use LAI to initialize (v3.7)
                 NoahmpIO%STMASSXY(I,J) = NoahmpIO%XSAIXY(I,J) * 1000.0 / 3.0                ! use SAI to initialize (v3.7)
                 NoahmpIO%RTMASSXY(I,J) = 500.0                                              ! these are all arbitrary and probably should be
                 NoahmpIO%WOODXY(I,J)   = 500.0                                              ! in the table or read from initialization

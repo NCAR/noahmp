@@ -123,6 +123,8 @@ contains
     NoahmpIO%RECHXY      (I,J) = NoahmpIO%RECHXY(I,J) + (noahmp%water%state%RechargeGwShallowWT*1.0e3)
     NoahmpIO%DEEPRECHXY  (I,J) = NoahmpIO%DEEPRECHXY(I,J) + noahmp%water%state%RechargeGwDeepWT
     NoahmpIO%SMCWTDXY    (I,J) = noahmp%water%state%SoilMoistureToWT
+    NoahmpIO%WSURFXY     (I,J) = noahmp%water%state%WaterStorageWetland
+    NoahmpIO%FSATXY      (I,J) = noahmp%water%state%SoilSaturateFrac
     NoahmpIO%SMOIS       (I,1:NumSoilLayer,J)       = noahmp%water%state%SoilMoisture(1:NumSoilLayer)
     NoahmpIO%SH2O        (I,1:NumSoilLayer,J)       = noahmp%water%state%SoilLiqWater(1:NumSoilLayer)
     NoahmpIO%ACC_ETRANIXY(I,1:NumSoilLayer,J)       = noahmp%water%flux%TranspWatLossSoilAcc(1:NumSoilLayer)
