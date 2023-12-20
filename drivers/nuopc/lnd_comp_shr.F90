@@ -802,7 +802,7 @@ contains
     if (isPresent .and. isSet) then
        read(cvalue,*) noahmp%nmlist%output_freq
     else
-       noahmp%nmlist%output_freq = 6
+       noahmp%nmlist%output_freq = 21600
     end if
     call ESMF_LogWrite(trim(subname)//' : output_freq = '//trim(cvalue), ESMF_LOGMSG_INFO)
 
