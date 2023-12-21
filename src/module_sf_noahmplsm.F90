@@ -2116,7 +2116,7 @@ endif   ! croptype == 0
 ! thermal properties of soil, snow, lake, and frozen soil
 
   call thermoprop (parameters,nsoil   ,nsnow   ,isnow   ,ist     ,dzsnso  , & !in
-                   dt      ,snowh   ,snice   ,snliq   , & !in
+                   dt      ,snowh   ,snice   ,snliq   , shdfac, & !in
                    smc     ,sh2o    ,tg      ,stc     ,ur      , & !in
                    lat     ,z0m     ,zlvl    ,vegtyp  ,  & !in
                    df      ,hcpct   ,snicev  ,snliqv  ,epore   , & !out
@@ -2463,7 +2463,7 @@ endif   ! croptype == 0
 
 !>\ingroup NoahMP_LSM
   subroutine thermoprop (parameters,nsoil   ,nsnow   ,isnow   ,ist     ,dzsnso  , & !in
-                         dt      ,snowh   ,snice   ,snliq   , & !in
+                         dt      ,snowh   ,snice   ,snliq   , shdfac,   & !in
                          smc     ,sh2o    ,tg      ,stc     ,ur      , & !in
                          lat     ,z0m     ,zlvl    ,vegtyp  , & !in
                          df      ,hcpct   ,snicev  ,snliqv  ,epore   , & !out
@@ -2480,6 +2480,7 @@ endif   ! croptype == 0
   real (kind=kind_phys)                           , intent(in)  :: dt      !< time step [s]
   real (kind=kind_phys), dimension(-nsnow+1:    0), intent(in)  :: snice   !< snow ice mass (kg/m2)
   real (kind=kind_phys), dimension(-nsnow+1:    0), intent(in)  :: snliq   !< snow liq mass (kg/m2)
+  real (kind=kind_phys)                           , intent(in)  :: shdfac !< green vegetation fraction [0.0-1.0]
   real (kind=kind_phys), dimension(-nsnow+1:nsoil), intent(in)  :: dzsnso  !< thickness of snow/soil layers [m]
   real (kind=kind_phys), dimension(       1:nsoil), intent(in)  :: smc     !< soil moisture (ice + liq.) [m3/m3]
   real (kind=kind_phys), dimension(       1:nsoil), intent(in)  :: sh2o    !< liquid soil moisture [m3/m3]
@@ -2539,6 +2540,7 @@ endif   ! croptype == 0
 ! not in use because of the separation of the canopy layer from the ground.
 ! but this may represent the effects of leaf litter (niu comments)
 !       df1 = df1 * exp (sbeta * shdfac)
+        df(1) = df(1) * exp (sbeta * shdfac)
 
 ! compute lake thermal properties 
 ! (no consideration of turbulent mixing for this version)
@@ -4888,7 +4890,7 @@ endif   ! croptype == 0
      end if
     endif ! 4
 
-! use sfc_diag to calculate t2mv and q2v for opt_sfc=1&3
+! use sfc_diag to calculate t2mb and q2b for opt_sfc=1&3
     if(opt_diag ==3) then
      if(opt_sfc == 1 .or. opt_sfc == 3) then
 
@@ -5823,7 +5825,8 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
 
       elseif (opt_trs == chen09) then
 
-        z0m_out = exp(fveg * log(z0m)      + (1.0 - fveg) * log(z0mg))
+!       z0m_out = exp(fveg * log(z0m)      + (1.0 - fveg) * log(z0mg))
+        z0m_out = fveg * z0m      + (1.0 - fveg) * z0mg
         czil    = 10.0 ** (- 0.4 * parameters%hvt)
 
         reyn = ustarx*z0m_out/viscosity                      ! Blumel99 eqn 36c
@@ -5873,7 +5876,7 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
 
         z0h_out = z0m_out
 
-      elseif (opt_trs == tessel) then
+      elseif (opt_trs == chen09 .or. opt_trs == tessel) then
 
         if (vegtyp <= 5) then
           z0h_out = z0m_out
@@ -5881,7 +5884,7 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
           z0h_out = z0m_out * 0.01
         endif
 
-      elseif (opt_trs == blumel99 .or. opt_trs == chen09) then
+      elseif (opt_trs == blumel99) then
 
         reyn = ustarx*z0m_out/viscosity                      ! Blumel99 eqn 36c
         if (reyn > 2.0) then

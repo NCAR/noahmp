@@ -33,7 +33,7 @@
 
 !> This module contains some of the most frequently used math and physics
 !! constants for GCM models.
-          module physcons                
+          module physcons
 !
   use machine, only: kind_phys, kind_dyn
 !
@@ -44,7 +44,7 @@
 !> \name Math constants
 ! real(kind=kind_phys),parameter:: con_pi     =3.1415926535897931        !< pi
   real(kind=kind_phys),parameter:: con_pi     =4.0d0*atan(1.0d0)         !< pi
-  real(kind=kind_phys),parameter:: con_sqrt2  =1.414214e+0_kind_phys               !< square root of 2 
+  real(kind=kind_phys),parameter:: con_sqrt2  =1.414214e+0_kind_phys               !< square root of 2
   real(kind=kind_phys),parameter:: con_sqrt3  =1.732051e+0_kind_phys               !< quare root of 3
 
 !> \name Geophysics/Astronomy constants
@@ -97,6 +97,7 @@
   real(kind=kind_phys),parameter:: con_dldt   =con_cvap-con_cliq
   real(kind=kind_phys),parameter:: con_xpona  =-con_dldt/con_rv
   real(kind=kind_phys),parameter:: con_xponb  =-con_dldt/con_rv+con_hvap/(con_rv*con_ttp)
+  real(kind=kind_phys),parameter:: con_1ovg   = 1._kind_phys/con_g
 
 !> \name Other Physics/Chemistry constants (source: 2002 CODATA)
   real(kind=kind_phys),parameter:: con_c      =2.99792458e+8_kind_phys             !< speed of light (\f$m/s\f$)

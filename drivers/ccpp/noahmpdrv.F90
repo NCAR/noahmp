@@ -453,7 +453,7 @@
   integer    :: iopt_pedo = 1 ! option for pedotransfer function
   integer    :: iopt_crop = 0 ! option for crop model
   integer    :: iopt_gla  = 2 ! option for glacier treatment
-  integer    :: iopt_z0m  = 2 ! option for z0m treatment
+  integer    :: iopt_z0m  = 1 ! option for z0m treatment
 
 !
 !  ---  local inputs to noah-mp and glacier subroutines; listed in order in noah-mp call
