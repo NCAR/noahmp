@@ -56,7 +56,7 @@ jobs:
             cd ${{ env.APP_INSTALL_DIR }}/noahmp
             mkdir build
             cd build
-            cmake -DCMAKE_INSTALL_PREFIX=${{ env.APP_INSTALL_DIR }} ../
+            cmake -DCMAKE_INSTALL_PREFIX=${{ env.APP_INSTALL_DIR }} -DCMAKE_Fortran_FLAGS="-g -fbacktrace" ../
             make
             make install
           component_module_name: lnd_comp_nuopc.mod
