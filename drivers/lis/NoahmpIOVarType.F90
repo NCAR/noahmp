@@ -57,7 +57,6 @@ module NoahmpIOVarType
     integer                                                ::  IOPT_IRRM           ! irrigation method (0->dynamic; 1-> sprinkler; 2-> micro; 3-> flood)
     integer                                                ::  IOPT_INFDV          ! infiltration options for dynamic VIC (1->Philip; 2-> Green-Ampt;3->Smith-Parlange)
     integer                                                ::  IOPT_TDRN           ! drainage option (0->off; 1->simple scheme; 2->Hooghoudt's scheme)
-    integer                                                ::  IOPT_sndpth_gla     ! snow depth max for glacier model [mm]
     integer                                                ::  sf_urban_physics    ! urban physics option
     
     ! basic model info
