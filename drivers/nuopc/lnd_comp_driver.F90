@@ -291,7 +291,7 @@ contains
     ! interpolate monthly data, vegetation fraction and mean sfc diffuse sw albedo (NOT used)
     !----------------------
 
-    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'vfrac')) then
+    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Sa_vfrac')) then
        where(noahmp%forc%vegfrac(:) < 0.01_r8)
           noahmp%model%sigmaf(:) = 0.01_r8
        else where

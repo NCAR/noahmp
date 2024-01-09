@@ -117,8 +117,8 @@ contains
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_snow')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_snowc')
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_snowl')
-    call fldlist_add(fldsToLnd_num, fldsToLnd, 'vfrac')
-    call fldlist_add(fldsToLnd_num, fldsToLnd, 'zorl')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_vfrac')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_zorl')
 
     ! Now advertise import fields
     do n = 1,fldsToLnd_num
@@ -331,9 +331,9 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, 'Faxa_snowl', noahmp%forc%snowl, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, 'vfrac'     , noahmp%forc%vegfrac, rc=rc)
+    call state_getimport_1d(importState, 'Sa_vfrac'  , noahmp%forc%vegfrac, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, 'zorl'      , noahmp%forc%zorl, rc=rc)
+    call state_getimport_1d(importState, 'Sa_zorl'   , noahmp%forc%zorl, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)

@@ -272,12 +272,12 @@ Model Fields Used for Coupling
      - noahmp%forc%snow
      - total snow precipitation
      -
-   * - vfrac
+   * - Sa_vfrac
      - 1
      - noahmp%forc%vegfrac
      - areal fractional cover of green vegetation
      -
-   * - zorl
+   * - Sa_zorl
      - cm
      - noahmp%forc%zorl
      - surface roughness
@@ -300,7 +300,7 @@ Model Fields Used for Coupling
    * - Sl_sfrac
      - 0-1
      - noahmp%model%sncovr1
-     - mean snow area fraction
+     - instantaneous snow area fraction
      -
    * - Fall_lat
      - kg kg-1 m s-1
