@@ -1,5 +1,21 @@
 name: Test NUOPC cap
 
+env:
+  # default compiler version
+  compiler: gcc@latest
+  # default esmf version
+  esmf_version: 'esmf@develop'
+  # default test name
+  test: test_datm_lnd
+  # set token to access gh command
+  GH_TOKEN: ${{ github.token }}
+  # installation location for application
+  APP_INSTALL_DIR: ${{ github.workspace }}/app
+  # installation location for dependencies
+  DEP_INSTALL_DIR: ~/.spack-ci
+  # option for retention period for artifacts, default is 90 days
+  ARTIFACTS_RETENTION_PERIOD: 2
+
 on:
   push:
     branches: [ develop ]
@@ -10,26 +26,72 @@ on:
     - cron: '0 0 * * MON'
     - cron: '0 0 * * FRI'
   workflow_dispatch:
-  
+    inputs:
+      compiler:
+        description: 'Compiler version like gcc@12.3.0 or gcc@latest (latest available version on runner)'
+        required: false
+        type: string
+        default: 'gcc@latest'
+      esmf_version: 
+        description: 'ESMF version or tag: esmf@develop, esmf@=8.5.0b23, esmf@@git.<>=X.Y.Z'
+        required: false
+        type: string
+        default: 'esmf@develop'
+      test:
+        description: 'Test that will be run'
+        required: false
+        type: string
+        default: test_datm_lnd
+
 jobs:
-  latest-stable:
-    runs-on: ${{ matrix.os }}
+  set-matrix:
+    runs-on: ubuntu-latest
+
+    outputs:
+      matrix: ${{ steps.generate.outputs.matrix }}
+
+    steps:
+    # generete matrix
+    - name: Generate Matrix by Listing Compiler and ESMF Packages
+      id: generate
+      run: |
+        # output variables for debugging
+        echo "INPUT: >${{ inputs.compiler }}< >${{ inputs.esmf_version }}<"
+        echo "ENV  : >${{ env.compiler }}< >${{ env.esmf_version }}<"
+
+        # create matrix JSON file
+        # compiler
+        if [ -z "${{ inputs.compiler }}" ]; then
+          str1="{\"compiler\": [\"${{ env.compiler }}\"],"
+        else
+          str1="{\"compiler\": [\"${{ inputs.compiler }}\"],"  
+        fi
+        # esmf
+        if [ -z "${{ inputs.esmf_version }}" ]; then
+          str2="\"esmf\": [\"${{ env.esmf_version }}+external-parallelio\"],"
+        else
+          str2="\"esmf\": [\"${{ inputs.esmf_version }}+external-parallelio\"],"
+        fi
+        # test
+        if [ -z "${{ inputs.test }}" ]; then
+          str3="\"test\": [\"${{ env.test }}\"]}"
+        else
+          str3="\"test\": [\"${{ inputs.test }}\"]}"
+        fi
+
+        # output contect for debugging
+        echo "matrix=${str1}${str2}${str3}"
+
+        # output for next step
+        echo "matrix=${str1}${str2}${str3}" >> $GITHUB_OUTPUT
+
+  build:
+    needs: set-matrix
+
+    runs-on: ubuntu-latest
 
     strategy:
-      matrix:
-        os: [ubuntu-22.04]
-        test: [test_datm_lnd]
-        esmf: [esmf@8.5.0]
-    
-    env:
-      # set token to access gh command
-      GH_TOKEN: ${{ github.token }}
-      # installation location for application
-      APP_INSTALL_DIR: ${{ github.workspace }}/app
-      # installation location for dependencies
-      DEP_INSTALL_DIR: ~/.spack-ci
-      # option for retention period for artifacts, default is 90 days
-      ARTIFACTS_RETENTION_PERIOD: 2
+      matrix: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
 
     steps:
       # test component
@@ -37,13 +99,13 @@ jobs:
         uses: esmf-org/nuopc-comp-testing@feature/v1.3
         with:
           app_install_dir: ${{ env.APP_INSTALL_DIR }}
-          artifacts_name: artifacts for ${{ matrix.test }} ${{ matrix.os }} ${{ matrix.esmf }}
+          artifacts_name: artifacts for ${{ matrix.test }} ${{ matrix.compiler }} ${{ matrix.esmf }}
           artifacts_files: |
             ${{ env.APP_INSTALL_DIR }}/run/PET*
             ${{ env.APP_INSTALL_DIR }}/run/*.txt
             ${{ env.APP_INSTALL_DIR }}/run/*.log
             ${{ env.APP_INSTALL_DIR }}/run/comp.test.lnd.out.2000-01-01-75600.*
-          baseline_files: |
+          baseline_files: | 
             ${{ env.APP_INSTALL_DIR }}/run/comp.test.*.nc
           cache_input_file_list: |
             ${{ env.APP_INSTALL_DIR }}/run/INPUT
@@ -62,7 +124,7 @@ jobs:
           component_module_name: lnd_comp_nuopc.mod
           data_component_name: datm
           dependencies: |
-            ${{ matrix.esmf }}+external-parallelio
+            ${{ matrix.esmf }}
           dependencies_install_dir: ${{ env.DEP_INSTALL_DIR }}
           mpirun_args: --oversubscribe -np 6 --mca btl_tcp_if_include eth0
           test_definition: ${{ env.APP_INSTALL_DIR }}/noahmp/.github/workflows/tests/${{ matrix.test }}.yaml
