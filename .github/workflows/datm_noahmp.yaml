@@ -33,7 +33,7 @@ on:
         type: string
         default: 'gcc@latest'
       esmf_version: 
-        description: 'ESMF version or tag: esmf@develop, esmf@=8.5.0b23, esmf@@git.<>=X.Y.Z'
+        description: 'ESMF version or tag: esmf@develop, esmf@=8.5.0b23, esmf@git.hconfig_change_equal=8.6.0'
         required: false
         type: string
         default: 'esmf@develop'
