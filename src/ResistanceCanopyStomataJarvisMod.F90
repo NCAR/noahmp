@@ -68,13 +68,9 @@ contains
     ResistanceTemp       = 0.0
     ResistanceVapDef     = 0.0
     ResistanceStomataTmp = 0.0
-<<<<<<< Updated upstream
+
     if ( IndexShade == 0 ) RadPhotoActAbsTmp = RadPhotoActAbsSunlit / max(VegFrac,1.0e-6) ! Sunlit case
     if ( IndexShade == 1 ) RadPhotoActAbsTmp = RadPhotoActAbsShade  / max(VegFrac,1.0e-6) ! Shaded case
-=======
-    if ( IndexShade == 0 ) RadPhotoActAbsTmp = RadPhotoActAbsSunlit / max(VegFrac,1.0e-6)  ! Sunlit case
-    if ( IndexShade == 1 ) RadPhotoActAbsTmp = RadPhotoActAbsShade / max(VegFrac,1.0e-6)  ! Shaded case
->>>>>>> Stashed changes
 
     ! compute MixingRatioTmp and MixingRatioSat
     SpecHumidityTmp = 0.622 * PressureVaporCanAir / (PressureAirRefHeight - 0.378*PressureVaporCanAir) ! specific humidity

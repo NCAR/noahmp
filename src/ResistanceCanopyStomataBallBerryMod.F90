@@ -83,7 +83,6 @@ contains
               PressureAtmosO2         => noahmp%energy%state%PressureAtmosO2         ,& ! in,  atmospheric o2 pressure [Pa]
               PressureAtmosCO2        => noahmp%energy%state%PressureAtmosCO2        ,& ! in,  atmospheric co2 pressure [Pa]
               ResistanceLeafBoundary  => noahmp%energy%state%ResistanceLeafBoundary  ,& ! in,  leaf boundary layer resistance [s/m]
-              VegFrac                 => noahmp%energy%state%VegFrac                 ,& ! in,  greeness vegetation fraction
               RadPhotoActAbsSunlit    => noahmp%energy%flux%RadPhotoActAbsSunlit     ,& ! in,  average absorbed par for sunlit leaves [W/m2]
               RadPhotoActAbsShade     => noahmp%energy%flux%RadPhotoActAbsShade      ,& ! in,  average absorbed par for shaded leaves [W/m2]
               ResistanceStomataSunlit => noahmp%energy%state%ResistanceStomataSunlit ,& ! out, sunlit leaf stomatal resistance [s/m]
@@ -102,11 +101,7 @@ contains
     ResistanceStomataTmp = 1.0 / ConductanceLeafMin * CF
     PhotosynLeafTmp      = 0.0
     if ( IndexShade == 0 ) RadPhotoActAbsTmp = RadPhotoActAbsSunlit / max(VegFrac,1.0e-6)  ! Sunlit case
-<<<<<<< Updated upstream
     if ( IndexShade == 1 ) RadPhotoActAbsTmp = RadPhotoActAbsShade  / max(VegFrac,1.0e-6)  ! Shaded case
-=======
-    if ( IndexShade == 1 ) RadPhotoActAbsTmp = RadPhotoActAbsShade / max(VegFrac,1.0e-6)  ! Shaded case
->>>>>>> Stashed changes
 
     ! only compute when there is radiation absorption
     if ( RadPhotoActAbsTmp > 0.0 ) then

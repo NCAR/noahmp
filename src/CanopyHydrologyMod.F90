@@ -34,7 +34,6 @@ contains
               VegFrac           => noahmp%energy%state%VegFrac           ,& ! in,    greeness vegetation fraction
               SnowfallDensity   => noahmp%water%state%SnowfallDensity    ,& ! in,    bulk density of snowfall [kg/m3]
               CanopyLiqHoldCap  => noahmp%water%param%CanopyLiqHoldCap   ,& ! in,    maximum intercepted liquid water per unit veg area index [mm]
-              VegFrac           => noahmp%energy%state%VegFrac           ,& ! in,    greeness vegetation fraction
               CanopyLiqWater    => noahmp%water%state%CanopyLiqWater     ,& ! inout, intercepted canopy liquid water [mm]
               CanopyIce         => noahmp%water%state%CanopyIce          ,& ! inout, intercepted canopy ice [mm]
               TemperatureCanopy => noahmp%energy%state%TemperatureCanopy ,& ! inout, vegetation temperature [K]
