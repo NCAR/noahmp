@@ -162,6 +162,9 @@ contains
                   + sr2006_psi_e_b*psi_et         &
                   + sr2006_psi_e_c
     
+    theta_33    = max(10.0**-3.0,theta_33)  ! For numerical stability
+    theta_1500  = max(10.0**-5.0,theta_1500)  ! For numerical stability
+
     ! assign property values
     smcwlt = theta_1500
     smcref = theta_33
