@@ -68,7 +68,6 @@ contains
     ResistanceTemp       = 0.0
     ResistanceVapDef     = 0.0
     ResistanceStomataTmp = 0.0
-
     if ( IndexShade == 0 ) RadPhotoActAbsTmp = RadPhotoActAbsSunlit / max(VegFrac,1.0e-6) ! Sunlit case
     if ( IndexShade == 1 ) RadPhotoActAbsTmp = RadPhotoActAbsShade  / max(VegFrac,1.0e-6) ! Shaded case
 

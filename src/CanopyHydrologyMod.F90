@@ -68,11 +68,7 @@ contains
 
     ! canopy liquid water
     ! maximum canopy intercepted water
-<<<<<<< Updated upstream
     CanopyLiqWaterMax =  VegFrac * CanopyLiqHoldCap * (LeafAreaIndEff + StemAreaIndEff)
-=======
-    CanopyLiqWaterMax = VegFrac * CanopyLiqHoldCap * (LeafAreaIndEff + StemAreaIndEff)
->>>>>>> Stashed changes
 
     ! canopy evaporation, transpiration, and dew
     if ( FlagFrozenCanopy .eqv. .false. ) then    ! Barlage: change to FlagFrozenCanopy

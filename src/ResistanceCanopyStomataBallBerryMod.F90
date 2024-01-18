@@ -79,10 +79,10 @@ contains
               TemperatureCanopy       => noahmp%energy%state%TemperatureCanopy       ,& ! in,  vegetation temperature [K]
               VapPresSatCanopy        => noahmp%energy%state%VapPresSatCanopy        ,& ! in,  canopy saturation vapor pressure at TV [Pa]
               PressureVaporCanAir     => noahmp%energy%state%PressureVaporCanAir     ,& ! in,  canopy air vapor pressure [Pa]
-              VegFrac                 => noahmp%energy%state%VegFrac                 ,& ! in,  greeness vegetation fraction
               PressureAtmosO2         => noahmp%energy%state%PressureAtmosO2         ,& ! in,  atmospheric o2 pressure [Pa]
               PressureAtmosCO2        => noahmp%energy%state%PressureAtmosCO2        ,& ! in,  atmospheric co2 pressure [Pa]
               ResistanceLeafBoundary  => noahmp%energy%state%ResistanceLeafBoundary  ,& ! in,  leaf boundary layer resistance [s/m]
+              VegFrac                 => noahmp%energy%state%VegFrac                 ,& ! in,  greeness vegetation fraction
               RadPhotoActAbsSunlit    => noahmp%energy%flux%RadPhotoActAbsSunlit     ,& ! in,  average absorbed par for sunlit leaves [W/m2]
               RadPhotoActAbsShade     => noahmp%energy%flux%RadPhotoActAbsShade      ,& ! in,  average absorbed par for shaded leaves [W/m2]
               ResistanceStomataSunlit => noahmp%energy%state%ResistanceStomataSunlit ,& ! out, sunlit leaf stomatal resistance [s/m]
