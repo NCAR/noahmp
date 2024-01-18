@@ -34,6 +34,7 @@ contains
               VegFrac           => noahmp%energy%state%VegFrac           ,& ! in,    greeness vegetation fraction
               SnowfallDensity   => noahmp%water%state%SnowfallDensity    ,& ! in,    bulk density of snowfall [kg/m3]
               CanopyLiqHoldCap  => noahmp%water%param%CanopyLiqHoldCap   ,& ! in,    maximum intercepted liquid water per unit veg area index [mm]
+              VegFrac           => noahmp%energy%state%VegFrac           ,& ! in,    greeness vegetation fraction
               CanopyLiqWater    => noahmp%water%state%CanopyLiqWater     ,& ! inout, intercepted canopy liquid water [mm]
               CanopyIce         => noahmp%water%state%CanopyIce          ,& ! inout, intercepted canopy ice [mm]
               TemperatureCanopy => noahmp%energy%state%TemperatureCanopy ,& ! inout, vegetation temperature [K]
@@ -68,7 +69,11 @@ contains
 
     ! canopy liquid water
     ! maximum canopy intercepted water
+<<<<<<< Updated upstream
     CanopyLiqWaterMax =  VegFrac * CanopyLiqHoldCap * (LeafAreaIndEff + StemAreaIndEff)
+=======
+    CanopyLiqWaterMax = VegFrac * CanopyLiqHoldCap * (LeafAreaIndEff + StemAreaIndEff)
+>>>>>>> Stashed changes
 
     ! canopy evaporation, transpiration, and dew
     if ( FlagFrozenCanopy .eqv. .false. ) then    ! Barlage: change to FlagFrozenCanopy

@@ -79,6 +79,7 @@ contains
               TemperatureCanopy       => noahmp%energy%state%TemperatureCanopy       ,& ! in,  vegetation temperature [K]
               VapPresSatCanopy        => noahmp%energy%state%VapPresSatCanopy        ,& ! in,  canopy saturation vapor pressure at TV [Pa]
               PressureVaporCanAir     => noahmp%energy%state%PressureVaporCanAir     ,& ! in,  canopy air vapor pressure [Pa]
+              VegFrac                 => noahmp%energy%state%VegFrac                 ,& ! in,  greeness vegetation fraction
               PressureAtmosO2         => noahmp%energy%state%PressureAtmosO2         ,& ! in,  atmospheric o2 pressure [Pa]
               PressureAtmosCO2        => noahmp%energy%state%PressureAtmosCO2        ,& ! in,  atmospheric co2 pressure [Pa]
               ResistanceLeafBoundary  => noahmp%energy%state%ResistanceLeafBoundary  ,& ! in,  leaf boundary layer resistance [s/m]
@@ -101,7 +102,11 @@ contains
     ResistanceStomataTmp = 1.0 / ConductanceLeafMin * CF
     PhotosynLeafTmp      = 0.0
     if ( IndexShade == 0 ) RadPhotoActAbsTmp = RadPhotoActAbsSunlit / max(VegFrac,1.0e-6)  ! Sunlit case
+<<<<<<< Updated upstream
     if ( IndexShade == 1 ) RadPhotoActAbsTmp = RadPhotoActAbsShade  / max(VegFrac,1.0e-6)  ! Shaded case
+=======
+    if ( IndexShade == 1 ) RadPhotoActAbsTmp = RadPhotoActAbsShade / max(VegFrac,1.0e-6)  ! Shaded case
+>>>>>>> Stashed changes
 
     ! only compute when there is radiation absorption
     if ( RadPhotoActAbsTmp > 0.0 ) then
