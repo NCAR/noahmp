@@ -484,6 +484,9 @@ contains
                                                       sr2006_psi_e_a, sr2006_psi_e_b, sr2006_psi_e_c, sr2006_smcmax_a,       &
                                                       sr2006_smcmax_b
 
+    errmsg = ''
+    errflg = 0
+
     ! initialize our variables to bad values, so that if the namelist read fails, we come to a screeching halt as soon as we try to use anything.
     ! vegetation parameters
     isurban_table      = -99999
@@ -783,7 +786,7 @@ rsurf_snow_table     = -1.0e36
        open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if ( ierr /= 0 ) then
-       errmsg = 'warning: cannot find file noahmptable.tb'
+       errmsg = 'warning: cannot find file noahmptable.tbl'
        errflg = 1
        return
 !      write(*,'("warning: cannot find file noahmptable.tbl")')
@@ -914,7 +917,7 @@ rsurf_snow_table     = -1.0e36
        open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if ( ierr /= 0 ) then
-       errmsg = 'warning: cannot find file noahmptable.tb'
+       errmsg = 'warning: cannot find file noahmptable.tbl'
        errflg = 1
        return
 !      write(*,'("warning: cannot find file noahmptable.tbl")')
@@ -957,7 +960,7 @@ rsurf_snow_table     = -1.0e36
        open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if ( ierr /= 0 ) then
-       errmsg = 'warning: cannot find file noahmptable.tb'
+       errmsg = 'warning: cannot find file noahmptable.tbl'
        errflg = 1
        return
 !      write(*,'("warning: cannot find file noahmptable.tbl")')
@@ -982,7 +985,7 @@ rsurf_snow_table     = -1.0e36
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       errmsg = 'warning: cannot find file noahmptable.tb'
+       errmsg = 'warning: cannot find file noahmptable.tbl'
        errflg = 1
        return
 !      write(*,'("warning: cannot find file noahmptable.tbl")')
@@ -1011,7 +1014,7 @@ rsurf_snow_table     = -1.0e36
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       errmsg = 'warning: cannot find file noahmptable.tb'
+       errmsg = 'warning: cannot find file noahmptable.tbl'
        errflg = 1
        return
 !      write(*,'("warning: cannot find file noahmptable.tbl")')
@@ -1069,7 +1072,7 @@ rsurf_snow_table     = -1.0e36
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       errmsg = 'warning: cannot find file noahmptable.tb'
+       errmsg = 'warning: cannot find file noahmptable.tbl'
        errflg = 1
        return
 !      write(*,'("warning: cannot find file noahmptable.tbl")')
@@ -1096,7 +1099,7 @@ rsurf_snow_table     = -1.0e36
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       errmsg = 'warning: cannot find file noahmptable.tb'
+       errmsg = 'warning: cannot find file noahmptable.tbl'
        errflg = 1
        return
 !      write(*,'("warning: cannot find file noahmptable.tbl")')
@@ -1249,7 +1252,7 @@ rsurf_snow_table     = -1.0e36
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       errmsg = 'warning: cannot find file noahmptable.tb'
+       errmsg = 'warning: cannot find file noahmptable.tbl'
        errflg = 1
        return
 !      write(*,'("warning: cannot find file noahmptable.tbl")')
@@ -1278,7 +1281,7 @@ rsurf_snow_table     = -1.0e36
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       errmsg = 'warning: cannot find file noahmptable.tb'
+       errmsg = 'warning: cannot find file noahmptable.tbl'
        errflg = 1
        return
 !      write(*,'("warning: cannot find file noahmptable.tbl")')

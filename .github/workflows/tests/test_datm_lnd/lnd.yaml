@@ -72,76 +72,67 @@ input:
       - /esmf-org/noahmp/develop/.github/workflows/data/C96.initial.tile6.nc
     target_directory: 'INPUT'
 config:
-  nuopc:
-    name: esmxRun.config
+  hconfig:
+    name: esmxRun.yaml
     content: 
-      no_group:
-        LND_model:
-          values: noahmp
-        LND_petlist: 
-          values: 0-5
-      LND_attributes:
-        Verbosity:
-          values: 0
-        Diagnostic:
-          values: 0
-        mosaic_file:
-          values: INPUT/grid_spec.nc
-        input_dir:
-          values: INPUT/
-        ic_type:
-          values: custom
-        num_soil_levels:
-          values: 4
-        forcing_height:
-          values: 10
-        soil_level_thickness:
-          values: 0.10:0.30:0.60:1.00
-        soil_level_nodes:
-          values: 0.05:0.25:0.70:1.50
-        dynamic_vegetation_option:
-          values: 4
-        canopy_stomatal_resistance_option:
-          values: 2
-        soil_wetness_option:
-          values: 1
-        runoff_option:
-          values: 1
-        surface_exchange_option:
-          values: 3
-        supercooled_soilwater_option:
-          values: 1
-        frozen_soil_adjust_option:
-          values: 1
-        radiative_transfer_option:
-          values: 3
-        snow_albedo_option:
-          values: 1
-        precip_partition_option:
-          values: 4
-        soil_temp_lower_bdy_option:
-          values: 2
-        soil_temp_time_scheme_option:
-          values: 3
-        surface_evap_resistance_option:
-          values: 1
-        glacier_option:
-          values: 1
-        surface_thermal_roughness_option:
-          values: 2
-        output_freq:
-          values: 10800
-        has_export:
-          values: .false.
-  nml:
-    name: input.nml
-    content:
-      fms_nml:
-        clock_grain:
-          values: "'ROUTINE'"
-        clock_flags:
-          values: "'NONE'"
-        domains_stack_size:
-          values: 5000000
-        stack_size:
-          values: 0
+      LND:
+        no_group:
+          model:
+            values: noahmp
+          petlist:
+            values: 0-5
+        attributes:
+          Verbosity:
+            values: 0
+          Diagnostic:
+            values: 0
+          mosaic_file:
+            values: INPUT/grid_spec.nc
+          input_dir:
+            values: INPUT/
+          ic_type:
+            values: custom
+          layout:
+            values: "1:1"
+          num_soil_levels:
+            values: 4
+          forcing_height:
+            values: 10
+          soil_level_thickness:
+            values: 0.10:0.30:0.60:1.00
+          soil_level_nodes:
+            values: 0.05:0.25:0.70:1.50
+          dynamic_vegetation_option:
+            values: 4
+          canopy_stomatal_resistance_option:
+            values: 2
+          soil_wetness_option:
+            values: 1
+          runoff_option:
+            values: 1
+          surface_exchange_option:
+            values: 3
+          supercooled_soilwater_option:
+            values: 1
+          frozen_soil_adjust_option:
+            values: 1
+          radiative_transfer_option:
+            values: 3
+          snow_albedo_option:
+            values: 1
+          precip_partition_option:
+            values: 4
+          soil_temp_lower_bdy_option:
+            values: 2
+          soil_temp_time_scheme_option:
+            values: 3
+          surface_evap_resistance_option:
+            values: 1
+          glacier_option:
+            values: 1
+          surface_thermal_roughness_option:
+            values: 2
+          output_freq:
+            values: 10800
+          has_export:
+            values: .false.

@@ -25,7 +25,7 @@ To create Docker container that will be the foundation of development and testin
 .. note::
    Using container to create test and development environment is optional. The following steps can be used also in other platforms or/and OS in case of lack of depencenies in there.
 
-Then, `spack <https://spack.io>`_ package manager can be used to install dependencies such as ESMF, FMS. In this case, the content of the `spack.yaml` can be structured as following. Also note that the installadtion directory can be changed through the `config` section of the YAML file. 
+Then, `spack <https://spack.io>`_ package manager can be used to install dependencies such as ESMF. In this case, the content of the `spack.yaml` can be structured as following. Also note that the installadtion directory can be changed through the `config` section of the YAML file. 
 
 .. code-block:: yaml 
 
@@ -33,9 +33,8 @@ Then, `spack <https://spack.io>`_ package manager can be used to install depende
     concretizer:
       unify: true
     specs:
-    - fms
-    - esmf@8.4.0b15+parallelio~xerces
-    - parallelio@2.5.8+pnetcdf~shared
+    - esmf@8.5.0b17+external-parallelio
+    - parallelio@2.5.10+pnetcdf~shared
     view: /root/.spack-ci/view
     config:
       source_cache: ~/.spack-ci/source_cache
@@ -170,7 +169,8 @@ The NoahMP model uses GitHub Actions (GHA), a GitHub-hosted continuous integrati
 
 The GHA-related ``yaml`` script is located in the ``.github/workflows/`` directory. ``datm_noahmp.yaml`` is the main workflow file that aim to run `datm+lnd` configuration. 
 
-* `.github/workflows/tests/` directory includes YAML files that will be used to create required configuration files for CDEPS and NoahMP and retrive required input files.
-* `.github/workflows/data/` directory includes additional the input files that are not found on the web to retrive.
-* `.github/workflows/scripts/` directory includes Python scripts that reads the information from YAML files to create configuration files and retrieve required input files.
-* `.github/workflows/spack/` directory includes `spack.yaml` file that is used to insatll dependencies through the use of `spack <https://spack.io>`_ package manager.
+* `.github/workflows/tests/` directory includes YAML file that will be used to create required configuration files for ESMX driver and retrive required input files.
+* `.github/workflows/tests/test_datm_lnd/` directory includes YAML files that will be used to create required configuration files for CDEPS and NoahMP and retrive required input files.
+* `.github/workflows/data/` directory includes additional the input files (initial conditions) that are not found on the web to retrive.
+
+The action uses composite action for isolated component testing that can be found in `esmf-org nuopc-comp-testing repository <https://github.com/esmf-org/nuopc-comp-testing>`_.

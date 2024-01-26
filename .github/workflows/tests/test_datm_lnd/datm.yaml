@@ -16,60 +16,45 @@ input:
       - /trunk/inputdata/share/meshes/fv1.9x2.5_141008_ESMFmesh.nc
     target_directory: 'INPUT'
 config:
-  nuopc1:
-    name: esmxRun.config
+  hconfig:
+    name: esmxRun.yaml
     content: 
-      no_group:
-        ATM_model:
-          values: datm
-        ATM_petlist:
-          values: 0-5
-      ATM_attributes:
-        Verbosity:
-          values: 0
-        Diagnostic:
-          values: 0
-        read_restart:
-          values: .false.
-        orb_eccen:
-          values: 1.e36
-        orb_iyear:
-          values: 2000
-        orb_iyear_align:
-          values: 2000
-        orb_mode: 
-          values: fixed_year
-        orb_mvelp: 
-          values: 1.e36
-        orb_obliq: 
-          values: 1.e36
-        ScalarFieldCount: 
-          values: 3
-        ScalarFieldIdxGridNX: 
-          values: 1
-        ScalarFieldIdxGridNY: 
-          values: 2
-        ScalarFieldIdxNextSwCday: 
-          values: 3
-        ScalarFieldName: 
-          values: cpl_scalars
-        case_name:
-          values: comp.test
-        stop_n:
-          values: 1
-        stop_option:
-          values: ndays
-        stop_tod:
-          values: 0
-        stop_ymd:
-          values: -999
-        restart_n:
-          values: 1
-        restart_option:
-          values: never
-        restart_ymd:
-          values: -999
-  nuopc2:
+      ATM:
+        no_group:
+          model:
+            values: datm
+          petlist:
+            values: 0-5
+        attributes:
+          Verbosity:
+            values: 0
+          Diagnostic:
+            values: 0
+          read_restart:
+            values: .false.
+          orb_eccen:
+            values: 1.e36
+          orb_iyear:
+            values: 2000
+          orb_iyear_align:
+            values: 2000
+          orb_mode:
+            values: fixed_year
+          orb_mvelp:
+            values: 1.e36
+          orb_obliq:
+            values: 1.e36
+          ScalarFieldCount:
+            values: 3
+          ScalarFieldIdxGridNX:
+            values: 1
+          ScalarFieldIdxGridNY:
+            values: 2
+          ScalarFieldIdxNextSwCday:
+            values: 3
+          ScalarFieldName:
+            values: cpl_scalars
+  nuopc:
     name: datm.streams
     content:
       no_group:

@@ -31,15 +31,8 @@ list(APPEND _noahmp_files src/module_sf_noahmplsm.F90
                           src/module_sf_noahmp_glacier.F90)
 
 #------------------------------------------------------------------------------
-# Build options 
-set(OPENMP OFF CACHE BOOL "Enable OpenMP threading")
-
-#------------------------------------------------------------------------------
 # Find dependencies
 find_package(MPI REQUIRED)
-if(OPENMP)
-  find_package(OpenMP REQUIRED)
-endif()
 find_package(NetCDF REQUIRED)
 if (TARGET esmf)
   message("Target esmf is already found. Skip find_package ...")
@@ -52,8 +45,20 @@ else()
     set(CMAKE_Fortran_LINK_FLAGS "${ESMF_F90LINKOPTS} ${ESMF_F90LINKPATHS} ${ESMF_F90LINKRPATHS} ${ESMF_F90ESMFLINKLIBS}")
   endif()
 endif()
-find_package(FMS REQUIRED COMPONENTS R8)
-add_library(fms ALIAS FMS::fms_r8)
+
+#------------------------------------------------------------------------------
+# Modification for compiler flags
+if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -fbacktrace")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fdefault-real-8 -fdefault-double-8")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Waliasing -fcray-pointer -fconvert=big-endian -ffree-line-length-none -fno-range-check -fbacktrace")
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -traceback")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -i4 -r8")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -sox")
+else()
+  message(WARNING "Fortran compiler with ID ${CMAKE_Fortran_COMPILER_ID} will be used with CMake default options")
+endif()
 
 #------------------------------------------------------------------------------
 # Set CCPP flags for C/C++/Fortran preprocessor
@@ -71,19 +76,14 @@ target_link_libraries(noahmp PUBLIC esmf fms)
 
 #------------------------------------------------------------------------------
 # CMake export for ESMX driver
-file(WRITE  ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "add_library(FMS::fms_r8 STATIC IMPORTED)\n")
-file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "set_target_properties(FMS::fms_r8 PROPERTIES\n")
-file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  IMPORTED_LOCATION \"${FMS_R8_LIBRARIES}\"\n") 
-file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  INTERFACE_INCLUDE_DIRECTORIES \"${FMS_INSTALL_PREFIX}/include\"\n") 
-file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  INTERFACE_LINK_DIRECTORIES \"${FMS_INSTALL_PREFIX}/lib\"\n") 
-file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake ")\n\n")
-
+if(EXISTS "${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake")
+  file(REMOVE ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake)
+endif()
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "add_library(noahmp STATIC IMPORTED)\n")
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "set_target_properties(noahmp PROPERTIES\n")
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  IMPORTED_LOCATION \"${CMAKE_INSTALL_PREFIX}/lib/libnoahmp.a\"\n")
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  INTERFACE_INCLUDE_DIRECTORIES \"${CMAKE_INSTALL_PREFIX}/include\"\n")
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  INTERFACE_LINK_DIRECTORIES  \"${CMAKE_INSTALL_PREFIX}/lib\"\n")
-file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "  INTERFACE_LINK_LIBRARIES  \"noahmp;FMS::fms_r8\"\n")
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake ")\n")
 file(APPEND ${CMAKE_INSTALL_PREFIX}/lib/cmake/noahmp-esmx.cmake "target_link_libraries(esmx_driver PUBLIC noahmp)\n")
 

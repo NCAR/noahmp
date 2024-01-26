@@ -28,16 +28,16 @@ The UFS Weather Model uses the CMake build system. The build system is updated t
      - Enabled Components
      - Short Description 
    * - LND
-     - CDEPS, NOAHMP, CMEPS, and FMS
-     - Land model forced by GSWP3 data atmosphere
+     - CDEPS, NOAHMP, CMEPS
+     - Land model forced by GSWP3 and ERA5 data atmosphere
    * - ATML
-     - FV3ATM, NOAHMP, CMEPS, and FMS
+     - FV3ATM, NOAHMP and CMEPS
      - Land model forced by active atmosphere (FV3ATM) 
    * - S2SWAL
      - FV3ATM, MOM6, CICE6, WW3, NOAHMP, FMS, CMEPS
      - All components used by S2S plus NOAHMP. There is no RT to test this configuration.
 
-To compile the model with land model support, following command can be used for NCAR's Cheyenne. Note that this is using `contol_p8` as an example for CCPP suites. The platform definition can be changed to build model in other platforms such as MSU's Orion but initial implementation is only tested on NCAR's Cheyenne at this point.
+To compile the model with land component model support, following command can be used for NCAR's Cheyenne. Note that this is using `contol_p8` as an example for CCPP suites and uses GNU compiler. The platform definition can be changed to build model in other platforms such as MSU's Orion.
 
 .. code-block:: console
 
@@ -48,7 +48,7 @@ To compile the model with land model support, following command can be used for 
 Running NoahMP Specific Regression Tests
 ========================================
 
-Three new regression test are included to test the external NoahMP land component:
+The new regression tests that inclulde NoahMP land component:
 
 .. list-table:: List of regression tests 
    :widths: 25 50
@@ -58,17 +58,28 @@ Three new regression test are included to test the external NoahMP land componen
      - Short Description
    * - datm_cdeps_lnd_gswp3
      - NoahMP forced by the CDEPS "data atmosphere" using Global Soil Wetness Project v3 forcings. 24 hour forecast with 1 hour coupling interval.
-   * - datm_cdeps_lnd_gswp3_rst
-     - Restart reproducibility test (compare results with datm_cdeps_lnd_gswp3)
+   * - datm_cdeps_lnd_era5
+     - NoahMP forced by the CDEPS "data atmosphere" using ECMWF's ERA5 ranalysis forcings. 6 hour forecast with 1 hour coupling interval.
+   * - datm_cdeps_lnd_era5_rst
+     - Restart reproducibility test (compare results with datm_cdeps_lnd_era5)
    * - control_p8_atmlnd_sbs
      - Side-by-side test that forces external land component with active atmosphere in `contol_p8` configuration. This is mainly used to compare land output coming from CCPP/Physics with external NoahMP. In this configuration there is no feedback to active atmosphere.
+   * - control_p8_atmlnd
+     - Fully coupled atmosphere-land configuration
+   * - control_restart_p8_atmlnd
+     - Restart reproducibility test for fully coupled atmosphere-land configuration (compare results with control_p8_atmlnd).
 
 Newly introduced RTs can be run with following command,
 
 .. code-block:: console
 
   cd tests
-  ./rt.sh -k -n datm_cdeps_lnd_gswp3_rst
+  ./rt.sh -k -n datm_cdeps_lnd_gswp3
+
+.. code-block:: console
+
+  cd tests
+  ./rt.sh -k -n datm_cdeps_lnd_era5_rst
 
 .. code-block:: console
 

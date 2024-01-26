@@ -136,7 +136,7 @@
       iopt_trs,iopt_diag,xlatin, xcoszin, iyrlen, julian, garea, &
       rainn_mp, rainc_mp, snow_mp, graupel_mp, ice_mp, rhonewsn1,&
       con_hvap, con_cp, con_jcal, rhoh2o, con_eps, con_epsm1,    &
-      con_fvirt, con_rd, con_hfus, thsfc_loc,                    &
+      con_fvirt, con_rd, con_hfus, thsfc_loc, cpllnd, cpllnd2atm,&
 
 !  ---  in/outs:
       weasd, snwdph, tskin, tprcp, srflag, smc, stc, slc,        &
@@ -310,6 +310,9 @@
 
   logical                                , intent(in)    :: thsfc_loc  ! Flag for reference pressure in theta calculation
 
+  logical                                , intent(in)    :: cpllnd     ! Flag for land coupling (atm->lnd)
+  logical                                , intent(in)    :: cpllnd2atm ! Flag for land coupling (lnd->atm)
+
   real(kind=kind_phys), dimension(:)     , intent(inout) :: weasd      ! water equivalent accumulated snow depth [mm]
   real(kind=kind_phys), dimension(:)     , intent(inout) :: snwdph     ! snow depth [mm]
   real(kind=kind_phys), dimension(:)     , intent(inout) :: tskin      ! ground surface skin temperature [K]
@@ -450,7 +453,7 @@
   integer    :: iopt_pedo = 1 ! option for pedotransfer function
   integer    :: iopt_crop = 0 ! option for crop model
   integer    :: iopt_gla  = 2 ! option for glacier treatment
-  integer    :: iopt_z0m  = 2 ! option for z0m treatment
+  integer    :: iopt_z0m  = 1 ! option for z0m treatment
 
 !
 !  ---  local inputs to noah-mp and glacier subroutines; listed in order in noah-mp call
@@ -684,7 +687,12 @@
   errmsg = ''
   errflg = 0
 
-do i = 1, im
+!
+!  --- Just return if external land component is activated for two-way interaction
+!
+  if (cpllnd .and. cpllnd2atm) return
+
+  do i = 1, im
 
     if (flag_iter(i) .and. dry(i)) then
 

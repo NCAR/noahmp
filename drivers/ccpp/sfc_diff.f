@@ -60,6 +60,7 @@
      &                    sigmaf,vegtype,shdmax,ivegsrc,                &  !intent(in)
      &                    z0pert,ztpert,                                &  ! mg, sfc-perts !intent(in)
      &                    flag_iter,redrag,                             &  !intent(in)
+     &                    flag_lakefreeze,                              &  !intent(in)             
      &                    u10m,v10m,sfc_z0_type,                        &  !hafs,z0 type !intent(in)
      &                    wet,dry,icy,                                  &  !intent(in)
      &                    thsfc_loc,                                    &  !intent(in)
@@ -90,6 +91,7 @@
 
       logical, intent(in) :: redrag ! reduced drag coeff. flag for high wind over sea (j.han)
       logical, dimension(:), intent(in) :: flag_iter, dry, icy
+      logical, dimension(:), intent(in) :: flag_lakefreeze 
       logical, dimension(:), intent(inout) :: wet
 
       logical, intent(in) :: thsfc_loc ! Flag for reference pressure in theta calculation
@@ -168,7 +170,7 @@
 !       write(0,*)'in sfc_diff, sfc_z0_type=',sfc_z0_type
 
       do i=1,im
-        if(flag_iter(i)) then
+        if(flag_iter(i) .or. flag_lakefreeze(i)) then
 
           ! Need to initialize ztmax arrays
           ztmax_lnd(i) = 1. ! log(1) = 0

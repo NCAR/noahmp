@@ -1,60 +1,69 @@
 ---
 components:
   drv:
-    runseq:
-      dt:
-        values: 3600
-      lnd-to-atm:
-        values: remapMethod=bilinear:unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq
-      atm-to-lnd: 
-        values: remapMethod=bilinear:unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq
-      atm:
-      lnd:
     input:
       field_table:
         protocol: wget
         end_point: 'https://raw.githubusercontent.com'
         files:
-          - /ufs-community/ufs-weather-model/develop/tests/parm/fd_nems.yaml
+          #- /ufs-community/ufs-weather-model/develop/tests/parm/fd_nems.yaml
+          - /uturuncoglu/ufs-weather-model/feature/noahmp/tests/parm/fd_ufs.yaml
+        force: True
     config:
-      nuopc:
-        name: esmxRun.config
+      hconfig:
+        name: esmxRun.yaml
         content:
-          ESMX_attributes:
-            Verbosity:
-              values: high
-          ALLCOMP_attributes:
-            case_name:
-              values: comp.test
-            stop_n: 
-              values: 1
-            stop_option: 
-              values: ndays
-            stop_tod: 
-              values: 0
-            stop_ymd: 
-              values: -999
-            restart_n: 
-              values: 1
-            restart_option: 
-              values: never
-            restart_ymd: 
-              values: -999
-          no_group:
-            ESMX_component_list:
-              values: ATM LND
-            startTime:
-              values: '2000-01-01T00:00:00'
-            stopTime:
-              values: '2000-01-02T00:00:00'
-            logKindFlag:
-              values: ESMF_LOGKIND_MULTI
-            globalResourceControl:
-              values: .true.
-            ESMX_log_flush:
-              values: .true.
-            ESMX_field_dictionary: 
-              values: fd_nems.yaml
+          ESMX:
+            App:
+              globalResourceControl:
+                values: 'true'
+              logKindFlag:
+                values: ESMF_LOGKIND_Multi
+              logAppendFlag:
+                values: 'false'
+              logFlush:
+                values: 'true'
+              fieldDictionary:
+                values: fd_ufs.yaml
+              startTime:
+                values: '2000-01-01T00:00:00'
+              stopTime:
+                values: '2000-01-02T00:00:00'
+            Driver:
+              componentList:
+                values:
+                  - ATM
+                  - LND
+              attributes:
+                Verbosity:
+                  values: low
+              no_group:
+                runSequence:
+                  values: |
+                    @3600
+                      LND -> ATM :remapMethod=bilinear:unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq
+                      ATM -> LND :remapMethod=bilinear:unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq
+                      ATM
+                      LND
+                    @
+          generalAttributes:
+            no_group:
+              case_name:
+                values: comp.test
+              stop_n:
+                values: 1
+              stop_option:
+                values: ndays
+              stop_tod:
+                values: 0
+              stop_ymd:
+                values: -999
+              restart_n:
+                values: 1
+              restart_option:
+                values: never
+              restart_ymd:
+                values: -999
 
   lnd: test_datm_lnd/lnd.yaml
 

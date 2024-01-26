@@ -1,8 +1,9 @@
 [ccpp-table-properties]
   name = noahmpdrv
   type = scheme
-  dependencies = ../../../funcphys.f90,../../../machine.F,../../../sfc_diff.f,../../../set_soilveg.f
-  dependencies = ../../src/module_sf_noahmp_glacier.f90,../../src/module_sf_noahmplsm.f90,noahmp_tables.f90
+  dependencies = ../../../tools/funcphys.f90,../../../hooks/machine.F
+  dependencies = module_sf_noahmp_glacier.F90,module_sf_noahmplsm.F90,noahmp_tables.f90
+  dependencies = ../Noah/set_soilveg.f
 
 ########################################################################
 [ccpp-arg-table]
@@ -171,6 +172,13 @@
 [soiltyp]
   standard_name = soil_type_classification
   long_name = soil type at each grid cell
+  units = index
+  dimensions = (horizontal_loop_extent)
+  type = integer
+  intent= in
+[soilcol]
+  standard_name = soil_color_classification
+  long_name = soil color at each grid cell
   units = index
   dimensions = (horizontal_loop_extent)
   type = integer
@@ -454,6 +462,13 @@
   dimensions = ()
   type = integer
   intent = in
+[iopt_diag]
+  standard_name = control_for_land_surface_scheme_surface_diagnose_approach
+  long_name = choice for surface diagnose approach option (see noahmp module for definition)
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
 [xlatin]
   standard_name = latitude
   long_name = latitude
@@ -534,7 +549,7 @@
   kind = kind_phys
   intent = in
 [rhonewsn1]
-  standard_name = lwe_density_of_precip_ice
+  standard_name = surface_frozen_precipitation_density
   long_name = density of precipitation ice
   units = kg m-3
   dimensions = (horizontal_loop_extent)
@@ -616,6 +631,20 @@
 [thsfc_loc]
   standard_name = flag_for_reference_pressure_theta
   long_name = flag for reference pressure in theta calculation
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+[cpllnd]
+  standard_name = flag_for_land_coupling
+  long_name = flag controlling cpllnd collection (default off)
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+[cpllnd2atm]
+  standard_name = flag_for_one_way_land_coupling_to_atmosphere
+  long_name = flag controlling land coupling to the atmosphere (default off)
   units = flag
   dimensions = ()
   type = logical

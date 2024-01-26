@@ -23,7 +23,8 @@ module lnd_comp_shr
   use ESMF,  only : ESMF_KIND_I4, ESMF_GRIDITEM_MASK, ESMF_STAGGERLOC_CENTER
   use ESMF,  only : ESMF_STAGGERLOC_CENTER, ESMF_STAGGERLOC_CORNER
   use ESMF,  only : ESMF_FieldWriteVTK, ESMF_FieldWrite, ESMF_Decomp_Flag, ESMF_DECOMP_SYMMEDGEMAX
-  use ESMF,  only : ESMF_INDEX_GLOBAL, ESMF_KIND_R4, ESMF_Field, ESMF_FieldGet, ESMF_ArraySpec, ESMF_ArraySpecSet, ESMF_TYPEKIND_R4
+  use ESMF,  only : ESMF_INDEX_GLOBAL, ESMF_KIND_R4, ESMF_Field, ESMF_FieldGet
+  use ESMF,  only : ESMF_LogFoundNetCDFError, ESMF_ArraySpec, ESMF_ArraySpecSet, ESMF_TYPEKIND_R4
   use ESMF,  only : ESMF_RouteHandle, ESMF_FieldRegridStore, ESMF_FieldRedist
   use NUOPC, only : NUOPC_CompAttributeGet
 
@@ -36,6 +37,7 @@ module lnd_comp_shr
 
   public :: alarm_init
   public :: chkerr 
+  public :: chkerrnc
   public :: read_namelist
   public :: shr_string_listGetName
   public :: shr_string_listGetNum
@@ -96,6 +98,22 @@ contains
        ChkErr = .true.
     endif
   end function ChkErr
+
+  !===============================================================================
+  logical function ChkErrNc(rc, line, file)
+
+    integer, intent(in) :: rc
+    integer, intent(in) :: line
+    character(len=*), intent(in) :: file
+
+    integer :: lrc
+
+    ChkErrNc = .false.
+    lrc = rc
+    if (ESMF_LogFoundNetCDFError(lrc, msg=ESMF_LOGERR_PASSTHRU, line=line, file=file)) then
+       ChkErrNc = .true.
+    endif
+  end function ChkErrNc
 
   !===============================================================================
   subroutine alarm_init( clock, alarm, option, &
@@ -540,6 +558,16 @@ contains
        noahmp%nmlist%case_name = 'ufs'
     end if
 
+    ! forcing height
+    call NUOPC_CompAttributeGet(gcomp, name='forcing_height', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) noahmp%nmlist%forcing_height
+    else
+       noahmp%nmlist%forcing_height = -999
+    end if
+    call ESMF_LogWrite(trim(subname)//' : forcing_height = '//trim(cvalue), ESMF_LOGMSG_INFO)
+
     ! get num_soil_levels
     call NUOPC_CompAttributeGet(gcomp, name='num_soil_levels', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
@@ -774,9 +802,37 @@ contains
     if (isPresent .and. isSet) then
        read(cvalue,*) noahmp%nmlist%output_freq
     else
-       noahmp%nmlist%output_freq = 6
+       noahmp%nmlist%output_freq = 21600
     end if
     call ESMF_LogWrite(trim(subname)//' : output_freq = '//trim(cvalue), ESMF_LOGMSG_INFO)
+
+    ! output mode (high, low, debug)
+    call NUOPC_CompAttributeGet(gcomp, name='output_mode', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) noahmp%nmlist%output_mode
+       if (trim(noahmp%nmlist%output_mode) == 'all' .or. &
+           trim(noahmp%nmlist%output_mode) == 'mid' .or. &
+           trim(noahmp%nmlist%output_mode) == 'low') then
+       else
+         call ESMF_LogWrite(trim(subname)//": ERROR in output_mode. Only 'all', 'mid' and 'low' are allowed!", ESMF_LOGMSG_INFO)
+         rc = ESMF_FAILURE
+         return 
+       end if
+    else
+       noahmp%nmlist%output_mode = 'all'
+    end if
+
+    ! restart frequency
+    call NUOPC_CompAttributeGet(gcomp, name='restart_freq', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) noahmp%nmlist%restart_freq
+    else
+       noahmp%nmlist%restart_freq = noahmp%nmlist%output_freq
+    end if
+    write(msg, fmt='(A,I6)') trim(subname)//': restart_freq = ', noahmp%nmlist%restart_freq
+    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 
     ! MYNN-EDMF
     call NUOPC_CompAttributeGet(gcomp, name='do_mynnedmf', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
@@ -796,6 +852,7 @@ contains
        if (trim(cvalue) .eq. '.true.' .or. trim(cvalue) .eq. 'true') noahmp%model%do_mynnsfclay = .true.
     end if
     noahmp%model%do_mynnsfclay = noahmp%static%do_mynnsfclay
+    if (noahmp%static%iopt_sfc == 4) noahmp%model%do_mynnsfclay = .true.
     write(msg, fmt='(A,L)') trim(subname)//': do_mynnsfclay = ', noahmp%static%do_mynnsfclay
     call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 

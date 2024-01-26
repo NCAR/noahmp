@@ -17,9 +17,10 @@ module lnd_comp_driver
   use lnd_comp_kind   , only: cl => shr_kind_cl
   use lnd_comp_types  , only: noahmp_type
   use lnd_comp_types  , only: fldsToLnd, fldsToLnd_num
+  use lnd_comp_types  , only: histflds, restflds
   use lnd_comp_shr    , only: chkerr
   use lnd_comp_io     , only: read_static, read_initial, read_restart
-  use lnd_comp_io     , only: write_mosaic_output
+  use lnd_comp_io     , only: write_tiled_file_init, write_tiled_file
   use lnd_comp_import_export, only: check_for_connected
 
   use sfc_diff        , only: stability
@@ -42,7 +43,7 @@ module lnd_comp_driver
   implicit none
   private
 
-  public :: drv_init, drv_run
+  public :: drv_init, drv_run, drv_finalize
 
   !--------------------------------------------------------------------------
   ! Private module data
@@ -161,11 +162,13 @@ contains
 
     ! local variables
     logical, save               :: first_time = .true.
-    integer                     :: i, is, step
+    integer                     :: i, is, localPet
     integer                     :: year, month, day, hour, minute, second
     real(r8)                    :: now_time
-    character(len=cl)           :: filename
+    character(len=cl)           :: filename, start_time_str, end_time_str
     logical                     :: restart_write
+    logical                     :: cpllnd = .false.
+    logical                     :: cpllnd2atm = .true.
     type(ESMF_VM)               :: vm
     type(ESMF_Clock)            :: clock
     type(ESMF_Alarm)            :: alarm
@@ -189,6 +192,13 @@ contains
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
+
+    !----------------------
+    ! Query component
+    !----------------------
+
+    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------
     ! Query clock and set timestep, current time etc. 
@@ -216,50 +226,99 @@ contains
        ! use coupling time step and internal time step of model
        call ESMF_TimeIntervalGet(timeStep, s_r8=noahmp%static%delt, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       ! init data structure that will be used to write history files
+       call write_tiled_file_init(noahmp, 'hist', rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       ! init data structure that will be used to write restart files
+       call write_tiled_file_init(noahmp, 'rest', rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
+
+    ! print out start and stop time for step
+    call ESMF_TimeGet(currTime, timeString=start_time_str, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_TimeGet(currTime+timeStep, timeString=end_time_str, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_LogWrite(subname//' advance model: '//trim(start_time_str)//' --> '//trim(end_time_str), ESMF_LOGMSG_INFO)
 
     !----------------------
     ! initialize model variables
     !----------------------
 
-    step = int((currTime-startTime)/timeStep)
-    if (.not. noahmp%nmlist%restart_run .and. step == 0) then
-       ! transfer common initial conditions for all configurations
-       do i = noahmp%domain%begl, noahmp%domain%endl
-          if (noahmp%domain%mask(i) == 1) then
-             noahmp%model%weasd(i)  = noahmp%init%snow_water_equivalent(i)
-             noahmp%model%snwdph(i) = noahmp%init%snow_depth(i)
-             noahmp%model%canopy(i) = noahmp%init%canopy_water(i)
-             noahmp%model%tskin(i)  = noahmp%init%skin_temperature(i)
-             noahmp%model%stc(i,:)  = noahmp%init%soil_temperature(i,:)
-             noahmp%model%smc(i,:)  = noahmp%init%soil_moisture(i,:)
-             noahmp%model%slc(i,:)  = noahmp%init%soil_liquid(i,:)
+    if (first_time) then
+       if (.not. noahmp%nmlist%restart_run) then
+          ! transfer common initial conditions for all configurations
+          do i = noahmp%domain%begl, noahmp%domain%endl
+             if (noahmp%domain%mask(i) == 1) then
+                noahmp%model%weasd(i)  = noahmp%init%snow_water_equivalent(i)
+                noahmp%model%snwdph(i) = noahmp%init%snow_depth(i)
+                noahmp%model%canopy(i) = noahmp%init%canopy_water(i)
+                noahmp%model%tskin(i)  = noahmp%init%skin_temperature(i)
+                noahmp%model%stc(i,:)  = noahmp%init%soil_temperature(i,:)
+                noahmp%model%smc(i,:)  = noahmp%init%soil_moisture(i,:)
+                noahmp%model%slc(i,:)  = noahmp%init%soil_liquid(i,:)
+             end if
+          end do
+
+          ! transfer custom initial conditions based on selected configuration
+          if (trim(noahmp%nmlist%ic_type) == 'sfc') then
+             where(noahmp%domain%mask(:) == 1)
+                noahmp%model%zorl(:) = noahmp%init%surface_roughness(:)
+                noahmp%model%ustar1(:) = noahmp%init%friction_velocity(:)
+             end where
+          else if (trim(noahmp%nmlist%ic_type) == 'custom') then
+             ! get initial value of zorl from pre-defined table
+             where(noahmp%model%vegtype(:) > 0) noahmp%model%zorl(:) = z0_data(noahmp%model%vegtype(:))*100.0_r8
+             ! additional unit conversion for datm configuration, noahmp driver requires mm
+             where(noahmp%domain%mask(:) > 1) noahmp%model%snwdph(:) = noahmp%model%snwdph(:)*1000.0_r8
+
+             ! following initial values are taken from ufs-land-driver
+             noahmp%model%pblh   = 1000.0_r8
+             noahmp%model%rmol1  = 1.0_r8
+             noahmp%model%flhc1  = 0.0_r8
+             noahmp%model%flqc1  = 0.0_r8
+             noahmp%model%ustar1 = 0.1_r8
           end if
-       end do
 
-       ! transfer custom initial conditions based on selected configuration
-       if (trim(noahmp%nmlist%ic_type) == 'sfc') then
-          where(noahmp%domain%mask(:) == 1)
-             noahmp%model%zorl(:) = noahmp%init%surface_roughness(:)
-             noahmp%model%ustar1(:) = noahmp%init%friction_velocity(:)
-          end where
-       else if (trim(noahmp%nmlist%ic_type) == 'custom') then
-          ! get initial value of zorl from pre-defined table
-          where(noahmp%model%vegtype(:) > 0) noahmp%model%zorl(:) = z0_data(noahmp%model%vegtype(:))*100.0_r8
-          ! additional unit conversion for datm configuration
-          where(noahmp%domain%mask(:) > 1) noahmp%model%snwdph(:) = noahmp%model%snwdph(:)*1000.0_r8
+          ! initialize model variables
+          call noahmp%InitializeStates(noahmp%nmlist, noahmp%static, month)
        end if
-
-       ! initialize model variables
-       call noahmp%InitializeStates(noahmp%nmlist, noahmp%static, month)
     end if
+
+    !----------------------
+    ! interpolate monthly data, vegetation fraction and mean sfc diffuse sw albedo (NOT used)
+    !----------------------
+
+    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Sa_vfrac')) then
+       where(noahmp%forc%vegfrac(:) < 0.01_r8)
+          noahmp%model%sigmaf(:) = 0.01_r8
+       else where
+          noahmp%model%sigmaf(:) = noahmp%forc%vegfrac(:)
+       end where
+    else
+       call interpolate_monthly(currTime, noahmp%static%im, &
+          noahmp%model%gvf_monthly, noahmp%model%sigmaf, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
+
+    ! not used by the model but is set internally in the driver to albedo_total
+    ! sfalb is also used to calculate snet in datm configurations when calc_snet = T
+    call interpolate_monthly(currTime, noahmp%static%im, &
+       noahmp%model%alb_monthly, noahmp%model%sfalb, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------
     ! set internal model variables from forcing
     !----------------------
 
     ! set forcing height
-    noahmp%model%zf = noahmp%forc%hgt
+    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Sa_z')) then
+       noahmp%model%zf = noahmp%forc%hgt
+    else
+       noahmp%model%zf = noahmp%nmlist%forcing_height
+    end if
 
     ! set net shortwave radiation
     if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_swnet')) then
@@ -276,12 +335,13 @@ contains
 
     ! set air pressure at surface adjacent layer
     ! cdeps provides Sa_pbot but Sa_prsl is used for coupling with fv3
-    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Sa_pbot') .or. &
-        check_for_connected(fldsToLnd, fldsToLnd_num, 'Sa_prsl')) then
-       noahmp%model%prsl1 = noahmp%forc%pbot
-    else
-       ! calculate it from surface pressure, height and temperature
-       noahmp%model%prsl1 = noahmp%forc%ps*exp(-1.0_r8*noahmp%model%zf/29.25_r8/noahmp%forc%t1)
+    ! calculate it from surface pressure, height and temperature
+    noahmp%model%prsl1 = noahmp%forc%ps*exp(-1.0_r8*noahmp%model%zf/29.25_r8/noahmp%forc%t1)
+    if (trim(noahmp%nmlist%ic_type) /= 'custom') then
+       if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Sa_pbot') .or. &
+          check_for_connected(fldsToLnd, fldsToLnd_num, 'Sa_prsl')) then
+          noahmp%model%prsl1 = noahmp%forc%pbot
+       end if
     end if
 
     ! set dimensionless Exner function at surface adjacent layer
@@ -291,16 +351,26 @@ contains
        ! calculate it based on bottom pressure
        noahmp%model%prslk1 = (noahmp%forc%pbot(:)/p0)**cappa
        ! following is used by ufs-land-driver
-       !noahmp%model%prslk1 = (exp(noahmp%model%zf/29.25_r8/noahmp%forc%t1))**(2.0_r8/7.0_r8)
+       if (trim(noahmp%nmlist%ic_type) == 'custom') then
+          noahmp%model%prslk1 = (exp(noahmp%model%zf/29.25_r8/noahmp%forc%t1))**(2.0_r8/7.0_r8)
+       end if
     end if
 
     ! set dimensionless Exner function at the ground surface
-    noahmp%model%prsik1 = (noahmp%forc%ps(:)/p0)**cappa
+    if (trim(noahmp%nmlist%ic_type) == 'custom') then
+       ! following is used by ufs-land-driver
+       noahmp%model%prsik1 = (exp(noahmp%model%zf/29.25_r8/noahmp%forc%t1))**(2.0_r8/7.0_r8)
+    else
+       noahmp%model%prsik1 = (noahmp%forc%ps(:)/p0)**cappa
+    end if
 
     ! set Exner function ratio between midlayer and interface
-    ! following is used by ufs-land-driver
-    !noahmp%model%prslki = (exp(noahmp%model%zf/29.25_r8/noahmp%forc%t1))**(2.0_r8/7.0_r8)
-    noahmp%model%prslki(:) = noahmp%model%prsik1(:)/noahmp%model%prslk1(:)
+    if (trim(noahmp%nmlist%ic_type) == 'custom') then
+       ! following is used by ufs-land-driver
+       noahmp%model%prslki = (exp(noahmp%model%zf/29.25_r8/noahmp%forc%t1))**(2.0_r8/7.0_r8)
+    else
+       noahmp%model%prslki(:) = noahmp%model%prsik1(:)/noahmp%model%prslk1(:)
+    end if
 
     ! set wind forcing to model internal variables
     noahmp%model%u1(:) = noahmp%forc%u1(:)
@@ -309,7 +379,11 @@ contains
     ! NOTE: CCPP has addtional adjustment in wind speed which could lead to minor difference
     ! The modification is done in GFS_surface_generic_pre.F90
     noahmp%forc%wind(:) = sqrt(noahmp%forc%u1(:)**2+noahmp%forc%v1(:)**2)
-    noahmp%forc%wind(:) = max(noahmp%forc%wind(:), 1.0_r8)
+    if (trim(noahmp%nmlist%ic_type) == 'custom') then
+       noahmp%forc%wind(:) = max(noahmp%forc%wind(:), 0.1_r8)
+    else
+       noahmp%forc%wind(:) = max(noahmp%forc%wind(:), 1.0_r8)
+    end if
 
     ! set snow precipitation
     if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_snow')) then
@@ -337,35 +411,13 @@ contains
     end if
     if (check_for_connected(fldsToLnd, fldsToLnd_num, 'Faxa_rain')) then
        noahmp%model%rainn_mp(:) = noahmp%forc%tprcp(:)
-    end if
-
-    ! convert mm/s to m
-    noahmp%model%rainn_mp(:) = noahmp%model%rainn_mp(:)*noahmp%static%delt/1000.0_r8
-    noahmp%model%rainc_mp(:) = noahmp%model%rainc_mp(:)*noahmp%static%delt/1000.0_r8
-
-    ! calculate total precipitation
-    noahmp%model%tprcp(:) = noahmp%model%rainn_mp(:)+noahmp%model%rainc_mp(:)
-
-    !----------------------
-    ! interpolate monthly data, vegetation fraction and mean sfc diffuse sw albedo (NOT used)
-    !----------------------
-
-    if (check_for_connected(fldsToLnd, fldsToLnd_num, 'vfrac')) then
-       where(noahmp%forc%vegfrac(:) < 0.01_r8)
-          noahmp%model%sigmaf(:) = 0.01_r8
-       else where
-          noahmp%model%sigmaf(:) = noahmp%forc%vegfrac(:)
-       end where
+       ! convert mm/s to m, it will be converted to mm/s internally in noahmpdrv() call
+       noahmp%model%tprcp(:) = noahmp%forc%tprcp(:)*noahmp%static%delt/1000.0
     else
-       call interpolate_monthly(currTime, noahmp%static%im, &
-          noahmp%model%gvf_monthly, noahmp%model%sigmaf, rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%model%tprcp(:) = noahmp%model%rainn_mp(:)+noahmp%model%rainc_mp(:)
+       ! convert mm/s to m, it will be converted to mm/s internally in noahmpdrv() call
+       noahmp%model%tprcp(:) = noahmp%model%tprcp(:)*noahmp%static%delt/1000.0
     end if
- 
-    ! not used by the model but is set internally in the driver to albedo_total
-    call interpolate_monthly(currTime, noahmp%static%im, &
-       noahmp%model%alb_monthly, noahmp%model%sfalb, rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------
     ! calculate solar zenith angle
@@ -384,13 +436,6 @@ contains
     ! set snow/rain flag for precipitation
     noahmp%model%srflag = 0.0_r8
     where(noahmp%forc%t1 < tfreeze) noahmp%model%srflag = 1.0_r8
-
-    ! unit conversion for precipitation
-    ! TODO: do we need for datm coupling?
-    ! convert mm/s to m
-    !noahmp%forc%tprcp(:) = noahmp%forc%tprcp(:)*noahmp%static%delt/1000.0_r8
-    ! datm
-    !noahmp%model%rainn_mp = 1000.0_r8*noahmp%forc%tprcp/noahmp%static%delt
 
     ! they are not defined as coupling fields but CCPP provides those fields
     noahmp%model%graupel_mp = 0.0_r8
@@ -433,7 +478,7 @@ contains
             enddo
           else ! bexp <= 0.0
             noahmp%model%smoiseq(i,:) = smcmax
-          endif  
+          endif
        
           noahmp%model%smcwtdxy(i) = smcmax
        end if
@@ -442,6 +487,7 @@ contains
     !----------------------
     ! call stability
     !----------------------
+
     do i = noahmp%domain%begl, noahmp%domain%endl
        if (noahmp%domain%mask(i) == 1 .and. noahmp%model%flag_iter(i)) then
           ! set initial value for ztmax
@@ -539,10 +585,10 @@ contains
     !----------------------
 
     if (first_time) then
-       write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5)') &
+       write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5,a)') &
           trim(noahmp%nmlist%case_name)//'.lnd.ini.', &
-          year, '-', month, '-', day, '-', hour*60*60+minute*60+second
-       call write_mosaic_output(filename, noahmp, now_time, rc)
+          year, '-', month, '-', day, '-', hour*60*60+minute*60+second, '.tile*.nc'
+       call write_tiled_file(filename, noahmp, histflds, now_time, vm, localPet, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        first_time = .false.
     end if
@@ -579,7 +625,7 @@ contains
          con_hvap              , con_cp                 , con_jcal               , &
          rhoh2o                , con_eps                , con_epsm1              , &
          con_fvirt             , con_rd                 , con_hfus               , &
-         noahmp%model%thsfc_loc, &
+         noahmp%model%thsfc_loc, cpllnd                 , cpllnd2atm             , &
     !  ---  in/outs:
          noahmp%model%weasd    , noahmp%model%snwdph    , noahmp%model%tskin     , &
          noahmp%model%tprcp    , noahmp%model%srflag    , noahmp%model%smc       , &
@@ -615,7 +661,7 @@ contains
          noahmp%model%snohf    , noahmp%model%smcwlt2   , noahmp%model%smcref2   , &
          noahmp%model%wet1     , noahmp%model%t2mmp     , noahmp%model%q2mp      , &
          noahmp%model%zvfun    , noahmp%model%ztmax     , &
-         noahmp%static%errmsg   , noahmp%static%errflg)
+         noahmp%static%errmsg  , noahmp%static%errflg)
 
     !----------------------
     ! unit conversions
@@ -627,7 +673,8 @@ contains
     where(noahmp%forc%dswsfc>0.0_r8 .and. noahmp%model%sfalb<0.0_r8) noahmp%forc%dswsfc = 0.0_r8
 
     !----------------------
-    ! write output 
+    ! write output and restart files 
+    ! since component land is called after ccpp/radiation step, use time for one time step ahead
     !---------------------- 
 
     ! return date to create file name
@@ -641,12 +688,32 @@ contains
 
     ! check the output frequency before calling write method
     if (mod(int(now_time), noahmp%nmlist%output_freq) == 0) then
-       write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5)') &
+       write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5,a)') &
           trim(noahmp%nmlist%case_name)//'.lnd.out.', &
-          year, '-', month, '-', day, '-', hour*60*60+minute*60+second 
-       call write_mosaic_output(filename, noahmp, now_time, rc)
+          year, '-', month, '-', day, '-', hour*60*60+minute*60+second, '.tile*.nc'
+       call write_tiled_file(filename, noahmp, histflds, now_time, vm, localPet, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
+
+    ! check the restart frequency before calling write method
+    ! if restart frequency < 0 then skip writing restart file
+    if (noahmp%nmlist%restart_freq > 0) then
+       if (mod(int(now_time), noahmp%nmlist%restart_freq) == 0) then
+          write(filename, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5,a)') &
+             trim(noahmp%nmlist%case_name)//'.lnd.rst.', &
+             year, '-', month, '-', day, '-', hour*60*60+minute*60+second, '.tile*.nc'
+          call write_tiled_file(filename, noahmp, restflds, now_time, vm, localPet, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       end if
+    end if
+
+    !----------------------
+    ! apply unit conversions after writing the history
+    ! two way atm-lnd coupling expects units in K m s-1 and kg kg-1 m s-1 not W m-2
+    !----------------------
+
+    noahmp%model%hflx = noahmp%model%hflx/(noahmp%model%rho*con_cp)
+    noahmp%model%evap = noahmp%model%evap/(noahmp%model%rho*con_hvap)
 
     !----------------------
     ! exit if there is an error 
@@ -664,6 +731,25 @@ contains
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
   end subroutine drv_run
+
+  !===============================================================================
+  subroutine drv_finalize(gcomp, noahmp, rc)
+
+    ! input/output variables
+    type(ESMF_GridComp), intent(in)    :: gcomp
+    type(noahmp_type)  , intent(inout) :: noahmp
+    integer            , intent(out)   :: rc
+
+    ! local variables
+    character(len=*),parameter  :: subname = trim(modName)//':(drv_finalize) '
+    !-------------------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
+
+    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
+
+  end subroutine drv_finalize
 
   !===============================================================================
   subroutine interpolate_monthly(currTime, vector_length, monthly_var, interp_var, rc)

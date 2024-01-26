@@ -22,21 +22,16 @@ module lnd_comp_domain
   use ESMF ,  only : ESMF_STAGGERLOC_CENTER, ESMF_STAGGERLOC_CORNER
   use ESMF ,  only : ESMF_RouteHandleDestroy, ESMF_GridGet, ESMF_GridGetCoord
   use ESMF ,  only : ESMF_FieldRegridGetArea, ESMF_CoordSys_Flag
-  use ESMF ,  only : ESMF_COORDSYS_CART, ESMF_KIND_R8
+  use ESMF ,  only : ESMF_MeshGetFieldBounds, ESMF_COORDSYS_CART, ESMF_KIND_R8
   use NUOPC,  only : NUOPC_CompAttributeGet
 
+  use lnd_comp_kind  , only : r4 => shr_kind_r4
   use lnd_comp_kind  , only : r8 => shr_kind_r8 
   use lnd_comp_kind  , only : cl => shr_kind_cl
   use lnd_comp_types , only : noahmp_type
+  use lnd_comp_types , only : field_type
   use lnd_comp_shr   , only : chkerr
   use lnd_comp_io    , only : read_tiled_file
-
-  use fms2_io_mod    , only : FmsNetcdfFile_t, open_file
-  use mosaic2_mod    , only : get_mosaic_ntiles, get_mosaic_grid_sizes
-  use mosaic2_mod    , only : get_mosaic_contact, get_mosaic_ncontacts
-  use mpp_mod        , only : mpp_root_pe
-  use mpp_domains_mod, only : mpp_define_mosaic, mpp_domains_init
-  use mpp_domains_mod, only : mpp_define_layout
 
   implicit none
   private
@@ -65,8 +60,16 @@ contains
     integer, intent(out)             :: rc
 
     ! local variables
-    integer                          :: n, numOwnedElements, spatialDim, rank
+    real(r4), target, allocatable :: tmpr4(:)
+    integer                          :: n
     integer                          :: decomptile(2,6)
+    integer                          :: maxIndex(2)
+    type(ESMF_Decomp_Flag)           :: decompflagPTile(2,6)
+
+    type(field_type)                 :: flds(1)
+    integer                          :: numOwnedElements, spatialDim, rank
+
+    integer                          :: tlb(1), tub(1), tc(1)
     real(r8), allocatable            :: ownedElemCoords(:)
     integer, allocatable             :: vegtype(:)
     real(ESMF_KIND_R8), pointer      :: ptr1d(:)
@@ -74,9 +77,7 @@ contains
     real(ESMF_KIND_R8), pointer      :: ptr3d(:,:,:)
     character(len=CL)                :: msg, filename
     logical                          :: isPresent, isSet
-    type(FmsNetcdfFile_t)            :: mosaic_fileobj
     type(ESMF_Field)                 :: field, farea
-    type(ESMF_Decomp_Flag)           :: decompflagPTile(2,6)
     type(ESMF_CoordSys_Flag)         :: coordSys
     real(r8), parameter              :: con_rerth = 6.3712e+6_r8
     character(len=*), parameter      :: subname = trim(modName)//':(lnd_set_decomp_and_domain_from_mosaic) '
@@ -86,68 +87,19 @@ contains
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
     ! ---------------------
-    ! Open mosaic file and query some information 
+    ! Set decomposition and decide it is regional or global
     ! ---------------------
 
-    if (.not. open_file(mosaic_fileobj, trim(noahmp%nmlist%mosaic_file), 'read')) then
-       call ESMF_LogWrite(trim(subname)//'error in opening file '//trim(noahmp%nmlist%mosaic_file), ESMF_LOGMSG_ERROR)
-       rc = ESMF_FAILURE
-       return
-    end if
-
-    ! query number of tiles
-    noahmp%domain%ntiles = get_mosaic_ntiles(mosaic_fileobj)
-    noahmp%domain%global = (noahmp%domain%ntiles > 1)
-
-    ! query domain sizes for each tile
-    if (.not. allocated(noahmp%domain%nit)) allocate(noahmp%domain%nit(noahmp%domain%ntiles))
-    if (.not. allocated(noahmp%domain%njt)) allocate(noahmp%domain%njt(noahmp%domain%ntiles))
-    call get_mosaic_grid_sizes(mosaic_fileobj, noahmp%domain%nit, noahmp%domain%njt)
-
-    ! query number of contacts
-    noahmp%domain%ncontacts = get_mosaic_ncontacts(mosaic_fileobj)
-
-    ! allocate required arrays to create FMS domain from mosaic file
-    if (.not. allocated(noahmp%domain%tile1)) allocate(noahmp%domain%tile1(noahmp%domain%ncontacts))
-    if (.not. allocated(noahmp%domain%tile2)) allocate(noahmp%domain%tile2(noahmp%domain%ncontacts))
-    if (.not. allocated(noahmp%domain%istart1)) allocate(noahmp%domain%istart1(noahmp%domain%ncontacts))
-    if (.not. allocated(noahmp%domain%iend1)) allocate(noahmp%domain%iend1(noahmp%domain%ncontacts))
-    if (.not. allocated(noahmp%domain%jstart1)) allocate(noahmp%domain%jstart1(noahmp%domain%ncontacts))
-    if (.not. allocated(noahmp%domain%jend1)) allocate(noahmp%domain%jend1(noahmp%domain%ncontacts))
-    if (.not. allocated(noahmp%domain%istart2)) allocate(noahmp%domain%istart2(noahmp%domain%ncontacts))
-    if (.not. allocated(noahmp%domain%iend2)) allocate(noahmp%domain%iend2(noahmp%domain%ncontacts))
-    if (.not. allocated(noahmp%domain%jstart2)) allocate(noahmp%domain%jstart2(noahmp%domain%ncontacts))
-    if (.not. allocated(noahmp%domain%jend2)) allocate(noahmp%domain%jend2(noahmp%domain%ncontacts))
-
-    ! query domain related information
-    call get_mosaic_contact(mosaic_fileobj, noahmp%domain%tile1, noahmp%domain%tile2, &
-         noahmp%domain%istart1, noahmp%domain%iend1, noahmp%domain%jstart1, noahmp%domain%jend1, &
-         noahmp%domain%istart2, noahmp%domain%iend2, noahmp%domain%jstart2, noahmp%domain%jend2)
-
-    do n = 1, noahmp%domain%ncontacts
-       write(msg, fmt='(A,I2,A,2I5)') trim(subname)//' : tile1, tile2 (', n ,') = ', &
-         noahmp%domain%tile1(n), noahmp%domain%tile2(n)
-       call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)    
-       write(msg, fmt='(A,I2,A,4I5)') trim(subname)//' : istart1, iend1, jstart1, jend1 (', n ,') = ', &
-         noahmp%domain%istart1(n), noahmp%domain%iend1(n), noahmp%domain%jstart1(n), noahmp%domain%jend1(n)
-       call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)    
-       write(msg, fmt='(A,I2,A,4I5)') trim(subname)//' : istart2, iend2, jstart2, jend2 (', n ,') = ', &
-         noahmp%domain%istart2(n), noahmp%domain%iend2(n), noahmp%domain%jstart2(n), noahmp%domain%jend2(n)
-       call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)    
-    end do
-
-    ! ---------------------
-    ! Create FMS domain 
-    ! ---------------------
-
-    call lnd_domain_create(gcomp, noahmp, rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    noahmp%domain%global = .true.
 
     ! ---------------------
     ! Create ESMF grid 
     ! ---------------------
 
     if (noahmp%domain%global) then
+       ! set number of tiles
+       noahmp%domain%ntiles = 6
+
        ! set decomposition
        do n = 1, noahmp%domain%ntiles
           decomptile(1,n) = noahmp%domain%layout(1)
@@ -180,6 +132,12 @@ contains
        end if
        noahmp%domain%latt(:,:) = ptr2d(:,:)
        nullify(ptr2d)
+
+       ! query grid resolution (96, 384 etc.)
+       call ESMF_GridGet(noahmp%domain%grid, 1, ESMF_STAGGERLOC_CENTER, maxIndex=maxIndex, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%domain%ni = maxIndex(1)
+       noahmp%domain%nj = maxIndex(2)
     else
        ! TODO: need to define grid for regional application such as HAFS
        call ESMF_LogWrite(trim(subname)//": "//' number of tile is 1, regional application is not supported!', ESMF_LOGMSG_ERROR)
@@ -203,31 +161,45 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! ---------------------
-    ! Get fraction from orography file 
+    ! Query sizes from mesh
     ! ---------------------
 
-    ! input file name, the tile will be added to it based on the active PET
-    filename = trim(noahmp%nmlist%input_dir)//'oro_data.tile'
-
-    ! read data to ESMF field
-    call read_tiled_file(filename, 'land_frac', noahmp, field, numrec=1, rc=rc)
+    call ESMF_MeshGetFieldBounds(noahmp%domain%mesh, meshloc=ESMF_MESHLOC_ELEMENT, &
+      totalLBound=tlb, totalUBound=tub, totalCount=tc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! get pointer
-    call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr3d, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    noahmp%domain%begl = lbound(ptr3d, dim=1)
-    noahmp%domain%endl = ubound(ptr3d, dim=1)
-    noahmp%static%im = noahmp%domain%endl-noahmp%domain%begl+1
+    noahmp%domain%begl = tlb(1)
+    noahmp%domain%endl = tub(1)
+    noahmp%static%im = tc(1)
+    write(msg, fmt='(A,3I5)') trim(subname)//' : begl, endl, im = ', noahmp%domain%begl, &
+      noahmp%domain%endl, noahmp%static%im
+    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 
-    ! allocate variable and fill it
+    !----------------------
+    ! allocate temporary data structures
+    !----------------------
+
+    if (.not. allocated(tmpr4)) then
+       allocate(tmpr4(noahmp%domain%begl:noahmp%domain%endl))
+       tmpr4(:) = 0.0
+    end if
+
+    ! ---------------------
+    ! Get fraction from orography file
+    ! ---------------------
+
+    ! read field
+    filename = trim(noahmp%nmlist%input_dir)//'oro_data.tile*.nc'
+    flds(1)%short_name = 'land_frac'
+    flds(1)%ptr1r4 => tmpr4
+    call read_tiled_file(noahmp, filename, flds, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! allocate data
     if (.not. allocated(noahmp%domain%frac)) then
        allocate(noahmp%domain%frac(noahmp%domain%begl:noahmp%domain%endl))
     end if
-    noahmp%domain%frac(:) = ptr3d(:,1,1)
-    nullify(ptr3d)
-    call ESMF_FieldDestroy(field, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    noahmp%domain%frac = dble(tmpr4)
 
     ! ---------------------
     ! Read one of the static files to get mask information. This will be used to fix
@@ -235,16 +207,18 @@ contains
     ! following link: https://github.com/ufs-community/ufs-weather-model/issues/1423 
     ! ---------------------
 
-    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C',maxval(noahmp%domain%nit), '.vegetation_type.tile'
-    call read_tiled_file(filename, 'vegetation_type', noahmp, field, numrec=1, rc=rc)
+    ! read field
+    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C',noahmp%domain%ni, '.vegetation_type.tile*.nc'
+    flds(1)%short_name = 'vegetation_type'
+    flds(1)%ptr1r4 => tmpr4
+    call read_tiled_file(noahmp, filename, flds, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr3d, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (.not. allocated(vegtype)) allocate(vegtype(noahmp%domain%begl:noahmp%domain%endl))
-    vegtype(:) = int(ptr3d(:,1,1))
-    nullify(ptr3d)
-    call ESMF_FieldDestroy(field, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! allocate data
+    if (.not. allocated(vegtype)) then
+       allocate(vegtype(noahmp%domain%begl:noahmp%domain%endl))
+    end if
+    vegtype(:) = int(tmpr4)
 
     ! ---------------------
     ! Calculate mask from land-sea fraction
@@ -273,25 +247,18 @@ contains
     ! Get height from orography file
     ! ---------------------
 
-    ! read data to ESMF field
-    filename = trim(noahmp%nmlist%input_dir)//'oro_data.tile'
-    call read_tiled_file(filename, 'orog_raw', noahmp, field, numrec=1, rc=rc)
+    ! read field
+    filename = trim(noahmp%nmlist%input_dir)//'oro_data.tile*.nc'
+    flds(1)%short_name = 'orog_raw'
+    flds(1)%ptr1r4 => tmpr4
+    call read_tiled_file(noahmp, filename, flds, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! get pointer
-    call ESMF_FieldGet(field, localDe=0, farrayPtr=ptr3d, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! allocate variable
+    ! allocate data
     if (.not. allocated(noahmp%domain%hgt)) then
        allocate(noahmp%domain%hgt(noahmp%domain%begl:noahmp%domain%endl))
     end if
-    noahmp%domain%hgt(:) = ptr3d(:,1,1)
-
-    ! clean memory
-    nullify(ptr3d)
-    call ESMF_FieldDestroy(field, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    noahmp%domain%hgt = dble(tmpr4)
 
     ! ---------------------
     ! Query cell area 
@@ -351,115 +318,10 @@ contains
     ! Clean memory
     ! ---------------------
 
-    call ESMF_FieldDestroy(farea, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (allocated(tmpr4)) deallocate(tmpr4)
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
   end subroutine lnd_set_decomp_and_domain_from_mosaic
-
-  !===============================================================================
-  subroutine lnd_domain_create(gcomp, noahmp, rc)
-
-    ! input/output variables
-    type(ESMF_GridComp), intent(in)  :: gcomp
-    type(noahmp_type), intent(inout) :: noahmp
-    integer, intent(inout)           :: rc
-
-    ! local variables
-    type(ESMF_VM)               :: vm
-    integer                     :: n, npet, npes_per_tile
-    integer                     :: halo = 0
-    integer                     :: global_indices(4,6)
-    integer                     :: layout2d(2,6)
-    integer, allocatable        :: pe_start(:), pe_end(:)
-    character(len=cl)           :: msg
-    character(len=*), parameter :: subname=trim(modName)//':(lnd_domain_create) '
-    !-------------------------------------------------------------------------------
-
-    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
-
-    ! ---------------------
-    ! Query components 
-    ! ---------------------
-
-    call ESMF_GridCompGet(gcomp, vm=vm, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call ESMF_VMGet(vm=vm, petCount=npet, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    !----------------------
-    ! Initialize domain 
-    !----------------------
-
-    call mpp_domains_init()
-
-    !----------------------
-    ! Create domain 
-    !----------------------
-
-    ! setup global indices
-    do n = 1, noahmp%domain%ntiles
-       global_indices(1,n) = 1
-       global_indices(2,n) = noahmp%domain%nit(n)
-       global_indices(3,n) = 1
-       global_indices(4,n) = noahmp%domain%njt(n)
-    enddo
-
-    ! check total number of PETs
-    if (mod(npet, noahmp%domain%ntiles) /= 0) then
-       write(msg, fmt='(A,I5)') trim(subname)//' : nPet should be multiple of 6 to read initial conditions but it is ', npet 
-       call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_ERROR)
-       rc = ESMF_FAILURE
-       return
-    end if
-
-    ! calculate layout if it is not provided as configuration option
-    if (noahmp%domain%layout(1) < 0 .and. noahmp%domain%layout(2) < 0) then
-       npes_per_tile = npet/noahmp%domain%ntiles
-       call mpp_define_layout(global_indices(:,1), npes_per_tile, noahmp%domain%layout)
-    end if
-
-    ! set layout and print out debug information
-    do n = 1, noahmp%domain%ntiles
-       layout2d(:,n) = noahmp%domain%layout(:)
-       write(msg, fmt='(A,I2,A,2I5)') trim(subname)//' layout (', n ,') = ', layout2d(1,n), layout2d(2,n)
-       call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
-       write(msg, fmt='(A,I2,A,4I5)') trim(subname)//' global_indices (', n,') = ', &
-         global_indices(1,n), global_indices(2,n), global_indices(3,n), global_indices(4,n)
-       call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
-    enddo
-
-    !----------------------
-    ! Set pe_start, pe_end 
-    !----------------------
-
-    allocate(pe_start(noahmp%domain%ntiles))
-    allocate(pe_end(noahmp%domain%ntiles))
-    do n = 1, noahmp%domain%ntiles
-       pe_start(n) = mpp_root_pe()+(n-1)*noahmp%domain%layout(1)*noahmp%domain%layout(2)
-       pe_end(n) = mpp_root_pe()+n*noahmp%domain%layout(1)*noahmp%domain%layout(2)-1
-       write(msg, fmt='(A,I2,A,2I5)') trim(subname)//' pe_start, pe_end (', n ,') = ', pe_start(n), pe_end(n)
-       call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
-    enddo
-
-    call mpp_define_mosaic(global_indices, layout2d, noahmp%domain%mosaic_domain, &
-         noahmp%domain%ntiles, noahmp%domain%ncontacts, noahmp%domain%tile1, noahmp%domain%tile2, &
-         noahmp%domain%istart1, noahmp%domain%iend1, noahmp%domain%jstart1, noahmp%domain%jend1, &
-         noahmp%domain%istart2, noahmp%domain%iend2, noahmp%domain%jstart2, noahmp%domain%jend2, &
-         pe_start, pe_end, symmetry=.true., whalo=halo, ehalo=halo, shalo=halo, nhalo=halo, &
-         name='lnd domain')
-
-    !----------------------
-    ! Deallocate temporary arrays
-    !----------------------
-
-    deallocate(pe_start)
-    deallocate(pe_end)
-
-    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
-
-  end subroutine lnd_domain_create
 
 end module lnd_comp_domain

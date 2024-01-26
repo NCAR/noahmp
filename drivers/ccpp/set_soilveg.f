@@ -44,6 +44,9 @@
      &  DEFINED_SLOPE, FXEXP_DATA, NROOT_DATA, REFKDT_DATA, Z0_DATA,
      &  CZIL_DATA, LAI_DATA, CSOIL_DATA
 
+      errmsg = ''
+      errflg = 0
+
 cmy end locals
       if(ivet.eq.2) then
 

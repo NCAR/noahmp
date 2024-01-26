@@ -27,7 +27,7 @@ Within the **drivers/nuopc/** directory, the following files are found,
    * - lnd_comp_import_export.F90
      - Includes subroutines to define import and export states as well as diagnostic code to check the fields in states 
    * - lnd_comp_io.F90
-     - Includes subroutines to read in static information and initial conditions from tiled files and writing model output in tiled format. The I/O routines currently using `FMS <https://github.com/NOAA-GFDL/FMS>` library to access multi-tile files but this will be replaced with ESMF calls in the near future and FMS dependency from NUOPC "cap" will be removed.
+     - Includes subroutines to read in static information and initial conditions from tiled files and writing model output in tiled format. 
    * - lnd_comp_kind.F90
      - Stores parameters that define used kind types etc.
    * - lnd_comp_nuopc.F90
@@ -56,7 +56,7 @@ The NUOPC "cap" uses set of namelist options provided as ESMF Config file format
    * - ic_type
      - Indicates the source of the initial conditions. Two options are supported 'custom' (i.e. C96.initial.tile[1-6].nc) and 'sfc' (default, sfc_data.tile[1-6].nc).
    * - layout
-     - Defines decompositions in each direction on each tile (i.e. 3:8 for C96). This needs to be consistent with resolution. If this is missing, then the NUOPC "cap" tries to calculate the tiles using FMS's `mpp_define_layout()` call.
+     - Defines decompositions in each direction on each tile (i.e. 3:8 for C96). This needs to be consistent with resolution.
    * - num_soil_levels
      - Number of soil levels used by NoahMP Land Model (i.e. 4)
    * - forcing_height
@@ -94,7 +94,11 @@ The NUOPC "cap" uses set of namelist options provided as ESMF Config file format
    * - glacier_option (iopt_gla, Note: this is not used currently and fixed to 2 in `noahmpdrv.F90`)
      - Options for glacier treatment (1->phase change; 2->simple)
    * - output_freq
-     - Options for output frequency in seconds (i.e. 21600 for 6-hourly output, 1 output every coupling time-step and can be used for debugging)
+     - Option for output frequency in seconds (i.e. 21600 for 6-hourly output, 1 output every coupling time-step and can be used for debugging)
+   * - restart_freq
+     - Option for restart frequency in seconds. If it is not provided, it will be same with `output_freq`
+   * - restart_file
+     - Option for specifying the restart file (`.tile#.nc` will be added to the given file name). If it is not provided the model specifies the file name internally using current model time and coupling time step. 
    * - do_mynnedmf
      - Option for MYNN-EDMF (default value is `.false.`)
    * - do_mynnsfclay
@@ -107,6 +111,8 @@ The NUOPC "cap" uses set of namelist options provided as ESMF Config file format
      - Option for initial surface lw emissivity in fraction (default value is 0.95)
    * - initial_albedo
      - Option for initial mean surface albedo (value is default 0.2)
+   * - calc_snet
+     - Option for calculating net shortwave radiation using downward component and surface albedo
 
 .. note::
    ``:`` symbol is used as a seperator for namelist options with multiple values such as `layout`, `soil_level_thickness`.
@@ -125,13 +131,13 @@ The current version of the NUOPC "cap" is able to create ESMF grid by reading mo
 Initialization
 --------------
 
-During the `InitializeAdvertise` phase, call is made to `fms_init()` to use `Flexible Modeling System (FMS) <https://www.gfdl.noaa.gov/fms/>`_ for reading and writing cubed-sphere tiled output. In this case, The MPI communicator is pulled in through the ESMF VM object and used by FMS. This phase also calls `advertise_fields()` to setup import and export states. The FMS initialization will be removed once the multi-tile I/O calls is supported by ESMF.
+During the `InitializeAdvertise` phase, call is made to `advertise_fields()` to setup import and export states.
 
 ---
 Run
 ---
 
-During the `ModelAdvance` phase, the `cap` updates the import state and calls NoahMP driver routine (`drv_run`, which is found in `drivers/nuopc/lnd_comp_driver.F90`) to run the model and updates the export state with the information calculated by model. The `drv_run` call mainly read in static information as well as initial conditions when it is first called and interpolate monthly data provided by the static information such as fractional coverage of green vegetation and surface albedo to the date of the simulation. Then calculates solar zenith angle based on the time information extracted from `cap` and calls `noahmpdrv_run` subroutine provided by the NoahMP. This phase also responsible to write NoahMP model output in tiled format by taking advantage of FMS and ESMF routines. 
+During the `ModelAdvance` phase, the `cap` updates the import state and calls NoahMP driver routine (`drv_run`, which is found in `drivers/nuopc/lnd_comp_driver.F90`) to run the model and updates the export state with the information calculated by model. The `drv_run` call mainly read in static information as well as initial conditions when it is first called and interpolate monthly data provided by the static information such as fractional coverage of green vegetation and surface albedo to the date of the simulation. Then calculates solar zenith angle based on the time information extracted from `cap` and calls `noahmpdrv_run` subroutine provided by the NoahMP. This phase also responsible to write NoahMP model output in tiled format by taking advantage of ESMF I/O multi-tile support. 
 
 .. note::
    : the restart capability is only tested with DATM+NOAHMP configuration.
@@ -160,17 +166,17 @@ Model Fields Used for Coupling
      - m
      - noahmp%forc%hgt
      - bottom layer height
-     - namelist option `forcing_height
+     - namelist option `forcing_height`
    * - inst_temp_height_lowest (`Sa_tbot`)
      - K
      - noahmp%forc%t1
      - bottom layer temperature
-     -
+     - 
    * - inst_temp_height_lowest_from_phys (`Sa_ta`)
      - K
      - noahmp%forc%t1
      - bottom layer temperature
-     - used under UFS Weather Model, and active atmosphere
+     - used if coupled with active atmosphere
    * - inst_temp_height_surface (`Sa_tskn`)
      - K
      - noahmp%forc%tskin
@@ -185,7 +191,7 @@ Model Fields Used for Coupling
      - Pa
      - noahmp%forc%pbot
      - pressure at lowest model layer
-     - used under UFS Weather Model, and active atmosphere
+     - used if coupled with active atmosphere
    * - inst_pres_height_surface (`Sa_pslv`)
      - Pa
      - noahmp%forc%ps
@@ -200,7 +206,7 @@ Model Fields Used for Coupling
      - kg kg-1 
      - noahmp%forc%q1
      - bottom layer specific humidity
-     - used under UFS Weather Model, and active atmosphere
+     - used if coupled with active atmosphere
    * - inst_zonal_wind_height_lowest (`Sa_u`)
      - m s-1 
      - noahmp%forc%u1
@@ -211,16 +217,6 @@ Model Fields Used for Coupling
      - noahmp%forc%v1
      - bottom layer meridional wind
      -
-   * - inst_zonal_wind_height_lowest_from_phys (`Sa_ua`)
-     - m s-1 
-     - noahmp%forc%u1
-     - bottom layer zonal wind
-     - used under UFS Weather Model, and active atmosphere
-   * - inst_merid_wind_height_lowest_from_phys (`Sa_va`)
-     - m s-1 
-     - noahmp%forc%v1
-     - bottom layer meridional wind
-     - used under UFS Weather Model, and active atmosphere
    * - inst_exner_function_height_lowest (`Sa_exner`)
      - 1 
      - noahmp%forc%prslk1
@@ -245,7 +241,7 @@ Model Fields Used for Coupling
      - W m-2 
      - noahmp%forc%dlwflx
      - net SW radiation 
-     - if it is not available, it will be calculated by using `mean_down_sw_flx` and surface albedo
+     - if it is not available, it will be calculated by using `mean_down_sw_flx` and surface albedo (see `calc_snet` option)
    * - mean_prec_rate_conv (`Faxa_rainc`)
      - kg m-2 s-1
      - noahmp%forc%tprcpc
@@ -276,12 +272,12 @@ Model Fields Used for Coupling
      - noahmp%forc%snow
      - total snow precipitation
      -
-   * - vfrac
+   * - Sa_vfrac
      - 1
      - noahmp%forc%vegfrac
      - areal fractional cover of green vegetation
      -
-   * - zorl
+   * - Sa_zorl
      - cm
      - noahmp%forc%zorl
      - surface roughness
@@ -299,10 +295,70 @@ Model Fields Used for Coupling
    * - Sl_lfrin
      - 0-1
      - noahmp%domain%frac
-     - land fraction     
+     - land fraction
      - required by mediator
-   * - Sl_t
+   * - Sl_sfrac
+     - 0-1
+     - noahmp%model%sncovr1
+     - instantaneous snow area fraction
+     -
+   * - Fall_lat
+     - kg kg-1 m s-1
+     - noahmp%model%evap
+     - mean latent heat flux
+     -
+   * - Fall_sen
+     - kg kg-1 m s-1
+     - noahmp%model%hflx
+     - mean sensible heat flux
+     -
+   * - Fall_evap
+     - W m-2
+     - noahmp%model%ep
+     - mean potential latent heat flux
+     -
+   * - Sl_tref
      - K
      - noahmp%model%t2mmp
-     - land surface temperature
-     - 
+     - instantenous temperature at 2 meters
+     -
+   * - Sl_qref
+     - kg kg-1
+     - noahmp%model%q2mp
+     - instantenous specific humidity at 2 meters
+     -
+   * - Sl_q
+     - kg kg-1
+     - noahmp%model%qsurf
+     - instantenous specific humidity (at lowest model layer)
+     -
+   * - Fall_gflx
+     - W m-2
+     - noahmp%model%gflux
+     - mean upward heat flux (ground)
+     -
+   * - Fall_roff
+     - kg m-2 s-1
+     - noahmp%model%runoff
+     - mean runoff rate (surface)
+     -
+   * - Fall_soff
+     - kg m-2 s-1
+     - noahmp%model%drain
+     - mean runoff rate (sub-surface)
+     -
+   * - Sl_cmm
+     - m s-1
+     - noahmp%model%cmm
+     - instantenous drag wind speed for momentum
+     -
+   * - Sl_chh
+     - kg m-2 s-1
+     - noahmp%model%chh
+     - instantenous drag wind speed for heat and moisture
+     -
+   * - Sl_zvfun
+     - 0-1
+     - noahmp%model%zvfun
+     - instantenous function of roughness length and areal fractional cover of green vegetation
+     -

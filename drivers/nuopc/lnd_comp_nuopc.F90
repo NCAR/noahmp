@@ -13,7 +13,7 @@ module lnd_comp_nuopc
   use ESMF             , only : ESMF_Array, ESMF_ArrayRead, ESMF_ArrayGet, ESMF_ArrayDestroy
   use ESMF             , only : ESMF_TimeInterval, ESMF_Alarm, ESMF_ClockGet
   use ESMF             , only : ESMF_ClockGetAlarmList, ESMF_Clock, ESMF_Time
-  use ESMF             , only : ESMF_ClockSet, ESMF_TimeInterval, ESMF_ALARMLIST_ALL 
+  use ESMF             , only : ESMF_ClockSet, ESMF_TimeIntervalGet, ESMF_ALARMLIST_ALL
   use ESMF             , only : ESMF_AlarmSet, ESMF_ClockAdvance
   use ESMF             , only : ESMF_TimeGet, ESMF_TimeInterval
   use ESMF             , only : ESMF_GEOMTYPE_GRID, ESMF_GEOMTYPE_MESH
@@ -27,18 +27,17 @@ module lnd_comp_nuopc
   use NUOPC_Model      , only : SetVM
   use NUOPC_Model      , only : model_label_Advance => label_Advance
   use NUOPC_Model      , only : model_label_SetRunClock => label_SetRunClock
-
-  use fms_mod          , only : fms_init
-  use fms_io_mod       , only : read_data
+  use NUOPC_Model      , only : model_label_Finalize => label_Finalize
 
   use lnd_comp_types   , only : noahmp_type
   use lnd_comp_kind    , only : cl => shr_kind_cl
+  use lnd_comp_kind    , only : r8 => shr_kind_r8
   use lnd_comp_shr     , only : chkerr, alarm_init
   use lnd_comp_shr     , only : shr_string_listGetName, read_namelist
   use lnd_comp_domain  , only : lnd_set_decomp_and_domain_from_mosaic
   use lnd_comp_import_export, only : advertise_fields, realize_fields
   use lnd_comp_import_export, only : import_fields, export_fields, state_diagnose
-  use lnd_comp_driver  , only : drv_init, drv_run
+  use lnd_comp_driver  , only : drv_init, drv_run, drv_finalize
 
   implicit none
   private ! except
@@ -108,6 +107,12 @@ contains
          specRoutine=ModelSetRunClock, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+    call NUOPC_CompSpecialize(gcomp, specLabel=model_label_Finalize, &
+         specRoutine=ModelFinalize, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
+
   end subroutine SetServices
 
   !===============================================================================
@@ -157,18 +162,6 @@ contains
     call advertise_fields(gcomp, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! ---------------------
-    ! Initialize FMS
-    ! ---------------------
-
-    call ESMF_VMGetCurrent(vm=vm, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call ESMF_VMGet(vm=vm, mpiCommunicator=lnd_mpi_comm, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call fms_init(lnd_mpi_comm)
-
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
   end subroutine InitializeAdvertise
@@ -185,7 +178,8 @@ contains
     integer, intent(out) :: rc
 
     ! local variables
-    integer                    :: n
+    integer                    :: n, suffix_sec
+    real(r8)                   :: dt
     integer, pointer           :: ptr(:)
     character(len=CL)          :: cvalue, cname, msg
     character(len=CL)          :: meshfile_mask
@@ -288,16 +282,27 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        if (isPresent .and. isSet) then
-          noahmp%nmlist%restart_file = trim(cvalue)
+          noahmp%nmlist%restart_file = trim(cvalue)//'.tile*.nc'
        else
           call ESMF_ClockGet(clock, currTime=currTime, timeStep=timeStep, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           call ESMF_TimeGet(currTime, yy=year, mm=month, dd=day, h=hour, m=minute, s=second, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    
+
+          call ESMF_TimeIntervalGet(timeStep, s_r8=dt, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          ! update day if it is required
+          ! coupling time (dt) needs to be same in case of restart run
+          suffix_sec = int(hour*60*60+minute*60+second)
+          if (suffix_sec < 0) then
+             day = day-1
+             suffix_sec = 86400-abs(suffix_sec)
+          end if
+
           write(noahmp%nmlist%restart_file, fmt='(a,i4,a1,i2.2,a1,i2.2,a1,i5.5,a)') &
-             trim(noahmp%nmlist%case_name)//'.lnd.out.', year, '-', month, '-', day, '-', hour*60*60+minute*60+second, '.tile'
+             trim(noahmp%nmlist%case_name)//'.lnd.out.', year, '-', month, '-', day, '-', suffix_sec, '.tile*.nc'
        end if
 
        call ESMF_LogWrite(trim(subname)//': restart_file = '//trim(noahmp%nmlist%restart_file), ESMF_LOGMSG_INFO)
@@ -595,5 +600,25 @@ contains
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
   end subroutine ModelSetRunClock
+
+  !===============================================================================
+  subroutine ModelFinalize(gcomp, rc)
+
+    type(ESMF_GridComp)  :: gcomp
+    integer, intent(out) :: rc
+
+    ! local variables
+    character(len=*),parameter :: subname=trim(modName)//':(ModelFinalize) '
+    !-------------------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
+
+    ! call model finalize routine
+    call drv_finalize(gcomp, noahmp, rc)
+
+    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
+
+  end subroutine ModelFinalize
 
 end module lnd_comp_nuopc
