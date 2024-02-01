@@ -151,7 +151,7 @@ contains
        endif
     endif
 
-    ! wet-bulb scheme (Wang et al., 2019 GRL), C.He, 12/18/2020
+    ! wet-bulb scheme (Wang et al., 2019 GRL), C.He, 12/18/2020, R. Abolafia-Rosnezweig, 02/01/2024
     if ( OptRainSnowPartition == 5 ) then
        TemperatureDegC = min( 50.0, max(-50.0,(TemperatureAirRefHeight-ConstFreezePoint)) )    ! Kelvin to degree Celsius with limit -50 to +50
        if ( TemperatureAirRefHeight > ConstFreezePoint ) then
@@ -166,7 +166,7 @@ contains
           TemperatureWetBulb = TemperatureWetBulb - (VapPresSat - PressureVaporRefHeight) / PsychConst   ! Wang et al., 2019 GRL Eq.2
        enddo
 
-        if ( TemperatureWetBulb >= (ConstFreezePoint+5)) then !added by RAR 02/2024
+        if ( TemperatureWetBulb >= (ConstFreezePoint+5)) then !avoid numerical errors when temperature is high
             FrozenPrecipFrac = 0
         else
             FrozenPrecipFrac      = 1.0 / (1.0 + 6.99e-5 * exp(2.0*(TemperatureWetBulb+3.97)))                ! Wang et al., 2019 GRL Eq. 1
