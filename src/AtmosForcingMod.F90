@@ -166,7 +166,7 @@ contains
           TemperatureWetBulb = TemperatureWetBulb - (VapPresSat - PressureVaporRefHeight) / PsychConst   ! Wang et al., 2019 GRL Eq.2
        enddo
 
-        if ( TemperatureWetBulb >= (ConstFreezePoint+5)) then !avoid numerical errors when temperature is high
+        if ( TemperatureWetBulb >= 5) then !avoid numerical errors when temperature is high
             FrozenPrecipFrac = 0
         else
             FrozenPrecipFrac      = 1.0 / (1.0 + 6.99e-5 * exp(2.0*(TemperatureWetBulb+3.97)))                ! Wang et al., 2019 GRL Eq. 1
