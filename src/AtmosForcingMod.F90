@@ -166,8 +166,7 @@ contains
           TemperatureWetBulb = TemperatureWetBulb - (VapPresSat - PressureVaporRefHeight) / PsychConst   ! Wang et al., 2019 GRL Eq.2
        enddo
 
-        ! If structure created by Ronnie Abolafia-Rosenzweig (Feb 1, 2024) to impose FrozenPrecipFrac=0 on high-temp instances to avoid numerical issues
-        if ( TemperatureWetBulb >= (ConstFreezePoint+5)) then
+        if ( TemperatureWetBulb >= (ConstFreezePoint+5)) then !added by RAR 02/2024
             FrozenPrecipFrac = 0
         else
             FrozenPrecipFrac      = 1.0 / (1.0 + 6.99e-5 * exp(2.0*(TemperatureWetBulb+3.97)))                ! Wang et al., 2019 GRL Eq. 1
