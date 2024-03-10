@@ -467,7 +467,9 @@ contains
     ! local variables
     type(field_type), allocatable :: flds(:)
     real(r4), target, allocatable :: tmpr4(:)
+    real(r8), target, allocatable :: tmpr8(:)
     real(r4), target, allocatable :: tmp2r4(:,:)
+    real(r8), target, allocatable :: tmp2r8(:,:)
     character(len=CL)             :: filename
     real(ESMF_KIND_R8), parameter :: pi_8 = 3.14159265358979323846_r8
     character(len=*), parameter   :: subname=trim(modName)//':(read_static) '
@@ -485,9 +487,19 @@ contains
        tmpr4(:) = 0.0
     end if
 
+    if (.not. allocated(tmpr8)) then
+       allocate(tmpr8(noahmp%domain%begl:noahmp%domain%endl))
+       tmpr8(:) = 0.0_r8
+    end if
+
     if (.not. allocated(tmp2r4)) then
        allocate(tmp2r4(noahmp%domain%begl:noahmp%domain%endl,12))
        tmp2r4(:,:) = 0.0
+    end if
+
+    if (.not. allocated(tmp2r8)) then
+       allocate(tmp2r8(noahmp%domain%begl:noahmp%domain%endl,1))
+       tmp2r8(:,:) = 0.0_r8
     end if
 
     !----------------------
@@ -509,66 +521,122 @@ contains
     ! Read soil type
     !----------------------
 
-    allocate(flds(1))
-    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.soil_type.tile*.nc'
-    flds(1)%short_name = 'soil_type'
-    flds(1)%ptr1r4 => tmpr4
-    call read_tiled_file(noahmp, filename, flds, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    noahmp%model%soiltyp = int(tmpr4)
-    deallocate(flds)
+    if (trim(noahmp%nmlist%ic_type) == 'sfc') then
+       allocate(flds(1))
+       write(filename, fmt="(A)") trim(noahmp%nmlist%input_dir)//'sfc_data.tile*.nc'
+       flds(1)%short_name = 'stype'
+       flds(1)%ptr1r8 => tmpr8
+       call read_tiled_file(noahmp, filename, flds, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%model%soiltyp = int(tmpr8)
+       deallocate(flds)
+    else
+       allocate(flds(1))
+       write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.soil_type.tile*.nc'
+       flds(1)%short_name = 'soil_type'
+       flds(1)%ptr1r4 => tmpr4
+       call read_tiled_file(noahmp, filename, flds, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%model%soiltyp = int(tmpr4)
+       deallocate(flds)
+    end if
 
     !----------------------
     ! Read vegetation type
     !----------------------
 
-    allocate(flds(1))
-    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.vegetation_type.tile*.nc'
-    flds(1)%short_name = 'vegetation_type'
-    flds(1)%ptr1r4 => tmpr4
-    call read_tiled_file(noahmp, filename, flds, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    noahmp%model%vegtype = int(tmpr4)
-    deallocate(flds)
+    if (trim(noahmp%nmlist%ic_type) == 'sfc') then
+       allocate(flds(1))
+       write(filename, fmt="(A)") trim(noahmp%nmlist%input_dir)//'sfc_data.tile*.nc'
+       flds(1)%short_name = 'vtype'
+       flds(1)%ptr1r8 => tmpr8
+       call read_tiled_file(noahmp, filename, flds, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%model%vegtype = int(tmpr8)
+       deallocate(flds)
+    else
+       allocate(flds(1))
+       write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.vegetation_type.tile*.nc'
+       flds(1)%short_name = 'vegetation_type'
+       flds(1)%ptr1r4 => tmpr4
+       call read_tiled_file(noahmp, filename, flds, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%model%vegtype = int(tmpr4)
+       deallocate(flds)
+    end if
 
     !----------------------
     ! Read slope type
     !----------------------
 
-    allocate(flds(1))
-    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.slope_type.tile*.nc'
-    flds(1)%short_name = 'slope_type'
-    flds(1)%ptr1r4 => tmpr4
-    call read_tiled_file(noahmp, filename, flds, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    noahmp%model%slopetyp = int(tmpr4)
-    deallocate(flds)
+    if (trim(noahmp%nmlist%ic_type) == 'sfc') then
+       allocate(flds(1))
+       write(filename, fmt="(A)") trim(noahmp%nmlist%input_dir)//'sfc_data.tile*.nc'
+       flds(1)%short_name = 'slope'
+       flds(1)%ptr1r8 => tmpr8
+       call read_tiled_file(noahmp, filename, flds, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%model%slopetyp = int(tmpr8)
+       deallocate(flds)
+    else
+       allocate(flds(1))
+       write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.slope_type.tile*.nc'
+       flds(1)%short_name = 'slope_type'
+       flds(1)%ptr1r4 => tmpr4
+       call read_tiled_file(noahmp, filename, flds, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%model%slopetyp = int(tmpr4)
+       deallocate(flds)
+    end if
 
     !----------------------
     ! Read deep soil temperature
     !----------------------
 
-    allocate(flds(1))
-    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.substrate_temperature.tile*.nc'
-    flds(1)%short_name = 'substrate_temperature'
-    flds(1)%ptr1r4 => tmpr4
-    call read_tiled_file(noahmp, filename, flds, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    noahmp%model%tg3 = dble(tmpr4)
-    deallocate(flds)
+    if (trim(noahmp%nmlist%ic_type) == 'sfc') then
+       allocate(flds(1))
+       write(filename, fmt="(A)") trim(noahmp%nmlist%input_dir)//'sfc_data.tile*.nc'
+       flds(1)%short_name = 'tg3'
+       flds(1)%nrec = 1; flds(1)%ptr2r8 => tmp2r8
+       call read_tiled_file(noahmp, filename, flds, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       print*, 'tg3, lb, ub = ', lbound(tmp2r8, dim=1), ubound(tmp2r8, dim=1)
+       noahmp%model%tg3 = tmp2r8(:,1)
+       deallocate(flds)
+    else
+       allocate(flds(1))
+       write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.substrate_temperature.tile*.nc'
+       flds(1)%short_name = 'substrate_temperature'
+       flds(1)%ptr1r4 => tmpr4
+       call read_tiled_file(noahmp, filename, flds, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%model%tg3 = dble(tmpr4)
+       deallocate(flds)
+    end if
 
     !----------------------
     ! Read maximum snow albedo
     !----------------------
 
-    allocate(flds(1))
-    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.maximum_snow_albedo.tile*.nc'
-    flds(1)%short_name = 'maximum_snow_albedo'
-    flds(1)%ptr1r4 => tmpr4
-    call read_tiled_file(noahmp, filename, flds, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    noahmp%model%snoalb = dble(tmpr4)
-    deallocate(flds)
+    if (trim(noahmp%nmlist%ic_type) == 'sfc') then
+       allocate(flds(1))
+       write(filename, fmt="(A)") trim(noahmp%nmlist%input_dir)//'sfc_data.tile*.nc'
+       flds(1)%short_name = 'snoalb'
+       flds(1)%nrec = 1; flds(1)%ptr2r8 => tmp2r8
+       call read_tiled_file(noahmp, filename, flds, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%model%snoalb = tmp2r8(:,1)
+       deallocate(flds)
+    else
+       allocate(flds(1))
+       write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C', noahmp%domain%ni, '.maximum_snow_albedo.tile*.nc'
+       flds(1)%short_name = 'maximum_snow_albedo'
+       flds(1)%ptr1r4 => tmpr4
+       call read_tiled_file(noahmp, filename, flds, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       noahmp%model%snoalb = dble(tmpr4)
+       deallocate(flds)
+    end if
 
     !----------------------
     ! Read vegetation greenness, monthly average 
@@ -610,7 +678,9 @@ contains
     !----------------------
 
     if (allocated(tmpr4)) deallocate(tmpr4)
+    if (allocated(tmpr8)) deallocate(tmpr8)
     if (allocated(tmp2r4)) deallocate(tmp2r4)
+    if (allocated(tmp2r8)) deallocate(tmp2r8)
 
     call ESMF_LogWrite(subname//' done for '//trim(filename), ESMF_LOGMSG_INFO)
 

@@ -675,7 +675,7 @@ contains
 
   end subroutine InitializeDefault
 
-  subroutine InitializeStates(this, namelist, static, month)
+  subroutine InitializeStates(this, namelist, static, domain, month)
     
     ! out of necessity, this is extracted from FV3GFS_io.F90
     
@@ -685,140 +685,143 @@ contains
     class(noahmp_type)  :: this
     type(namelist_type) :: namelist
     type(static_type)   :: static
+    type(domain_type)   :: domain
 
     integer             :: iloc, ilevel, isnow
     real                :: masslai, masssai, depthm
     real                :: dzsno(static%lsnowl:static%km)
     
     do iloc = 1, static%im
-      this%model%tvxy (iloc) = this%model%tskin(iloc)
-      this%model%tgxy (iloc) = this%model%tskin(iloc)
-      this%model%tahxy(iloc) = this%model%tskin(iloc)
+       if (domain%mask(iloc) > 0) then
+          this%model%tvxy (iloc) = this%model%tskin(iloc)
+          this%model%tgxy (iloc) = this%model%tskin(iloc)
+          this%model%tahxy(iloc) = this%model%tskin(iloc)
   
-      if (this%model%snwdph(iloc) > 0.01 .and. this%model%tskin(iloc) > 273.15 ) then
-         this%model%tvxy (iloc) = 273.15
-         this%model%tgxy (iloc) = 273.15
-         this%model%tahxy(iloc) = 273.15
-      end if
+          if (this%model%snwdph(iloc) > 0.01 .and. this%model%tskin(iloc) > 273.15 ) then
+             this%model%tvxy (iloc) = 273.15
+             this%model%tgxy (iloc) = 273.15
+             this%model%tahxy(iloc) = 273.15
+          end if
     
-      this%model%canicexy(iloc) = 0.0
-      this%model%canliqxy(iloc) = this%model%canopy(iloc)
-      this%model%eahxy(iloc)    = 2000.0
-      this%model%cmxy    (iloc) = 0.0
-      this%model%chxy    (iloc) = 0.0
-      this%model%fwetxy  (iloc) = 0.0
-      this%model%sneqvoxy(iloc) = this%model%weasd(iloc)
-      this%model%alboldxy(iloc) = 0.65
-      this%model%qsnowxy (iloc) = 0.0
-      this%model%wslakexy(iloc) = 0.0
-      this%model%taussxy (iloc) = 0.0
-      this%model%waxy    (iloc) = 4900.0 ! this assumes water table is at 2.5m
-      this%model%wtxy    (iloc) = this%model%waxy(iloc)
-      this%model%zwtxy   (iloc) = (25.0 + 2.0)-this%model%waxy(iloc)/1000.0/0.2
+          this%model%canicexy(iloc) = 0.0
+          this%model%canliqxy(iloc) = this%model%canopy(iloc)
+          this%model%eahxy(iloc)    = 2000.0
+          this%model%cmxy    (iloc) = 0.0
+          this%model%chxy    (iloc) = 0.0
+          this%model%fwetxy  (iloc) = 0.0
+          this%model%sneqvoxy(iloc) = this%model%weasd(iloc)
+          this%model%alboldxy(iloc) = 0.65
+          this%model%qsnowxy (iloc) = 0.0
+          this%model%wslakexy(iloc) = 0.0
+          this%model%taussxy (iloc) = 0.0
+          this%model%waxy    (iloc) = 4900.0 ! this assumes water table is at 2.5m
+          this%model%wtxy    (iloc) = this%model%waxy(iloc)
+          this%model%zwtxy   (iloc) = (25.0 + 2.0)-this%model%waxy(iloc)/1000.0/0.2
   
-      if ((this%model%vegtype(iloc) == isbarren_table) .or. (this%model%vegtype(iloc) == isice_table) .or. &
-          (this%model%vegtype(iloc) == isurban_table)  .or. (this%model%vegtype(iloc) == iswater_table) .or. &
-          (this%model%vegtype(iloc) < 0)) then
-         this%model%xlaixy  (iloc) = 0.0
-         this%model%xsaixy  (iloc) = 0.0
-         this%model%lfmassxy(iloc) = 0.0
-         this%model%stmassxy(iloc) = 0.0
-         this%model%rtmassxy(iloc) = 0.0
-         this%model%woodxy  (iloc) = 0.0       
-         this%model%stblcpxy(iloc) = 0.0      
-         this%model%fastcpxy(iloc) = 0.0     
-      else
-         this%model%xlaixy  (iloc) = max(laim_table(this%model%vegtype(iloc), month),0.05)
-         this%model%xsaixy  (iloc) = max(this%model%xlaixy(iloc)*0.1,0.05)
-         masslai             = 1000.0/max(sla_table(this%model%vegtype(iloc)),1.0)
-         this%model%lfmassxy(iloc) = this%model%xlaixy(iloc)*masslai
-         masssai             = 1000.0/3.0
-         this%model%stmassxy(iloc) = this%model%xsaixy(iloc)*masssai
-         this%model%rtmassxy(iloc) = 500.0      
-         this%model%woodxy  (iloc) = 500.0       
-         this%model%stblcpxy(iloc) = 1000.0      
-         this%model%fastcpxy(iloc) = 1000.0     
-      end if
+          if ((this%model%vegtype(iloc) == isbarren_table) .or. (this%model%vegtype(iloc) == isice_table) .or. &
+              (this%model%vegtype(iloc) == isurban_table)  .or. (this%model%vegtype(iloc) == iswater_table) .or. &
+              (this%model%vegtype(iloc) < 0)) then
+             this%model%xlaixy  (iloc) = 0.0
+             this%model%xsaixy  (iloc) = 0.0
+             this%model%lfmassxy(iloc) = 0.0
+             this%model%stmassxy(iloc) = 0.0
+             this%model%rtmassxy(iloc) = 0.0
+             this%model%woodxy  (iloc) = 0.0
+             this%model%stblcpxy(iloc) = 0.0
+             this%model%fastcpxy(iloc) = 0.0
+          else
+             this%model%xlaixy  (iloc) = max(laim_table(this%model%vegtype(iloc), month),0.05)
+             this%model%xsaixy  (iloc) = max(this%model%xlaixy(iloc)*0.1,0.05)
+             masslai             = 1000.0/max(sla_table(this%model%vegtype(iloc)),1.0)
+             this%model%lfmassxy(iloc) = this%model%xlaixy(iloc)*masslai
+             masssai             = 1000.0/3.0
+             this%model%stmassxy(iloc) = this%model%xsaixy(iloc)*masssai
+             this%model%rtmassxy(iloc) = 500.0
+             this%model%woodxy  (iloc) = 500.0
+             this%model%stblcpxy(iloc) = 1000.0
+             this%model%fastcpxy(iloc) = 1000.0
+          end if
   
-      if (this%model%vegtype(iloc)  == isice_table )  then
-         do ilevel = 1, namelist%num_soil_levels
-            this%model%stc(iloc,ilevel) = min(this%model%stc(iloc,ilevel),min(this%model%tg3(iloc),263.15))
-         end do
-         this%model%smc(iloc,:) = 1.0
-         this%model%slc(iloc,:) = 0.0
-      end if
+          if (this%model%vegtype(iloc)  == isice_table )  then
+             do ilevel = 1, namelist%num_soil_levels
+                this%model%stc(iloc,ilevel) = min(this%model%stc(iloc,ilevel),min(this%model%tg3(iloc),263.15))
+             end do
+             this%model%smc(iloc,:) = 1.0
+             this%model%slc(iloc,:) = 0.0
+          end if
   
-      depthm = this%model%snwdph(iloc)/1000.0  ! snow depth in meters
+          depthm = this%model%snwdph(iloc)/1000.0  ! snow depth in meters
   
-      if (this%model%weasd(iloc) /= 0.0 .and. depthm == 0.0 ) then
-        depthm = this%model%weasd(iloc)/1000.0*10.0 ! assume 10/1 ratio
-      endif
+          if (this%model%weasd(iloc) /= 0.0 .and. depthm == 0.0 ) then
+            depthm = this%model%weasd(iloc)/1000.0*10.0 ! assume 10/1 ratio
+          endif
   
-      if (this%model%vegtype(iloc) == isice_table) then  ! land ice in MODIS/IGBP
-         if (this%model%weasd(iloc) < 0.1) then
-            this%model%weasd(iloc) = 0.1
-            depthm = this%model%weasd(iloc)/1000.0*10.0 
-         end if
-      end if
+          if (this%model%vegtype(iloc) == isice_table) then  ! land ice in MODIS/IGBP
+             if (this%model%weasd(iloc) < 0.1) then
+                this%model%weasd(iloc) = 0.1
+                depthm = this%model%weasd(iloc)/1000.0*10.0
+             end if
+          end if
   
-      dzsno = 0.0
-      if (depthm < 0.025 ) then
-         this%model%snowxy(iloc) = 0.0
-         dzsno(-2:0) = 0.0
-      elseif (depthm >= 0.025 .and. depthm <= 0.05 ) then
-         this%model%snowxy(iloc) = -1.0
-         dzsno(0) = depthm
-      elseif (depthm > 0.05 .and. depthm <= 0.10 ) then
-         this%model%snowxy(iloc) = -2.0
-         dzsno(-1) = 0.5*depthm
-         dzsno(0) = 0.5*depthm
-      elseif (depthm > 0.10 .and. depthm <= 0.25 ) then
-         this%model%snowxy(iloc) = -2.0
-         dzsno(-1) = 0.05
-         dzsno(0) = depthm - 0.05
-      elseif (depthm > 0.25 .and. depthm <= 0.45 ) then
-         this%model%snowxy(iloc) = -3.0
-         dzsno(-2) = 0.05
-         dzsno(-1) = 0.5*(depthm-0.05)
-         dzsno(0) = 0.5*(depthm-0.05)
-      elseif (depthm > 0.45) then 
-         this%model%snowxy(iloc) = -3.0
-         dzsno(-2) = 0.05
-         dzsno(-1) = 0.20
-         dzsno(0) = depthm - 0.05 - 0.20
-      endif
+          dzsno = 0.0
+          if (depthm < 0.025 ) then
+             this%model%snowxy(iloc) = 0.0
+             dzsno(-2:0) = 0.0
+          elseif (depthm >= 0.025 .and. depthm <= 0.05 ) then
+             this%model%snowxy(iloc) = -1.0
+             dzsno(0) = depthm
+          elseif (depthm > 0.05 .and. depthm <= 0.10 ) then
+             this%model%snowxy(iloc) = -2.0
+             dzsno(-1) = 0.5*depthm
+             dzsno(0) = 0.5*depthm
+          elseif (depthm > 0.10 .and. depthm <= 0.25 ) then
+             this%model%snowxy(iloc) = -2.0
+             dzsno(-1) = 0.05
+             dzsno(0) = depthm - 0.05
+          elseif (depthm > 0.25 .and. depthm <= 0.45 ) then
+             this%model%snowxy(iloc) = -3.0
+             dzsno(-2) = 0.05
+             dzsno(-1) = 0.5*(depthm-0.05)
+             dzsno(0) = 0.5*(depthm-0.05)
+          elseif (depthm > 0.45) then 
+             this%model%snowxy(iloc) = -3.0
+             dzsno(-2) = 0.05
+             dzsno(-1) = 0.20
+             dzsno(0) = depthm - 0.05 - 0.20
+          endif
   
-      ! Now we have the snowxy field
-      ! snice + snliq + tsno allocation and compute them from what we have
-      this%model%tsnoxy (iloc,-2:0) = 0.0
-      this%model%snicexy(iloc,-2:0) = 0.0
-      this%model%snliqxy(iloc,-2:0) = 0.0
-      this%model%zsnsoxy(iloc,-2:namelist%num_soil_levels) = 0.0
+          ! Now we have the snowxy field
+          ! snice + snliq + tsno allocation and compute them from what we have
+          this%model%tsnoxy (iloc,-2:0) = 0.0
+          this%model%snicexy(iloc,-2:0) = 0.0
+          this%model%snliqxy(iloc,-2:0) = 0.0
+          this%model%zsnsoxy(iloc,-2:namelist%num_soil_levels) = 0.0
   
-      isnow = nint(this%model%snowxy(iloc))+1 ! snowxy <=0.0, dzsno >= 0.0
+          isnow = nint(this%model%snowxy(iloc))+1 ! snowxy <=0.0, dzsno >= 0.0
   
-      do ilevel = isnow, 0
-         this%model%tsnoxy (iloc,ilevel) = this%model%tgxy(iloc)
-         this%model%snliqxy(iloc,ilevel) = 0.0
-         this%model%snicexy(iloc,ilevel) = dzsno(ilevel)/depthm*this%model%weasd(iloc)
-      end do
+          do ilevel = isnow, 0
+             this%model%tsnoxy (iloc,ilevel) = this%model%tgxy(iloc)
+             this%model%snliqxy(iloc,ilevel) = 0.0
+             this%model%snicexy(iloc,ilevel) = dzsno(ilevel)/depthm*this%model%weasd(iloc)
+          end do
   
-      this%model%zsnsoxy(iloc,isnow) = -1.0*dzsno(isnow)
-      do ilevel = isnow+1, 0
-         this%model%zsnsoxy(iloc,ilevel) = this%model%zsnsoxy(iloc,ilevel-1)-dzsno(ilevel)
-      end do
-      do ilevel = 1, namelist%num_soil_levels
-         this%model%zsnsoxy(iloc,ilevel) = this%model%zsnsoxy(iloc,ilevel-1)-namelist%soil_level_thickness(ilevel)
-      end do
+          this%model%zsnsoxy(iloc,isnow) = -1.0*dzsno(isnow)
+          do ilevel = isnow+1, 0
+             this%model%zsnsoxy(iloc,ilevel) = this%model%zsnsoxy(iloc,ilevel-1)-dzsno(ilevel)
+          end do
+          do ilevel = 1, namelist%num_soil_levels
+             this%model%zsnsoxy(iloc,ilevel) = this%model%zsnsoxy(iloc,ilevel-1)-namelist%soil_level_thickness(ilevel)
+          end do
   
-      ! TODO: Should not need to initialize these
-      this%model%smoiseq(iloc,:)  = 0.0
-      this%model%smcwtdxy(iloc)   = 0.0
-      this%model%deeprechxy(iloc) = 0.0
-      this%model%rechxy(iloc)     = 0.0
+          ! TODO: Should not need to initialize these
+          this%model%smoiseq(iloc,:)  = 0.0
+          this%model%smcwtdxy(iloc)   = 0.0
+          this%model%deeprechxy(iloc) = 0.0
+          this%model%rechxy(iloc)     = 0.0
 
-      ! TODO: Fixed number given. This could be coupling field
-      this%model%rhonewsn1(iloc)= 200.0
+          ! TODO: Fixed number given. This could be coupling field
+          this%model%rhonewsn1(iloc)= 200.0
+       end if
     end do ! iloc
     
   end subroutine InitializeStates
