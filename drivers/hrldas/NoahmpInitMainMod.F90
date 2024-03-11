@@ -24,7 +24,7 @@ contains
 
     ! local variables
     integer                                     :: ide,jde,its,jts,itf,jtf
-    integer                                     :: I,J,errflag,NS
+    integer                                     :: I,J,errflag,NS,IZ
     logical                                     :: urbanpt_flag
     real(kind=kind_noahmp)                      :: BEXP, SMCMAX, PSISAT, FK
     real(kind=kind_noahmp), parameter           :: BLIM  = 5.5
@@ -263,6 +263,40 @@ contains
        if ( NoahmpIO%IOPT_RUNSUB == 5 ) then
           NoahmpIO%STEPWTD = nint(NoahmpIO%WTDDT * 60.0 / NoahmpIO%DTBL)
           NoahmpIO%STEPWTD = max(NoahmpIO%STEPWTD,1)
+       endif
+
+    else
+
+       if (NoahmpIO%IOPT_ALB == 3 )then
+          itf = min0(NoahmpIO%ite, ide-1)
+          jtf = min0(NoahmpIO%jte, jde-1)
+          do J = jts, jtf
+             do I = its, itf
+                do IZ = -NoahmpIO%NSNOW+1, 0
+                   if ((NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J)) > 0.0) then
+                      NoahmpIO%MassConcBCPHIXY (I,IZ,J)  = NoahmpIO%BCPHIXY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
+                      NoahmpIO%MassConcBCPHOXY (I,IZ,J)  = NoahmpIO%BCPHOXY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
+                      NoahmpIO%MassConcOCPHIXY (I,IZ,J)  = NoahmpIO%OCPHIXY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
+                      NoahmpIO%MassConcOCPHOXY (I,IZ,J)  = NoahmpIO%OCPHOXY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
+                      NoahmpIO%MassConcDUST1XY (I,IZ,J)  = NoahmpIO%DUST1XY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
+                      NoahmpIO%MassConcDUST2XY (I,IZ,J)  = NoahmpIO%DUST2XY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
+                      NoahmpIO%MassConcDUST3XY (I,IZ,J)  = NoahmpIO%DUST3XY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
+                      NoahmpIO%MassConcDUST4XY (I,IZ,J)  = NoahmpIO%DUST4XY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
+                      NoahmpIO%MassConcDUST5XY (I,IZ,J)  = NoahmpIO%DUST5XY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
+                   else
+                      NoahmpIO%MassConcBCPHIXY (I,IZ,J)  = 0.0
+                      NoahmpIO%MassConcBCPHOXY (I,IZ,J)  = 0.0
+                      NoahmpIO%MassConcOCPHIXY (I,IZ,J)  = 0.0
+                      NoahmpIO%MassConcOCPHOXY (I,IZ,J)  = 0.0
+                      NoahmpIO%MassConcDUST1XY (I,IZ,J)  = 0.0
+                      NoahmpIO%MassConcDUST2XY (I,IZ,J)  = 0.0
+                      NoahmpIO%MassConcDUST3XY (I,IZ,J)  = 0.0
+                      NoahmpIO%MassConcDUST4XY (I,IZ,J)  = 0.0
+                      NoahmpIO%MassConcDUST5XY (I,IZ,J)  = 0.0
+                   endif
+                enddo
+             enddo
+          enddo            
        endif
 
     endif ! NoahmpIO%restart_flag

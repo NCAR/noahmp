@@ -41,6 +41,7 @@ contains
 
 ! --------------------------------------------------------------------
     associate(                                                                       &
+              OptSnowAlbedo          => noahmp%config%nmlist%OptSnowAlbedo          ,& ! in,  options for ground snow surface albedo
               OptSoilSupercoolWater  => noahmp%config%nmlist%OptSoilSupercoolWater  ,& ! in,    options for soil supercooled liquid water
               NumSoilLayer           => noahmp%config%domain%NumSoilLayer           ,& ! in,    number of soil layers
               NumSnowLayerMax        => noahmp%config%domain%NumSnowLayerMax        ,& ! in,    maximum number of snow layers
@@ -62,7 +63,8 @@ contains
               IndexPhaseChange       => noahmp%water%state%IndexPhaseChange         ,& ! out,   phase change index [0-none;1-melt;2-refreeze]
               SoilSupercoolWater     => noahmp%water%state%SoilSupercoolWater       ,& ! out,   supercooled water in soil [kg/m2]
               PondSfcThinSnwMelt     => noahmp%water%state%PondSfcThinSnwMelt       ,& ! out,   surface ponding [mm] from melt when thin snow w/o layer
-              MeltGroundSnow         => noahmp%water%flux%MeltGroundSnow             & ! out,   ground snowmelt rate [mm/s]
+              MeltGroundSnow         => noahmp%water%flux%MeltGroundSnow            ,& ! out,   ground snowmelt rate [mm/s]
+              SnowFreezeRate         => noahmp%water%flux%SnowFreezeRate             & ! out,   rate of snow freezing [mm/s]
              )
 ! ----------------------------------------------------------------------
 
@@ -84,6 +86,7 @@ contains
     MeltGroundSnow     = 0.0
     PondSfcThinSnwMelt = 0.0
     HeatLhTotPhsChg    = 0.0
+    if (OptSnowAlbedo == 3) SnowFreezeRate(:)  = 0.0
 
     ! supercooled water content
     do LoopInd = -NumSnowLayerMax+1, NumSoilLayer 
@@ -228,6 +231,9 @@ contains
           ! snow melting rate
           if ( LoopInd < 1 ) then
              MeltGroundSnow = MeltGroundSnow + max(0.0, (MassWatIceInit(LoopInd)-MassWatIceTmp(LoopInd))) / MainTimeStep
+             if (OptSnowAlbedo == 3) then
+                SnowFreezeRate(LoopInd) = max(0.0, (MassWatIceTmp(LoopInd)-MassWatIceInit(LoopInd))) / MainTimeStep
+             endif
           endif
        endif
     enddo

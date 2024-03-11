@@ -6,6 +6,7 @@ module ConfigVarType
 ! ------------------------ Code history -----------------------------------
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! SNICAR: Adding related variables (T.-S. Lin, C. He et al. 2023)
 ! -------------------------------------------------------------------------
 
   use Machine
@@ -51,6 +52,7 @@ module ConfigVarType
     integer :: OptSnowAlbedo               ! options for ground snow surface albedo
                                               ! 1 -> BATS snow albedo scheme (default)
                                               ! 2 -> CLASS snow albedo scheme
+                                              ! 3 -> SNICAR snow albedo scheme
     integer :: OptCanopyRadiationTransfer  ! options for canopy radiation transfer
                                               ! 1 -> modified two-stream (gap=F(solar angle,3D structure, etc)<1-VegFrac)
                                               ! 2 -> two-stream applied to grid-cell (gap = 0)
@@ -120,8 +122,27 @@ module ConfigVarType
     integer :: OptGlacierTreatment         ! options for glacier treatment
                                               ! 1 -> include phase change of ice (default)
                                               ! 2 -> ice treatment more like original Noah
-
-  end type namelist_type
+    !SNICAR
+    integer :: OptSnicarSnowShape          ! options for snow grain shape in SNICAR (He et al. 2017 JC)
+                                              ! 1 -> sphere
+                                              ! 2 -> spheroid
+                                              ! 3 -> hexagonal plate
+                                              ! 4 -> Koch snowflake
+    integer :: OptSnicarRTSolver           ! option for two different SNICAR radiative transfer solver
+                                              ! 1 -> Toon et a 1989 2-stream (Flanner et al. 2007)
+                                              ! 2 -> Adding-doubling 2-stream (Dang et al.2019)
+    logical :: FlagSnicarSnowBCIntmix      ! flag to determine SNICAR, false->external mixing for all BC  ; true->internal mixing for hydrophilic BC
+    logical :: FlagSnicarSnowDustIntmix    ! flag to determine SNICAR, false->external mixing for all dust; true->internal mixing for all dust
+    logical :: FlagSnicarUseAerosol        ! option to turn on/off aerosol deposition flux effect in snow in SNICAR
+                                             !  .false. -> without aerosol deposition flux effect
+                                             !  .true.  -> with aerosol deposition flux effect
+    logical :: FlagSnicarUseOC             ! option to activate OC in snow in SNICAR
+                                             !  .false. -> without organic carbon in snow
+                                             !  .true.  -> with organic carbon in snow
+    logical :: FlagSnicarAerosolReadTable  ! option to read aerosol deposition fluxes from table or not
+                                             !  .false. -> data read from NetCDF forcing file
+                                             !  .true.  -> data read from table
+   end type namelist_type
 
 
 !=== define "domain" sub-type of config (config%domain%variable)
@@ -153,6 +174,11 @@ module ConfigVarType
     integer                :: NumDayInYear                ! Number of days in the particular year
     integer                :: RunoffSlopeType             ! underground runoff slope term type
     integer                :: NumSoilTimeStep             ! number of timesteps to calculate soil processes
+    integer                :: idx_T_max                   ! maxiumum temperature index used in aging lookup table [idx]
+    integer                :: idx_Tgrd_max                ! maxiumum temperature gradient index used in aging lookup table [idx]
+    integer                :: idx_rhos_max                ! maxiumum snow density index used in aging lookup table [idx]
+    integer                :: NumSnicarRadBand            ! wavelength bands used in SNICAR snow albedo calculation
+    integer                :: idx_Mie_snw_mx              ! number of effective radius indices used in Mie lookup table [idx] 
     real(kind=kind_noahmp) :: MainTimeStep                ! noahmp main timestep [sec]
     real(kind=kind_noahmp) :: SoilTimeStep                ! soil timestep [sec]
     real(kind=kind_noahmp) :: GridSize                    ! noahmp model grid spacing [m]

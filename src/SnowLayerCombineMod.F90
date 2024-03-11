@@ -37,6 +37,7 @@ contains
 
 ! --------------------------------------------------------------------
     associate(                                                                       &
+              OptSnowAlbedo          => noahmp%config%nmlist%OptSnowAlbedo          ,& ! in,    options for ground snow surface albedo
               NumSnowLayerNeg        => noahmp%config%domain%NumSnowLayerNeg        ,& ! inout, actual number of snow layers (negative)
               ThicknessSnowSoilLayer => noahmp%config%domain%ThicknessSnowSoilLayer ,& ! inout, thickness of snow/soil layers [m]
               SnowDepth              => noahmp%water%state%SnowDepth                ,& ! inout, snow depth [m]
@@ -46,6 +47,16 @@ contains
               SoilLiqWater           => noahmp%water%state%SoilLiqWater             ,& ! inout, soil liquid moisture [m3/m3]
               SoilIce                => noahmp%water%state%SoilIce                  ,& ! inout, soil ice moisture [m3/m3]
               TemperatureSoilSnow    => noahmp%energy%state%TemperatureSoilSnow     ,& ! inout, snow and soil layer temperature [K]
+              MassBChydropho         => noahmp%water%state%MassBChydropho           ,& ! inout, mass of hydrophobic Black Carbon in snow [kg m-2]
+              MassBChydrophi         => noahmp%water%state%MassBChydrophi           ,& ! inout, mass of hydrophillic Black Carbon in snow [kg m-2]
+              MassOChydropho         => noahmp%water%state%MassOChydropho           ,& ! inout, mass of hydrophobic Organic Carbon in snow [kg m-2]
+              MassOChydrophi         => noahmp%water%state%MassOChydrophi           ,& ! inout, mass of hydrophillic Organic Carbon in snow [kg m-2]
+              MassDust1              => noahmp%water%state%MassDust1                ,& ! inout, mass of dust species 1 in snow [kg m-2]
+              MassDust2              => noahmp%water%state%MassDust2                ,& ! inout, mass of dust species 2 in snow [kg m-2]
+              MassDust3              => noahmp%water%state%MassDust3                ,& ! inout, mass of dust species 3 in snow [kg m-2]
+              MassDust4              => noahmp%water%state%MassDust4                ,& ! inout, mass of dust species 4 in snow [kg m-2]
+              MassDust5              => noahmp%water%state%MassDust5                ,& ! inout, mass of dust species 5 in snow [kg m-2]
+              SnowRadius             => noahmp%water%state%SnowRadius               ,& ! inout, effective grain radius [microns, m-6]
               PondSfcThinSnwComb     => noahmp%water%state%PondSfcThinSnwComb       ,& ! out,   surface ponding [mm] from liquid in thin snow layer combination
               PondSfcThinSnwTrans    => noahmp%water%state%PondSfcThinSnwTrans       & ! out,   surface ponding [mm] from thin snow liquid during transition from multilayer to no layer
              )
@@ -60,11 +71,38 @@ contains
              SnowLiqWater(J+1)           = SnowLiqWater(J+1) + SnowLiqWater(J)
              SnowIce(J+1)                = SnowIce(J+1) + SnowIce(J)
              ThicknessSnowSoilLayer(J+1) = ThicknessSnowSoilLayer(J+1) + ThicknessSnowSoilLayer(J)
+
+             if ( OptSnowAlbedo == 3 ) then
+                MassBChydropho(J+1)         = MassBChydropho(J+1) +  MassBChydropho(J)
+                MassBChydrophi(J+1)         = MassBChydrophi(J+1) +  MassBChydrophi(J)
+                MassOChydropho(J+1)         = MassOChydropho(J+1) +  MassOChydropho(J)
+                MassOChydrophi(J+1)         = MassOChydrophi(J+1) +  MassOChydrophi(J)
+                MassDust1(J+1)              = MassDust1(J+1) +  MassDust1(J)
+                MassDust2(J+1)              = MassDust2(J+1) +  MassDust2(J)
+                MassDust3(J+1)              = MassDust3(J+1) +  MassDust3(J)
+                MassDust4(J+1)              = MassDust4(J+1) +  MassDust4(J)
+                MassDust5(J+1)              = MassDust5(J+1) +  MassDust5(J)
+             endif
+
           else
              if ( NumSnowLayerNeg < -1 ) then    ! MB/KM: change to NumSnowLayerNeg
+!             if ( NumSnowLayerOld < -1 ) then    ! MB/KM: change to NumSnowLayerNeg !samlin
                 SnowLiqWater(J-1)           = SnowLiqWater(J-1) + SnowLiqWater(J)
                 SnowIce(J-1)                = SnowIce(J-1) + SnowIce(J)
                 ThicknessSnowSoilLayer(J-1) = ThicknessSnowSoilLayer(J-1) + ThicknessSnowSoilLayer(J)
+
+                if ( OptSnowAlbedo == 3 ) then
+                   MassBChydropho(J-1)         = MassBChydropho(J-1) +  MassBChydropho(J)
+                   MassBChydrophi(J-1)         = MassBChydrophi(J-1) +  MassBChydrophi(J)
+                   MassOChydropho(J-1)         = MassOChydropho(J-1) +  MassOChydropho(J)
+                   MassOChydrophi(J-1)         = MassOChydrophi(J-1) +  MassOChydrophi(J)
+                   MassDust1(J-1)              = MassDust1(J-1) +  MassDust1(J)
+                   MassDust2(J-1)              = MassDust2(J-1) +  MassDust2(J)
+                   MassDust3(J-1)              = MassDust3(J-1) +  MassDust3(J)
+                   MassDust4(J-1)              = MassDust4(J-1) +  MassDust4(J)
+                   MassDust5(J-1)              = MassDust5(J-1) +  MassDust5(J)
+                endif
+
              else
                 if ( SnowIce(J) >= 0.0 ) then
                    PondSfcThinSnwComb = SnowLiqWater(J)                ! NumSnowLayerNeg WILL GET SET TO ZERO BELOW; PondSfcThinSnwComb WILL GET 
@@ -82,6 +120,21 @@ contains
                 SnowLiqWater(J)   = 0.0
                 SnowIce(J)        = 0.0
                 ThicknessSnowSoilLayer(J) = 0.0
+
+                !SNICAR, aerosol flux may infiltrate into top soil like PondSfcThinSnwComb, it
+                !would be more thorough to do so later  
+                if ( OptSnowAlbedo == 3 ) then
+                   MassBChydropho(J) = 0.0 
+                   MassBChydrophi(J) = 0.0       
+                   MassOChydropho(J) = 0.0    
+                   MassOChydrophi(J) = 0.0    
+                   MassDust1(J)      = 0.0        
+                   MassDust2(J)      = 0.0        
+                   MassDust3(J)      = 0.0     
+                   MassDust4(J)      = 0.0  
+                   MassDust5(J)      = 0.0
+                endif
+
              endif ! if(NumSnowLayerOld < -1)
 
              !SoilLiqWater(1) = SoilLiqWater(1) + SnowLiqWater(J)/(ThicknessSnowSoilLayer(1)*1000.0)
@@ -95,6 +148,20 @@ contains
                 SnowLiqWater(I)           = SnowLiqWater(I-1)
                 SnowIce(I)                = SnowIce(I-1)
                 ThicknessSnowSoilLayer(I) = ThicknessSnowSoilLayer(I-1)
+
+                if ( OptSnowAlbedo == 3 ) then
+                   MassBChydropho(I)         = MassBChydropho(I-1)
+                   MassBChydrophi(I)         = MassBChydrophi(I-1)
+                   MassOChydropho(I)         = MassOChydropho(I-1)
+                   MassOChydrophi(I)         = MassOChydrophi(I-1)
+                   MassDust1(I)              = MassDust1(I-1)
+                   MassDust2(I)              = MassDust2(I-1)
+                   MassDust3(I)              = MassDust3(I-1)
+                   MassDust4(I)              = MassDust4(I-1)
+                   MassDust5(I)              = MassDust5(I-1)
+                   SnowRadius(I)             = SnowRadius(I-1)
+                endif
+
              enddo
           endif
           NumSnowLayerNeg = NumSnowLayerNeg + 1
@@ -128,6 +195,8 @@ contains
        NumSnowLayerNeg     = 0
        SnowWaterEquiv      = SnowIceTmp
        PondSfcThinSnwTrans = SnowLiqTmp                ! LIMIT OF NumSnowLayerNeg < 0 MEANS INPUT PONDING
+       !SNICAR, aerosol flux may infiltrate into top soil like PondSfcThinSnwTrans, it
+       !would be more thorough to do so later
        if ( SnowWaterEquiv <= 0.0 ) SnowDepth = 0.0    ! SHOULD BE ZERO; SEE ABOVE
     endif
 
@@ -155,9 +224,24 @@ contains
                 L = IndNeighbor
              endif
 
+             if ( OptSnowAlbedo == 3 ) then
+                MassBChydropho(J)         = MassBChydropho(J) +  MassBChydropho(L)
+                MassBChydrophi(J)         = MassBChydrophi(J) +  MassBChydrophi(L)
+                MassOChydropho(J)         = MassOChydropho(J) +  MassOChydropho(L)
+                MassOChydrophi(J)         = MassOChydrophi(J) +  MassOChydrophi(L)
+                MassDust1(J)              = MassDust1(J) +  MassDust1(L)
+                MassDust2(J)              = MassDust2(J) +  MassDust2(L)
+                MassDust3(J)              = MassDust3(J) +  MassDust3(L)
+                MassDust4(J)              = MassDust4(J) +  MassDust4(L)
+                MassDust5(J)              = MassDust5(J) +  MassDust5(L)
+                SnowRadius(J)             = (SnowRadius(J) * (SnowLiqWater(J) + SnowIce(J)) + SnowRadius(L) * (SnowLiqWater(L) + SnowIce(L)) ) / &
+                                            (SnowLiqWater(J) + SnowIce(J) + SnowLiqWater(L) + SnowIce(L))
+             endif
+
              ! update combined snow water & temperature
              call SnowLayerWaterCombo(ThicknessSnowSoilLayer(J), SnowLiqWater(J), SnowIce(J), TemperatureSoilSnow(J), &
                                       ThicknessSnowSoilLayer(L), SnowLiqWater(L), SnowIce(L), TemperatureSoilSnow(L) )
+
 
              ! Now shift all elements above this down one.
              if ( (J-1) > (NumSnowLayerNeg+1) ) then
@@ -166,6 +250,20 @@ contains
                    SnowIce(K)                = SnowIce(K-1)
                    SnowLiqWater(K)           = SnowLiqWater(K-1)
                    ThicknessSnowSoilLayer(K) = ThicknessSnowSoilLayer(K-1)
+
+                   if ( OptSnowAlbedo == 3 ) then
+                      MassBChydropho(K)         = MassBChydropho(K-1) 
+                      MassBChydrophi(K)         = MassBChydrophi(K-1) 
+                      MassOChydropho(K)         = MassOChydropho(K-1) 
+                      MassOChydrophi(K)         = MassOChydrophi(K-1) 
+                      MassDust1(K)              = MassDust1(K-1) 
+                      MassDust2(K)              = MassDust2(K-1) 
+                      MassDust3(K)              = MassDust3(K-1) 
+                      MassDust4(K)              = MassDust4(K-1) 
+                      MassDust5(K)              = MassDust5(K-1)
+                      SnowRadius(K)             = SnowRadius(K-1)
+                   endif
+
                 enddo
              endif
              ! Decrease the number of snow layers

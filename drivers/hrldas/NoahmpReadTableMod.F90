@@ -203,6 +203,13 @@ contains
                                                       sr2006_psi_et_d, sr2006_psi_et_e, sr2006_psi_et_f, sr2006_psi_et_g,    &
                                                       sr2006_psi_e_a, sr2006_psi_e_b, sr2006_psi_e_c, sr2006_smcmax_a,       &
                                                       sr2006_smcmax_b
+    ! SNICAR
+    real(kind=kind_noahmp)                   ::       DepBChydropho,DepBChydrophi,DepOChydropho,DepOChydrophi,               &
+                                                      DepDust1,DepDust2,DepDust3,DepDust4,DepDust5,                          &
+                                                      SnowRadiusMin,FreshSnowRadiusMax,SnowRadiusRefrz
+    namelist / noahmp_snicar_parameters /             DepBChydropho,DepBChydrophi,DepOChydropho,DepOChydrophi,               &
+                                                      DepDust1,DepDust2,DepDust3,DepDust4,DepDust5,                          &
+                                                      SnowRadiusMin,FreshSnowRadiusMax,SnowRadiusRefrz
 
     !--------------------------------------------------
     !=== allocate multi-dim input table variables
@@ -640,6 +647,20 @@ contains
     NoahmpIO%sr2006_psi_e_c_TABLE       = undefined_real
     NoahmpIO%sr2006_smcmax_a_TABLE      = undefined_real
     NoahmpIO%sr2006_smcmax_b_TABLE      = undefined_real
+   
+    !SNICAR
+    NoahmpIO%DepBChydropho_TABLE        = undefined_real
+    NoahmpIO%DepBChydrophi_TABLE        = undefined_real
+    NoahmpIO%DepOChydropho_TABLE        = undefined_real
+    NoahmpIO%DepOChydrophi_TABLE        = undefined_real
+    NoahmpIO%DepDust1_TABLE             = undefined_real
+    NoahmpIO%DepDust2_TABLE             = undefined_real
+    NoahmpIO%DepDust3_TABLE             = undefined_real
+    NoahmpIO%DepDust4_TABLE             = undefined_real
+    NoahmpIO%DepDust5_TABLE             = undefined_real
+    NoahmpIO%SnowRadiusMin_TABLE        = undefined_real
+    NoahmpIO%FreshSnowRadiusMax_TABLE   = undefined_real
+    NoahmpIO%SnowRadiusRefrz_TABLE      = undefined_real
 
     !---------------------------------------------------------------
     ! transfer values from table to input variables
@@ -1176,6 +1197,33 @@ contains
     NoahmpIO%sr2006_psi_e_c_TABLE       = sr2006_psi_e_c
     NoahmpIO%sr2006_smcmax_a_TABLE      = sr2006_smcmax_a
     NoahmpIO%sr2006_smcmax_b_TABLE      = sr2006_smcmax_b
+
+    !---------------- NoahmpTable.TBL snicar parameters
+    inquire( file='NoahmpTable.TBL', exist=file_named )
+    if ( file_named ) then
+      open(15, file="NoahmpTable.TBL", status='old', form='formatted', action='read', iostat=ierr)
+    else
+      open(15, status='old', form='formatted', action='read', iostat=ierr)
+    end if
+    if (ierr /= 0) then
+       write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+    endif
+    read(15,noahmp_snicar_parameters)
+    close(15)
+
+    ! assign values
+    NoahmpIO%DepBChydropho_TABLE      = DepBChydropho
+    NoahmpIO%DepBChydrophi_TABLE      = DepBChydrophi
+    NoahmpIO%DepOChydropho_TABLE      = DepOChydropho
+    NoahmpIO%DepOChydrophi_TABLE      = DepOChydrophi
+    NoahmpIO%DepDust1_TABLE           = DepDust1
+    NoahmpIO%DepDust2_TABLE           = DepDust2
+    NoahmpIO%DepDust3_TABLE           = DepDust3
+    NoahmpIO%DepDust4_TABLE           = DepDust4
+    NoahmpIO%DepDust5_TABLE           = DepDust5
+    NoahmpIO%SnowRadiusMin_TABLE      = SnowRadiusMin
+    NoahmpIO%FreshSnowRadiusMax_TABLE = FreshSnowRadiusMax
+    NoahmpIO%SnowRadiusRefrz_TABLE    = SnowRadiusRefrz
 
   end subroutine NoahmpReadTable
 

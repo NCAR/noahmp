@@ -9,8 +9,11 @@ module SurfaceAlbedoMod
   use SnowAgingBatsMod,            only : SnowAgingBats
   use SnowAlbedoBatsMod,           only : SnowAlbedoBats
   use SnowAlbedoClassMod,          only : SnowAlbedoClass
+  use SnowAlbedoSnicarMod,         only : SnowAlbedoSnicar
   use GroundAlbedoMod,             only : GroundAlbedo
   use CanopyRadiationTwoStreamMod, only : CanopyRadiationTwoStream
+  use SnowFreshRadiusMod,          only : SnowFreshRadius
+  use SnowAgingSnicarMod,          only : SnowAgingSnicar
 
   implicit none
 
@@ -22,6 +25,7 @@ contains
 ! Original Noah-MP subroutine: ALBEDO
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! SNICAR: Adding snicar snow albedo (T.-S. Lin, C. He et al. 2023)
 ! -------------------------------------------------------------------------
 
     implicit none
@@ -51,6 +55,8 @@ contains
               AlbedoGrdDif        => noahmp%energy%state%AlbedoGrdDif         ,& ! out, ground albedo (diffuse: vis, nir)
               AlbedoSnowDir       => noahmp%energy%state%AlbedoSnowDir        ,& ! out, snow albedo for direct(1=vis, 2=nir)
               AlbedoSnowDif       => noahmp%energy%state%AlbedoSnowDif        ,& ! out, snow albedo for diffuse(1=vis, 2=nir)
+              FracRadSwAbsSnowDir => noahmp%energy%flux%FracRadSwAbsSnowDir   ,& ! out, direct solar flux factor absorbed by snow [frc] (-NumSnowLayerMax+1:1,NumSwRadBand)
+              FracRadSwAbsSnowDif => noahmp%energy%flux%FracRadSwAbsSnowDif   ,& ! out, diffuse solar flux factor absorbed by snow [frc] (-NumSnowLayerMax+1:1,NumSwRadBand)
               AlbedoSfcDir        => noahmp%energy%state%AlbedoSfcDir         ,& ! out, surface albedo (direct)
               AlbedoSfcDif        => noahmp%energy%state%AlbedoSfcDif         ,& ! out, surface albedo (diffuse)
               CanopySunlitFrac    => noahmp%energy%state%CanopySunlitFrac     ,& ! out, sunlit fraction of canopy
@@ -101,8 +107,16 @@ contains
        RadSwReflVegDif   (IndBand) = 0.0
        RadSwReflGrdDir   (IndBand) = 0.0
        RadSwReflGrdDif   (IndBand) = 0.0
+       FracRadSwAbsSnowDir(:,IndBand) = 0.0
+       FracRadSwAbsSnowDif(:,IndBand) = 0.0
     enddo
     VegAreaIndEff = LeafAreaIndEff + StemAreaIndEff
+
+    if ( OptSnowAlbedo == 3 ) then
+    ! snow radius
+       call SnowFreshRadius(noahmp)
+       call SnowAgingSnicar(noahmp)
+    endif
 
     ! solar radiation process is only done if there is light
     if ( CosSolarZenithAngle > 0 ) then
@@ -121,6 +135,7 @@ contains
        ! snow albedos
        if ( OptSnowAlbedo == 1 )  call SnowAlbedoBats(noahmp)
        if ( OptSnowAlbedo == 2 )  call SnowAlbedoClass(noahmp)
+       if ( OptSnowAlbedo == 3 )  call SnowAlbedoSnicar(noahmp)
 
        ! ground surface albedo
        call GroundAlbedo(noahmp)

@@ -35,6 +35,8 @@ contains
 !   SNICEXY is the frozen content of a snow layer.  Initial estimate based on SNOWH and SNOW
 !   SNLIQXY is the liquid content of a snow layer.  Initialized to 0.0
 !   ZNSNOXY is the layer depth from the surface.  
+!   SNRDSXY is the snow layer effective grain radius [microns, m-6]
+!   SNFRXY  is the snow layer rate of snow freezing [mm/s]
 !------------------------------------------------------------------------------------------
 
     itf = min0(NoahmpIO%ite, (NoahmpIO%ide+1)-1)
@@ -107,6 +109,23 @@ contains
           do IZ = NoahmpIO%ISNOWXY(I,J)+2, NoahmpIO%NSOIL
              NoahmpIO%ZSNSOXY(I,IZ,J) = NoahmpIO%ZSNSOXY(I,IZ-1,J) + DZSNSO(IZ)
           enddo
+
+          !SNICAR, can move out to initial file later
+          if (NoahmpIO%IOPT_ALB == 3 )then
+             NoahmpIO%ALBSOILDIRXY(I,:,J) = 0.0
+             NoahmpIO%ALBSOILDIFXY(I,:,J) = 0.0
+             NoahmpIO%SNRDSXY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%SNFRXY  (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%BCPHIXY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%BCPHOXY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%OCPHIXY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%OCPHOXY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%DUST1XY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%DUST2XY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%DUST3XY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%DUST4XY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%DUST5XY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+          endif
 
        enddo ! I
     enddo    ! J
