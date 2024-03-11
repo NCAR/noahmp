@@ -38,6 +38,19 @@ contains
     noahmp%forcing%PressureAirRefHeight     = undefined_real
     noahmp%forcing%TemperatureSoilBottom    = undefined_real
 
+    noahmp%forcing%DepBChydropho            = undefined_real    
+    noahmp%forcing%DepBChydrophi            = undefined_real
+    noahmp%forcing%DepOChydropho            = undefined_real
+    noahmp%forcing%DepOChydrophi            = undefined_real
+    noahmp%forcing%DepDust1                 = undefined_real
+    noahmp%forcing%DepDust2                 = undefined_real
+    noahmp%forcing%DepDust3                 = undefined_real
+    noahmp%forcing%DepDust4                 = undefined_real
+    noahmp%forcing%DepDust5                 = undefined_real
+
+    noahmp%forcing%VisFrac                  = undefined_real
+    noahmp%forcing%DirFrac                  = undefined_real
+
   end subroutine ForcingVarInitDefault
 
 end module ForcingVarInitMod

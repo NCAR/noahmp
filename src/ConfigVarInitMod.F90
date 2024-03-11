@@ -84,6 +84,22 @@ contains
     noahmp%config%domain%Latitude                    = undefined_real
     noahmp%config%domain%DepthSoilTempBottom         = undefined_real
 
+    !SNICAR
+    if (noahmp%config%nmlist%OptSnowAlbedo == 3 )then
+       noahmp%config%nmlist%OptSnicarSnowShape          = undefined_int
+       noahmp%config%nmlist%OptSnicarRTSolver           = undefined_int
+       noahmp%config%nmlist%FlagSnicarSnowBCIntmix      = .true.
+       noahmp%config%nmlist%FlagSnicarSnowDustIntmix    = .true.
+       noahmp%config%nmlist%FlagSnicarUseAerosol        = .true. 
+       noahmp%config%nmlist%FlagSnicarUseOC             = .true.
+       noahmp%config%nmlist%FlagSnicarAerosolReadTable  = .false.
+       noahmp%config%domain%idx_T_max                   = undefined_int
+       noahmp%config%domain%idx_Tgrd_max                = undefined_int
+       noahmp%config%domain%idx_rhos_max                = undefined_int
+       noahmp%config%domain%NumSnicarRadBand            = undefined_int
+       noahmp%config%domain%idx_Mie_snw_mx              = undefined_int
+    endif
+
   end subroutine ConfigVarInitDefault
 
 end module ConfigVarInitMod

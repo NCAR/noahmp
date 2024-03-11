@@ -34,6 +34,7 @@ contains
     real(kind=kind_noahmp)                :: SoilWatConductivity   ! soil water conductivity [m/s]
     real(kind=kind_noahmp)                :: InfilFacTmp           ! temporary infiltrability variable
     real(kind=kind_noahmp)                :: WeighFac              ! smith-parlang weighing parameter
+    real(kind=kind_noahmp)                :: IniSoilIce            ! zero soil ice
 
 ! --------------------------------------------------------------------
     associate(                                                                     &
@@ -50,6 +51,7 @@ contains
 
     ! smith-parlang weighing parameter, Gamma
     WeighFac = 0.82
+    IniSoilIce = 0.0
     IndSoil  = 1
 
     ! check whether we are estimating infiltration for current SoilMoisture or SoilMoistureWilt
@@ -57,7 +59,7 @@ contains
 
        ! estimate initial soil hydraulic conductivty (Ki in the equation) (m/s)
        call SoilDiffusivityConductivityOpt2(noahmp, SoilWatDiffusivity, SoilWatConductivity, &
-                                            SoilMoistureWilt(IndSoil), 0.0, IndSoil)
+                                            SoilMoistureWilt(IndSoil), IniSoilIce, IndSoil)
 
        ! Maximum infiltrability based on the Eq. 6.25. (m/s)
        InfilFacTmp = InfilCapillaryDynVic * (SoilMoistureSat(IndSoil) - SoilMoistureWilt(IndSoil)) * &

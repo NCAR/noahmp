@@ -50,6 +50,8 @@ contains
               RadSwDownRefHeight      => noahmp%forcing%RadSwDownRefHeight           ,& ! in,  downward shortwave radiation [W/m2] at reference height
               WindEastwardRefHeight   => noahmp%forcing%WindEastwardRefHeight        ,& ! in,  wind speed [m/s] in eastward direction at reference height
               WindNorthwardRefHeight  => noahmp%forcing%WindNorthwardRefHeight       ,& ! in,  wind speed [m/s] in northward direction at reference height
+              VisFrac                 => noahmp%forcing%VisFrac                      ,& ! in,
+              DirFrac                 => noahmp%forcing%DirFrac                      ,& ! in,
               SnowfallDensityMax      => noahmp%water%param%SnowfallDensityMax       ,& ! in,  maximum fresh snowfall density [kg/m3]
               TemperaturePotRefHeight => noahmp%energy%state%TemperaturePotRefHeight ,& ! out, surface potential temperature [K]
               PressureVaporRefHeight  => noahmp%energy%state%PressureVaporRefHeight  ,& ! out, vapor pressure air [Pa] at reference height
@@ -78,6 +80,19 @@ contains
     ! downward solar radiation
     RadDirFrac = 0.7
     RadVisFrac = 0.5
+
+    if (DirFrac >=0.0 .and. DirFrac <=1.0) then
+       RadDirFrac=DirFrac
+    else
+       DirFrac=RadDirFrac
+    endif
+
+    if (VisFrac >=0.0 .and. VisFrac <=1.0) then 
+       RadVisFrac=VisFrac
+    else
+       VisFrac=RadVisFrac
+    endif
+
     if ( CosSolarZenithAngle <= 0.0 ) RadSwDownRefHeight = 0.0                  ! filter by solar zenith angle
     RadSwDownDir(1) = RadSwDownRefHeight * RadDirFrac       * RadVisFrac        ! direct  vis
     RadSwDownDir(2) = RadSwDownRefHeight * RadDirFrac       * (1.0-RadVisFrac)  ! direct  nir

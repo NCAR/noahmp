@@ -62,6 +62,34 @@ contains
     noahmp%forcing%PrecipNonConvRefHeight  = noahmp%forcing%PrecipNonConvRefHeight + PrecipOtherRefHeight
     noahmp%forcing%PrecipSnowRefHeight     = noahmp%forcing%PrecipSnowRefHeight + PrecipOtherRefHeight * NoahmpIO%SR(I,J)
 
+    noahmp%forcing%DirFrac                 = NoahmpIO%DirFrac(I,J)
+    noahmp%forcing%VisFrac                 = NoahmpIO%VisFrac(I,J)
+
+    !SNICAR
+    if (noahmp%config%nmlist%OptSnowAlbedo == 3 )then
+       if (noahmp%config%nmlist%FlagSnicarAerosolReadTable == .true.) then 
+          noahmp%forcing%DepBChydropho           = NoahmpIO%DepBChydropho_TABLE
+          noahmp%forcing%DepBChydrophi           = NoahmpIO%DepBChydrophi_TABLE
+          noahmp%forcing%DepOChydropho           = NoahmpIO%DepOChydropho_TABLE
+          noahmp%forcing%DepOChydrophi           = NoahmpIO%DepOChydrophi_TABLE
+          noahmp%forcing%DepDust1                = NoahmpIO%DepDust1_TABLE
+          noahmp%forcing%DepDust2                = NoahmpIO%DepDust2_TABLE
+          noahmp%forcing%DepDust3                = NoahmpIO%DepDust3_TABLE
+          noahmp%forcing%DepDust4                = NoahmpIO%DepDust4_TABLE
+          noahmp%forcing%DepDust5                = NoahmpIO%DepDust5_TABLE
+       else
+          noahmp%forcing%DepBChydropho           = NoahmpIO%DepBChydrophoXY(I,J)
+          noahmp%forcing%DepBChydrophi           = NoahmpIO%DepBChydrophiXY(I,J)
+          noahmp%forcing%DepOChydropho           = NoahmpIO%DepOChydrophoXY(I,J)
+          noahmp%forcing%DepOChydrophi           = NoahmpIO%DepOChydrophiXY(I,J)
+          noahmp%forcing%DepDust1                = NoahmpIO%DepDust1XY(I,J)
+          noahmp%forcing%DepDust2                = NoahmpIO%DepDust2XY(I,J)
+          noahmp%forcing%DepDust3                = NoahmpIO%DepDust3XY(I,J)
+          noahmp%forcing%DepDust4                = NoahmpIO%DepDust4XY(I,J)
+          noahmp%forcing%DepDust5                = NoahmpIO%DepDust5XY(I,J)
+       endif
+    endif
+
     end associate
  
   end subroutine ForcingVarInTransfer
