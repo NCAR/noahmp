@@ -137,13 +137,11 @@ contains
     NoahmpIO%CHB2XY  (I,J) = noahmp%energy%state%ExchCoeffSh2mBare
     NoahmpIO%Q2MVXY  (I,J) = noahmp%energy%state%SpecHumidity2mVeg /(1.0-noahmp%energy%state%SpecHumidity2mVeg)  ! spec humidity to mixing ratio
     NoahmpIO%Q2MBXY  (I,J) = noahmp%energy%state%SpecHumidity2mBare/(1.0-noahmp%energy%state%SpecHumidity2mBare)
+    NoahmpIO%ALBEDO  (I,J) = noahmp%energy%state%AlbedoSfc
     NoahmpIO%IRRSPLH (I,J) = NoahmpIO%IRRSPLH(I,J) + &
                              (noahmp%energy%flux%HeatLatentIrriEvap * noahmp%config%domain%MainTimeStep)
     NoahmpIO%TSLB    (I,1:NumSoilLayer,J)       = noahmp%energy%state%TemperatureSoilSnow(1:NumSoilLayer)
     NoahmpIO%TSNOXY  (I,-NumSnowLayerMax+1:0,J) = noahmp%energy%state%TemperatureSoilSnow(-NumSnowLayerMax+1:0)
-    if ( noahmp%energy%state%AlbedoSfc > -999 ) then
-       NoahmpIO%ALBEDO(I,J) = noahmp%energy%state%AlbedoSfc
-    endif
 
     !SNICAR
     if (noahmp%config%nmlist%OptSnowAlbedo == 3 )then

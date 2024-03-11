@@ -340,7 +340,7 @@ contains
     if ( RadSwDownRefHeight > 0.0 ) then
        AlbedoSfc = RadSwReflSfc / RadSwDownRefHeight
     else
-       AlbedoSfc = -999.9
+       AlbedoSfc = undefined_real
     endif
     end associate
 

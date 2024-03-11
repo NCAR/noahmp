@@ -166,21 +166,26 @@ contains
        endif
     endif
 
-    ! wet-bulb scheme (Wang et al., 2019 GRL), C.He, 12/18/2020
+    ! wet-bulb scheme (Wang et al., 2019 GRL), C.He, 12/18/2020, R. Abolafia-Rosnezweig, 02/01/2024
     if ( OptRainSnowPartition == 5 ) then
-       TemperatureDegC = min( 50.0, max(-50.0,(TemperatureAirRefHeight-ConstFreezePoint)) )    ! Kelvin to degree Celsius with limit -50 to +50
-       if ( TemperatureAirRefHeight > ConstFreezePoint ) then
-          LatHeatVap = ConstLatHeatEvap
-       else
-          LatHeatVap = ConstLatHeatSublim
-       endif
-       PsychConst            = ConstHeatCapacAir * PressureAirRefHeight / (0.622 * LatHeatVap)
-       TemperatureWetBulb    = TemperatureDegC - 5.0    ! first guess wetbulb temperature
-       do LoopInd = 1, LoopNum
-          VapPresSat         = 610.8 * exp( (17.27*TemperatureWetBulb) / (237.3+TemperatureWetBulb) )
-          TemperatureWetBulb = TemperatureWetBulb - (VapPresSat - PressureVaporRefHeight) / PsychConst   ! Wang et al., 2019 GRL Eq.2
-       enddo
-       FrozenPrecipFrac      = 1.0 / (1.0 + 6.99e-5 * exp(2.0*(TemperatureWetBulb+3.97)))                ! Wang et al., 2019 GRL Eq. 1
+
+        if ( TemperatureAirRefHeight >= (ConstFreezePoint+10) ) then !avoid numerical errors when temperature is high
+            FrozenPrecipFrac = 0.0
+        else
+            TemperatureDegC = min( 50.0, max(-50.0,(TemperatureAirRefHeight-ConstFreezePoint)) )    ! Kelvin to degree Celsius with limit -50 to +50
+            if ( TemperatureAirRefHeight > ConstFreezePoint ) then
+                LatHeatVap = ConstLatHeatEvap
+            else
+                LatHeatVap = ConstLatHeatSublim
+            endif
+            PsychConst            = ConstHeatCapacAir * PressureAirRefHeight / (0.622 * LatHeatVap)
+            TemperatureWetBulb    = TemperatureDegC - 5.0    ! first guess wetbulb temperature
+            do LoopInd = 1, LoopNum
+                VapPresSat         = 610.8 * exp( (17.27*TemperatureWetBulb) / (237.3+TemperatureWetBulb) )
+                TemperatureWetBulb = TemperatureWetBulb - (VapPresSat - PressureVaporRefHeight) / PsychConst   ! Wang et al., 2019 GRL Eq.2
+            enddo
+            FrozenPrecipFrac      = 1.0 / (1.0 + 6.99e-5 * exp(2.0*(TemperatureWetBulb+3.97)))                ! Wang et al., 2019 GRL Eq. 1
+        endif
     endif
 
     ! rain-snow partitioning
