@@ -59,6 +59,7 @@ contains
               NumSnowLayerNeg        => noahmp%config%domain%NumSnowLayerNeg           ,& ! in, actual number of snow layers (negative)
               SnowIce                => noahmp%water%state%SnowIce                     ,& ! in, snow layer ice [mm]
               SnowLiqWater           => noahmp%water%state%SnowLiqWater                ,& ! in, snow layer liquid water [mm]
+              SnowWaterEquiv         => noahmp%water%state%SnowWaterEquiv              ,& ! in, snow water equivalent [mm]
               OutflowSnowLayer       => noahmp%water%flux%OutflowSnowLayer             ,& ! in, water flow out of each snow layer [mm/s]
               DepBChydropho          => noahmp%forcing%DepBChydropho                   ,& ! in, hydrophobic Black Carbon deposition [kg m-2 s-1] 
               DepBChydrophi          => noahmp%forcing%DepBChydrophi                   ,& ! in, hydrophillic Black Carbon deposition [kg m-2 s-1]
@@ -265,6 +266,50 @@ contains
        endif
 
     enddo
+
+    ! special treatment for very shallow snowpack (NumSnowLayerNeg = 0 and SnowMass > 0.0)
+    if ( NumSnowLayerNeg == 0 ) then
+       SnowMass = SnowWaterEquiv
+       if ( SnowMass > 0.0 ) then
+          MassBChydropho(0)     =  MassBChydropho (0) +  DepBChydropho * MainTimeStep
+          MassBChydrophi(0)     =  MassBChydrophi (0) +  DepBChydrophi * MainTimeStep
+          MassOChydropho(0)     =  MassOChydropho (0) +  DepOChydropho * MainTimeStep
+          MassOChydrophi(0)     =  MassOChydrophi (0) +  DepOChydrophi * MainTimeStep
+          MassDust1(0)          =  MassDust1 (0)      +  DepDust1 * MainTimeStep
+          MassDust2(0)          =  MassDust2 (0)      +  DepDust2 * MainTimeStep
+          MassDust3(0)          =  MassDust3 (0)      +  DepDust3 * MainTimeStep
+          MassDust4(0)          =  MassDust4 (0)      +  DepDust4 * MainTimeStep
+          MassDust5(0)          =  MassDust5 (0)      +  DepDust5 * MainTimeStep
+          MassConcBChydropho(0) =  MassBChydropho(0) / SnowMass
+          MassConcBChydrophi(0) =  MassBChydrophi(0) / SnowMass
+          MassConcOChydropho(0) =  MassOChydropho(0) / SnowMass
+          MassConcOChydrophi(0) =  MassOChydrophi(0) / SnowMass
+          MassConcDust1(0)      =  MassDust1(0) / SnowMass
+          MassConcDust2(0)      =  MassDust2(0) / SnowMass
+          MassConcDust3(0)      =  MassDust3(0) / SnowMass
+          MassConcDust4(0)      =  MassDust4(0) / SnowMass
+          MassConcDust5(0)      =  MassDust5(0) / SnowMass
+       else
+          MassBChydropho(0)     =  0.0
+          MassBChydrophi(0)     =  0.0
+          MassOChydropho(0)     =  0.0
+          MassOChydrophi(0)     =  0.0
+          MassDust1(0)          =  0.0
+          MassDust2(0)          =  0.0
+          MassDust3(0)          =  0.0
+          MassDust4(0)          =  0.0
+          MassDust5(0)          =  0.0
+          MassConcBChydropho(0) =  0.0
+          MassConcBChydrophi(0) =  0.0
+          MassConcOChydropho(0) =  0.0
+          MassConcOChydrophi(0) =  0.0
+          MassConcDust1(0)      =  0.0
+          MassConcDust2(0)      =  0.0
+          MassConcDust3(0)      =  0.0
+          MassConcDust4(0)      =  0.0
+          MassConcDust5(0)      =  0.0
+       endif
+    endif
 
     end associate
 

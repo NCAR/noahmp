@@ -1347,7 +1347,6 @@ contains
 
                       ! Delta-Eddington solution expressions
                       ! Eq. 50: Briegleb and Light 2007; alpha and gamma for direct radiation
-                      !print *,'debug',cp75,ws,mu_not,c1,gs,lm,lm*lm*mu_not*mu_not
                       if (c1 - lm*lm*mu_not*mu_not /= 0.0) then
                          alp = cp75*ws*mu_not*((c1 + gs*(c1-ws))/(c1 - lm*lm*mu_not*mu_not))
                          gam = cp5*ws*((c1 + c3*gs*(c1-ws)*mu_not*mu_not)/(c1-lm*lm*mu_not*mu_not))

@@ -125,6 +125,24 @@ contains
              NoahmpIO%DUST3XY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
              NoahmpIO%DUST4XY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
              NoahmpIO%DUST5XY (I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%MassConcBCPHOXY(I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%MassConcBCPHIXY(I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%MassConcOCPHOXY(I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%MassConcOCPHIXY(I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%MassConcDUST1XY(I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%MassConcDUST2XY(I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%MassConcDUST3XY(I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%MassConcDUST4XY(I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%MassConcDUST5XY(I,-NoahmpIO%NSNOW+1:0,J)  = 0.0
+             NoahmpIO%DepBChydrophoXY(I,J) = 0.0
+             NoahmpIO%DepBChydrophiXY(I,J) = 0.0
+             NoahmpIO%DepOChydrophoXY(I,J) = 0.0
+             NoahmpIO%DepOChydrophiXY(I,J) = 0.0
+             NoahmpIO%DepDust1XY(I,J) = 0.0
+             NoahmpIO%DepDust2XY(I,J) = 0.0
+             NoahmpIO%DepDust3XY(I,J) = 0.0
+             NoahmpIO%DepDust4XY(I,J) = 0.0
+             NoahmpIO%DepDust5XY(I,J) = 0.0
           endif
 
        enddo ! I
