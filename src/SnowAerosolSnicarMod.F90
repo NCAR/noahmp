@@ -270,7 +270,7 @@ contains
     ! special treatment for very shallow snowpack (NumSnowLayerNeg = 0 and SnowMass > 0.0)
     if ( NumSnowLayerNeg == 0 ) then
        SnowMass = SnowWaterEquiv
-       if ( SnowMass > 0.0 ) then
+       if ( SnowMass > 0.1 ) then ! set minimum threshold (0.1mm SWE) for computing aerosol-snow albedo
           MassBChydropho(0)     =  MassBChydropho (0) +  DepBChydropho * MainTimeStep
           MassBChydrophi(0)     =  MassBChydrophi (0) +  DepBChydrophi * MainTimeStep
           MassOChydropho(0)     =  MassOChydropho (0) +  DepOChydropho * MainTimeStep

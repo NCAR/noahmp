@@ -166,6 +166,9 @@ contains
        noahmp%energy%param%ss_alb_dst4         (1:NumSnicarRadBand)                  = NoahmpIO%ss_alb_dst4      (1:NumSnicarRadBand)
        noahmp%energy%param%asm_prm_dst4        (1:NumSnicarRadBand)                  = NoahmpIO%asm_prm_dst4     (1:NumSnicarRadBand)
        noahmp%energy%param%ext_cff_mss_dst4    (1:NumSnicarRadBand)                  = NoahmpIO%ext_cff_mss_dst4 (1:NumSnicarRadBand)
+       noahmp%energy%param%ss_alb_dst5         (1:NumSnicarRadBand)                  = NoahmpIO%ss_alb_dst5      (1:NumSnicarRadBand)
+       noahmp%energy%param%asm_prm_dst5        (1:NumSnicarRadBand)                  = NoahmpIO%asm_prm_dst5     (1:NumSnicarRadBand)
+       noahmp%energy%param%ext_cff_mss_dst5    (1:NumSnicarRadBand)                  = NoahmpIO%ext_cff_mss_dst5 (1:NumSnicarRadBand)
     endif
 
     do SoilLayerIndex = 1, size(SoilType)

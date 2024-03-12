@@ -561,9 +561,9 @@ contains
 
     ! set threshold for precision
     if (NumSnicarRadBand == 480) then 
-       SnowWaterEquivMin = 1.0E-1
+       SnowWaterEquivMin = 1.0e-1
     elseif (NumSnicarRadBand == 5) then
-       SnowWaterEquivMin = 1.0E-3
+       SnowWaterEquivMin = 1.0e-3
     endif
 
     ! Qualifier for computing snow RT: 
