@@ -600,7 +600,6 @@ contains
        flds(1)%nrec = 1; flds(1)%ptr2r8 => tmp2r8
        call read_tiled_file(noahmp, filename, flds, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       print*, 'tg3, lb, ub = ', lbound(tmp2r8, dim=1), ubound(tmp2r8, dim=1)
        noahmp%model%tg3 = tmp2r8(:,1)
        deallocate(flds)
     else
