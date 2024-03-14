@@ -96,7 +96,7 @@ contains
        ThicknessSnowSoilLayer(LoopInd) = 0.0
        DepthSnowSoilLayer(LoopInd)     = 0.0
 
-       if ( OptSnowAlbedo == 3 ) then
+       if ( (OptSnowAlbedo == 3) .and. (NumSnowLayerNeg < 0) ) then
           MassBChydropho(LoopInd)         = 0.0
           MassBChydrophi(LoopInd)         = 0.0
           MassOChydropho(LoopInd)         = 0.0
