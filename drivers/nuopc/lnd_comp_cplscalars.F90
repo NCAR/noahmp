@@ -11,7 +11,6 @@
 
 module lnd_comp_cplscalars
 
-  use NUOPC
   use ESMF, only : ESMF_Field, ESMF_Distgrid, ESMF_Grid, ESMF_State
   use ESMF, only : ESMF_VM, ESMF_VMGetCurrent, ESMF_VMGet, ESMF_VMBroadCast
   use ESMF, only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU, ESMF_FAILURE, ESMF_SUCCESS
