@@ -14,9 +14,10 @@ list(APPEND _noahmp_cap_files drivers/nuopc/lnd_comp_kind.F90
                               drivers/nuopc/lnd_comp_domain.F90
                               drivers/nuopc/lnd_comp_import_export.F90
                               drivers/nuopc/lnd_comp_nuopc.F90
-                              drivers/nuopc/lnd_comp_driver.F90)
+                              drivers/nuopc/lnd_comp_driver.F90
+			      drivers/nuopc/lnd_comp_cplscalars.F90)
 
-# CCPP interface 
+# CCPP interface
 list(APPEND _noahmp_ccpp_files drivers/ccpp/noahmpdrv.F90
                                drivers/ccpp/sfc_diff.f
                                drivers/ccpp/machine.F
@@ -67,7 +68,7 @@ add_definitions(-DCCPP)
 #------------------------------------------------------------------------------
 # NOAHMP
 add_library(noahmp STATIC ${_noahmp_cap_files} ${_noahmp_ccpp_files} ${_noahmp_files})
-set_target_properties(noahmp PROPERTIES 
+set_target_properties(noahmp PROPERTIES
   Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 target_include_directories(noahmp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>

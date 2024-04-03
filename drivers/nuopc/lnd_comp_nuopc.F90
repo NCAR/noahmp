@@ -20,7 +20,7 @@ module lnd_comp_nuopc
   use ESMF             , only : ESMF_MeshCreate, ESMF_Grid, ESMF_GeomType_Flag
   use ESMF             , only : ESMF_VMGet, ESMF_VMGetCurrent
   use NUOPC            , only : NUOPC_CompDerive, NUOPC_CompAttributeGet
-  use NUOPC            , only : NUOPC_CompFilterPhaseMap, NUOPC_CompSetEntryPoint 
+  use NUOPC            , only : NUOPC_CompFilterPhaseMap, NUOPC_CompSetEntryPoint
   use NUOPC            , only : NUOPC_CompSpecialize
   use NUOPC_Model      , only : NUOPC_ModelGet
   use NUOPC_Model      , only : model_routine_SS => SetServices
@@ -169,6 +169,9 @@ contains
   !===============================================================================
   subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
 
+    use lnd_comp_cplscalars,      only: flds_scalar_name, flds_scalar_num,          &
+         flds_scalar_index_nx, flds_scalar_index_ny, flds_scalar_index_ntile
+
     ! Realize the list of fields that will be exchanged
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -241,7 +244,7 @@ contains
     call ESMF_LogWrite(trim(subname)//': restart_dir = '//trim(noahmp%nmlist%restart_dir), ESMF_LOGMSG_INFO)
 
     ! ---------------------
-    ! Query ESMF attribute, layout 
+    ! Query ESMF attribute, layout
     ! ---------------------
 
     call NUOPC_CompAttributeGet(gcomp, name='layout', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
@@ -272,7 +275,7 @@ contains
           noahmp%nmlist%restart_run = .true.
        end if
     else
-       noahmp%nmlist%restart_run = .false. 
+       noahmp%nmlist%restart_run = .false.
     end if
     write(msg, fmt='(A,L)') trim(subname)//': restart_run = ', noahmp%nmlist%restart_run
     call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
@@ -358,8 +361,54 @@ contains
     write(msg, fmt='(A,L)') trim(subname)//': calc_snet = ', noahmp%nmlist%calc_snet
     call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 
+    ! set cpl_scalars from config. Default to null values
+    flds_scalar_name = ''
+    flds_scalar_num = 0
+    flds_scalar_index_nx = 0
+    flds_scalar_index_ny = 0
+    flds_scalar_index_ntile = 0
+    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldName", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       flds_scalar_name = trim(cvalue)
+       call ESMF_LogWrite(trim(subname)//' flds_scalar_name = '//trim(flds_scalar_name), ESMF_LOGMSG_INFO)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    endif
+    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldCount", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue, *) flds_scalar_num
+       write(msg,*) flds_scalar_num
+       call ESMF_LogWrite(trim(subname)//' flds_scalar_num = '//trim(msg), ESMF_LOGMSG_INFO)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    endif
+    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldIdxGridNX", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) flds_scalar_index_nx
+       write(msg,*) flds_scalar_index_nx
+       call ESMF_LogWrite(trim(subname)//' : flds_scalar_index_nx = '//trim(msg), ESMF_LOGMSG_INFO)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    endif
+    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldIdxGridNY", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) flds_scalar_index_ny
+       write(msg,*) flds_scalar_index_ny
+       call ESMF_LogWrite(trim(subname)//' : flds_scalar_index_ny = '//trim(msg), ESMF_LOGMSG_INFO)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    endif
+    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldIdxGridNTile", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) flds_scalar_index_ntile
+       write(msg,*) flds_scalar_index_ntile
+       call ESMF_LogWrite(trim(subname)//' : flds_scalar_index_ntile = '//trim(msg), ESMF_LOGMSG_INFO)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    endif
+
     ! ---------------------
-    ! Create mosaic grid and convert it to mesh 
+    ! Create mosaic grid and convert it to mesh
     ! ---------------------
 
     call lnd_set_decomp_and_domain_from_mosaic(gcomp, noahmp, rc)
@@ -382,7 +431,7 @@ contains
     ! Realize the actively coupled fields
     ! ---------------------
 
-    call realize_fields(importState, exportState, noahmp%domain%mesh, rc)
+    call realize_fields(importState, exportState, noahmp, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! ---------------------
@@ -399,7 +448,7 @@ contains
     ! ---------------------
 
     if (dbug > 0) then
-       call state_diagnose(exportState, subname//': ExportState ',rc=rc)
+       call state_diagnose(exportState, flds_scalar_name, subname//': ExportState ',rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     endif
 
@@ -409,6 +458,8 @@ contains
 
   !===============================================================================
   subroutine ModelAdvance(gcomp, rc)
+
+    use lnd_comp_cplscalars, only: flds_scalar_name
 
     !------------------------
     ! Run NoahMP
@@ -448,7 +499,7 @@ contains
     !----------------------
 
     if (dbug > 1) then
-       call state_diagnose(importState, subname//': ImportState ',rc=rc)
+       call state_diagnose(importState, flds_scalar_name, subname//': ImportState ',rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     endif
 
@@ -472,7 +523,7 @@ contains
     !----------------------
 
     if (dbug > 1) then
-       call state_diagnose(exportState, subname//': ExportState ',rc=rc)
+       call state_diagnose(exportState, flds_scalar_name, subname//': ExportState ',rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     endif
 
