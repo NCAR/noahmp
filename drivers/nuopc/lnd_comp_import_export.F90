@@ -82,6 +82,7 @@ contains
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_cmm')
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_chh')
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_zvfun')
+    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'cpl_scalars')
 
     ! Now advertise above export fields
     do n = 1,fldsFrLnd_num
@@ -166,20 +167,34 @@ contains
   end subroutine fldlist_add
 
   !===============================================================================
-  subroutine realize_fields(importState, exportState, Emesh, rc)
+  subroutine realize_fields(importState, exportState, noahmp, rc)
+
+    use lnd_comp_cplscalars, only : flds_scalar_name, flds_scalar_num,          &
+         flds_scalar_index_nx, flds_scalar_index_ny, flds_scalar_index_ntile
+    use lnd_comp_cplscalars, only : State_SetScalar
+
+    !logical                    :: global         ! flag for global vs. regional domain
+    !integer                    :: ntiles         ! number of tiles in case of having CS grid
+    !integer                    :: ni             ! global size in i direction
+    !integer                    :: nj             ! global size in j direction
 
     ! input/output variables
     type(ESMF_State) , intent(inout) :: importState
     type(ESMF_State) , intent(inout) :: exportState
-    type(ESMF_Mesh)  , intent(in)    :: Emesh
+    type(noahmp_type), intent(in)    :: noahmp
     integer          , intent(out)   :: rc
 
     ! local variables
+    type(ESMF_Mesh)   :: Emesh
+    real(R8)          :: scalardim(3)
+
     character(len=*), parameter :: subname=trim(modName)//':(realize_fields)'
     !---------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
+
+    Emesh = noahmp%domain%mesh
 
     call fldlist_realize( &
          state=ExportState, &
@@ -197,6 +212,23 @@ contains
          mesh=Emesh, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+    ! cpl_scalars for export state
+    scalardim = 0.0
+    scalardim(1) = real(noahmp%domain%ni,8)
+    scalardim(2) = real(noahmp%domain%nj,8)
+    scalardim(3) = 1.0
+    if (noahmp%domain%global)scalardim(3) = 6.0
+
+    if (flds_scalar_num > 0) then
+       ! Set the scalar data into the exportstate
+       call State_SetScalar(scalardim(1), flds_scalar_index_nx, exportState, flds_scalar_name, flds_scalar_num, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call State_SetScalar(scalardim(2), flds_scalar_index_ny, exportState, flds_scalar_name, flds_scalar_num, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call State_SetScalar(scalardim(3), flds_scalar_index_ntile, exportState, flds_scalar_name, flds_scalar_num, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
+
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
   end subroutine realize_fields
@@ -210,6 +242,9 @@ contains
     use ESMF  , only : ESMF_LogFoundError, ESMF_LOGMSG_INFO, ESMF_SUCCESS
     use ESMF  , only : ESMF_LogWrite, ESMF_LOGMSG_ERROR, ESMF_LOGERR_PASSTHRU
 
+    use lnd_comp_cplscalars,  only: flds_scalar_name, flds_scalar_num
+    use lnd_comp_cplscalars,  only: SetScalarField
+
     ! input/output variables
     type(ESMF_State)    , intent(inout) :: state
     type(fld_list_type) , intent(inout) :: fldList(:)
@@ -222,7 +257,7 @@ contains
     integer                :: n
     type(ESMF_Field)       :: field
     character(len=80)      :: stdname
-    character(len=*),parameter  :: subname=trim(modName)//':fldlist_realize)'
+    character(len=*), parameter :: subname=trim(modName)//':fldlist_realize)'
     ! ----------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -238,12 +273,18 @@ contains
                   ungriddedUbound=(/fldlist(n)%ungridded_ubound/), &
                   gridToFieldMap=(/2/), rc=rc)
              if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          elseif (trim(stdname) == trim(flds_scalar_name)) then
+             ! Create the scalar field
+             call SetScalarField(field, flds_scalar_name, flds_scalar_num, rc=rc)
+             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+             call NUOPC_Realize(state, field=field, rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
           else
              field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, name=stdname, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
              if (ChkErr(rc,__LINE__,u_FILE_u)) return
           end if
           call ESMF_LogWrite(trim(subname)//trim(tag)//" Field = "//trim(stdname)//" is connected using mesh", &
-             ESMF_LOGMSG_INFO)
+               ESMF_LOGMSG_INFO)
 
           ! NOW call NUOPC_Realize
           call NUOPC_Realize(state, field=field, rc=rc)
@@ -253,7 +294,7 @@ contains
           fldList(n)%connected = .true.
        else
           call ESMF_LogWrite(subname // trim(tag) // " Field = "// trim(stdname) // " is not connected.", &
-             ESMF_LOGMSG_INFO)
+               ESMF_LOGMSG_INFO)
           call ESMF_StateRemove(state, (/stdname/), rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
@@ -268,7 +309,7 @@ contains
 
     ! input/output variables
     type(ESMF_GridComp), intent(in)    :: gcomp
-    type(noahmp_type),   intent(inout) :: noahmp 
+    type(noahmp_type),   intent(inout) :: noahmp
     integer,             intent(out)   :: rc
 
     ! local variables
@@ -368,7 +409,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! -----------------------
-    ! output to atm 
+    ! output to atm
     ! -----------------------
 
     call state_setexport_1d(exportState, 'Sl_sfrac', noahmp%model%sncovr1, rc=rc)
@@ -527,13 +568,14 @@ contains
   end subroutine state_getfldptr
 
   !===============================================================================
-  subroutine state_diagnose(state, string, rc)
+  subroutine state_diagnose(state, flds_scalar_name, string, rc)
 
     ! ----------------------------------------------
     ! Diagnose status of State
     ! ----------------------------------------------
 
     type(ESMF_State), intent(in)  :: state
+    character(len=*), intent(in)  :: flds_scalar_name
     character(len=*), intent(in)  :: string
     integer         , intent(out) :: rc
 
@@ -556,35 +598,37 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     do n = 1, fieldCount
+       if (trim(lfieldnamelist(n)) /= trim(flds_scalar_name)) then
 
-       call ESMF_StateGet(state, itemName=lfieldnamelist(n), field=lfield, rc=rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) return
+          call ESMF_StateGet(state, itemName=lfieldnamelist(n), field=lfield, rc=rc)
+          if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-       call field_getfldptr(lfield, rc=rc, fldptr1=dataPtr1d, fldptr2=dataPtr2d, rank=lrank)
-       if (chkerr(rc,__LINE__,u_FILE_u)) return
+          call field_getfldptr(lfield, rc=rc, fldptr1=dataPtr1d, fldptr2=dataPtr2d, rank=lrank)
+          if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-       if (lrank == 0) then
-          ! no local data
-       elseif (lrank == 1) then
-          if (size(dataPtr1d) > 0) then
-             write(msgString,'(A,3g14.7,i8)') trim(string)//': '//trim(lfieldnamelist(n)), &
-                  minval(dataPtr1d), maxval(dataPtr1d), sum(dataPtr1d), size(dataPtr1d)
+          if (lrank == 0) then
+             ! no local data
+          elseif (lrank == 1) then
+             if (size(dataPtr1d) > 0) then
+                write(msgString,'(A,3g14.7,i8)') trim(string)//': '//trim(lfieldnamelist(n)), &
+                     minval(dataPtr1d), maxval(dataPtr1d), sum(dataPtr1d), size(dataPtr1d)
+             else
+                write(msgString,'(A,a)') trim(string)//': '//trim(lfieldnamelist(n))," no data"
+             endif
+          elseif (lrank == 2) then
+             if (size(dataPtr2d) > 0) then
+                write(msgString,'(A,3g14.7,i8)') trim(string)//': '//trim(lfieldnamelist(n)), &
+                     minval(dataPtr2d), maxval(dataPtr2d), sum(dataPtr2d), size(dataPtr2d)
+             else
+                write(msgString,'(A,a)') trim(string)//': '//trim(lfieldnamelist(n))," no data"
+             endif
           else
-             write(msgString,'(A,a)') trim(string)//': '//trim(lfieldnamelist(n))," no data"
+             call ESMF_LogWrite(trim(subname)//": ERROR rank not supported ", ESMF_LOGMSG_ERROR)
+             rc = ESMF_FAILURE
+             return
           endif
-       elseif (lrank == 2) then
-          if (size(dataPtr2d) > 0) then
-             write(msgString,'(A,3g14.7,i8)') trim(string)//': '//trim(lfieldnamelist(n)), &
-                  minval(dataPtr2d), maxval(dataPtr2d), sum(dataPtr2d), size(dataPtr2d)
-          else
-             write(msgString,'(A,a)') trim(string)//': '//trim(lfieldnamelist(n))," no data"
-          endif
-       else
-          call ESMF_LogWrite(trim(subname)//": ERROR rank not supported ", ESMF_LOGMSG_ERROR)
-          rc = ESMF_FAILURE
-          return
-       endif
-       call ESMF_LogWrite(trim(msgString), ESMF_LOGMSG_INFO)
+          call ESMF_LogWrite(trim(msgString), ESMF_LOGMSG_INFO)
+       end if
     enddo
 
     deallocate(lfieldnamelist)
@@ -653,7 +697,7 @@ contains
           call ESMF_MeshGet(lmesh, numOwnedNodes=nnodes, numOwnedElements=nelements, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
           if (nnodes == 0 .and. nelements == 0) lrank = 0
-       else  
+       else
           call ESMF_LogWrite(trim(subname)//": ERROR geomtype not supported ", &
                ESMF_LOGMSG_INFO, rc=rc)
           rc = ESMF_FAILURE
@@ -748,7 +792,7 @@ contains
     check_for_connected = .false.
     do n = 1, numflds
        if (trim(fname) == trim(fldList(n)%stdname)) then
-          check_for_connected = fldList(n)%connected 
+          check_for_connected = fldList(n)%connected
           exit
        end if
     end do
