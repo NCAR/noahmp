@@ -111,7 +111,7 @@ contains
     ThicknessCanBury      = min(max(SnowDepth-HeightCanopyBot,0.0), (HeightCanopyTop-HeightCanopyBot))
     CanopyFracSnowBury    = ThicknessCanBury / max(1.0e-06, (HeightCanopyTop-HeightCanopyBot))           ! snow buried fraction
     if ( (HeightCanopyTop > 0.0) .and. (HeightCanopyTop <= 1.0) ) then                                   ! MB: change to 1.0 & 0.2 to reflect changes to HeightCanopyTop in MPTABLE
-       SnowDepthVegBury   = HeightCanopyTop * exp(-SnowDepth / 0.2)
+       SnowDepthVegBury   = HeightCanopyTop * exp(-min(SnowDepth,10.0) / 0.2)     ! CH: add limit to avoid numerical floating issue
        CanopyFracSnowBury = min(SnowDepth, SnowDepthVegBury) / SnowDepthVegBury
     endif
 
