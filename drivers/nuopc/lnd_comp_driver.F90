@@ -283,7 +283,7 @@ contains
           end if
 
           ! initialize model variables
-          call noahmp%InitializeStates(noahmp%nmlist, noahmp%static, month)
+          call noahmp%InitializeStates(noahmp%nmlist, noahmp%static, noahmp%domain, month)
        end if
     end if
 

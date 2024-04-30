@@ -60,7 +60,8 @@ contains
     integer, intent(out)             :: rc
 
     ! local variables
-    real(r4), target, allocatable :: tmpr4(:)
+    real(r4), target, allocatable    :: tmpr4(:)
+    real(r8), target, allocatable    :: tmpr8(:)
     integer                          :: n
     integer                          :: decomptile(2,6)
     integer                          :: maxIndex(2)
@@ -183,6 +184,10 @@ contains
        allocate(tmpr4(noahmp%domain%begl:noahmp%domain%endl))
        tmpr4(:) = 0.0
     end if
+    if (.not. allocated(tmpr8)) then
+       allocate(tmpr8(noahmp%domain%begl:noahmp%domain%endl))
+       tmpr8(:) = 0.0
+    end if
 
     ! ---------------------
     ! Get fraction from orography file
@@ -207,18 +212,27 @@ contains
     ! following link: https://github.com/ufs-community/ufs-weather-model/issues/1423 
     ! ---------------------
 
-    ! read field
-    write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C',noahmp%domain%ni, '.vegetation_type.tile*.nc'
-    flds(1)%short_name = 'vegetation_type'
-    flds(1)%ptr1r4 => tmpr4
-    call read_tiled_file(noahmp, filename, flds, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
     ! allocate data
     if (.not. allocated(vegtype)) then
        allocate(vegtype(noahmp%domain%begl:noahmp%domain%endl))
     end if
-    vegtype(:) = int(tmpr4)
+
+    ! read field
+    if (trim(noahmp%nmlist%ic_type) == 'sfc') then
+       filename = trim(noahmp%nmlist%input_dir)//'sfc_data.tile*.nc'
+       flds(1)%short_name = 'vtype'
+       flds(1)%ptr1r8 => tmpr8
+       call read_tiled_file(noahmp, filename, flds, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       vegtype(:) = int(tmpr8)
+    else
+       write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C',noahmp%domain%ni, '.vegetation_type.tile*.nc'
+       flds(1)%short_name = 'vegetation_type'
+       flds(1)%ptr1r4 => tmpr4
+       call read_tiled_file(noahmp, filename, flds, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       vegtype(:) = int(tmpr4)
+    end if
 
     ! ---------------------
     ! Calculate mask from land-sea fraction
@@ -228,7 +242,7 @@ contains
        allocate(noahmp%domain%mask(noahmp%domain%begl:noahmp%domain%endl))
     end if
 
-    where (noahmp%domain%frac(:) > 0.0_r8 .and. vegtype(:) >= 0)
+    where (noahmp%domain%frac(:) > 0.0_r8 .and. vegtype(:) > 0)
        noahmp%domain%mask(:) = 1
     elsewhere
        noahmp%domain%mask(:) = 0
@@ -319,6 +333,7 @@ contains
     ! ---------------------
 
     if (allocated(tmpr4)) deallocate(tmpr4)
+    if (allocated(tmpr8)) deallocate(tmpr8)
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
