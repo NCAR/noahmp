@@ -1063,14 +1063,14 @@
       zorl      (i)   = z0_total * 100.0  ! convert to cm
       ztmax     (i)   = z0h_total 
       
-      ! total stomatal/canopy resistance Based on Bonan et al. (2011) conductance (1/Rs) equation
+      !LAI-scale canopy resistance based on weighted sunlit shaded fraction
       if(rs_sunlit .le. 0.0 .or. rs_shaded .le. 0.0 .or. &
           lai_sunlit .eq. 0.0 .or. lai_shaded .eq. 0.0) then
-        rca(i) = 0.0
-      else
+        rca(i) = parameters%rsmax
+      else !calculate LAI-scale canopy conductance (1/Rs)
         rca(i) = ((1.0/(rs_sunlit+leaf_air_resistance)*lai_sunlit) + &
                  ((1.0/(rs_shaded+leaf_air_resistance))*lai_shaded))
-        rca(i) = 1.0/rca(i) !resistance
+        rca(i) = max((1.0/rca(i)),parameters%rsmin) !resistance
       end if
       
       smc       (i,:) = soil_moisture_vol
