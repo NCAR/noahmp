@@ -2013,6 +2013,8 @@ endif   ! croptype == 0
     chuc      = 0.
     chv2      = 0.
     rb        = 0.
+    laisun    = 0.
+    laisha    = 0.
 
     cdmnv     = 0.0
     ezpdv     = 0.0
@@ -2263,7 +2265,8 @@ endif   ! croptype == 0
                     csigmaf1,                                     & !out
 !jref:start
                     qc      ,qsfc    ,psfc    , & !in
-                    q2v     ,chv2, chleaf, chuc)               !inout 
+                    q2v     ,chv2    ,chleaf  ,chuc    ,          &
+                    rb)                                             !out 
 
 ! new coupling code
 
@@ -3712,7 +3715,8 @@ endif   ! croptype == 0
                        t2mv    ,psnsun  ,psnsha  ,canhs   ,          & !out
                        csigmaf1,                                     & !out
                        qc      ,qsfc    ,psfc    ,                   & !in
-                       q2v     ,cah2    ,chleaf  ,chuc    )            !inout 
+                       q2v     ,cah2    ,chleaf  ,chuc    ,          & !inout
+                       rb)                                             !out      
 
 ! --------------------------------------------------------------------------------------------------
 ! use newton-raphson iteration to solve for vegetation (tv) and
@@ -3836,6 +3840,7 @@ endif   ! croptype == 0
   real (kind=kind_phys),                           intent(out) :: chuc   !< under canopy exchange coefficient
   real (kind=kind_phys),                           intent(out) :: canhs  !< canopy heat storage change (w/m2)
   real (kind=kind_phys),                           intent(out) :: q2v    !< 
+  real (kind=kind_phys),                           intent(out) :: rb     !< bulk leaf boundary layer resistance (s/m)
   real (kind=kind_phys) :: cah     !< sensible heat conductance, canopy air to zlvl air (m/s)
   real (kind=kind_phys) :: u10v    !< 10 m wind speed in eastward dir (m/s) 
   real (kind=kind_phys) :: v10v    !< 10 m wind speed in eastward dir (m/s) 
@@ -3852,7 +3857,6 @@ endif   ! croptype == 0
   real (kind=kind_phys) :: z0mo        !roughness length for intermediate output only (m)
   real (kind=kind_phys) :: z0h          !roughness length, sensible heat (m)
   real (kind=kind_phys) :: z0hg         !roughness length, sensible heat (m)
-  real (kind=kind_phys) :: rb           !bulk leaf boundary layer resistance (s/m)
   real (kind=kind_phys) :: ramc         !aerodynamic resistance for momentum (s/m)
   real (kind=kind_phys) :: rahc         !aerodynamic resistance for sensible heat (s/m)
   real (kind=kind_phys) :: rawc         !aerodynamic resistance for water vapor (s/m)

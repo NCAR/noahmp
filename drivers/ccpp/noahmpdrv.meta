@@ -1360,6 +1360,14 @@
   type = real
   kind = kind_phys
   intent = out
+[rca]
+  standard_name = aerodynamic_resistance_in_canopy
+  long_name = canopy resistance
+  units = s m-1
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  intent = out
 [errmsg]
   standard_name = ccpp_error_message
   long_name = error message for error handling in CCPP
