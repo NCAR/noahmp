@@ -23,6 +23,7 @@ module lnd_comp_domain
   use ESMF ,  only : ESMF_RouteHandleDestroy, ESMF_GridGet, ESMF_GridGetCoord
   use ESMF ,  only : ESMF_FieldRegridGetArea, ESMF_CoordSys_Flag
   use ESMF ,  only : ESMF_MeshGetFieldBounds, ESMF_COORDSYS_CART, ESMF_KIND_R8
+  use ESMF ,  only : ESMF_MeshDestroy, ESMF_DistGridCreate, ESMF_VMAllGatherV
   use NUOPC,  only : NUOPC_CompAttributeGet
 
   use lnd_comp_kind  , only : r4 => shr_kind_r4
@@ -62,10 +63,28 @@ contains
     ! local variables
     real(r4), target, allocatable    :: tmpr4(:)
     real(r8), target, allocatable    :: tmpr8(:)
-    integer                          :: n
+    integer                          :: n, m, g
     integer                          :: decomptile(2,6)
     integer                          :: maxIndex(2)
     type(ESMF_Decomp_Flag)           :: decompflagPTile(2,6)
+
+    integer                          :: petCount, localPet
+    integer                          :: gsize(1), lsize, mytask
+    integer                          :: nlnd, nocn
+    integer, allocatable             :: nlnd_loc(:), nocn_loc(:)
+    integer, pointer                 :: tmp(:), lsize_arr(:)
+    integer, pointer                 :: mask_glb(:)
+    integer, pointer                 :: gindex_loc(:)
+    integer, pointer                 :: gindex_glb(:)
+    integer, pointer                 :: gindex_lnd(:)
+    integer, pointer                 :: gindex_ocn(:)
+    integer, pointer                 :: gindex_new(:)
+    integer                          :: begl_l, endl_l
+    integer                          :: begl_o, endl_o
+    type(ESMF_VM)                    :: vm
+    type(ESMF_DistGrid)              :: distgrid
+    type(ESMF_DistGrid)              :: distgrid_new
+    type(ESMF_Mesh)                  :: mesh
 
     type(field_type)                 :: flds(1)
     integer                          :: numOwnedElements, spatialDim, rank
@@ -86,6 +105,16 @@ contains
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
+
+    ! ---------------------
+    ! Query VM
+    ! ---------------------
+
+    call ESMF_GridCompGet(gcomp, vm=vm, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_VMGet(vm, petCount=petCount, localPet=localPet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! ---------------------
     ! Set decomposition and decide it is regional or global
@@ -256,6 +285,164 @@ contains
 
     call ESMF_MeshSet(noahmp%domain%mesh, elementMask=noahmp%domain%mask, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! ---------------------
+    ! Modify decomposition
+    ! ---------------------
+
+    ! retrive default distgrid
+    call ESMF_MeshGet(noahmp%domain%mesh, elementdistGrid=distgrid, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! get local number of elements
+    call ESMF_DistGridGet(distgrid, localDe=0, elementCount=lsize, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! calculate number of elements globally
+    call ESMF_VMAllReduce(vm, (/ lsize /), gsize, 1, ESMF_REDUCE_SUM, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    nlnd = count(noahmp%domain%mask(:) > 0, dim=1)
+    nocn = lsize-nlnd
+    write(msg, fmt='(A,4I8)') trim(subname)//' : lsize, gsize, nlnd, nocn = ', &
+      lsize, gsize(1), nlnd, nocn 
+    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
+
+    ! collect local sizes
+    allocate(lsize_arr(petCount))
+    call ESMF_VMAllGatherV(vm, sendData=(/ lsize /), sendCount=1, &
+      recvData=lsize_arr, recvCounts=(/ (1, n = 0, petCount-1) /), &
+      recvOffsets=(/ (n, n = 0, petCount-1) /), rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    !do n = 1, petCount
+    !   write(msg,'(A,2I8)') trim(subname)//' : lsize = ', n, lsize_arr(n)
+    !   call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
+    !end do
+
+    ! get default sequence index
+    allocate(gindex_loc(lsize))
+    call ESMF_DistGridGet(distgrid, 0, seqIndexList=gindex_loc, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    !write(msg,'(A,4I8)') trim(subname)//' : distgrid list = ',&
+    !     gindex_loc(1), gindex_loc(lsize), minval(gindex_loc), maxval(gindex_loc)
+    !call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
+
+    ! create global index by collecting local indexes
+    allocate(gindex_glb(gsize(1)))
+    gindex_glb(:) = 0
+    call ESMF_VMAllGatherV(vm, sendData=gindex_loc, sendCount=lsize, &
+      recvData=gindex_glb, recvCounts=lsize_arr, &
+      recvOffsets=(/ (sum(lsize_arr(1:n))-lsize_arr(1), n = 1, petCount) /), rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! generate global land sea mask
+    allocate(mask_glb(gsize(1)))
+    mask_glb(:) = 0
+    call ESMF_VMAllGatherV(vm, sendData=noahmp%domain%mask, sendCount=lsize, &
+      recvData=mask_glb, recvCounts=lsize_arr, &
+      recvOffsets=(/ (sum(lsize_arr(1:n))-lsize_arr(1), n = 1, petCount) /), rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! split global indexes as land and ocean
+    nlnd = count(mask_glb > 0, dim=1)
+    nocn = gsize(1)-nlnd
+    allocate(gindex_lnd(nlnd))
+    gindex_lnd = 0
+    allocate(gindex_ocn(nocn))
+    gindex_ocn = 0
+
+    n = 0
+    m = 0
+    do g = 1, gsize(1)
+       if (mask_glb(g) > 0) then
+          n = n+1
+          gindex_lnd(n) = gindex_glb(g)
+       else
+          m = m+1
+          gindex_ocn(m) = gindex_glb(g)
+       end if
+    end do
+
+    ! create new local indexes
+    allocate(nlnd_loc(0:petCount-1))
+    nlnd_loc = 0
+    allocate(nocn_loc(0:petCount-1))
+    nocn_loc = 0
+    do n = 0, petCount-1
+       nlnd_loc(n) = nlnd/petCount
+       nocn_loc(n) = nocn/petCount
+       if (n < mod(nlnd, petCount)) then
+          nlnd_loc(n) = nlnd_loc(n)+1
+       else
+          nocn_loc(n) = nocn_loc(n)+1
+       end if
+    end do
+    if (localPet == 0) then
+       begl_l = 1
+       begl_o = 1
+    else
+       begl_l = sum(nlnd_loc(0:localPet-1))+1
+       begl_o = sum(nocn_loc(0:localPet-1))+1
+    end if
+    endl_l = sum(nlnd_loc(0:localPet))
+    endl_o = sum(nocn_loc(0:localPet))
+
+    write(msg,'(A,6I8)') trim(subname)//' : nlnd_loc, nocn_loc, begl_l, endl_l, begl_o, endl_o = ', nlnd_loc(localPet), nocn_loc(localPet), begl_l, endl_l, begl_o, endl_o 
+    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
+
+    allocate(gindex_new(nlnd_loc(localPet)+nocn_loc(localPet)))
+    gindex_new(:nlnd_loc(localPet)) = gindex_lnd(begl_l:begl_l)
+    gindex_new(nlnd_loc(localPet)+1:) = gindex_ocn(begl_o:endl_o)
+
+    do n = 1, nlnd_loc(localPet)+nocn_loc(localPet)
+       write(msg,'(A,2I8)') trim(subname)//' : n, gindex_new = ', n, gindex_new(n)
+       call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
+    end do
+
+    ! update internal data structures
+    noahmp%domain%mask(:nlnd_loc(localPet)) = 1
+    noahmp%domain%mask(nlnd_loc(localPet)+1:) = 0
+
+    ! read field
+    filename = trim(noahmp%nmlist%input_dir)//'oro_data.tile*.nc'
+    flds(1)%short_name = 'land_frac'
+    flds(1)%ptr1r4 => tmpr4
+    call read_tiled_file(noahmp, filename, flds, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! allocate data
+    if (.not. allocated(noahmp%domain%frac)) then
+       allocate(noahmp%domain%frac(noahmp%domain%begl:noahmp%domain%endl))
+    end if
+    noahmp%domain%frac = dble(tmpr4)
+
+    ! create new distgrid with new index
+    distgrid_new = ESMF_DistGridCreate(arbSeqIndexList=gindex_new, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! create new mesh with new distgrid
+    mesh = ESMF_MeshCreate(noahmp%domain%mesh, elementDistGrid=distgrid_new, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! destroy old and replace with new one
+    call ESMF_MeshDestroy(noahmp%domain%mesh, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    noahmp%domain%mesh = mesh
+
+    !call ESMF_MeshGetFieldBounds(noahmp%domain%mesh, meshloc=ESMF_MESHLOC_ELEMENT, &
+    !  totalLBound=tlb, totalUBound=tub, totalCount=tc, rc=rc)
+    !if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    !noahmp%domain%begl = tlb(1)
+    !noahmp%domain%endl = tub(1)
+    !noahmp%static%im = tc(1)
+    !write(msg, fmt='(A,3I8)') trim(subname)//' : begl, endl, im = ', noahmp%domain%begl, &
+    !  noahmp%domain%endl, noahmp%static%im
+    !call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
+
+    !noahmp%domain%mask(noahmp%domain%begl:noahmp%domain%endl) = mask_glb(gindex_new)
 
     ! ---------------------
     ! Get height from orography file
