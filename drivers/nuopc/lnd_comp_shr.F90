@@ -811,17 +811,17 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     if (isPresent .and. isSet) then
        read(cvalue,*) noahmp%nmlist%output_mode
-       if (trim(noahmp%nmlist%output_mode) == 'all' .or. &
-           trim(noahmp%nmlist%output_mode) == 'mid' .or. &
-           trim(noahmp%nmlist%output_mode) == 'low') then
-       else
-         call ESMF_LogWrite(trim(subname)//": ERROR in output_mode. Only 'all', 'mid' and 'low' are allowed!", ESMF_LOGMSG_INFO)
-         rc = ESMF_FAILURE
-         return 
+       if (trim(noahmp%nmlist%output_mode) /= 'all' .and. &
+           trim(noahmp%nmlist%output_mode) /= 'mid' .and. &
+           trim(noahmp%nmlist%output_mode) /= 'low') then
+          call ESMF_LogWrite(trim(subname)//" : ERROR in output_mode. Only 'all', 'mid' and 'low' are allowed!", ESMF_LOGMSG_INFO)
+          rc = ESMF_FAILURE
+          return 
        end if
     else
        noahmp%nmlist%output_mode = 'all'
     end if
+    call ESMF_LogWrite(trim(subname)//' : output_mode = '//trim(noahmp%nmlist%output_mode), ESMF_LOGMSG_INFO)
 
     ! restart frequency
     call NUOPC_CompAttributeGet(gcomp, name='restart_freq', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
@@ -831,7 +831,7 @@ contains
     else
        noahmp%nmlist%restart_freq = noahmp%nmlist%output_freq
     end if
-    write(msg, fmt='(A,I6)') trim(subname)//': restart_freq = ', noahmp%nmlist%restart_freq
+    write(msg, fmt='(A,I6)') trim(subname)//' : restart_freq = ', noahmp%nmlist%restart_freq
     call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 
     ! MYNN-EDMF
@@ -841,7 +841,7 @@ contains
     if (isPresent .and. isSet) then
        if (trim(cvalue) .eq. '.true.' .or. trim(cvalue) .eq. 'true') noahmp%static%do_mynnedmf = .true.
     end if
-    write(msg, fmt='(A,L)') trim(subname)//': do_mynnedmf = ', noahmp%static%do_mynnedmf
+    write(msg, fmt='(A,L)') trim(subname)//' : do_mynnedmf = ', noahmp%static%do_mynnedmf
     call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 
     ! MYNN Surface Layer Scheme
@@ -853,7 +853,7 @@ contains
     end if
     noahmp%model%do_mynnsfclay = noahmp%static%do_mynnsfclay
     if (noahmp%static%iopt_sfc == 4) noahmp%model%do_mynnsfclay = .true.
-    write(msg, fmt='(A,L)') trim(subname)//': do_mynnsfclay = ', noahmp%static%do_mynnsfclay
+    write(msg, fmt='(A,L)') trim(subname)//' : do_mynnsfclay = ', noahmp%static%do_mynnsfclay
     call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 
     ! Option for soil type category
@@ -900,6 +900,33 @@ contains
        noahmp%nmlist%initial_albedo = 0.2
     end if
     write(msg, fmt='(A,F6.2)') trim(subname)//' : initial_albedo = ', noahmp%nmlist%initial_albedo
+    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
+
+    ! Decomposition
+    call NUOPC_CompAttributeGet(gcomp, name='decomp_type', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) noahmp%nmlist%decomp_type
+       if (trim(noahmp%nmlist%decomp_type) /= 'default' .and. &
+           trim(noahmp%nmlist%decomp_type) /= 'custom') then
+          call ESMF_LogWrite(trim(subname)//": ERROR in decomp_type. Only 'default' and 'custom' are allowed!", ESMF_LOGMSG_INFO)
+          rc = ESMF_FAILURE
+          return
+       end if
+    else
+       noahmp%nmlist%decomp_type = 'default'
+    end if
+    call ESMF_LogWrite(trim(subname)//' : decomp_type = '//trim(noahmp%nmlist%decomp_type), ESMF_LOGMSG_INFO)
+
+    ! Debug level
+    call NUOPC_CompAttributeGet(gcomp, name='debug_level', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) noahmp%nmlist%debug_level
+    else
+       noahmp%nmlist%debug_level = 0
+    end if
+    write(msg, fmt='(A,I1)') trim(subname)//' : debug_level = ', noahmp%nmlist%debug_level
     call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)

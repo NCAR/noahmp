@@ -278,6 +278,8 @@ module lnd_comp_types
      integer                    :: veg_type_category                 ! vegetation type (category)
      real(kind=r8)              :: initial_emiss                     ! initial value for the emissivity (constant in everywhere)
      real(kind=r8)              :: initial_albedo                    ! initial value for the monthly albedo (constant in everywhere)
+     character*10               :: decomp_type                       ! decomposition type: default or custom
+     logical                    :: debug_level                       ! debug level
   end type namelist_type
 
   type noahmp_type
