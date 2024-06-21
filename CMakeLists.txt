@@ -17,8 +17,12 @@ file(GLOB NoahMP_Sources
     ${CMAKE_CURRENT_SOURCE_DIR}/drivers/hrldas/*.F90
     ${CMAKE_CURRENT_SOURCE_DIR}/hrldas_utility_routines/*.F90
 )
-
 add_library(NoahMP ${NoahMP_Sources})
+
+if("${CMAKE_Fortran_COMPILER_ID}" MATCHES "GNU")
+    target_compile_options(NoahMP PRIVATE "-ffree-line-length-none")
+endif()
+
 target_include_directories(NoahMP PRIVATE ${NETCDF_INCLUDES})
 target_link_libraries(NoahMP PRIVATE ${NETCDF_LIBRARIES_F90})
 add_library(NoahMP::NoahMP ALIAS NoahMP)
