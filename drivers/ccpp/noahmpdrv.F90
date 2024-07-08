@@ -292,11 +292,11 @@
   integer                                , intent(in)    :: iyrlen     ! year length [days]
   real(kind=kind_phys)                   , intent(in)    :: julian     ! julian day of year
   real(kind=kind_phys), dimension(:)     , intent(in)    :: garea      ! area of the grid cell
-  real(kind=kind_phys), dimension(:)     , intent(in)    :: rainn_mp   ! microphysics non-convective precipitation [mm]
-  real(kind=kind_phys), dimension(:)     , intent(in)    :: rainc_mp   ! microphysics convective precipitation [mm]
-  real(kind=kind_phys), dimension(:)     , intent(in)    :: snow_mp    ! microphysics snow [mm]
-  real(kind=kind_phys), dimension(:)     , intent(in)    :: graupel_mp ! microphysics graupel [mm]
-  real(kind=kind_phys), dimension(:)     , intent(in)    :: ice_mp     ! microphysics ice/hail [mm]
+  real(kind=kind_phys), dimension(:)     , intent(in), optional :: rainn_mp   ! microphysics non-convective precipitation [mm]
+  real(kind=kind_phys), dimension(:)     , intent(in), optional :: rainc_mp   ! microphysics convective precipitation [mm]
+  real(kind=kind_phys), dimension(:)     , intent(in), optional :: snow_mp    ! microphysics snow [mm]
+  real(kind=kind_phys), dimension(:)     , intent(in), optional :: graupel_mp ! microphysics graupel [mm]
+  real(kind=kind_phys), dimension(:)     , intent(in), optional :: ice_mp     ! microphysics ice/hail [mm]
   real(kind=kind_phys), dimension(:)     , intent(in)    :: rhonewsn1  ! precipitation ice density (kg/m^3)
   real(kind=kind_phys)                   , intent(in)    :: con_hvap   ! latent heat condensation [J/kg]
   real(kind=kind_phys)                   , intent(in)    :: con_cp     ! specific heat air [J/kg/K] 
@@ -334,40 +334,40 @@
   real(kind=kind_phys), dimension(:)     , intent(inout) :: fm101      ! MOS function for momentum evaulated @ 10 m
   real(kind=kind_phys), dimension(:)     , intent(inout) :: fh21       ! MOS function for heat evaulated @ 2m
 
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: snowxy     ! actual no. of snow layers
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: tvxy       ! vegetation leaf temperature [K]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: tgxy       ! bulk ground surface temperature [K]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: canicexy   ! canopy-intercepted ice [mm]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: canliqxy   ! canopy-intercepted liquid water [mm]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: eahxy      ! canopy air vapor pressure [Pa]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: tahxy      ! canopy air temperature [K]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: cmxy       ! bulk momentum drag coefficient [m/s]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: chxy       ! bulk sensible heat exchange coefficient [m/s]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: fwetxy     ! wetted or snowed fraction of the canopy [-]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: sneqvoxy   ! snow mass at last time step[mm h2o]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: alboldxy   ! snow albedo at last time step [-]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: qsnowxy    ! snowfall on the ground [mm/s]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: wslakexy   ! lake water storage [mm]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: zwtxy      ! water table depth [m]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: waxy       ! water in the "aquifer" [mm]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: wtxy       ! groundwater storage [mm]
-  real(kind=kind_phys), dimension(:,lsnowl:), intent(inout) :: tsnoxy  ! snow temperature [K]
-  real(kind=kind_phys), dimension(:,lsnowl:), intent(inout) :: zsnsoxy ! snow/soil layer depth [m]
-  real(kind=kind_phys), dimension(:,lsnowl:), intent(inout) :: snicexy ! snow layer ice [mm]
-  real(kind=kind_phys), dimension(:,lsnowl:), intent(inout) :: snliqxy ! snow layer liquid water [mm]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: lfmassxy   ! leaf mass [g/m2]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: rtmassxy   ! mass of fine roots [g/m2]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: stmassxy   ! stem mass [g/m2]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: woodxy     ! mass of wood (incl. woody roots) [g/m2]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: stblcpxy   ! stable carbon in deep soil [g/m2]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: fastcpxy   ! short-lived carbon, shallow soil [g/m2]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: xlaixy     ! leaf area index [m2/m2]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: xsaixy     ! stem area index [m2/m2]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: taussxy    ! snow age factor [-]
-  real(kind=kind_phys), dimension(:,:)   , intent(inout) :: smoiseq    ! eq volumetric soil moisture [m3/m3]
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: smcwtdxy   ! soil moisture content in the layer to the water table when deep
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: deeprechxy ! recharge to the water table when deep
-  real(kind=kind_phys), dimension(:)     , intent(inout) :: rechxy     ! recharge to the water table
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: snowxy     ! actual no. of snow layers
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: tvxy       ! vegetation leaf temperature [K]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: tgxy       ! bulk ground surface temperature [K]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: canicexy   ! canopy-intercepted ice [mm]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: canliqxy   ! canopy-intercepted liquid water [mm]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: eahxy      ! canopy air vapor pressure [Pa]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: tahxy      ! canopy air temperature [K]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: cmxy       ! bulk momentum drag coefficient [m/s]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: chxy       ! bulk sensible heat exchange coefficient [m/s]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: fwetxy     ! wetted or snowed fraction of the canopy [-]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: sneqvoxy   ! snow mass at last time step[mm h2o]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: alboldxy   ! snow albedo at last time step [-]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: qsnowxy    ! snowfall on the ground [mm/s]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: wslakexy   ! lake water storage [mm]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: zwtxy      ! water table depth [m]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: waxy       ! water in the "aquifer" [mm]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: wtxy       ! groundwater storage [mm]
+  real(kind=kind_phys), dimension(:,lsnowl:), intent(inout), optional :: tsnoxy  ! snow temperature [K]
+  real(kind=kind_phys), dimension(:,lsnowl:), intent(inout), optional :: zsnsoxy ! snow/soil layer depth [m]
+  real(kind=kind_phys), dimension(:,lsnowl:), intent(inout), optional :: snicexy ! snow layer ice [mm]
+  real(kind=kind_phys), dimension(:,lsnowl:), intent(inout), optional :: snliqxy ! snow layer liquid water [mm]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: lfmassxy   ! leaf mass [g/m2]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: rtmassxy   ! mass of fine roots [g/m2]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: stmassxy   ! stem mass [g/m2]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: woodxy     ! mass of wood (incl. woody roots) [g/m2]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: stblcpxy   ! stable carbon in deep soil [g/m2]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: fastcpxy   ! short-lived carbon, shallow soil [g/m2]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: xlaixy     ! leaf area index [m2/m2]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: xsaixy     ! stem area index [m2/m2]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: taussxy    ! snow age factor [-]
+  real(kind=kind_phys), dimension(:,:)   , intent(inout), optional :: smoiseq    ! eq volumetric soil moisture [m3/m3]
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: smcwtdxy   ! soil moisture content in the layer to the water table when deep
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: deeprechxy ! recharge to the water table when deep
+  real(kind=kind_phys), dimension(:)     , intent(inout), optional :: rechxy     ! recharge to the water table
   real(kind=kind_phys), dimension(:)     , intent(out)   :: albdvis    ! albedo - direct  visible [fraction]
   real(kind=kind_phys), dimension(:)     , intent(out)   :: albdnir    ! albedo - direct  NIR     [fraction]
   real(kind=kind_phys), dimension(:)     , intent(out)   :: albivis    ! albedo - diffuse visible [fraction]
@@ -395,12 +395,12 @@
   real(kind=kind_phys), dimension(:)     , intent(out)   :: snohf      ! snow/freezing-rain latent heat flux [W/m2]
   real(kind=kind_phys), dimension(:)     , intent(out)   :: smcwlt2    ! dry soil moisture threshold [m3/m3]
   real(kind=kind_phys), dimension(:)     , intent(out)   :: smcref2    ! soil moisture threshold [m3/m3]
-  real(kind=kind_phys), dimension(:)     , intent(out)   :: wet1       ! normalized surface soil saturated fraction
-  real(kind=kind_phys), dimension(:)     , intent(out)   :: t2mmp      ! combined T2m from tiles
-  real(kind=kind_phys), dimension(:)     , intent(out)   :: q2mp       ! combined q2m from tiles
+  real(kind=kind_phys), dimension(:)     , intent(out), optional :: wet1       ! normalized surface soil saturated fraction
+  real(kind=kind_phys), dimension(:)     , intent(out), optional :: t2mmp      ! combined T2m from tiles
+  real(kind=kind_phys), dimension(:)     , intent(out), optional :: q2mp       ! combined q2m from tiles
   real(kind=kind_phys), dimension(:)     , intent(out)   :: zvfun      ! 
   real(kind=kind_phys), dimension(:)     , intent(out)   :: ztmax      ! thermal roughness length
-  real(kind=kind_phys), dimension(:)     , intent(out)   :: rca        ! total canopy/stomatal resistance (s/m)
+  real(kind=kind_phys), dimension(:)     , intent(out), optional :: rca        ! total canopy/stomatal resistance (s/m)
 
   character(len=*)    ,                    intent(out)   :: errmsg
   integer             ,                    intent(out)   :: errflg
@@ -663,6 +663,7 @@
   real (kind=kind_phys) :: precip_freeze_frac_in  ! used for penman calculation
  
   real (kind=kind_phys) :: virtfac1               ! virtual factor
+  real (kind=kind_phys) :: tflux                  ! surface flux temp
   real (kind=kind_phys) :: tvs1                   ! surface virtual temp
   real (kind=kind_phys) :: vptemp                 ! virtual potential temp
 
@@ -944,7 +945,8 @@
         t2mmp(i)               = temperature_bare_2m
         q2mp(i)                = spec_humidity_bare_2m
 
-        tskin(i)               = temperature_ground
+        tskin(i)               = temperature_radiative
+        tflux                  = temperature_ground
         surface_temperature    = temperature_ground
         vegetation_fraction    = vegetation_frac
         ch_vegetated           = 0.0
@@ -1038,7 +1040,8 @@
          q2mp(i)  = spec_humidity_veg_2m * vegetation_fraction + &
                    spec_humidity_bare_2m * (1-vegetation_fraction)
 
-         tskin(i) = surface_temperature
+         tskin(i)               = temperature_radiative
+         tflux                  = surface_temperature
 
       endif          ! glacial split ends
 
@@ -1194,9 +1197,9 @@
        endif
 
        if(thsfc_loc) then ! Use local potential temperature
-              tvs1   = tskin(i) * virtfac1
+              tvs1   = tflux * virtfac1
          else ! Use potential temperature referenced to 1000 hPa
-              tvs1   = tskin(i)/prsik1(i) * virtfac1
+              tvs1   = tflux/prsik1(i) * virtfac1
        endif
 
       z0_total  = max(min(z0_total,forcing_height),1.0e-6)
