@@ -645,7 +645,6 @@ CONTAINS
     IPRINT    =  .false.                     ! debug printout
 
 ! for using soil update timestep difference from noahmp main timestep
-    calculate_soil = .false.
     soil_update_steps = nint(soiltstep/DT)  ! 3600 = 1 hour
     soil_update_steps = max(soil_update_steps,1)
     if ( soil_update_steps == 1 ) then
@@ -673,7 +672,7 @@ CONTAINS
      end if
     end if
 
-    if (mod(itimestep,soil_update_steps) == 0) calculate_soil = .true.
+    calculate_soil = mod(itimestep,soil_update_steps) == 0
 ! end soil timestep
 
     YEARLEN = 365                            ! find length of year for phenology (also S Hemisphere)
