@@ -517,10 +517,9 @@ contains
     endl_l = sum(nlnd_loc(0:localPet))
     endl_o = sum(nocn_loc(0:localPet))
 
-    if (noahmp%nmlist%debug_level > 10) then
-       write(msg,'(A,6I8)') trim(subname)//' : nlnd_loc, nocn_loc, begl_l, endl_l, begl_o, endl_o = ', nlnd_loc(localPet), nocn_loc(localPet), begl_l, endl_l, begl_o, endl_o 
-       call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
-    end if
+    write(msg,'(A,6I8)') trim(subname)//' : nlnd_loc, nocn_loc, begl_l, endl_l, begl_o, endl_o = ', &
+      nlnd_loc(localPet), nocn_loc(localPet), begl_l, endl_l, begl_o, endl_o 
+    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 
     allocate(gindex_new(nlnd_loc(localPet)+nocn_loc(localPet)))
     gindex_new(:nlnd_loc(localPet)) = gindex_lnd(begl_l:begl_l)
@@ -532,10 +531,6 @@ contains
           call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
        end do
     end if
-
-    write(msg, fmt='(A,4I8)') trim(subname)//' : lsize, gsize, nlnd, nocn = ', &
-      lsize, gsize(1), nlnd_loc(localPet), nocn_loc(localPet)
-    call ESMF_LogWrite(trim(msg), ESMF_LOGMSG_INFO)
 
     ! ---------------------
     ! Update mesh with new decomposition
