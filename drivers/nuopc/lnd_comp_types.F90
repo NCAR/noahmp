@@ -245,6 +245,7 @@ module lnd_comp_types
      character*100              :: case_name                         ! name of case
      character*255              :: mosaic_file                       ! name of mosaic file
      character*255              :: input_dir                         ! input directory for tiled files
+     character*255              :: fixed_dir                         ! fixed input directory for tiled files
      character*255              :: restart_dir                       ! restart directory
      character*255              :: restart_file                      ! restart file name
      character*255              :: ic_type                           ! source of initial conditions, custom vs. sfc

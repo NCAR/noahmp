@@ -223,6 +223,16 @@ contains
       return
     end if
 
+    call NUOPC_CompAttributeGet(gcomp, name='fixed_dir', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    if (isPresent .and. isSet) then
+       noahmp%nmlist%fixed_dir = trim(cvalue)
+    else
+       noahmp%nmlist%fixed_dir = "INPUT/"
+    end if
+    call ESMF_LogWrite(trim(subname)//': fixed_dir = '//trim(noahmp%nmlist%fixed_dir), ESMF_LOGMSG_INFO)
+
     call NUOPC_CompAttributeGet(gcomp, name='input_dir', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 

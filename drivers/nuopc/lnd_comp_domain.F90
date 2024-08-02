@@ -245,7 +245,7 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        vegtype(:) = int(tmpr8)
     else
-       write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%input_dir)//'C',noahmp%domain%ni, '.vegetation_type.tile*.nc'
+       write(filename, fmt="(A,I0,A)") trim(noahmp%nmlist%fixed_dir)//'C',noahmp%domain%ni, '.vegetation_type.tile*.nc'
        flds(1)%short_name = 'vegetation_type'
        flds(1)%ptr1r4 => tmpr4
        call read_tiled_file(noahmp, filename, flds, rc=rc)
