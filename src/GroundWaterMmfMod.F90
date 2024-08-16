@@ -225,8 +225,7 @@ contains
 !  USE NOAHMP_TABLES, ONLY : DKSAT_TABLE
 
 #ifdef MPP_LAND
-    ! MPP_LAND only for HRLDAS Noah-MP/WRF-Hydro - Prasanth Valayamkunnath (06/10/2022)
-     use module_mpp_land, only: mpp_land_com_real, mpp_land_com_integer, global_nx, global_ny, my_id
+     use module_mpp_land !, only: mpp_land_lr_com, mpp_land_ub_com, mpp_land_sync, global_nx, global_ny, my_id
 #endif
 ! ----------------------------------------------------------------------
   IMPLICIT NONE
@@ -251,9 +250,8 @@ contains
 
 #ifdef MPP_LAND 
   ! halo'ed arrays
+!gmm this should not be like this if memory dimensions are already different than tile dimensions
   REAL,    DIMENSION(ims-1:ime+1, jms-1:jme+1) :: KCELL, HEAD
-  integer, dimension(ims-1:ime+1, jms-1:jme+1) :: landmask_h
-  real,    dimension(ims-1:ime+1, jms-1:jme+1) :: area_h, qlat_h
 #else
   REAL,    DIMENSION(ims:ime, jms:jme) :: KCELL, HEAD
 #endif
@@ -264,27 +262,18 @@ contains
   REAL,    PARAMETER :: PI = 3.14159265 
   REAL,    PARAMETER :: FANGLE = 0.22754493   ! = 0.5*sqrt(0.5*tan(pi/8))
 
+
+
 #ifdef MPP_LAND
-! create halo'ed local copies of tile vars
-  landmask_h(ims:ime, jms:jme) = landmask
-  area_h(ims:ime, jms:jme)     = area
-
-  nx = ((ime-ims) + 1) + 2      ! include halos
-  ny = ((jme-jms) + 1) + 2      ! include halos
-  
-  !copy neighbor's values for landmask and area
-  call mpp_land_com_integer(landmask_h, nx, ny, 99)
-  call mpp_land_com_real(area_h, nx, ny, 99)
-
-  itsh=max(its,1)
-  iteh=min(ite,global_nx)
-  jtsh=max(jts,1)
-  jteh=min(jte,global_ny)
+    itsh=ims
+    iteh=ime
+    jtsh=jms
+    jteh=jme
 #else
-  itsh=max(its-1,ids)
-  iteh=min(ite+1,ide-1)
-  jtsh=max(jts-1,jds)
-  jteh=min(jte+1,jde-1)
+    itsh=its
+    iteh=ite
+    jtsh=jts
+    jteh=jte
 #endif
 
     DO J=jtsh,jteh
@@ -294,7 +283,7 @@ contains
                  IF(WTD(I,J) < -1.5)THEN
                      KCELL(I,J) = FDEPTH(I,J) * KLAT * EXP( (WTD(I,J) + 1.5) / FDEPTH(I,J) )
                  ELSE
-                     KCELL(I,J) = KLAT * ( WTD(I,J) + 1.5 + FDEPTH(I,J) )  
+                     KCELL(I,J) = KLAT * ( WTD(I,J) + 1.5 + FDEPTH(I,J) )
                  ENDIF
            ELSE
                  KCELL(i,J) = 0.
@@ -305,30 +294,42 @@ contains
     ENDDO
 
 #ifdef MPP_LAND
-! update neighbors with kcell/head/calculation
-    call mpp_land_com_real(KCELL, nx, ny, 99)
-    call mpp_land_com_real(HEAD, nx, ny, 99)
 
+  nx = ((ime-ims) + 1) + 2      ! include halos
+  ny = ((jme-jms) + 1) + 2      ! include halos
+  
+  !copy neighbor's values for haloed variables
+!gmm if memory dimensions already included the halo from the start, only wtd would need to be communicated
+!gmm before the kcell and head calculation,
+!gmm since the communication of the static arrays could be done at initial time
+
+!first do left and right communication
+  call mpp_land_lr_com(kcell, nx, ny, 99)
+  call mpp_land_lr_com(head, nx, ny, 99)
+
+  call mpp_land_sync() !need this to make sure that the corners or haloes are passed
+
+!once all know their left and right haloes, do the up and down
+  call mpp_land_ub_com(kcell, nx, ny, 99)
+  call mpp_land_ub_com(head, nx, ny, 99)
+
+#endif
+
+#ifdef MPP_LAND
     itsh=max(its,2)
     iteh=min(ite,global_nx-1)
     jtsh=max(jts,2)
     jteh=min(jte,global_ny-1)
-    
-    qlat_h  = 0.
 #else
     itsh=max(its,ids+1)
-    iteh=min(ite,ide-2)
+    iteh=min(ite,ide-1)
     jtsh=max(jts,jds+1)
-    jteh=min(jte,jde-2)
+    jteh=min(jte,jde-1)
 #endif
 
     DO J=jtsh,jteh
        DO I=itsh,iteh
-#ifdef MPP_LAND
-          IF( landmask_h(I,J).GT.0 )THEN
-#else
           IF( LANDMASK(I,J).GT.0   )THEN
-#endif
                  Q=0.
                              
                  Q  = Q + (KCELL(I-1,J+1)+KCELL(I,J)) &
@@ -356,21 +357,11 @@ contains
                         * (HEAD(I+1,J-1)-HEAD(I,J))/SQRT(2.)
 
                  ! Here, Q is in m3/s. To convert to m, divide it by area of the grid cell.
-#ifdef MPP_LAND
-                 qlat_h(I, J)  = (FANGLE * Q * DELTAT / area_h(I, J))
-#else
                  QLAT(I,J) = FANGLE* Q * DELTAT / AREA(I,J)
-#endif
           ENDIF
        ENDDO
     ENDDO
 
-#ifdef MPP_LAND
-! merge (sum) of all neighbor's edge Q's
-    call mpp_land_com_real(qlat_h, nx, ny, 1)
-    qlat = qlat_h(ims:ime, jms:jme)
-#endif
- 
   end subroutine LATERALFLOW
 
 
