@@ -26,5 +26,5 @@ endif()
 
 target_include_directories(NoahMP PRIVATE ${NETCDF_INCLUDES})
 target_link_libraries(NoahMP PRIVATE ${NETCDF_LIBRARIES_F90})
+target_include_directories(NoahMP INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/hrldas)
 add_library(NoahMP::NoahMP ALIAS NoahMP)
-target_include_directories(NoahMP INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)

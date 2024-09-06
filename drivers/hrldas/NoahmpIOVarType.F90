@@ -6,14 +6,35 @@ module NoahmpIOVarType
 ! ------------------------ Code history -----------------------------------
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath & refactor team (He et al. 2023)
+! Fortran-C API: A. Dhruv & M. Buehlmann (2024)
 ! -------------------------------------------------------------------------
 
+  use, intrinsic :: iso_c_binding, only: c_int
   use Machine
 
   implicit none
   save
   private
 
+! ---------------------------------------------------------------------------
+! Mirror of extern C struct
+! ---------------------------------------------------------------------------
+  type, bind(c), public :: NoahmpIO_struct
+    integer(c_int)                                         ::  ids,ide, &          ! d -> domain
+                                                               jds,jde, &          ! d -> domain
+                                                               kds,kde, &          ! d -> domain
+                                                               ims,ime, &          ! m -> memory
+                                                               jms,jme, &          ! m -> memory
+                                                               kms,kme, &          ! m -> memory
+                                                               its,ite, &          ! t -> tile
+                                                               jts,jte, &          ! t -> tile
+                                                               kts,kte             ! t -> tile
+  end type NoahmpIO_struct
+
+
+! ---------------------------------------------------------------------------
+! Native Fortran IO type
+! --------------------------------------------------------------------------- 
   type, public :: NoahmpIO_type
 
 !------------------------------------------------------------------------
@@ -942,5 +963,10 @@ module NoahmpIOVarType
     real(kind=kind_noahmp)                                 :: sr2006_smcmax_b_TABLE           ! constant adjustment
 
   end type NoahmpIO_type
+
+! ---------------------------------------------------------------------------
+! Public variable of NoahmpIO_type
+! --------------------------------------------------------------------------- 
+  type(NoahmpIO_type), save, public :: NoahmpIO
 
 end module NoahmpIOVarType

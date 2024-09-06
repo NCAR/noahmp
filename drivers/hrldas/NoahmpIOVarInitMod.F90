@@ -17,22 +17,22 @@ contains
 
 !=== initialize with default values
 
-  subroutine NoahmpIOVarInitDefault(NoahmpIO)
+  subroutine NoahmpIOVarInitDefault(NoahmpIO_cptr)
 
     implicit none
 
-    type(NoahmpIO_type), intent(inout) :: NoahmpIO
+    type(NoahmpIO_struct), intent(inout) :: NoahmpIO_cptr
    
 ! ------------------------------------------------- 
-    associate(                               &
-              XSTART  =>  NoahmpIO%XSTART   ,&
-              XEND    =>  NoahmpIO%XEND     ,&
-              YSTART  =>  NoahmpIO%YSTART   ,&
-              YEND    =>  NoahmpIO%YEND     ,&
-              KDS     =>  NoahmpIO%KDS      ,&
-              KDE     =>  NoahmpIO%KDE      ,&
-              NSOIL   =>  NoahmpIO%NSOIL    ,&
-              NSNOW   =>  NoahmpIO%NSNOW     &
+    associate(                                &
+              XSTART  =>  NoahmpIO%XSTART    ,&
+              XEND    =>  NoahmpIO%XEND      ,&
+              YSTART  =>  NoahmpIO%YSTART    ,&
+              YEND    =>  NoahmpIO%YEND      ,&
+              KDS     =>  NoahmpIO_cptr%KDS  ,&
+              KDE     =>  NoahmpIO_cptr%KDE  ,&
+              NSOIL   =>  NoahmpIO%NSOIL     ,&
+              NSNOW   =>  NoahmpIO%NSNOW      &
              )
 ! -------------------------------------------------
 
