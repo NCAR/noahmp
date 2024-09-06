@@ -1056,7 +1056,7 @@ CONTAINS
                                 FSA,     FSR,    FIRA,     FSH,    FGEV,   SSOIL, & ! OUT : 
                                TRAD,   ESOIL,   RUNSF,   RUNSB,     SAG,    SALB, & ! OUT :
                               QSNBOT,PONDING,PONDING1,PONDING2,    T2MB,    Q2MB, & ! OUT :
-			      EMISSI,  FPICE,    CHB2,   QMELT                    & ! OUT :
+			      EMISSI,  FPICE,    CHB2,   QMELT,   HCPCT           & ! OUT :
 #ifdef WRF_HYDRO
                               , sfcheadrt(i,j)                                      &
 #endif

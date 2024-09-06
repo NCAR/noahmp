@@ -112,7 +112,7 @@ contains
                    FSA     ,FSR     ,FIRA    ,FSH     ,FGEV    ,SSOIL   , & ! OUT : 
                    TRAD    ,EDIR    ,RUNSRF  ,RUNSUB  ,SAG     ,ALBEDO  , & ! OUT :
                    QSNBOT  ,PONDING ,PONDING1,PONDING2,T2M     ,Q2E     , & ! OUT :
-                   EMISSI,  FPICE,    CH2B   ,QMELT                       & ! OUT :
+                   EMISSI,  FPICE,    CH2B   ,QMELT,   HCPCT              & ! OUT :
 #ifdef WRF_HYDRO
                    , sfcheadrt                                            &
 #endif
@@ -209,7 +209,8 @@ contains
   REAL                                           :: QDEW   !ground surface dew rate [mm/s]
   REAL                                           :: QVAP   !ground surface evap. rate [mm/s]
   REAL                                           :: LATHEA !latent heat [j/kg]
-  REAL, INTENT(OUT)                              :: QMELT  !internal pack melt due to phase change [mm/s]
+  REAL, INTENT(OUT)                              :: QMELT !internal pack melt due to phase change [mm/s]
+  REAL, DIMENSION(-NSNOW+1:NSOIL), INTENT(OUT)   :: HCPCT  !heat capacity [j/m3/k]    
   REAL                                           :: SWDOWN !downward solar [w/m2]
   REAL                                           :: BEG_WB !beginning water for error check
   REAL                                           :: ZBOT = -8.0 
@@ -245,7 +246,7 @@ contains
                          TAUSS  ,QSFC   ,                                 & !inout
                          IMELT  ,SNICEV ,SNLIQV ,EPORE  ,QMELT  ,PONDING, & !out
 		         SAG    ,FSA    ,FSR    ,FIRA   ,FSH    ,FGEV   , & !out
-		         TRAD   ,T2M    ,SSOIL  ,LATHEA ,Q2E    ,EMISSI, CH2B )   !out
+		         TRAD   ,T2M    ,SSOIL  ,LATHEA ,Q2E    ,EMISSI, CH2B, HCPCT )   !out
 
     SICE = MAX(0.0, SMC - SH2O)   
     SNEQVO  = SNEQV
@@ -358,7 +359,7 @@ contains
                              TAUSS  ,QSFC   ,                                 & !inout
                              IMELT  ,SNICEV ,SNLIQV ,EPORE  ,QMELT  ,PONDING, & !out
                              SAG    ,FSA    ,FSR    ,FIRA   ,FSH    ,FGEV   , & !out
-                             TRAD   ,T2M    ,SSOIL  ,LATHEA ,Q2E    ,EMISSI, CH2B )   !out
+                             TRAD   ,T2M    ,SSOIL  ,LATHEA ,Q2E    ,EMISSI, CH2B, HCPCT)   !out
 
 ! --------------------------------------------------------------------------------------------------
 ! --------------------------------------------------------------------------------------------------
@@ -426,6 +427,7 @@ contains
   REAL                              , INTENT(OUT)   :: Q2E
   REAL                              , INTENT(OUT)   :: EMISSI
   REAL                              , INTENT(OUT)   :: CH2B   !sensible heat conductance, canopy air to ZLVL air (m/s)
+  REAL, DIMENSION(-NSNOW+1:NSOIL)   , INTENT(OUT)   :: HCPCT  !heat capacity [j/m3/k]
 
 
 ! local
@@ -438,7 +440,6 @@ contains
   REAL                                              :: FIRE   !emitted IR (w/m2)
   REAL, DIMENSION(-NSNOW+1:NSOIL)                   :: FACT   !temporary used in phase change
   REAL, DIMENSION(-NSNOW+1:NSOIL)                   :: DF     !thermal conductivity [w/m/k]
-  REAL, DIMENSION(-NSNOW+1:NSOIL)                   :: HCPCT  !heat capacity [j/m3/k]
   REAL                                              :: GAMMA  !psychrometric constant (pa/k)
   REAL                                              :: RHSUR  !raltive humidity in surface soil/snow air space (-)
 
