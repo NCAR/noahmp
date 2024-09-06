@@ -1989,7 +1989,7 @@ endif   ! croptype == 0
 
   real (kind=kind_phys), parameter                   :: mpe    = 1.e-6
   real (kind=kind_phys), parameter                   :: psiwlt = -150.  !metric potential for wilting point (m)
-  real (kind=kind_phys), parameter                   :: z0     = 0.002  ! bare-soil roughness length (m) (i.e., under the canopy)
+  real (kind=kind_phys), parameter                   :: z0     = 0.015  ! bare-soil roughness length (m) (i.e., under the canopy)
 
 ! ---------------------------------------------------------------------------------------------------
 ! initialize fluxes from veg. fraction
@@ -2013,6 +2013,8 @@ endif   ! croptype == 0
     chuc      = 0.
     chv2      = 0.
     rb        = 0.
+    laisun    = 0.
+    laisha    = 0.
 
     cdmnv     = 0.0
     ezpdv     = 0.0
@@ -2263,7 +2265,8 @@ endif   ! croptype == 0
                     csigmaf1,                                     & !out
 !jref:start
                     qc      ,qsfc    ,psfc    , & !in
-                    q2v     ,chv2, chleaf, chuc)               !inout 
+                    q2v     ,chv2    ,chleaf  ,chuc    ,          &
+                    rb)                                             !out 
 
 ! new coupling code
 
@@ -2626,10 +2629,10 @@ endif   ! croptype == 0
 ! thermal conductivity of snow
 
   do iz = isnow+1, 0
-!     tksno(iz) = 3.2217e-6*bdsnoi(iz)**2.           ! stieglitz(yen,1965)
+!    tksno(iz) = 3.2217e-6*bdsnoi(iz)**2.           ! stieglitz(yen,1965)
 !    tksno(iz) = 2e-2+2.5e-6*bdsnoi(iz)*bdsnoi(iz)   ! anderson, 1976
-!    tksno(iz) = 0.35                                ! constant
-    tksno(iz) = 2.576e-6*bdsnoi(iz)**2. + 0.074    ! verseghy (1991)
+     tksno(iz) = 0.35                                ! constant
+!   tksno(iz) = 2.576e-6*bdsnoi(iz)**2. + 0.074    ! verseghy (1991)
 !    tksno(iz) = 2.22*(bdsnoi(iz)/1000.)**1.88      ! douvill(yen, 1981)
   enddo
 
@@ -3712,7 +3715,8 @@ endif   ! croptype == 0
                        t2mv    ,psnsun  ,psnsha  ,canhs   ,          & !out
                        csigmaf1,                                     & !out
                        qc      ,qsfc    ,psfc    ,                   & !in
-                       q2v     ,cah2    ,chleaf  ,chuc    )            !inout 
+                       q2v     ,cah2    ,chleaf  ,chuc    ,          & !inout
+                       rb)                                             !out      
 
 ! --------------------------------------------------------------------------------------------------
 ! use newton-raphson iteration to solve for vegetation (tv) and
@@ -3836,6 +3840,7 @@ endif   ! croptype == 0
   real (kind=kind_phys),                           intent(out) :: chuc   !< under canopy exchange coefficient
   real (kind=kind_phys),                           intent(out) :: canhs  !< canopy heat storage change (w/m2)
   real (kind=kind_phys),                           intent(out) :: q2v    !< 
+  real (kind=kind_phys),                           intent(out) :: rb     !< bulk leaf boundary layer resistance (s/m)
   real (kind=kind_phys) :: cah     !< sensible heat conductance, canopy air to zlvl air (m/s)
   real (kind=kind_phys) :: u10v    !< 10 m wind speed in eastward dir (m/s) 
   real (kind=kind_phys) :: v10v    !< 10 m wind speed in eastward dir (m/s) 
@@ -3852,7 +3857,6 @@ endif   ! croptype == 0
   real (kind=kind_phys) :: z0mo        !roughness length for intermediate output only (m)
   real (kind=kind_phys) :: z0h          !roughness length, sensible heat (m)
   real (kind=kind_phys) :: z0hg         !roughness length, sensible heat (m)
-  real (kind=kind_phys) :: rb           !bulk leaf boundary layer resistance (s/m)
   real (kind=kind_phys) :: ramc         !aerodynamic resistance for momentum (s/m)
   real (kind=kind_phys) :: rahc         !aerodynamic resistance for sensible heat (s/m)
   real (kind=kind_phys) :: rawc         !aerodynamic resistance for water vapor (s/m)
@@ -4052,11 +4056,6 @@ endif   ! croptype == 0
           
         end if
 
-! prepare for longwave rad.
-
-        air = -emv*(1.+(1.-emv)*(1.-emg))*lwdn - emv*emg*sb*tg**4  
-        cir = (2.-emv*(1.-emg))*emv*sb
-!
        if(opt_sfc == 4) then
 
         gdx  = sqrt(garea1)
@@ -4203,6 +4202,11 @@ endif   ! croptype == 0
         end if
      end if
 
+! prepare for longwave rad.
+
+        air = -emv*(1.+(1.-emv)*(1.-emg))*lwdn - emv*emg*sb*tg**4  
+        cir = (2.-emv*(1.-emg))*emv*sb
+
 ! prepare for sensible heat flux above veg.
 
         cah  = 1./rahc
@@ -4265,7 +4269,7 @@ endif   ! croptype == 0
 
 ! update vegetation surface temperature
         tv  = tv + dtv
-!        tah = ata + bta*tv               ! canopy air t; update here for consistency
+        tah = ata + bta*tv               ! canopy air t; update here for consistency
 
 ! for computing m-o length in the next iteration
         h  = rhoair*cpair*(tah - sfctmp) /rahc        
@@ -4278,15 +4282,7 @@ endif   ! croptype == 0
            qfx = (qsfc-qair)*rhoair*caw
         endif
 
-
-        if (liter == 1) then
-           exit loop1 
-        endif
-        if (iter >= 5 .and. abs(dtv) <= 0.01 .and. liter == 0) then
-           liter = 1
-        endif
-
-     end do loop1 ! end stability iteration
+! after canopy balance, do the under-canopy ground balance
 
 ! under-canopy fluxes and tg
 
@@ -4295,8 +4291,6 @@ endif   ! croptype == 0
         csh = rhoair*cpair/rahg
         cev = rhoair*cpair / (gammag*(rawg+rsurf))  ! barlage: change to ground v3.6
         cgh = 2.*df(isnow+1)/dzsnso(isnow+1)
-
-     loop2: do iter = 1, niterg
 
         t = tdc(tg)
         call esat(t, esatw, esati, dsatw, dsati)
@@ -4323,7 +4317,14 @@ endif   ! croptype == 0
         gh  = gh  + cgh*dtg
         tg  = tg  + dtg
 
-     end do loop2
+        if (liter == 1) then
+           exit loop1 
+        endif
+        if (iter >= 5 .and. abs(dtv) <= 0.01  .and. abs(dtg) <= 0.01 .and. liter == 0) then
+           liter = 1   ! if conditions are met, then do one final loop
+        endif
+
+     end do loop1
      
 !     tah = (cah*sfctmp + cvh*tv + cgh*tg)/(cah + cvh + cgh)
 
@@ -5820,7 +5821,8 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
 
       if (opt_trs == z0heqz0m) then
 
-        z0m_out = exp(fveg * log(z0m)      + (1.0 - fveg) * log(z0mg))
+!       z0m_out = exp(fveg * log(z0m)      + (1.0 - fveg) * log(z0mg))
+        z0m_out = fveg * z0m      + (1.0 - fveg) * z0mg
         z0h_out = z0m_out
 
       elseif (opt_trs == chen09) then
@@ -5837,7 +5839,7 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
         endif
 
         z0h_out = exp( fveg        * log(z0m * exp(-czil*0.4*258.2*sqrt(ustarx*z0m))) + &
-                      (1.0 - fveg) * log(max(z0m/exp(kb_sigma_f0),1.0e-6)) )
+                      (1.0 - fveg) * log(max(z0mg/exp(kb_sigma_f0),1.0e-6)) )
 
       elseif (opt_trs == tessel) then
 
@@ -5876,7 +5878,7 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
 
         z0h_out = z0m_out
 
-      elseif (opt_trs == chen09 .or. opt_trs == tessel) then
+      elseif (opt_trs == tessel) then
 
         if (vegtyp <= 5) then
           z0h_out = z0m_out
@@ -5884,7 +5886,7 @@ zolmax = xkrefsqr / sqrt(xkzo)   ! maximum z/L
           z0h_out = z0m_out * 0.01
         endif
 
-      elseif (opt_trs == blumel99) then
+      elseif (opt_trs == chen09 .or. opt_trs == blumel99) then
 
         reyn = ustarx*z0m_out/viscosity                      ! Blumel99 eqn 36c
         if (reyn > 2.0) then
