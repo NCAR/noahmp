@@ -17,7 +17,7 @@ contains
 
 !=== initialize with default values
 
-  subroutine NoahmpIOVarInitDefault(NoahmpIO_cptr)
+  subroutine NoahmpIOVarInitDefault(NoahmpIO_cptr) bind(C, name="NoahmpIOVarInitDefault")
 
     implicit none
 
