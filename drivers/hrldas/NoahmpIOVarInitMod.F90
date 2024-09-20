@@ -6,6 +6,7 @@ module NoahmpIOVarInitMod
 ! ------------------------ Code history -----------------------------------
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! Fortran-C API: A. Dhruv, M. Buehlmann, & R. Kotamarthi (2024)
 ! -------------------------------------------------------------------------
 
   use Machine
@@ -18,19 +19,30 @@ contains
 !=== initialize with default values
 
   subroutine NoahmpIOVarInitDefault(NoahmpIO_cptr) bind(C, name="NoahmpIOVarInitDefault")
+
     use, intrinsic :: iso_c_binding
+    use NoahmpIO_data, ONLY: NoahmpIO
+
     implicit none
 
     type(NoahmpIO_struct), intent(inout) :: NoahmpIO_cptr
+
+
+    NoahmpIO%XSTART = NoahmpIO_cptr%XSTART
+    NoahmpIO%XEND   = NoahmpIO_cptr%XEND
+    NoahmpIO%YSTART = NoahmpIO_cptr%YSTART
+    NoahmpIO%YEND   = NoahmpIO_cptr%YEND
+    NoahmpIO%KDS    = NoahmpIO_cptr%KDS
+    NoahmpIO%KDE    = NoahmpIO_cptr%KDE
    
 ! ------------------------------------------------- 
     associate(                                &
-              XSTART  =>  NoahmpIO_cptr%XSTART    ,&
-              XEND    =>  NoahmpIO_cptr%XEND      ,&
-              YSTART  =>  NoahmpIO_cptr%YSTART    ,&
-              YEND    =>  NoahmpIO_cptr%YEND      ,&
-              KDS     =>  NoahmpIO_cptr%KDS  ,&
-              KDE     =>  NoahmpIO_cptr%KDE  ,&
+              XSTART  =>  NoahmpIO%XSTART    ,&
+              XEND    =>  NoahmpIO%XEND      ,&
+              YSTART  =>  NoahmpIO%YSTART    ,&
+              YEND    =>  NoahmpIO%YEND      ,&
+              KDS     =>  NoahmpIO%KDS       ,&
+              KDE     =>  NoahmpIO%KDE       ,&
               NSOIL   =>  NoahmpIO%NSOIL     ,&
               NSNOW   =>  NoahmpIO%NSNOW      &
              )

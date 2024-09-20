@@ -10,18 +10,22 @@ module NoahmpInitMainMod
   
 contains
 
-  subroutine NoahmpInitMain(NoahmpIO)
+  subroutine NoahmpInitMain(NoahmpIO_cptr) bind(C, name="NoahmpInitMain")
 
 ! ------------------------ Code history -------------------------------------
 ! Original Noah-MP subroutine: NOAHMP_INIT
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! Fortran-C API: A. Dhruv, M. Buehlmann, & R. Kotamarthi (2024)
 ! ---------------------------------------------------------------------------
 
-    implicit none 
-   
-    type(NoahmpIO_type), intent(inout) :: NoahmpIO
+    use, intrinsic :: iso_c_binding 
+    use NoahmpIO_data, ONLY: NoahmpIO
 
+    implicit none 
+    
+    type(NoahmpIO_struct), intent(inout) :: NoahmpIO_cptr
+   
     ! local variables
     integer                                     :: ide,jde,its,jts,itf,jtf
     integer                                     :: I,J,errflag,NS
@@ -266,7 +270,7 @@ contains
        endif
 
     endif ! NoahmpIO%restart_flag
- 
+
   end subroutine NoahmpInitMain    
 
 end module NoahmpInitMainMod

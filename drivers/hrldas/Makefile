@@ -10,6 +10,7 @@ OBJS = NoahmpGroundwaterInitMod.o \
        NoahmpInitMainMod.o \
        NoahmpDriverMainMod.o \
        NoahmpIOVarType.o \
+       NoahmpIO_data.o \
        NoahmpIOVarInitMod.o \
        NoahmpReadTableMod.o \
        NoahmpReadNamelistMod.o \
@@ -43,7 +44,7 @@ clean:
 #
 
 NoahmpIOVarType.o:          ../../utility/Machine.o
-NoahmpIOVarInitMod.o:       ../../utility/Machine.o NoahmpIOVarType.o
+NoahmpIOVarInitMod.o:       ../../utility/Machine.o NoahmpIOVarType.o NoahmpIO_data.o
 NoahmpReadTableMod.o:       ../../utility/Machine.o NoahmpIOVarType.o
 NoahmpReadNamelistMod.o:    ../../utility/Machine.o NoahmpIOVarType.o
 PedoTransferSR2006Mod.o:    ../../utility/Machine.o NoahmpIOVarType.o

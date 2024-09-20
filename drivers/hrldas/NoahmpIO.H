@@ -51,6 +51,7 @@ extern "C" {
 
     // Function to expose the struct to Fortran
     void NoahmpIOVarInitDefault(NoahmpIO_struct* ptr);
+    void NoahmpInitMain(NoahmpIO_struct* ptr);
 }
 
 #endif // NOAHMP_IO_H

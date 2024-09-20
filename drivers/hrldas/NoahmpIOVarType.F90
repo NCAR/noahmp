@@ -6,7 +6,7 @@ module NoahmpIOVarType
 ! ------------------------ Code history -----------------------------------
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath & refactor team (He et al. 2023)
-! Fortran-C API: A. Dhruv & M. Buehlmann (2024)
+! Fortran-C API: A. Dhruv, M. Buehlmann, & R. Kotamarthi (2024)
 ! -------------------------------------------------------------------------
 
   use, intrinsic :: iso_c_binding, only: C_INT, C_DOUBLE, C_PTR
@@ -966,10 +966,5 @@ module NoahmpIOVarType
     real(kind=kind_noahmp)                                 :: sr2006_smcmax_b_TABLE           ! constant adjustment
 
   end type NoahmpIO_type
-
-! ---------------------------------------------------------------------------
-! Public variable of NoahmpIO_type
-! --------------------------------------------------------------------------- 
-  type(NoahmpIO_type), save, target, public :: NoahmpIO
 
 end module NoahmpIOVarType
