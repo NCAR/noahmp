@@ -18,17 +18,17 @@ contains
 !=== initialize with default values
 
   subroutine NoahmpIOVarInitDefault(NoahmpIO_cptr) bind(C, name="NoahmpIOVarInitDefault")
-
+    use, intrinsic :: iso_c_binding
     implicit none
 
     type(NoahmpIO_struct), intent(inout) :: NoahmpIO_cptr
    
 ! ------------------------------------------------- 
     associate(                                &
-              XSTART  =>  NoahmpIO%XSTART    ,&
-              XEND    =>  NoahmpIO%XEND      ,&
-              YSTART  =>  NoahmpIO%YSTART    ,&
-              YEND    =>  NoahmpIO%YEND      ,&
+              XSTART  =>  NoahmpIO_cptr%XSTART    ,&
+              XEND    =>  NoahmpIO_cptr%XEND      ,&
+              YSTART  =>  NoahmpIO_cptr%YSTART    ,&
+              YEND    =>  NoahmpIO_cptr%YEND      ,&
               KDS     =>  NoahmpIO_cptr%KDS  ,&
               KDE     =>  NoahmpIO_cptr%KDE  ,&
               NSOIL   =>  NoahmpIO%NSOIL     ,&
@@ -850,7 +850,10 @@ contains
 #endif 
    
     end associate
- 
+
+    NoahmpIO_cptr%XLAT = C_LOC(NoahmpIO%XLAT)
+    NoahmpIO_cptr%WSLAKEXY = C_LOC(NoahmpIO%WSLAKEXY)
+
   end subroutine NoahmpIOVarInitDefault
 
 end module NoahmpIOVarInitMod

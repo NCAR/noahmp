@@ -9,7 +9,7 @@ module NoahmpIOVarType
 ! Fortran-C API: A. Dhruv & M. Buehlmann (2024)
 ! -------------------------------------------------------------------------
 
-  use, intrinsic :: iso_c_binding, only: c_int
+  use, intrinsic :: iso_c_binding, only: C_INT, C_DOUBLE, C_PTR
   use Machine
 
   implicit none
@@ -20,7 +20,7 @@ module NoahmpIOVarType
 ! Mirror of extern C struct
 ! ---------------------------------------------------------------------------
   type, bind(c), public :: NoahmpIO_struct
-    integer(c_int)                                         ::  ids,ide, &          ! d -> domain
+    integer(C_INT)                                         ::  ids,ide, &          ! d -> domain
                                                                jds,jde, &          ! d -> domain
                                                                kds,kde, &          ! d -> domain
                                                                ims,ime, &          ! m -> memory
@@ -29,6 +29,9 @@ module NoahmpIOVarType
                                                                its,ite, &          ! t -> tile
                                                                jts,jte, &          ! t -> tile
                                                                kts,kte             ! t -> tile
+
+    integer(C_INT) :: xstart, xend, ystart, yend
+    type(C_PTR) :: XLAT, WSLAKEXY
   end type NoahmpIO_struct
 
 
@@ -95,7 +98,7 @@ module NoahmpIOVarType
     integer,                allocatable, dimension(:,:)    ::  IVGTYP              ! vegetation type
     integer,                allocatable, dimension(:,:)    ::  ISLTYP              ! soil type
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  COSZEN              ! cosine zenith angle
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  XLAT                ! latitude [rad]
+    real(C_DOUBLE),         allocatable, dimension(:,:)    ::  XLAT                ! latitude [rad]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  DZ8W                ! thickness of atmo layers [m]
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  DZS                 ! thickness of soil layers [m]
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  ZSOIL               ! depth to soil interfaces [m]
@@ -217,7 +220,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ALBOLDXY            ! snow albedo at last time step (-)
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QSNOWXY             ! snowfall on the ground [mm/s]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QRAINXY             ! rainfall on the ground [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  WSLAKEXY            ! lake water storage [mm]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  WSLAKEXY            ! lake water storage [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ZWTXY               ! water table depth [m]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  WAXY                ! water in the "aquifer" [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  WTXY                ! groundwater storage [mm]
@@ -967,6 +970,6 @@ module NoahmpIOVarType
 ! ---------------------------------------------------------------------------
 ! Public variable of NoahmpIO_type
 ! --------------------------------------------------------------------------- 
-  type(NoahmpIO_type), save, public :: NoahmpIO
+  type(NoahmpIO_type), save, target, public :: NoahmpIO
 
 end module NoahmpIOVarType
