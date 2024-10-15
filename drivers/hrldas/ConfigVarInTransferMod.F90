@@ -43,6 +43,7 @@ contains
     noahmp%config%nmlist%OptSurfaceDrag              = NoahmpIO%IOPT_SFC
     noahmp%config%nmlist%OptStomataResistance        = NoahmpIO%IOPT_CRS
     noahmp%config%nmlist%OptSnowAlbedo               = NoahmpIO%IOPT_ALB
+    noahmp%config%nmlist%OptSnowCompact              = NoahmpIO%IOPT_COMPACT !RAR
     noahmp%config%nmlist%OptCanopyRadiationTransfer  = NoahmpIO%IOPT_RAD
     noahmp%config%nmlist%OptSnowSoilTempTime         = NoahmpIO%IOPT_STC
     noahmp%config%nmlist%OptSnowThermConduct         = NoahmpIO%IOPT_TKSNO
@@ -129,12 +130,11 @@ contains
 
     ! treatment for urban point
     if ( (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISURBAN_TABLE) .or. (NoahmpIO%IVGTYP(I,J) > NoahmpIO%URBTYPE_beg) ) then
-       if ( NoahmpIO%SF_URBAN_PHYSICS == 0 ) then
-           noahmp%config%domain%VegType = NoahmpIO%ISURBAN_TABLE  ! treat as bulk urban point
-           noahmp%config%domain%FlagUrban = .true.
+       noahmp%config%domain%FlagUrban = .true. 
+       if(NoahmpIO%SF_URBAN_PHYSICS == 0 ) then
+           noahmp%config%domain%VegType = NoahmpIO%ISURBAN_TABLE
        else
-           noahmp%config%domain%VegType = NoahmpIO%NATURAL_TABLE  ! set rural vegetation type based on table natural
-                                                                  ! urban is handled by explicit urban scheme outside Noah-MP
+           noahmp%config%domain%VegType = NoahmpIO%NATURAL_TABLE  ! set urban vegetation type based on table natural
            NoahmpIO%GVFMAX(I,J)         = 0.96 * 100.0            ! unit: %
        endif         
     endif

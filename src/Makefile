@@ -42,6 +42,7 @@ OBJS = ConstantDefineMod.o \
        SnowLayerDivideMod.o \
        SnowLayerWaterComboMod.o \
        SnowpackCompactionMod.o \
+	   SnowpackCompactionAR2023Mod.o \
        SnowpackHydrologyMod.o \
        SnowWaterMainMod.o \
        SoilHydraulicPropertyMod.o \

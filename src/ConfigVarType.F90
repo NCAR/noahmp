@@ -121,6 +121,10 @@ module ConfigVarType
                                               ! 1 -> include phase change of ice (default)
                                               ! 2 -> ice treatment more like original Noah
 
+    integer :: OptSnowCompact              ! options for ground snow compaction
+                                          ! 1 -> original scheme from Anderson (1976)
+                                          ! 2 -> enhanced scheme from Abolafia-Rosenzweig et al. (2023)
+
   end type namelist_type
 
 
