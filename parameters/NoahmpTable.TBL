@@ -452,6 +452,12 @@
  C5_SNOWCOMPACT   = 2.0         ! snow desctructive metamorphism compaction parameter3
  DM_SNOWCOMPACT   = 100.0       ! upper Limit on destructive metamorphism compaction [kg/m3]
  ETA0_SNOWCOMPACT = 1.33e+6     ! snow viscosity coefficient [kg-s/m2], Anderson1979: 0.52e6~1.38e6; 1.33e+6 optimized based on SNOTEL obs (He et al. 2021 JGR)
+ SNOWCOMPACTm     = -0.00069503 ! snow compaction m parameter for linear sfc temp fitting from AR2024
+ SNOWCOMPACTb     = 0.20606699  ! snow compaction b parameter for linear sfc temp fitting from AR2024
+ SNOWCOMPACT_PSFC1 = 0.017     ! lower constrain for SnowCompactBurdenFac for high pressure bin from AR2024
+ SNOWCOMPACT_PSFC2 = 0.018     ! lower constrain for SnowCompactBurdenFac for mid pressure bin from AR2024
+ SNOWCOMPACT_PSFC3 = 0.019     ! lower constrain for SnowCompactBurdenFac for low pressure bin from AR2024
+ SNOWCOMPACT_Upper = 0.0315    ! upper constraint on SnowCompactBurdenFac from AR2024
  SNLIQMAXFRAC     = 0.4         ! maximum liquid water fraction in snow
  SWEMAXGLA        = 5000.0      ! Maximum SWE allowed at glaciers (mm)
  SNOWDEN_MAX      = 120.0       ! maximum fresh snowfall density (kg/m3)
@@ -460,6 +466,7 @@
  CLASS_ALB_NEW    = 0.84        ! fresh snow albedo in CLASS scheme
  RSURF_SNOW       = 50.0        ! surface resistence for snow [s/m]
  Z0SNO            = 0.002       ! snow surface roughness length (m)
+ 
  ! other soil and hydrological parameters
  RSURF_EXP        = 5.0         ! exponent in the shape parameter for soil resistance option 1
  WSLMAX           = 5000.0      ! maximum lake water storage (mm)

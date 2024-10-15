@@ -43,6 +43,7 @@ contains
     noahmp%config%nmlist%OptSurfaceDrag              = NoahmpIO%IOPT_SFC
     noahmp%config%nmlist%OptStomataResistance        = NoahmpIO%IOPT_CRS
     noahmp%config%nmlist%OptSnowAlbedo               = NoahmpIO%IOPT_ALB
+    noahmp%config%nmlist%OptSnowCompact              = NoahmpIO%IOPT_COMPACT 
     noahmp%config%nmlist%OptCanopyRadiationTransfer  = NoahmpIO%IOPT_RAD
     noahmp%config%nmlist%OptSnowSoilTempTime         = NoahmpIO%IOPT_STC
     noahmp%config%nmlist%OptSnowThermConduct         = NoahmpIO%IOPT_TKSNO
@@ -136,7 +137,7 @@ contains
            noahmp%config%domain%VegType = NoahmpIO%NATURAL_TABLE  ! set rural vegetation type based on table natural
                                                                   ! urban is handled by explicit urban scheme outside Noah-MP
            NoahmpIO%GVFMAX(I,J)         = 0.96 * 100.0            ! unit: %
-       endif         
+       endif
     endif
 
     ! treatment for crop point

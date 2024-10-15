@@ -173,6 +173,12 @@ module WaterVarType
     real(kind=kind_noahmp) :: SnowCompactAgingFac3       ! snow desctructive metamorphism compaction parameter3 
     real(kind=kind_noahmp) :: SnowCompactAgingMax        ! upper Limit on destructive metamorphism compaction [kg/m3]
     real(kind=kind_noahmp) :: SnowViscosityCoeff         ! snow viscosity coefficient [kg-s/m2], Anderson1979: 0.52e6~1.38e6
+    real(kind=kind_noahmp) :: SnowCompactm               ! snow compaction m parameter for linear sfc temp fitting from AR2024
+    real(kind=kind_noahmp) :: SnowCompactb               ! snow compaction b parameter for linear sfc temp fitting from AR2024
+    real(kind=kind_noahmp) :: SnowCompactPSFC1           ! lower constrain for SnowCompactBurdenFac for high pressure bin from AR2024
+    real(kind=kind_noahmp) :: SnowCompactPSFC2           ! lower constrain for SnowCompactBurdenFac for mid pressure bin from AR2024
+    real(kind=kind_noahmp) :: SnowCompactPSFC3           ! lower constrain for SnowCompactBurdenFac for low pressure bin from AR2024
+    real(kind=kind_noahmp) :: BurdenFacUpper             ! upper constraint on SnowCompactBurdenFac from AR2024
     real(kind=kind_noahmp) :: SnowLiqFracMax             ! maximum liquid water fraction in snow
     real(kind=kind_noahmp) :: SnowLiqHoldCap             ! liquid water holding capacity for snowpack [m3/m3]
     real(kind=kind_noahmp) :: SnowLiqReleaseFac          ! snowpack water release timescale factor [1/s]

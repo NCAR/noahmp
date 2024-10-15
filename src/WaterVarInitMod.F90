@@ -230,6 +230,12 @@ contains
     noahmp%water%param%SnowCompactAgingFac3        = undefined_real
     noahmp%water%param%SnowCompactAgingMax         = undefined_real
     noahmp%water%param%SnowViscosityCoeff          = undefined_real
+    noahmp%water%param%SnowCompactm                = undefined_real
+    noahmp%water%param%SnowCompactb                = undefined_real
+    noahmp%water%param%SnowCompactPSFC1            = undefined_real
+    noahmp%water%param%SnowCompactPSFC2            = undefined_real
+    noahmp%water%param%SnowCompactPSFC3            = undefined_real
+    noahmp%water%param%BurdenFacUpper              = undefined_real
     noahmp%water%param%SnowLiqFracMax              = undefined_real
     noahmp%water%param%SnowLiqHoldCap              = undefined_real
     noahmp%water%param%SnowLiqReleaseFac           = undefined_real
