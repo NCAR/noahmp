@@ -19,21 +19,21 @@ file(GLOB NoahMP_Sources
     ${CMAKE_CURRENT_SOURCE_DIR}/drivers/hrldas/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/hrldas_utility_routines/*.F90
 )
-add_library(NoahMP ${NoahMP_Sources})
-add_library(NoahMP::NoahMP ALIAS NoahMP)
+add_library(noahmp ${NoahMP_Sources})
+add_library(NoahMP::noahmp ALIAS noahmp)
 
 if("${CMAKE_Fortran_COMPILER_ID}" MATCHES "GNU")
-    target_compile_options(NoahMP PRIVATE "-ffree-line-length-none")
+    target_compile_options(noahmp PRIVATE "-ffree-line-length-none")
 endif()
 
-target_include_directories(NoahMP PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/drivers/hrldas>)
-target_include_directories(NoahMP PRIVATE $<BUILD_INTERFACE:${NETCDF_INCLUDES}>)
-target_link_libraries(NoahMP PRIVATE ${NETCDF_LIBRARIES_F90})
-target_link_libraries(NoahMP PUBLIC gfortran)
-target_include_directories(NoahMP INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/drivers/hrldas>)
+target_include_directories(noahmp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/drivers/hrldas>)
+target_include_directories(noahmp PRIVATE $<BUILD_INTERFACE:${NETCDF_INCLUDES}>)
+target_link_libraries(noahmp PRIVATE ${NETCDF_LIBRARIES_F90})
+target_link_libraries(noahmp PUBLIC gfortran)
+target_include_directories(noahmp INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/drivers/hrldas>)
 
 # Install the library and export the target
-install(TARGETS NoahMP
+install(TARGETS noahmp
     EXPORT NoahMPTargets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
@@ -43,5 +43,5 @@ install(TARGETS NoahMP
 install(EXPORT NoahMPTargets
     FILE NoahMPTargets.cmake
     NAMESPACE NoahMP::
-    DESTINATION lib/cmake/NoahMP
+    DESTINATION lib/cmake/noahmp
 )
