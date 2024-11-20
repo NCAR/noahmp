@@ -30,6 +30,7 @@ contains
     noahmp%config%nmlist%OptSurfaceDrag              = undefined_int
     noahmp%config%nmlist%OptStomataResistance        = undefined_int
     noahmp%config%nmlist%OptSnowAlbedo               = undefined_int
+    noahmp%config%nmlist%OptSnowCompact              = undefined_int 
     noahmp%config%nmlist%OptCanopyRadiationTransfer  = undefined_int
     noahmp%config%nmlist%OptSnowSoilTempTime         = undefined_int
     noahmp%config%nmlist%OptSnowThermConduct         = undefined_int
