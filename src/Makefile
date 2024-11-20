@@ -42,6 +42,7 @@ OBJS = ConstantDefineMod.o \
        SnowLayerDivideMod.o \
        SnowLayerWaterComboMod.o \
        SnowpackCompactionMod.o \
+       SnowpackCompactionARMod.o \
        SnowpackHydrologyMod.o \
        SnowWaterMainMod.o \
        SoilHydraulicPropertyMod.o \
@@ -205,10 +206,11 @@ SnowLayerDivideMod.o:                 ../utility/Machine.o NoahmpVarType.o Const
                                       SnowLayerWaterComboMod.o
 SnowLayerWaterComboMod.o:             ../utility/Machine.o ConstantDefineMod.o
 SnowpackCompactionMod.o:              ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
+SnowpackCompactionARMod.o:              ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SnowpackHydrologyMod.o:               ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       SnowLayerCombineMod.o
 SnowWaterMainMod.o:                   ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
-                                      SnowfallBelowCanopyMod.o SnowpackCompactionMod.o SnowLayerDivideMod.o \
+                                      SnowfallBelowCanopyMod.o SnowpackCompactionMod.o SnowpackCompactionARMod.o SnowLayerDivideMod.o \
                                       SnowLayerCombineMod.o SnowpackHydrologyMod.o
 SoilHydraulicPropertyMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SoilMoistureSolverMod.o:              ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
@@ -339,7 +341,7 @@ PsychrometricVariableGlacierMod.o:       ../utility/Machine.o NoahmpVarType.o Co
 ResistanceGroundEvaporationGlacierMod.o: ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SnowCoverGlacierMod.o:                   ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SnowWaterMainGlacierMod.o:               ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o SnowfallBelowCanopyMod.o \
-                                         SnowpackCompactionMod.o SnowLayerCombineMod.o SnowLayerDivideMod.o \
+                                         SnowpackCompactionMod.o SnowpackCompactionARMod.o SnowLayerCombineMod.o SnowLayerDivideMod.o \
                                          SnowpackHydrologyGlacierMod.o 
 SnowpackHydrologyGlacierMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o SnowLayerCombineMod.o
 SurfaceAlbedoGlacierMod.o:               ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o SnowAgingBatsMod.o \

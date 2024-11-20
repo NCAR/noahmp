@@ -79,6 +79,7 @@ contains
     integer                 :: frozen_soil_option                 = 1
     integer                 :: radiative_transfer_option          = 3
     integer                 :: snow_albedo_option                 = 1
+    integer                 :: snow_compaction_option             = 2 
     integer                 :: snow_thermal_conductivity          = 1
     integer                 :: pcp_partition_option               = 1
     integer                 :: tbot_option                        = 2
@@ -123,7 +124,7 @@ contains
          forcing_name_LW,forcing_name_SW,forcing_name_PR,forcing_name_SN,                 &
          dynamic_veg_option, canopy_stomatal_resistance_option,                           &
          btr_option, surface_drag_option, supercooled_water_option,        &
-         frozen_soil_option, radiative_transfer_option, snow_albedo_option,               &
+         frozen_soil_option, radiative_transfer_option, snow_albedo_option,  snow_compaction_option,          & 
          snow_thermal_conductivity, surface_runoff_option, subsurface_runoff_option,      &
          pcp_partition_option, tbot_option, temp_time_scheme_option,                      &
          glacier_option, surface_resistance_option,                                       &
@@ -330,6 +331,7 @@ contains
     NoahmpIO%IOPT_INF                          = frozen_soil_option
     NoahmpIO%IOPT_RAD                          = radiative_transfer_option
     NoahmpIO%IOPT_ALB                          = snow_albedo_option
+    NoahmpIO%IOPT_COMPACT                      = snow_compaction_option
     NoahmpIO%IOPT_SNF                          = pcp_partition_option
     NoahmpIO%IOPT_TKSNO                        = snow_thermal_conductivity 
     NoahmpIO%IOPT_TBOT                         = tbot_option

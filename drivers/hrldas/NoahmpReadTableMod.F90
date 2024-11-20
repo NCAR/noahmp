@@ -110,14 +110,19 @@ contains
                                                 GRAIN_GROWTH, EXTRA_GROWTH, DIRT_SOOT, BATS_COSZ, BATS_VIS_NEW,              &
                                                 BATS_NIR_NEW, BATS_VIS_AGE, BATS_NIR_AGE, BATS_VIS_DIR, BATS_NIR_DIR,        &
                                                 RSURF_SNOW, RSURF_EXP, C2_SNOWCOMPACT, C3_SNOWCOMPACT, C4_SNOWCOMPACT,       &
-                                                C5_SNOWCOMPACT, DM_SNOWCOMPACT, ETA0_SNOWCOMPACT, SNLIQMAXFRAC, SWEMAXGLA,   &
+                                                C5_SNOWCOMPACT, DM_SNOWCOMPACT, ETA0_SNOWCOMPACT, SNOWCOMPACTm,SNOWCOMPACTb, &
+                                                SNOWCOMPACT_PSFC1, SNOWCOMPACT_PSFC2, SNOWCOMPACT_PSFC3, SNOWCOMPACT_Upper,  &
+                                                SNLIQMAXFRAC, SWEMAXGLA,   &
                                                 WSLMAX, ROUS, CMIC, SNOWDEN_MAX, CLASS_ALB_REF, CLASS_SNO_AGE, CLASS_ALB_NEW,&
                                                 PSIWLT, Z0SOIL, Z0LAKE
     namelist / noahmp_global_parameters /       CO2, O2, TIMEAN, FSATMX, Z0SNO, SSI, SNOW_RET_FAC ,SNOW_EMIS, SWEMX, TAU0,   &
                                                 GRAIN_GROWTH, EXTRA_GROWTH, DIRT_SOOT, BATS_COSZ, BATS_VIS_NEW,              &
                                                 BATS_NIR_NEW, BATS_VIS_AGE, BATS_NIR_AGE, BATS_VIS_DIR, BATS_NIR_DIR,        &
                                                 RSURF_SNOW, RSURF_EXP, C2_SNOWCOMPACT, C3_SNOWCOMPACT, C4_SNOWCOMPACT,       &
-                                                C5_SNOWCOMPACT, DM_SNOWCOMPACT, ETA0_SNOWCOMPACT, SNLIQMAXFRAC, SWEMAXGLA,   &
+                                                C5_SNOWCOMPACT, DM_SNOWCOMPACT, ETA0_SNOWCOMPACT, SNOWCOMPACTm,SNOWCOMPACTb, &
+                                                SNOWCOMPACT_PSFC1, SNOWCOMPACT_PSFC2, SNOWCOMPACT_PSFC3, SNOWCOMPACT_Upper,  &
+                                                SNLIQMAXFRAC, SWEMAXGLA,   &
+                                                SNLIQMAXFRAC, SWEMAXGLA,   &
                                                 WSLMAX, ROUS, CMIC, SNOWDEN_MAX, CLASS_ALB_REF, CLASS_SNO_AGE, CLASS_ALB_NEW,&
                                                 PSIWLT, Z0SOIL, Z0LAKE
 
@@ -509,6 +514,12 @@ contains
     NoahmpIO%C5_SNOWCOMPACT_TABLE   = undefined_real
     NoahmpIO%DM_SNOWCOMPACT_TABLE   = undefined_real
     NoahmpIO%ETA0_SNOWCOMPACT_TABLE = undefined_real
+    NoahmpIO%SNOWCOMPACTm_TABLE     = undefined_real
+    NoahmpIO%SNOWCOMPACTb_TABLE     = undefined_real
+    NoahmpIO%SNOWCOMPACT_PSFC1_TABLE = undefined_real
+    NoahmpIO%SNOWCOMPACT_PSFC2_TABLE = undefined_real
+    NoahmpIO%SNOWCOMPACT_PSFC3_TABLE = undefined_real
+    NoahmpIO%SNOWCOMPACT_Upper_TABLE = undefined_real
     NoahmpIO%SNLIQMAXFRAC_TABLE     = undefined_real
     NoahmpIO%SWEMAXGLA_TABLE        = undefined_real
     NoahmpIO%WSLMAX_TABLE           = undefined_real
@@ -905,6 +916,12 @@ contains
     NoahmpIO%C5_SNOWCOMPACT_TABLE   = C5_SNOWCOMPACT
     NoahmpIO%DM_SNOWCOMPACT_TABLE   = DM_SNOWCOMPACT
     NoahmpIO%ETA0_SNOWCOMPACT_TABLE = ETA0_SNOWCOMPACT
+    NoahmpIO%SNOWCOMPACTm_TABLE   = SNOWCOMPACTm
+    NoahmpIO%SNOWCOMPACTb_TABLE   = SNOWCOMPACTb
+    NoahmpIO%SNOWCOMPACT_PSFC1_TABLE   = SNOWCOMPACT_PSFC1
+    NoahmpIO%SNOWCOMPACT_PSFC2_TABLE   = SNOWCOMPACT_PSFC2
+    NoahmpIO%SNOWCOMPACT_PSFC3_TABLE   = SNOWCOMPACT_PSFC3
+    NoahmpIO%SNOWCOMPACT_Upper_TABLE   = SNOWCOMPACT_Upper
     NoahmpIO%SNLIQMAXFRAC_TABLE     = SNLIQMAXFRAC
     NoahmpIO%SWEMAXGLA_TABLE        = SWEMAXGLA
     NoahmpIO%WSLMAX_TABLE           = WSLMAX

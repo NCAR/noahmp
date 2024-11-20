@@ -101,6 +101,12 @@ contains
     noahmp%water%param%SnowCompactAgingFac3               = NoahmpIO%C5_SNOWCOMPACT_TABLE
     noahmp%water%param%SnowCompactAgingMax                = NoahmpIO%DM_SNOWCOMPACT_TABLE
     noahmp%water%param%SnowViscosityCoeff                 = NoahmpIO%ETA0_SNOWCOMPACT_TABLE
+    noahmp%water%param%SnowCompactm                       = NoahmpIO%SNOWCOMPACTm_TABLE
+    noahmp%water%param%SnowCompactb                       = NoahmpIO%SNOWCOMPACTb_TABLE
+    noahmp%water%param%SnowCompactPSFC1                   = NoahmpIO%SNOWCOMPACT_PSFC1_TABLE
+    noahmp%water%param%SnowCompactPSFC2                   = NoahmpIO%SNOWCOMPACT_PSFC2_TABLE
+    noahmp%water%param%SnowCompactPSFC3                   = NoahmpIO%SNOWCOMPACT_PSFC3_TABLE
+    noahmp%water%param%BurdenFacUpper                     = NoahmpIO%SNOWCOMPACT_Upper_TABLE
     noahmp%water%param%SnowLiqFracMax                     = NoahmpIO%SNLIQMAXFRAC_TABLE
     noahmp%water%param%SnowLiqHoldCap                     = NoahmpIO%SSI_TABLE
     noahmp%water%param%SnowLiqReleaseFac                  = NoahmpIO%SNOW_RET_FAC_TABLE
