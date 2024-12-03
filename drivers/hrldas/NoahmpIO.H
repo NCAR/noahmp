@@ -1,39 +1,7 @@
 #ifndef NOAHMP_IO_H
 #define NOAHMP_IO_H
 
-/*
- * #include <NoahmpArray.H>
- *
- * class NoampIO {
- *
- *   private:
- *       NoampIO_struct fstruct;
- *
- *   public:
- *        NoahmpArray2D<double> XLAT;
- *        NoahmpArray3D<double> DZ8W;
- *        NoahmpArray1D<double> DZS;
- *
- *
- *        NoahmpIO();
- *        Init(ids, ide, jds, jde, kds, kde) {
- *          this->fstruct.ids = ids
- *          this->fstruct.jds = jds
- *
- *          XLAT.allocate(fstruct.ids, fstruct.jds);
- *          this->fstruct.XLAT = XLAT.data;
- *
- *          DZS.allocate();
- *
- *          NoahmpIOVarInitDefault(&this->fstruct);
- *        }
- *
- *        Advance() {
- *
- *        }
- * }
- *
- */
+#include <NoahArray.H>
 
 extern "C" {
     struct NoahmpIO_struct {
@@ -53,5 +21,12 @@ extern "C" {
     void NoahmpIOVarInitDefault(NoahmpIO_struct* ptr);
     void NoahmpInitMain(NoahmpIO_struct* ptr);
 }
+
+struct NoahmpIO_arrays {
+        NoahArray2D<double> XLAT;
+        NoahArray2D<double> WSLAKEXY;
+   };
+
+extern void NoahmpIOVarInit(NoahmpIO_struct* sptr, NoahmpIO_arrays* aptr);
 
 #endif // NOAHMP_IO_H
