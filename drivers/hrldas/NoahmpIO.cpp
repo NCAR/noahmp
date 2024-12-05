@@ -1,9 +1,22 @@
 #include <NoahmpIO.H>
 #include <NoahArray.H>
 
-void NoahmpIOVarInit(NoahmpIO_struct* sptr, NoahmpIO_arrays* aptr) {
-      NoahmpIOVarInitDefault(sptr); 
+void NoahmpIOVarInitDefault(NoahmpIO_type* noahmpio) {
 
-      aptr->XLAT = NoahArray2D<double>(sptr->XLAT, {sptr->xstart, sptr->ystart}, {sptr->xend, sptr->yend});
-      aptr->WSLAKEXY = NoahArray2D<double>(sptr->WSLAKEXY, {sptr->xstart, sptr->ystart}, {sptr->xend, sptr->yend});
+      NoahmpIO_type_fi* fptr = &noahmpio->fptr;
+      NoahmpIOVarInitDefault_fi(fptr);
+
+      noahmpio->XLAT = NoahArray2D<double>(fptr->XLAT, 
+                                          {noahmpio->xstart, noahmpio->ystart}, 
+                                          {noahmpio->xend, noahmpio->yend});
+
+      noahmpio->WSLAKEXY = NoahArray2D<double>(fptr->WSLAKEXY, 
+                                              {noahmpio->xstart, noahmpio->ystart}, 
+                                              {noahmpio->xend, noahmpio->yend});
+
+};
+
+void NoahmpInitMain(NoahmpIO_type* noahmpio) {
+     NoahmpIO_type_fi* fptr = &noahmpio->fptr;
+     NoahmpInitMain_fi(fptr);
 };

@@ -17,25 +17,6 @@ module NoahmpIOVarType
   private
 
 ! ---------------------------------------------------------------------------
-! Mirror of extern C struct
-! ---------------------------------------------------------------------------
-  type, bind(c), public :: NoahmpIO_struct
-    integer(C_INT)                                         ::  ids,ide, &          ! d -> domain
-                                                               jds,jde, &          ! d -> domain
-                                                               kds,kde, &          ! d -> domain
-                                                               ims,ime, &          ! m -> memory
-                                                               jms,jme, &          ! m -> memory
-                                                               kms,kme, &          ! m -> memory
-                                                               its,ite, &          ! t -> tile
-                                                               jts,jte, &          ! t -> tile
-                                                               kts,kte             ! t -> tile
-
-    integer(C_INT) :: xstart, xend, ystart, yend
-    type(C_PTR) :: XLAT, WSLAKEXY
-  end type NoahmpIO_struct
-
-
-! ---------------------------------------------------------------------------
 ! Native Fortran IO type
 ! --------------------------------------------------------------------------- 
   type, public :: NoahmpIO_type
@@ -45,7 +26,7 @@ module NoahmpIOVarType
 !------------------------------------------------------------------------
 
     ! IN only (as defined in WRF)
-    integer                                                ::  ids,ide, &          ! d -> domain 
+    integer, pointer                                       ::  ids,ide, &          ! d -> domain 
                                                                jds,jde, &          ! d -> domain
                                                                kds,kde, &          ! d -> domain
                                                                ims,ime, &          ! m -> memory
@@ -676,10 +657,10 @@ module NoahmpIOVarType
     character(len=256)                                     ::  external_lai_filename_template
     character(len=256)                                     ::  agdata_flnm
     character(len=256)                                     ::  tdinput_flnm
-    integer                                                ::  xstart
-    integer                                                ::  ystart
-    integer                                                ::  xend
-    integer                                                ::  yend
+    integer, pointer                                       ::  xstart
+    integer, pointer                                       ::  ystart
+    integer, pointer                                       ::  xend
+    integer, pointer                                       ::  yend
     integer                                                ::  MAX_SOIL_LEVELS
     real(kind=kind_noahmp),  allocatable, dimension(:)     ::  soil_thick_input
 
