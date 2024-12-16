@@ -12,6 +12,8 @@ extern "C" {
 
         int *xstart, *xend, *ystart, *yend;
 
+        int *nsoil, *nsnow;
+
         double* XLAT = nullptr;       // latitude [rad]
         double* WSLAKEXY = nullptr;   // lake water storage [mm]
 
@@ -19,13 +21,14 @@ extern "C" {
           int* ids, int* ide, int* jds, int* jde, int* kds, int* kde,
           int* ims, int* ime, int* jms, int* jme, int* kms, int* kme,
           int* its, int* ite, int* jts, int* jte, int* kts, int* kte,
-          int* xstart, int* xend, int* ystart, int* yend
+          int* xstart, int* xend, int* ystart, int* yend, int *nsoil,
+          int* nsnow
         ):
           ids(ids), ide(ide), jds(jds), jde(jde), kds(kds), kde(kde),
           ims(ims), ime(ime), jms(jms), jme(jme), kms(kms), kme(kme),
           its(its), ite(ite), jts(jts), jte(jte), kts(kts), kte(kte),
-          xstart(xstart), xend(xend), ystart(ystart), yend(yend) {}
-
+          xstart(xstart), xend(xend), ystart(ystart), yend(yend), nsoil(nsoil),
+          nsnow(nsnow) {}
     };
 
     // Function to expose the struct to Fortran
@@ -43,6 +46,8 @@ struct NoahmpIO_type {
 
         int xstart, xend, ystart, yend;
 
+        int nsoil, nsnow;
+
         NoahArray2D<double> XLAT;
         NoahArray2D<double> WSLAKEXY;
 
@@ -50,7 +55,7 @@ struct NoahmpIO_type {
           fptr(&ids, &ide, &jds, &jde, &kds, &kde,
                &ims, &ime, &jms, &jme, &kms, &kme,
                &its, &ite, &jts, &jte, &kts, &kte,
-               &xstart, &xend, &ystart, &yend) {}
+               &xstart, &xend, &ystart, &yend, &nsoil, &nsnow) {}
 
    };
 

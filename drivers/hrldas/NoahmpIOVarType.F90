@@ -26,7 +26,7 @@ module NoahmpIOVarType
 !------------------------------------------------------------------------
 
     ! IN only (as defined in WRF)
-    integer, pointer                                       ::  ids,ide, &          ! d -> domain 
+    integer                                                ::  ids,ide, &          ! d -> domain 
                                                                jds,jde, &          ! d -> domain
                                                                kds,kde, &          ! d -> domain
                                                                ims,ime, &          ! m -> memory
@@ -657,10 +657,10 @@ module NoahmpIOVarType
     character(len=256)                                     ::  external_lai_filename_template
     character(len=256)                                     ::  agdata_flnm
     character(len=256)                                     ::  tdinput_flnm
-    integer, pointer                                       ::  xstart
-    integer, pointer                                       ::  ystart
-    integer, pointer                                       ::  xend
-    integer, pointer                                       ::  yend
+    integer                                                ::  xstart
+    integer                                                ::  ystart
+    integer                                                ::  xend
+    integer                                                ::  yend
     integer                                                ::  MAX_SOIL_LEVELS
     real(kind=kind_noahmp),  allocatable, dimension(:)     ::  soil_thick_input
 

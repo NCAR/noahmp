@@ -27,6 +27,7 @@ module NoahmpIO_fi
                                                             kts,kte             ! t -> tile
 
     type(C_PTR) :: xstart, xend, ystart, yend
+    type(C_PTR) :: nsoil, nsnow
     type(C_PTR) :: XLAT, WSLAKEXY
   end type NoahmpIO_type_fi
 
@@ -39,12 +40,14 @@ contains
 
     type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
 
-    call c_f_pointer(NoahmpIO_cptr%XSTART, NoahmpIO%XSTART)
-    call c_f_pointer(NoahmpIO_cptr%XEND, NoahmpIO%XEND)
-    call c_f_pointer(NoahmpIO_cptr%YSTART, NoahmpIO%YSTART)
-    call c_f_pointer(NoahmpIO_cptr%YEND, NoahmpIO%YEND)
-    call c_f_pointer(NoahmpIO_cptr%KDS, NoahmpIO%KDS)
-    call c_f_pointer(NoahmpIO_cptr%KDE, NoahmpIO%KDE)
+    call copy_c2f_integer(NoahmpIO_cptr%XSTART, NoahmpIO%XSTART)
+    call copy_c2f_integer(NoahmpIO_cptr%XEND,   NoahmpIO%XEND)
+    call copy_c2f_integer(NoahmpIO_cptr%YSTART, NoahmpIO%YSTART)
+    call copy_c2f_integer(NoahmpIO_cptr%YEND,   NoahmpIO%YEND)
+    call copy_c2f_integer(NoahmpIO_cptr%KDS,    NoahmpIO%KDS)
+    call copy_c2f_integer(NoahmpIO_cptr%KDE,    NoahmpIO%KDE)
+    call copy_c2f_integer(NoahmpIO_cptr%NSOIL,  NoahmpIO%NSOIL)
+    call copy_c2f_integer(NoahmpIO_cptr%NSNOW,  NoahmpIO%NSNOW)
 
     call NoahmpIOVarInitDefault(NoahmpIO)
 
@@ -54,6 +57,7 @@ contains
   end subroutine NoahmpIOVarInitDefault_fi
 
   subroutine NoahmpInitMain_fi(NoahmpIO_cptr) bind(C, name="NoahmpInitMain_fi")
+
     use, intrinsic :: iso_c_binding 
     implicit none 
     
@@ -62,5 +66,20 @@ contains
     call NoahmpInitMain(NoahmpIO)
 
   end subroutine NoahmpInitMain_fi
+
+  subroutine copy_c2f_integer(cpointer, ftarget)
+
+    use, intrinsic :: iso_c_binding
+    implicit none
+
+    type(C_PTR) :: cpointer
+    integer, intent(inout) :: ftarget
+
+    integer, pointer :: fpointer
+
+    call c_f_pointer(cpointer, fpointer)
+    ftarget = fpointer
+
+  end subroutine copy_c2f_integer
 
 end module NoahmpIO_fi
