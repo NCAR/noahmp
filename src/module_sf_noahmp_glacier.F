@@ -711,26 +711,25 @@ contains
 ! compute snow albedo only if cosz >0
 ! to be consistent with the main NoahMP code, currently do not include snow aging when sun is not present
 ! this needs more future work
-  if (COSZ > 0.0) then
 
-     ! snow age
+  ! snow age (allow nighttime aging)
 
-     CALL SNOW_AGE_GLACIER (DT,TG,SNEQVO,SNEQV,TAUSS,FAGE)
+  CALL SNOW_AGE_GLACIER (DT,TG,SNEQVO,SNEQV,TAUSS,FAGE)
 
+  if (cosz > 0.0) then ! only compute albedo when there is sunlight
      IF(OPT_ALB == 1) &
         CALL SNOWALB_BATS_GLACIER (NBAND,COSZ,FAGE,ALBSND,ALBSNI)
      IF(OPT_ALB == 2) THEN
         CALL SNOWALB_CLASS_GLACIER(NBAND,QSNOW,DT,ALB,ALBOLD,ALBSND,ALBSNI)
         ALBOLD = ALB
      END IF
-
   endif
 
 ! zero summed solar fluxes
 
-   SAG = 0.
-   FSA = 0.
-   FSR = 0.
+   SAG = 0.0
+   FSA = 0.0
+   FSR = 0.0
    
    FSNO = 0.0
    IF(SNEQV > 0.0) FSNO = 1.0

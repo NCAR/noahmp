@@ -2920,7 +2920,11 @@ ENDIF   ! CROPTYPE == 0
     IF (IB.EQ.1) FSUN = 0.0
   END DO
 
-  IF(COSZ <= 0) GOTO 100
+! snow age (allow nighttime aging)
+
+   CALL SNOW_AGE (parameters,DT,TG,SNEQVO,SNEQV,TAUSS,FAGE)
+
+  IF (cosz > 0) THEN
 
 ! weight reflectance/transmittance by LAI and SAI
 
@@ -2931,10 +2935,6 @@ ENDIF   ! CROPTYPE == 0
     RHO(IB) = MAX(parameters%RHOL(IB)*WL+parameters%RHOS(IB)*WS, MPE)
     TAU(IB) = MAX(parameters%TAUL(IB)*WL+parameters%TAUS(IB)*WS, MPE)
   END DO
-
-! snow age
-
-   CALL SNOW_AGE (parameters,DT,TG,SNEQVO,SNEQV,TAUSS,FAGE)
 
 ! snow albedos: only if COSZ > 0 and FSNO > 0
 
@@ -2985,7 +2985,7 @@ ENDIF   ! CROPTYPE == 0
   END IF
   FSUN = WL
 
-100 CONTINUE
+  END IF ! cosz>0
 
   END SUBROUTINE ALBEDO
 
