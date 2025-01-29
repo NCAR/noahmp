@@ -127,6 +127,7 @@ contains
     ! Matric potential at the layer above the water table
     SatDegUnsatSoil   = min(1.0, SoilMoisture(IndUnsatSoil)/SoilMoistureSat(IndUnsatSoil))
     SatDegUnsatSoil   = max(SatDegUnsatSoil, real(0.01,kind=8))
+    if (SatDegUnsatSoil < 0.01) SatDegUnsatSoil = 0.01  ! avoid max() function leakage above for SatDegUnsatSoil less than but very close to 0.01
     SoilMatPotFrz     = -SoilMatPotentialSat(IndUnsatSoil) * 1000.0 * &
                         SatDegUnsatSoil**(-SoilExpCoeffB(IndUnsatSoil))   ! m -> mm
     SoilMatPotFrz     = max(-120000.0, MicroPoreContent*SoilMatPotFrz)
