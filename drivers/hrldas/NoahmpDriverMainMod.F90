@@ -86,8 +86,10 @@ contains
        end if
     endif
 
-    if ( mod(NoahmpIO%ITIMESTEP, NoahmpIO%SOIL_UPDATE_STEPS) == 0 ) NoahmpIO%CALCULATE_SOIL = .true.
- 
+    !if ( mod(NoahmpIO%ITIMESTEP, NoahmpIO%SOIL_UPDATE_STEPS) == 0 ) NoahmpIO%CALCULATE_SOIL = .true.
+    ! Prevent stale values of calculate_soil from leaking across cpu threads in if-statement above
+    NoahmpIO%CALCULATE_SOIL = mod(NoahmpIO%ITIMESTEP, NoahmpIO%SOIL_UPDATE_STEPS) == 0
+
     !---------------------------------------------------------------------
     !  Prepare Noah-MP driver
     !---------------------------------------------------------------------
