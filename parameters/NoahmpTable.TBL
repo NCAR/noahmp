@@ -503,7 +503,7 @@
  GDDS3      =  933.0, 1183.0,  933.0,  933.0,  933.0,    ! Grow Degree Day (GDD) from seeding to post vegetative
  GDDS4      = 1103.0, 1253.0, 1103.0, 1103.0, 1103.0,    ! Grow Degree Day (GDD) from seeding to intial reproductive
  GDDS5      = 1555.0, 1605.0, 1555.0, 1555.0, 1555.0,    ! Grow Degree Day (GDD) from seeding to pysical maturity
- C3PSNI     =    0.0,    1.0,    1.0,    1.0,    1.0,    ! photosynthetic pathway: 0.0 = c4, 1.0 = c3; the following 11 *I parameters added by Z. Zhang, 2020/02
+ C3PSNI     =    0.0,    1.0,    0.0,    1.0,    1.0,    ! photosynthetic pathway: 0.0 = c4, 1.0 = c3; the following 11 *I parameters added by Z. Zhang, 2020/02
  KC25I      =   30.0,   30.0,   30.0,   30.0,   30.0,    ! CO2 michaelis-menten constant at 25 degC (pa)
  AKCI       =    2.1,    2.1,    2.1,    2.1,    2.1,    ! q10 for KC25; change in CO2 Michaelis-Menten constant for every 10-degC temperature change
  KO25I      =   3.E4,   3.E4,   3.E4,   3.E4,   3.E4,    ! O2 michaelis-menten constant at 25 degC (pa)
