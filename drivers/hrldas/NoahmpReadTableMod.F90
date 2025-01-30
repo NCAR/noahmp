@@ -111,6 +111,8 @@ contains
                                                 BATS_NIR_NEW, BATS_VIS_AGE, BATS_NIR_AGE, BATS_VIS_DIR, BATS_NIR_DIR,        &
                                                 RSURF_SNOW, RSURF_EXP, C2_SNOWCOMPACT, C3_SNOWCOMPACT, C4_SNOWCOMPACT,       &
                                                 C5_SNOWCOMPACT, DM_SNOWCOMPACT, ETA0_SNOWCOMPACT, SNLIQMAXFRAC, SWEMAXGLA,   &
+                                                SNOWCOMPACTm_AR24,SNOWCOMPACTb_AR24,SNOWCOMPACT_P1_AR24, SNOWCOMPACT_P2_AR24,&
+                                                SNOWCOMPACT_P3_AR24, SNOWCOMPACT_Up_AR24,                                    &
                                                 WSLMAX, ROUS, CMIC, SNOWDEN_MAX, CLASS_ALB_REF, CLASS_SNO_AGE, CLASS_ALB_NEW,&
                                                 PSIWLT, Z0SOIL, Z0LAKE
     namelist / noahmp_global_parameters /       CO2, O2, TIMEAN, FSATMX, Z0SNO, SSI, SNOW_RET_FAC ,SNOW_EMIS, SWEMX, TAU0,   &
@@ -118,6 +120,8 @@ contains
                                                 BATS_NIR_NEW, BATS_VIS_AGE, BATS_NIR_AGE, BATS_VIS_DIR, BATS_NIR_DIR,        &
                                                 RSURF_SNOW, RSURF_EXP, C2_SNOWCOMPACT, C3_SNOWCOMPACT, C4_SNOWCOMPACT,       &
                                                 C5_SNOWCOMPACT, DM_SNOWCOMPACT, ETA0_SNOWCOMPACT, SNLIQMAXFRAC, SWEMAXGLA,   &
+                                                SNOWCOMPACTm_AR24,SNOWCOMPACTb_AR24,SNOWCOMPACT_P1_AR24, SNOWCOMPACT_P2_AR24,&
+                                                SNOWCOMPACT_P3_AR24, SNOWCOMPACT_Up_AR24,                                    &
                                                 WSLMAX, ROUS, CMIC, SNOWDEN_MAX, CLASS_ALB_REF, CLASS_SNO_AGE, CLASS_ALB_NEW,&
                                                 PSIWLT, Z0SOIL, Z0LAKE
 
@@ -481,46 +485,52 @@ contains
     NoahmpIO%EICE_TABLE         = undefined_real
 
     ! global parameters
-    NoahmpIO%CO2_TABLE              = undefined_real
-    NoahmpIO%O2_TABLE               = undefined_real
-    NoahmpIO%TIMEAN_TABLE           = undefined_real
-    NoahmpIO%FSATMX_TABLE           = undefined_real
-    NoahmpIO%Z0SNO_TABLE            = undefined_real
-    NoahmpIO%SSI_TABLE              = undefined_real
-    NoahmpIO%SNOW_RET_FAC_TABLE     = undefined_real
-    NoahmpIO%SNOW_EMIS_TABLE        = undefined_real
-    NoahmpIO%SWEMX_TABLE            = undefined_real
-    NoahmpIO%TAU0_TABLE             = undefined_real
-    NoahmpIO%GRAIN_GROWTH_TABLE     = undefined_real
-    NoahmpIO%EXTRA_GROWTH_TABLE     = undefined_real
-    NoahmpIO%DIRT_SOOT_TABLE        = undefined_real
-    NoahmpIO%BATS_COSZ_TABLE        = undefined_real
-    NoahmpIO%BATS_VIS_NEW_TABLE     = undefined_real
-    NoahmpIO%BATS_NIR_NEW_TABLE     = undefined_real
-    NoahmpIO%BATS_VIS_AGE_TABLE     = undefined_real
-    NoahmpIO%BATS_NIR_AGE_TABLE     = undefined_real
-    NoahmpIO%BATS_VIS_DIR_TABLE     = undefined_real
-    NoahmpIO%BATS_NIR_DIR_TABLE     = undefined_real
-    NoahmpIO%RSURF_SNOW_TABLE       = undefined_real
-    NoahmpIO%RSURF_EXP_TABLE        = undefined_real
-    NoahmpIO%C2_SNOWCOMPACT_TABLE   = undefined_real
-    NoahmpIO%C3_SNOWCOMPACT_TABLE   = undefined_real
-    NoahmpIO%C4_SNOWCOMPACT_TABLE   = undefined_real
-    NoahmpIO%C5_SNOWCOMPACT_TABLE   = undefined_real
-    NoahmpIO%DM_SNOWCOMPACT_TABLE   = undefined_real
-    NoahmpIO%ETA0_SNOWCOMPACT_TABLE = undefined_real
-    NoahmpIO%SNLIQMAXFRAC_TABLE     = undefined_real
-    NoahmpIO%SWEMAXGLA_TABLE        = undefined_real
-    NoahmpIO%WSLMAX_TABLE           = undefined_real
-    NoahmpIO%ROUS_TABLE             = undefined_real
-    NoahmpIO%CMIC_TABLE             = undefined_real
-    NoahmpIO%SNOWDEN_MAX_TABLE      = undefined_real
-    NoahmpIO%CLASS_ALB_REF_TABLE    = undefined_real
-    NoahmpIO%CLASS_SNO_AGE_TABLE    = undefined_real
-    NoahmpIO%CLASS_ALB_NEW_TABLE    = undefined_real
-    NoahmpIO%PSIWLT_TABLE           = undefined_real
-    NoahmpIO%Z0SOIL_TABLE           = undefined_real
-    NoahmpIO%Z0LAKE_TABLE           = undefined_real
+    NoahmpIO%CO2_TABLE                 = undefined_real
+    NoahmpIO%O2_TABLE                  = undefined_real
+    NoahmpIO%TIMEAN_TABLE              = undefined_real
+    NoahmpIO%FSATMX_TABLE              = undefined_real
+    NoahmpIO%Z0SNO_TABLE               = undefined_real
+    NoahmpIO%SSI_TABLE                 = undefined_real
+    NoahmpIO%SNOW_RET_FAC_TABLE        = undefined_real
+    NoahmpIO%SNOW_EMIS_TABLE           = undefined_real
+    NoahmpIO%SWEMX_TABLE               = undefined_real
+    NoahmpIO%TAU0_TABLE                = undefined_real
+    NoahmpIO%GRAIN_GROWTH_TABLE        = undefined_real
+    NoahmpIO%EXTRA_GROWTH_TABLE        = undefined_real
+    NoahmpIO%DIRT_SOOT_TABLE           = undefined_real
+    NoahmpIO%BATS_COSZ_TABLE           = undefined_real
+    NoahmpIO%BATS_VIS_NEW_TABLE        = undefined_real
+    NoahmpIO%BATS_NIR_NEW_TABLE        = undefined_real
+    NoahmpIO%BATS_VIS_AGE_TABLE        = undefined_real
+    NoahmpIO%BATS_NIR_AGE_TABLE        = undefined_real
+    NoahmpIO%BATS_VIS_DIR_TABLE        = undefined_real
+    NoahmpIO%BATS_NIR_DIR_TABLE        = undefined_real
+    NoahmpIO%RSURF_SNOW_TABLE          = undefined_real
+    NoahmpIO%RSURF_EXP_TABLE           = undefined_real
+    NoahmpIO%C2_SNOWCOMPACT_TABLE      = undefined_real
+    NoahmpIO%C3_SNOWCOMPACT_TABLE      = undefined_real
+    NoahmpIO%C4_SNOWCOMPACT_TABLE      = undefined_real
+    NoahmpIO%C5_SNOWCOMPACT_TABLE      = undefined_real
+    NoahmpIO%DM_SNOWCOMPACT_TABLE      = undefined_real
+    NoahmpIO%ETA0_SNOWCOMPACT_TABLE    = undefined_real
+    NoahmpIO%SNOWCOMPACTm_AR24_TABLE   = undefined_real
+    NoahmpIO%SNOWCOMPACTb_AR24_TABLE   = undefined_real
+    NoahmpIO%SNOWCOMPACT_P1_AR24_TABLE = undefined_real
+    NoahmpIO%SNOWCOMPACT_P2_AR24_TABLE = undefined_real
+    NoahmpIO%SNOWCOMPACT_P3_AR24_TABLE = undefined_real
+    NoahmpIO%SNOWCOMPACT_Up_AR24_TABLE = undefined_real
+    NoahmpIO%SNLIQMAXFRAC_TABLE        = undefined_real
+    NoahmpIO%SWEMAXGLA_TABLE           = undefined_real
+    NoahmpIO%WSLMAX_TABLE              = undefined_real
+    NoahmpIO%ROUS_TABLE                = undefined_real
+    NoahmpIO%CMIC_TABLE                = undefined_real
+    NoahmpIO%SNOWDEN_MAX_TABLE         = undefined_real
+    NoahmpIO%CLASS_ALB_REF_TABLE       = undefined_real
+    NoahmpIO%CLASS_SNO_AGE_TABLE       = undefined_real
+    NoahmpIO%CLASS_ALB_NEW_TABLE       = undefined_real
+    NoahmpIO%PSIWLT_TABLE              = undefined_real
+    NoahmpIO%Z0SOIL_TABLE              = undefined_real
+    NoahmpIO%Z0LAKE_TABLE              = undefined_real
 
     ! irrigation parameters
     NoahmpIO%IRR_HAR_TABLE          = undefined_int
@@ -877,46 +887,52 @@ contains
     close(15)
 
     ! assign values
-    NoahmpIO%CO2_TABLE              = CO2
-    NoahmpIO%O2_TABLE               = O2
-    NoahmpIO%TIMEAN_TABLE           = TIMEAN
-    NoahmpIO%FSATMX_TABLE           = FSATMX
-    NoahmpIO%Z0SNO_TABLE            = Z0SNO
-    NoahmpIO%SSI_TABLE              = SSI
-    NoahmpIO%SNOW_RET_FAC_TABLE     = SNOW_RET_FAC
-    NoahmpIO%SNOW_EMIS_TABLE        = SNOW_EMIS
-    NoahmpIO%SWEMX_TABLE            = SWEMX
-    NoahmpIO%TAU0_TABLE             = TAU0
-    NoahmpIO%GRAIN_GROWTH_TABLE     = GRAIN_GROWTH
-    NoahmpIO%EXTRA_GROWTH_TABLE     = EXTRA_GROWTH
-    NoahmpIO%DIRT_SOOT_TABLE        = DIRT_SOOT
-    NoahmpIO%BATS_COSZ_TABLE        = BATS_COSZ
-    NoahmpIO%BATS_VIS_NEW_TABLE     = BATS_VIS_NEW
-    NoahmpIO%BATS_NIR_NEW_TABLE     = BATS_NIR_NEW
-    NoahmpIO%BATS_VIS_AGE_TABLE     = BATS_VIS_AGE
-    NoahmpIO%BATS_NIR_AGE_TABLE     = BATS_NIR_AGE
-    NoahmpIO%BATS_VIS_DIR_TABLE     = BATS_VIS_DIR
-    NoahmpIO%BATS_NIR_DIR_TABLE     = BATS_NIR_DIR
-    NoahmpIO%RSURF_SNOW_TABLE       = RSURF_SNOW
-    NoahmpIO%RSURF_EXP_TABLE        = RSURF_EXP
-    NoahmpIO%C2_SNOWCOMPACT_TABLE   = C2_SNOWCOMPACT
-    NoahmpIO%C3_SNOWCOMPACT_TABLE   = C3_SNOWCOMPACT
-    NoahmpIO%C4_SNOWCOMPACT_TABLE   = C4_SNOWCOMPACT
-    NoahmpIO%C5_SNOWCOMPACT_TABLE   = C5_SNOWCOMPACT
-    NoahmpIO%DM_SNOWCOMPACT_TABLE   = DM_SNOWCOMPACT
-    NoahmpIO%ETA0_SNOWCOMPACT_TABLE = ETA0_SNOWCOMPACT
-    NoahmpIO%SNLIQMAXFRAC_TABLE     = SNLIQMAXFRAC
-    NoahmpIO%SWEMAXGLA_TABLE        = SWEMAXGLA
-    NoahmpIO%WSLMAX_TABLE           = WSLMAX
-    NoahmpIO%ROUS_TABLE             = ROUS
-    NoahmpIO%CMIC_TABLE             = CMIC
-    NoahmpIO%SNOWDEN_MAX_TABLE      = SNOWDEN_MAX
-    NoahmpIO%CLASS_ALB_REF_TABLE    = CLASS_ALB_REF
-    NoahmpIO%CLASS_SNO_AGE_TABLE    = CLASS_SNO_AGE
-    NoahmpIO%CLASS_ALB_NEW_TABLE    = CLASS_ALB_NEW
-    NoahmpIO%PSIWLT_TABLE           = PSIWLT
-    NoahmpIO%Z0SOIL_TABLE           = Z0SOIL
-    NoahmpIO%Z0LAKE_TABLE           = Z0LAKE
+    NoahmpIO%CO2_TABLE                 = CO2
+    NoahmpIO%O2_TABLE                  = O2
+    NoahmpIO%TIMEAN_TABLE              = TIMEAN
+    NoahmpIO%FSATMX_TABLE              = FSATMX
+    NoahmpIO%Z0SNO_TABLE               = Z0SNO
+    NoahmpIO%SSI_TABLE                 = SSI
+    NoahmpIO%SNOW_RET_FAC_TABLE        = SNOW_RET_FAC
+    NoahmpIO%SNOW_EMIS_TABLE           = SNOW_EMIS
+    NoahmpIO%SWEMX_TABLE               = SWEMX
+    NoahmpIO%TAU0_TABLE                = TAU0
+    NoahmpIO%GRAIN_GROWTH_TABLE        = GRAIN_GROWTH
+    NoahmpIO%EXTRA_GROWTH_TABLE        = EXTRA_GROWTH
+    NoahmpIO%DIRT_SOOT_TABLE           = DIRT_SOOT
+    NoahmpIO%BATS_COSZ_TABLE           = BATS_COSZ
+    NoahmpIO%BATS_VIS_NEW_TABLE        = BATS_VIS_NEW
+    NoahmpIO%BATS_NIR_NEW_TABLE        = BATS_NIR_NEW
+    NoahmpIO%BATS_VIS_AGE_TABLE        = BATS_VIS_AGE
+    NoahmpIO%BATS_NIR_AGE_TABLE        = BATS_NIR_AGE
+    NoahmpIO%BATS_VIS_DIR_TABLE        = BATS_VIS_DIR
+    NoahmpIO%BATS_NIR_DIR_TABLE        = BATS_NIR_DIR
+    NoahmpIO%RSURF_SNOW_TABLE          = RSURF_SNOW
+    NoahmpIO%RSURF_EXP_TABLE           = RSURF_EXP
+    NoahmpIO%C2_SNOWCOMPACT_TABLE      = C2_SNOWCOMPACT
+    NoahmpIO%C3_SNOWCOMPACT_TABLE      = C3_SNOWCOMPACT
+    NoahmpIO%C4_SNOWCOMPACT_TABLE      = C4_SNOWCOMPACT
+    NoahmpIO%C5_SNOWCOMPACT_TABLE      = C5_SNOWCOMPACT
+    NoahmpIO%DM_SNOWCOMPACT_TABLE      = DM_SNOWCOMPACT
+    NoahmpIO%ETA0_SNOWCOMPACT_TABLE    = ETA0_SNOWCOMPACT
+    NoahmpIO%SNOWCOMPACTm_AR24_TABLE   = SNOWCOMPACTm_AR24
+    NoahmpIO%SNOWCOMPACTb_AR24_TABLE   = SNOWCOMPACTb_AR24
+    NoahmpIO%SNOWCOMPACT_P1_AR24_TABLE = SNOWCOMPACT_P1_AR24
+    NoahmpIO%SNOWCOMPACT_P2_AR24_TABLE = SNOWCOMPACT_P2_AR24
+    NoahmpIO%SNOWCOMPACT_P3_AR24_TABLE = SNOWCOMPACT_P3_AR24
+    NoahmpIO%SNOWCOMPACT_Up_AR24_TABLE = SNOWCOMPACT_Up_AR24
+    NoahmpIO%SNLIQMAXFRAC_TABLE        = SNLIQMAXFRAC
+    NoahmpIO%SWEMAXGLA_TABLE           = SWEMAXGLA
+    NoahmpIO%WSLMAX_TABLE              = WSLMAX
+    NoahmpIO%ROUS_TABLE                = ROUS
+    NoahmpIO%CMIC_TABLE                = CMIC
+    NoahmpIO%SNOWDEN_MAX_TABLE         = SNOWDEN_MAX
+    NoahmpIO%CLASS_ALB_REF_TABLE       = CLASS_ALB_REF
+    NoahmpIO%CLASS_SNO_AGE_TABLE       = CLASS_SNO_AGE
+    NoahmpIO%CLASS_ALB_NEW_TABLE       = CLASS_ALB_NEW
+    NoahmpIO%PSIWLT_TABLE              = PSIWLT
+    NoahmpIO%Z0SOIL_TABLE              = Z0SOIL
+    NoahmpIO%Z0LAKE_TABLE              = Z0LAKE
 
     !---------------- NoahmpTable.TBL irrigation parameters
     inquire( file='NoahmpTable.TBL', exist=file_named )

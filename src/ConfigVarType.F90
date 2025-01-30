@@ -120,6 +120,9 @@ module ConfigVarType
     integer :: OptGlacierTreatment         ! options for glacier treatment
                                               ! 1 -> include phase change of ice (default)
                                               ! 2 -> ice treatment more like original Noah
+    integer :: OptSnowCompaction           ! options for ground snow compaction
+                                              ! 1 -> original scheme from Anderson (1976)
+                                              ! 2 -> new scheme from Abolafia-Rosenzweig et al. (2024)
 
   end type namelist_type
 
