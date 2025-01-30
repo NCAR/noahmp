@@ -57,6 +57,7 @@ module NoahmpIOVarType
     integer                                                ::  IOPT_IRRM           ! irrigation method (0->dynamic; 1-> sprinkler; 2-> micro; 3-> flood)
     integer                                                ::  IOPT_INFDV          ! infiltration options for dynamic VIC (1->Philip; 2-> Green-Ampt;3->Smith-Parlange)
     integer                                                ::  IOPT_TDRN           ! drainage option (0->off; 1->simple scheme; 2->Hooghoudt's scheme)
+    integer                                                ::  IOPT_COMPACT        ! snowpack compaction (1->Anderson1976; 2->Abolafia-Rosenzweig2024)
     integer                                                ::  sf_urban_physics    ! urban physics option
     
     ! basic model info
@@ -756,6 +757,12 @@ module NoahmpIOVarType
     real(kind=kind_noahmp)                                 :: C5_SNOWCOMPACT_TABLE      ! snow desctructive metamorphism compaction parameter3
     real(kind=kind_noahmp)                                 :: DM_SNOWCOMPACT_TABLE      ! upper Limit on destructive metamorphism compaction [kg/m3]
     real(kind=kind_noahmp)                                 :: ETA0_SNOWCOMPACT_TABLE    ! snow viscosity coefficient [kg-s/m2]
+    real(kind=kind_noahmp)                                 :: SNOWCOMPACTm_AR24_TABLE   ! snow compaction m parameter for linear sfc temp fitting from AR24
+    real(kind=kind_noahmp)                                 :: SNOWCOMPACTb_AR24_TABLE   ! snow compaction b parameter for linear sfc temp fitting from AR24
+    real(kind=kind_noahmp)                                 :: SNOWCOMPACT_P1_AR24_TABLE ! lower constraint for SnowCompactBurdenFac for high pressure bin from AR24
+    real(kind=kind_noahmp)                                 :: SNOWCOMPACT_P2_AR24_TABLE ! lower constraint for SnowCompactBurdenFac for mid pressure bin from AR24
+    real(kind=kind_noahmp)                                 :: SNOWCOMPACT_P3_AR24_TABLE ! lower constraint for SnowCompactBurdenFac for low pressure bin from AR24
+    real(kind=kind_noahmp)                                 :: SNOWCOMPACT_Up_AR24_TABLE ! upper constraint on SnowCompactBurdenFac from AR24
     real(kind=kind_noahmp)                                 :: SNLIQMAXFRAC_TABLE        ! maximum liquid water fraction in snow
     real(kind=kind_noahmp)                                 :: SWEMAXGLA_TABLE           ! Maximum SWE allowed at glaciers (mm)
     real(kind=kind_noahmp)                                 :: WSLMAX_TABLE              ! maximum lake water storage (mm)
