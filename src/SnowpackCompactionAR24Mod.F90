@@ -32,6 +32,7 @@ contains
     real(kind=kind_noahmp)           :: SnowVoid               ! void (1 - SnowIce - SnowLiqWater)
     real(kind=kind_noahmp)           :: SnowWatTotTmp          ! water mass (ice + liquid) [kg/m2]
     real(kind=kind_noahmp)           :: SnowIceDens            ! partial density of ice [kg/m3]
+    real(kind=kind_noahmp)           :: SnowCompactBurdenFac   ! snow overburden compaction parameter [m3/kg]
 
 ! --------------------------------------------------------------------
     associate(                                                                        &
@@ -43,7 +44,6 @@ contains
               SnowLiqWater            => noahmp%water%state%SnowLiqWater             ,& ! in,    snow layer liquid water [mm]
               IndexPhaseChange        => noahmp%water%state%IndexPhaseChange         ,& ! in,    phase change index [0-none;1-melt;2-refreeze]
               SnowIceFracPrev         => noahmp%water%state%SnowIceFracPrev          ,& ! in,    ice fraction in snow layers at previous timestep
-              SnowCompactBurdenFac    => noahmp%water%param%SnowCompactBurdenFac     ,& ! in,    snow overburden compaction parameter [m3/kg]
               SnowCompactAgingFac1    => noahmp%water%param%SnowCompactAgingFac1     ,& ! in,    snow desctructive metamorphism compaction factor1 [1/s]
               SnowCompactAgingFac2    => noahmp%water%param%SnowCompactAgingFac2     ,& ! in,    snow desctructive metamorphism compaction factor2 [1/k]
               SnowCompactAgingFac3    => noahmp%water%param%SnowCompactAgingFac3     ,& ! in,    snow desctructive metamorphism compaction factor3 
