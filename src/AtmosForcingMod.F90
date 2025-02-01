@@ -169,7 +169,7 @@ contains
     ! wet-bulb scheme (Wang et al., 2019 GRL), C.He, 12/18/2020, R. Abolafia-Rosnezweig, 02/01/2024
     if ( OptRainSnowPartition == 5 ) then
 
-        if ( TemperatureAirRefHeight >= (ConstFreezePoint+10) ) then !avoid numerical errors when temperature is high
+        if ( TemperatureAirRefHeight >= (ConstFreezePoint+8) ) then !avoid numerical errors when temperature is high
             FrozenPrecipFrac = 0.0
         else
             TemperatureDegC = min( 50.0, max(-50.0,(TemperatureAirRefHeight-ConstFreezePoint)) )    ! Kelvin to degree Celsius with limit -50 to +50
