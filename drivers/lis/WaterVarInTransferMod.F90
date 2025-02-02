@@ -103,6 +103,12 @@ contains
     noahmp%water%param%SnowCompactAgingFac3               = LISparam%C5_SNOWCOMPACT
     noahmp%water%param%SnowCompactAgingMax                = LISparam%DM_SNOWCOMPACT
     noahmp%water%param%SnowViscosityCoeff                 = LISparam%ETA0_SNOWCOMPACT
+    noahmp%water%param%SnowCompactmAR24                   = LISparam%SNOWCOMPACTm_AR24
+    noahmp%water%param%SnowCompactbAR24                   = LISparam%SNOWCOMPACTb_AR24
+    noahmp%water%param%SnowCompactP1AR24                  = LISparam%SNOWCOMPACT_P1_AR24
+    noahmp%water%param%SnowCompactP2AR24                  = LISparam%SNOWCOMPACT_P2_AR24
+    noahmp%water%param%SnowCompactP3AR24                  = LISparam%SNOWCOMPACT_P3_AR24
+    noahmp%water%param%BurdenFacUpAR24                    = LISparam%SNOWCOMPACT_Up_AR24
     noahmp%water%param%SnowLiqFracMax                     = LISparam%SNLIQMAXFRAC
     noahmp%water%param%SnowLiqHoldCap                     = LISparam%SSI
     noahmp%water%param%SnowLiqReleaseFac                  = LISparam%SNOW_RET_FAC

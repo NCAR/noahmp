@@ -53,11 +53,11 @@ contains
        AlbedoSnowDif(IndBand) = 0.0
     enddo
 
+    ! snow aging (allow nighttime BATS snow albedo aging)
+    call SnowAgingBats(noahmp)
+
     ! solar radiation process is only done if there is light
     if ( CosSolarZenithAngle > 0 ) then
-
-       ! snow aging
-       call SnowAgingBats(noahmp)
 
        ! snow albedo
        if ( OptSnowAlbedo == 1 )  call SnowAlbedoBats(noahmp)

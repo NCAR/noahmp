@@ -46,6 +46,7 @@ contains
     noahmp%config%nmlist%OptSoilProperty             = undefined_int
     noahmp%config%nmlist%OptPedotransfer             = undefined_int
     noahmp%config%nmlist%OptGlacierTreatment         = undefined_int
+    noahmp%config%nmlist%OptSnowCompaction           = undefined_int 
 
     ! config domain variable
     noahmp%config%domain%LandUseDataName             = "MODIFIED_IGBP_MODIS_NOAH"
