@@ -16,12 +16,14 @@ contains
 ! Original Noah-MP subroutine: NOAHMP_INIT
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! Fortran-C API: A. Dhruv, M. Buehlmann, & R. Kotamarthi (2024)
 ! ---------------------------------------------------------------------------
 
     implicit none 
-   
-    type(NoahmpIO_type), intent(inout) :: NoahmpIO
+    
+    type(NoahmpIO_type), intent(inout) :: NoahmpIO   
 
+#if 0
     ! local variables
     integer                                     :: ide,jde,its,jts,itf,jtf
     integer                                     :: I,J,errflag,NS
@@ -266,7 +268,11 @@ contains
        endif
 
     endif ! NoahmpIO%restart_flag
- 
+#endif
+
+  NoahmpIO%XLAT(1,2) = 34
+  NoahmpIO%WSLAKEXY(2,1) = 43
+
   end subroutine NoahmpInitMain    
 
 end module NoahmpInitMainMod

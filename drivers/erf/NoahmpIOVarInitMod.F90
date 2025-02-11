@@ -6,6 +6,7 @@ module NoahmpIOVarInitMod
 ! ------------------------ Code history -----------------------------------
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! Fortran-C API: A. Dhruv, M. Buehlmann, & R. Kotamarthi (2024)
 ! -------------------------------------------------------------------------
 
   use Machine
@@ -22,17 +23,17 @@ contains
     implicit none
 
     type(NoahmpIO_type), intent(inout) :: NoahmpIO
-   
+
 ! ------------------------------------------------- 
-    associate(                               &
-              XSTART  =>  NoahmpIO%XSTART   ,&
-              XEND    =>  NoahmpIO%XEND     ,&
-              YSTART  =>  NoahmpIO%YSTART   ,&
-              YEND    =>  NoahmpIO%YEND     ,&
-              KDS     =>  NoahmpIO%KDS      ,&
-              KDE     =>  NoahmpIO%KDE      ,&
-              NSOIL   =>  NoahmpIO%NSOIL    ,&
-              NSNOW   =>  NoahmpIO%NSNOW     &
+    associate(                                &
+              XSTART  =>  NoahmpIO%XSTART    ,&
+              XEND    =>  NoahmpIO%XEND      ,&
+              YSTART  =>  NoahmpIO%YSTART    ,&
+              YEND    =>  NoahmpIO%YEND      ,&
+              KDS     =>  NoahmpIO%KDS       ,&
+              KDE     =>  NoahmpIO%KDE       ,&
+              NSOIL   =>  NoahmpIO%NSOIL     ,&
+              NSNOW   =>  NoahmpIO%NSNOW      &
              )
 ! -------------------------------------------------
 
@@ -850,7 +851,7 @@ contains
 #endif 
    
     end associate
- 
+
   end subroutine NoahmpIOVarInitDefault
 
 end module NoahmpIOVarInitMod

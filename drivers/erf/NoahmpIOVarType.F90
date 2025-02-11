@@ -6,14 +6,19 @@ module NoahmpIOVarType
 ! ------------------------ Code history -----------------------------------
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath & refactor team (He et al. 2023)
+! Fortran-C API: A. Dhruv, M. Buehlmann, & R. Kotamarthi (2024)
 ! -------------------------------------------------------------------------
 
+  use, intrinsic :: iso_c_binding, only: C_INT, C_DOUBLE, C_PTR
   use Machine
 
   implicit none
   save
   private
 
+! ---------------------------------------------------------------------------
+! Native Fortran IO type
+! --------------------------------------------------------------------------- 
   type, public :: NoahmpIO_type
 
 !------------------------------------------------------------------------
@@ -74,7 +79,7 @@ module NoahmpIOVarType
     integer,                allocatable, dimension(:,:)    ::  IVGTYP              ! vegetation type
     integer,                allocatable, dimension(:,:)    ::  ISLTYP              ! soil type
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  COSZEN              ! cosine zenith angle
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  XLAT                ! latitude [rad]
+    real(C_DOUBLE),         allocatable, dimension(:,:)    ::  XLAT                ! latitude [rad]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  DZ8W                ! thickness of atmo layers [m]
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  DZS                 ! thickness of soil layers [m]
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  ZSOIL               ! depth to soil interfaces [m]
@@ -196,7 +201,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ALBOLDXY            ! snow albedo at last time step (-)
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QSNOWXY             ! snowfall on the ground [mm/s]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QRAINXY             ! rainfall on the ground [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  WSLAKEXY            ! lake water storage [mm]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  WSLAKEXY            ! lake water storage [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ZWTXY               ! water table depth [m]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  WAXY                ! water in the "aquifer" [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  WTXY                ! groundwater storage [mm]
