@@ -34,6 +34,8 @@ extern "C" {
     // Function to expose the struct to Fortran
     void NoahmpIOVarInitDefault_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpInitMain_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpReadNamelist_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpReadTable_fi(NoahmpIO_type_fi* noahmpio);
 }
 
 struct NoahmpIO_type {
@@ -61,5 +63,7 @@ struct NoahmpIO_type {
 
 extern void NoahmpIOVarInitDefault(NoahmpIO_type* noahmpio);
 extern void NoahmpInitMain(NoahmpIO_type* noahmpio);
+extern void NoahmpReadNamelist(NoahmpIO_type* noahmpio);
+extern void NoahmpReadTable(NoahmpIO_type* noahmpio);
 
 #endif // NOAHMP_IO_H

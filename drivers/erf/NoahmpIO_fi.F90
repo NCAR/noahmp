@@ -3,6 +3,9 @@ module NoahmpIO_fi
   use NoahmpIOVarType, ONLY: NoahmpIO_type
   use NoahmpIOVarInitMod, ONLY: NoahmpIOVarInitDefault
   use NoahmpInitMainMod, ONLY: NoahmpInitMain
+  use NoahmpReadNamelistMod, ONLY: NoahmpReadNamelist
+  use NoahmpReadTableMod, ONLY: NoahmpReadTable
+
   use, intrinsic :: iso_c_binding
 
   implicit none
@@ -57,15 +60,25 @@ contains
   end subroutine NoahmpIOVarInitDefault_fi
 
   subroutine NoahmpInitMain_fi(NoahmpIO_cptr) bind(C, name="NoahmpInitMain_fi")
-
     use, intrinsic :: iso_c_binding 
     implicit none 
-    
     type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
-
     call NoahmpInitMain(NoahmpIO)
-
   end subroutine NoahmpInitMain_fi
+
+  subroutine NoahmpReadTable_fi(NoahmpIO_cptr) bind(C, name="NoahmpReadTable_fi")
+    use, intrinsic :: iso_c_binding 
+    implicit none 
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    call NoahmpReadTable(NoahmpIO)
+  end subroutine NoahmpReadTable_fi
+
+  subroutine NoahmpReadNamelist_fi(NoahmpIO_cptr) bind(C, name="NoahmpReadNamelist_fi")
+    use, intrinsic :: iso_c_binding 
+    implicit none 
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    call NoahmpReadNamelist(NoahmpIO)
+  end subroutine NoahmpReadNamelist_fi
 
   subroutine copy_c2f_integer(cpointer, ftarget)
 

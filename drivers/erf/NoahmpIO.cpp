@@ -20,3 +20,13 @@ void NoahmpInitMain(NoahmpIO_type* noahmpio) {
      NoahmpIO_type_fi* fptr = &noahmpio->fptr;
      NoahmpInitMain_fi(fptr);
 };
+
+void NoahmpReadNamelist(NoahmpIO_type* noahmpio) {
+     NoahmpIO_type_fi* fptr = &noahmpio->fptr;
+     NoahmpReadNamelist_fi(fptr);
+};
+
+void NoahmpReadTable(NoahmpIO_type* noahmpio) {
+     NoahmpIO_type_fi* fptr = &noahmpio->fptr;
+     NoahmpReadTable_fi(fptr);
+};

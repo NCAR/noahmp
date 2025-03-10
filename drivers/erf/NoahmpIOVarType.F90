@@ -651,7 +651,7 @@ module NoahmpIOVarType
     integer                                                ::  khour
     integer                                                ::  kday
     real(kind=kind_noahmp)                                 ::  zlvl 
-    character(len=256)                                     ::  hrldas_setup_file
+    character(len=256)                                     ::  erf_setup_file
     character(len=256)                                     ::  spatial_filename
     character(len=256)                                     ::  external_veg_filename_template
     character(len=256)                                     ::  external_lai_filename_template

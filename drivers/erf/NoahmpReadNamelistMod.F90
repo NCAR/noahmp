@@ -97,7 +97,7 @@ contains
     integer                 :: khour                              = -9999
     integer                 :: kday                               = -9999
     real(kind=kind_noahmp)  :: zlvl                               = 10.
-    character(len=256)      :: hrldas_setup_file                  = " "
+    character(len=256)      :: erf_setup_file                     = " "
     character(len=256)      :: spatial_filename                   = " "
     character(len=256)      :: external_veg_filename_template     = " "
     character(len=256)      :: external_lai_filename_template     = " "
@@ -133,7 +133,7 @@ contains
          num_urban_ndm,num_urban_ng,num_urban_nwr ,num_urban_ngb ,                        &
          num_urban_nf ,num_urban_nz,num_urban_nbui,num_urban_ngr ,                        &
          split_output_count,                                                              & 
-         khour, kday, zlvl, hrldas_setup_file,                                            &
+         khour, kday, zlvl, erf_setup_file,                                               &
          spatial_filename, agdata_flnm, tdinput_flnm,                                     &
          external_veg_filename_template, external_lai_filename_template,                  &
          xstart, xend, ystart, yend
@@ -167,7 +167,7 @@ contains
     ! read namelist.input
     !---------------------------------------------------------------
     
-    open(30, file="namelist.hrldas", form="FORMATTED")
+    open(30, file="namelist.erf", form="FORMATTED")
     read(30, NOAHLSM_OFFLINE, iostat=ierr)
     if (ierr /= 0) then
        write(*,'(/," ***** ERROR: Problem reading namelist NOAHLSM_OFFLINE",/)')
@@ -384,7 +384,7 @@ contains
     NoahmpIO%khour                             = khour
     NoahmpIO%kday                              = kday
     NoahmpIO%zlvl                              = zlvl
-    NoahmpIO%hrldas_setup_file                 = hrldas_setup_file
+    NoahmpIO%erf_setup_file                    = erf_setup_file
     NoahmpIO%spatial_filename                  = spatial_filename
     NoahmpIO%external_veg_filename_template    = external_veg_filename_template
     NoahmpIO%external_lai_filename_template    = external_lai_filename_template
