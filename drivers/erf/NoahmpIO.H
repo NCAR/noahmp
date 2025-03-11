@@ -36,6 +36,7 @@ extern "C" {
     void NoahmpInitMain_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpReadNamelist_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpReadTable_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpIOTypeInit_fi(NoahmpIO_type_fi* noahmpio);
 }
 
 struct NoahmpIO_type {
@@ -57,7 +58,9 @@ struct NoahmpIO_type {
           fptr(&ids, &ide, &jds, &jde, &kds, &kde,
                &ims, &ime, &jms, &jme, &kms, &kme,
                &its, &ite, &jts, &jte, &kts, &kte,
-               &xstart, &xend, &ystart, &yend, &nsoil, &nsnow) {}
+               &xstart, &xend, &ystart, &yend, &nsoil, &nsnow) {
+            NoahmpIOTypeInit_fi(&fptr);
+       };
 
    };
 

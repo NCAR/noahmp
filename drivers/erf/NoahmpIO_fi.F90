@@ -36,7 +36,7 @@ module NoahmpIO_fi
 
 contains
 
-  subroutine NoahmpIOVarInitDefault_fi(NoahmpIO_cptr) bind(C, name="NoahmpIOVarInitDefault_fi")
+  subroutine NoahmpIOTypeInit_fi(NoahmpIO_cptr) bind(C, name="NoahmpIOTypeInit_fi")
     use, intrinsic :: iso_c_binding
     implicit none
     type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
@@ -45,10 +45,36 @@ contains
     call C_F_POINTER(NoahmpIO_cptr%XEND,   NoahmpIO%XEND)
     call C_F_POINTER(NoahmpIO_cptr%YSTART, NoahmpIO%YSTART)
     call C_F_POINTER(NoahmpIO_cptr%YEND,   NoahmpIO%YEND)
-    call C_F_POINTER(NoahmpIO_cptr%KDS,    NoahmpIO%KDS)
-    call C_F_POINTER(NoahmpIO_cptr%KDE,    NoahmpIO%KDE)
+
     call C_F_POINTER(NoahmpIO_cptr%NSOIL,  NoahmpIO%NSOIL)
     call C_F_POINTER(NoahmpIO_cptr%NSNOW,  NoahmpIO%NSNOW)
+
+    call C_F_POINTER(NoahmpIO_cptr%KDS,    NoahmpIO%IDS)
+    call C_F_POINTER(NoahmpIO_cptr%KDE,    NoahmpIO%IDE)
+    call C_F_POINTER(NoahmpIO_cptr%KDS,    NoahmpIO%JDS)
+    call C_F_POINTER(NoahmpIO_cptr%KDE,    NoahmpIO%JDE)
+    call C_F_POINTER(NoahmpIO_cptr%KDS,    NoahmpIO%KDS)
+    call C_F_POINTER(NoahmpIO_cptr%KDE,    NoahmpIO%KDE)
+
+    call C_F_POINTER(NoahmpIO_cptr%KDS,    NoahmpIO%IMS)
+    call C_F_POINTER(NoahmpIO_cptr%KDE,    NoahmpIO%IME)
+    call C_F_POINTER(NoahmpIO_cptr%KDS,    NoahmpIO%JMS)
+    call C_F_POINTER(NoahmpIO_cptr%KDE,    NoahmpIO%JME)
+    call C_F_POINTER(NoahmpIO_cptr%KDS,    NoahmpIO%KMS)
+    call C_F_POINTER(NoahmpIO_cptr%KDE,    NoahmpIO%KME)
+
+    call C_F_POINTER(NoahmpIO_cptr%KDS,    NoahmpIO%ITS)
+    call C_F_POINTER(NoahmpIO_cptr%KDE,    NoahmpIO%ITE)
+    call C_F_POINTER(NoahmpIO_cptr%KDS,    NoahmpIO%JTS)
+    call C_F_POINTER(NoahmpIO_cptr%KDE,    NoahmpIO%JTE)
+    call C_F_POINTER(NoahmpIO_cptr%KDS,    NoahmpIO%KTS)
+    call C_F_POINTER(NoahmpIO_cptr%KDE,    NoahmpIO%KTE)
+  end subroutine NoahmpIOTypeInit_fi
+
+  subroutine NoahmpIOVarInitDefault_fi(NoahmpIO_cptr) bind(C, name="NoahmpIOVarInitDefault_fi")
+    use, intrinsic :: iso_c_binding
+    implicit none
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
 
     call NoahmpIOVarInitDefault(NoahmpIO)
 
