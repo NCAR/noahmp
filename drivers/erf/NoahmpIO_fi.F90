@@ -37,26 +37,23 @@ module NoahmpIO_fi
 contains
 
   subroutine NoahmpIOVarInitDefault_fi(NoahmpIO_cptr) bind(C, name="NoahmpIOVarInitDefault_fi")
-
     use, intrinsic :: iso_c_binding
     implicit none
-
     type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
 
-    call copy_c2f_integer(NoahmpIO_cptr%XSTART, NoahmpIO%XSTART)
-    call copy_c2f_integer(NoahmpIO_cptr%XEND,   NoahmpIO%XEND)
-    call copy_c2f_integer(NoahmpIO_cptr%YSTART, NoahmpIO%YSTART)
-    call copy_c2f_integer(NoahmpIO_cptr%YEND,   NoahmpIO%YEND)
-    call copy_c2f_integer(NoahmpIO_cptr%KDS,    NoahmpIO%KDS)
-    call copy_c2f_integer(NoahmpIO_cptr%KDE,    NoahmpIO%KDE)
-    call copy_c2f_integer(NoahmpIO_cptr%NSOIL,  NoahmpIO%NSOIL)
-    call copy_c2f_integer(NoahmpIO_cptr%NSNOW,  NoahmpIO%NSNOW)
+    call C_F_POINTER(NoahmpIO_cptr%XSTART, NoahmpIO%XSTART)
+    call C_F_POINTER(NoahmpIO_cptr%XEND,   NoahmpIO%XEND)
+    call C_F_POINTER(NoahmpIO_cptr%YSTART, NoahmpIO%YSTART)
+    call C_F_POINTER(NoahmpIO_cptr%YEND,   NoahmpIO%YEND)
+    call C_F_POINTER(NoahmpIO_cptr%KDS,    NoahmpIO%KDS)
+    call C_F_POINTER(NoahmpIO_cptr%KDE,    NoahmpIO%KDE)
+    call C_F_POINTER(NoahmpIO_cptr%NSOIL,  NoahmpIO%NSOIL)
+    call C_F_POINTER(NoahmpIO_cptr%NSNOW,  NoahmpIO%NSNOW)
 
     call NoahmpIOVarInitDefault(NoahmpIO)
 
     NoahmpIO_cptr%XLAT = C_LOC(NoahmpIO%XLAT)
     NoahmpIO_cptr%WSLAKEXY = C_LOC(NoahmpIO%WSLAKEXY)
-
   end subroutine NoahmpIOVarInitDefault_fi
 
   subroutine NoahmpInitMain_fi(NoahmpIO_cptr) bind(C, name="NoahmpInitMain_fi")
@@ -79,20 +76,5 @@ contains
     type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
     call NoahmpReadNamelist(NoahmpIO)
   end subroutine NoahmpReadNamelist_fi
-
-  subroutine copy_c2f_integer(cpointer, ftarget)
-
-    use, intrinsic :: iso_c_binding
-    implicit none
-
-    type(C_PTR) :: cpointer
-    integer, intent(inout) :: ftarget
-
-    integer, pointer :: fpointer
-
-    call c_f_pointer(cpointer, fpointer)
-    ftarget = fpointer
-
-  end subroutine copy_c2f_integer
 
 end module NoahmpIO_fi

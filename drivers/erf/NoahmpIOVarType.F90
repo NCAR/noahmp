@@ -26,7 +26,7 @@ module NoahmpIOVarType
 !------------------------------------------------------------------------
 
     ! IN only (as defined in WRF)
-    integer                                                ::  ids,ide, &          ! d -> domain 
+    integer(C_INT), pointer                                ::  ids,ide, &          ! d -> domain 
                                                                jds,jde, &          ! d -> domain
                                                                kds,kde, &          ! d -> domain
                                                                ims,ime, &          ! m -> memory
@@ -37,7 +37,7 @@ module NoahmpIOVarType
                                                                kts,kte             ! t -> tile
     integer                                                ::  ITIMESTEP           ! timestep number
     integer                                                ::  YR                  ! 4-digit year
-    integer                                                ::  NSOIL               ! number of soil layers
+    integer(C_INT), pointer                                ::  NSOIL               ! number of soil layers
     integer                                                ::  ICE                 ! Sea-ice point
     integer                                                ::  ISICE               ! land cover category for ice
     integer                                                ::  ISURBAN             ! land cover category for urban
@@ -546,7 +546,7 @@ module NoahmpIOVarType
     integer                                                ::  J
     integer                                                ::  SLOPETYP
     integer                                                ::  YEARLEN
-    integer                                                ::  NSNOW = 3            ! number of snow layers fixed to 3
+    integer(C_INT), pointer                                ::  NSNOW           ! number of snow layers fixed to 3
     logical                                                ::  update_lai, update_veg
     integer                                                ::  spinup_loop
     logical                                                ::  reset_spinup_date
@@ -657,10 +657,7 @@ module NoahmpIOVarType
     character(len=256)                                     ::  external_lai_filename_template
     character(len=256)                                     ::  agdata_flnm
     character(len=256)                                     ::  tdinput_flnm
-    integer                                                ::  xstart
-    integer                                                ::  ystart
-    integer                                                ::  xend
-    integer                                                ::  yend
+    integer(C_INT), pointer                                ::  xstart, xend, ystart, yend
     integer                                                ::  MAX_SOIL_LEVELS
     real(kind=kind_noahmp),  allocatable, dimension(:)     ::  soil_thick_input
 
