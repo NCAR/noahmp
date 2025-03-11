@@ -31,6 +31,7 @@ module NoahmpIO_fi
 
     type(C_PTR) :: xstart, xend, ystart, yend
     type(C_PTR) :: nsoil, nsnow
+    type(C_PTR) :: llanduse
     type(C_PTR) :: XLAT, WSLAKEXY
   end type NoahmpIO_type_fi
 
@@ -69,6 +70,10 @@ contains
     call C_F_POINTER(NoahmpIO_cptr%JTE,    NoahmpIO%JTE)
     call C_F_POINTER(NoahmpIO_cptr%KTS,    NoahmpIO%KTS)
     call C_F_POINTER(NoahmpIO_cptr%KTE,    NoahmpIO%KTE)
+
+    call C_F_POINTER(NoahmpIO_cptr%LLANDUSE, NoahmpIO%LLANDUSE)
+    NoahmpIO%LLANDUSE => NoahmpIO%LLANDUSE(1:256)
+
   end subroutine NoahmpIOTypeInit_fi
 
   subroutine NoahmpIOVarInitDefault_fi(NoahmpIO_cptr) bind(C, name="NoahmpIOVarInitDefault_fi")

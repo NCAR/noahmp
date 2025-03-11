@@ -9,7 +9,7 @@ module NoahmpIOVarType
 ! Fortran-C API: A. Dhruv, M. Buehlmann, & R. Kotamarthi (2024)
 ! -------------------------------------------------------------------------
 
-  use, intrinsic :: iso_c_binding, only: C_INT, C_DOUBLE, C_PTR
+  use, intrinsic :: iso_c_binding, only: C_INT, C_DOUBLE, C_PTR, C_CHAR
   use Machine
 
   implicit none
@@ -523,7 +523,7 @@ module NoahmpIOVarType
 !------------------------------------------------------------------------
 
     CHARACTER(LEN=256)                                     ::  MMINSL  = 'STAS'    ! soil classification
-    CHARACTER(LEN=256)                                     ::  LLANDUSE            ! (=USGS, using USGS landuse classification)
+    CHARACTER(kind=C_CHAR, LEN=:), pointer                 ::  LLANDUSE            ! (=USGS, using USGS landuse classification)
 
 !------------------------------------------------------------------------
 ! Timing:

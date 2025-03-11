@@ -659,10 +659,10 @@ contains
        write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
     endif
 
-    if ( trim(DATASET_IDENTIFIER) == "USGS" ) then
+    if ( DATASET_IDENTIFIER(1:4) == "USGS" ) then
        read(15, noahmp_usgs_veg_categories)
        read(15, noahmp_usgs_parameters)
-    elseif ( trim(DATASET_IDENTIFIER) == "MODIFIED_IGBP_MODIS_NOAH" ) then
+    elseif ( DATASET_IDENTIFIER(1:24) == "MODIFIED_IGBP_MODIS_NOAH" ) then
        read(15,noahmp_modis_veg_categories)
        read(15,noahmp_modis_parameters)
     else
