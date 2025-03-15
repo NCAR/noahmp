@@ -577,7 +577,7 @@ module NoahmpIOVarType
     integer                                                ::  ierr
 
 !---------------------------------------------------------------------
-! Attributes from LDASIN input file (or HRLDAS_SETUP_FILE, as the case may be)
+! Attributes from LDASIN input file (or ERF_SETUP_FILE, as the case may be)
 !---------------------------------------------------------------------
 
     integer                                                ::  IX

@@ -5,7 +5,7 @@ module NoahmpIO_fi
   use NoahmpInitMainMod, ONLY: NoahmpInitMain
   use NoahmpReadNamelistMod, ONLY: NoahmpReadNamelist
   use NoahmpReadTableMod, ONLY: NoahmpReadTable
-  use NoahmpReadLandMod, ONLY: NoahmpReadHDRInfo, NoahmpReadLandMain
+  use NoahmpReadLandMod, ONLY: NoahmpReadLandHeader, NoahmpReadLandMain
   use NoahmpDriverMainMod, ONLY: NoahmpDriverMain
 
   use, intrinsic :: iso_c_binding
@@ -125,12 +125,12 @@ contains
     call NoahmpReadNamelist(NoahmpIO)
   end subroutine NoahmpReadNamelist_fi
 
-  subroutine NoahmpReadHDRInfo_fi(NoahmpIO_cptr) bind(C, name="NoahmpReadHDRInfo_fi")
+  subroutine NoahmpReadLandHeader_fi(NoahmpIO_cptr) bind(C, name="NoahmpReadLandHeader_fi")
     use, intrinsic :: iso_c_binding 
     implicit none 
     type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
-    call NoahmpReadHDRInfo(NoahmpIO)
-  end subroutine NoahmpReadHDRInfo_fi
+    call NoahmpReadLandHeader(NoahmpIO)
+  end subroutine NoahmpReadLandHeader_fi
 
   subroutine NoahmpReadLandMain_fi(NoahmpIO_cptr) bind(C, name="NoahmpReadLandMain_fi")
     use, intrinsic :: iso_c_binding 

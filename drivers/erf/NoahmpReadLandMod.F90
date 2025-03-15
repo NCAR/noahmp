@@ -7,17 +7,23 @@ module NoahmpReadLandMod
 
   implicit none
 
-  public :: NoahmpReadHDRInfo, NoahmpReadLandMain
+  public :: NoahmpReadLandHeader, NoahmpReadLandMain
 
-  private :: FATAL, NOT_FATAL, get_2d_netcdf, error_handler, &
-             get_landuse_netcdf, get_soilcat_netcdf, get_netcdf_soillevel, init_interp
+  private :: FATAL, NOT_FATAL, get_2d_netcdf, error_handler, get_landuse_netcdf, &
+             get_soilcat_netcdf, get_netcdf_soillevel, init_interp, get_2d_netcdf_cfloat, &
+             get_2d_netcdf_ffloat
 
   logical, parameter :: FATAL = .TRUE.
   logical, parameter :: NOT_FATAL = .FALSE.
 
+  interface get_2d_netcdf
+    module procedure get_2d_netcdf_cfloat
+    module procedure get_2d_netcdf_ffloat
+  end interface get_2d_netcdf
+
 contains
 
-subroutine NoahmpReadHDRInfo(NoahmpIO)
+subroutine NoahmpReadLandHeader(NoahmpIO)
 
     implicit none
     type(NoahmpIO_type), intent(inout)  :: NoahmpIO
@@ -103,7 +109,7 @@ subroutine NoahmpReadHDRInfo(NoahmpIO)
     ierr = nf90_close(ncid)
     call error_handler(ierr, "READ_ERF_HDRINFO:  Problems closing NetCDF file.")
 
-end subroutine NoahmpReadHDRInfo
+end subroutine NoahmpReadLandHeader
 
 subroutine NoahmpReadLandMain(NoahmpIO)
     implicit none
@@ -141,7 +147,7 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file))
 
     ! Get Latitude (lat)
-    call get_2d_netcdf_carray("XLAT", ncid, NoahmpIO%xlat,  units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_2d_netcdf("XLAT", ncid, NoahmpIO%xlat,  units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
 
     ! Get Longitude (lon)
     call get_2d_netcdf("XLONG", ncid, NoahmpIO%xlong, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
@@ -273,7 +279,7 @@ subroutine NoahmpReadLandMain(NoahmpIO)
 
 end subroutine NoahmpReadLandMain
 
-subroutine get_2d_netcdf_carray(name, ncid, array, units, xstart, xend, ystart, yend, fatal_if_error, ierr)
+subroutine get_2d_netcdf_cfloat(name, ncid, array, units, xstart, xend, ystart, yend, fatal_if_error, ierr)
 
     implicit none
 
@@ -319,9 +325,9 @@ subroutine get_2d_netcdf_carray(name, ncid, array, units, xstart, xend, ystart, 
 
     ierr = 0;
 
-end subroutine get_2d_netcdf_carray
+end subroutine get_2d_netcdf_cfloat
 
-subroutine get_2d_netcdf(name, ncid, array, units, xstart, xend, ystart, yend, fatal_if_error, ierr)
+subroutine get_2d_netcdf_ffloat(name, ncid, array, units, xstart, xend, ystart, yend, fatal_if_error, ierr)
 
     implicit none
 
@@ -367,7 +373,7 @@ subroutine get_2d_netcdf(name, ncid, array, units, xstart, xend, ystart, yend, f
 
     ierr = 0;
 
-end subroutine get_2d_netcdf
+end subroutine get_2d_netcdf_ffloat
 
 
 subroutine error_handler(status, failure, success)

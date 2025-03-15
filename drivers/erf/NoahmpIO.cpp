@@ -55,9 +55,9 @@ void NoahmpReadTable(NoahmpIO_type* noahmpio) {
      NoahmpReadTable_fi(fptr);
 };
 
-void NoahmpReadHDRInfo(NoahmpIO_type* noahmpio) {
+void NoahmpReadLandHeader(NoahmpIO_type* noahmpio) {
      NoahmpIO_type_fi* fptr = &noahmpio->fptr;
-     NoahmpReadHDRInfo_fi(fptr);
+     NoahmpReadLandHeader_fi(fptr);
 };
 
 void NoahmpReadLandMain(NoahmpIO_type* noahmpio) {

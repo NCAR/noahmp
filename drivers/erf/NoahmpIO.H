@@ -43,7 +43,7 @@ extern "C" {
     void NoahmpReadNamelist_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpReadTable_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpIOTypeInit_fi(NoahmpIO_type_fi* noahmpio);
-    void NoahmpReadHDRInfo_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpReadLandHeader_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpReadLandMain_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpDriverMain_fi(NoahmpIO_type_fi* noahmpio);
 }
@@ -84,7 +84,7 @@ extern void NoahmpIOVarInitDefault(NoahmpIO_type* noahmpio);
 extern void NoahmpInitMain(NoahmpIO_type* noahmpio);
 extern void NoahmpReadNamelist(NoahmpIO_type* noahmpio);
 extern void NoahmpReadTable(NoahmpIO_type* noahmpio);
-extern void NoahmpReadHDRInfo(NoahmpIO_type* noahmpio);
+extern void NoahmpReadLandHeader(NoahmpIO_type* noahmpio);
 extern void NoahmpReadLandMain(NoahmpIO_type* noahmpio);
 extern void NoahmpDriverMain(NoahmpIO_type* NoahmpIO);
 
