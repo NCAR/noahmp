@@ -23,7 +23,6 @@ contains
     
     type(NoahmpIO_type), intent(inout) :: NoahmpIO   
 
-#if 0
     ! local variables
     integer                                     :: ide,jde,its,jts,itf,jtf
     integer                                     :: I,J,errflag,NS
@@ -268,10 +267,6 @@ contains
        endif
 
     endif ! NoahmpIO%restart_flag
-#endif
-
-  NoahmpIO%XLAT(1,2) = 34
-  NoahmpIO%WSLAKEXY(2,1) = 43
 
   end subroutine NoahmpInitMain    
 

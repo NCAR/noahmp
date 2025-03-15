@@ -15,6 +15,12 @@ extern "C" {
 
         double* XLAT = nullptr;       // latitude [rad]
         double* WSLAKEXY = nullptr;   // lake water storage [mm]
+        double* U_PHY = nullptr;
+        double* T_PHY = nullptr;
+        double* V_PHY = nullptr;
+        double* QV_CURR = nullptr;
+        double* SHBXY = nullptr;
+        double* EVBXY = nullptr;
 
         NoahmpIO_type_fi(        
           int* ids, int* ide, int* jds, int* jde, int* kds, int* kde,
@@ -51,6 +57,12 @@ struct NoahmpIO_type {
 
         NoahArray2D<double> XLAT;
         NoahArray2D<double> WSLAKEXY;
+        NoahArray3D<double> U_PHY;
+        NoahArray3D<double> T_PHY;
+        NoahArray3D<double> V_PHY;
+        NoahArray3D<double> QV_CURR;
+        NoahArray2D<double> SHBXY;
+        NoahArray2D<double> EVBXY;
 
         NoahmpIO_type():
           fptr(&ids, &ide, &jds, &jde, &kds, &kde,

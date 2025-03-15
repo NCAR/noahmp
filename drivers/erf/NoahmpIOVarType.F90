@@ -79,7 +79,7 @@ module NoahmpIOVarType
     integer,                allocatable, dimension(:,:)    ::  IVGTYP              ! vegetation type
     integer,                allocatable, dimension(:,:)    ::  ISLTYP              ! soil type
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  COSZEN              ! cosine zenith angle
-    real(C_DOUBLE),         allocatable, dimension(:,:)    ::  XLAT                ! latitude [rad]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  XLAT                ! latitude [rad]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  DZ8W                ! thickness of atmo layers [m]
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  DZS                 ! thickness of soil layers [m]
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  ZSOIL               ! depth to soil interfaces [m]
@@ -90,10 +90,10 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SEAICE              ! seaice fraction
 
     ! forcings    
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  T_PHY               ! 3D atmospheric temperature valid at mid-levels [K]
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  QV_CURR             ! 3D water vapor mixing ratio [kg/kg_dry]
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  U_PHY               ! 3D U wind component [m/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  V_PHY               ! 3D V wind component [m/s]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  T_PHY               ! 3D atmospheric temperature valid at mid-levels [K]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  QV_CURR             ! 3D water vapor mixing ratio [kg/kg_dry]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  U_PHY               ! 3D U wind component [m/s]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  V_PHY               ! 3D V wind component [m/s]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SWDOWN              ! solar down at surface [W m-2]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  GLW                 ! longwave down at surface [W m-2]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  P8W                 ! 3D pressure, valid at interface [Pa]
@@ -273,9 +273,9 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  CHBXY               ! sensible heat exchange coefficient bare-ground
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SHGXY               ! veg ground sen. heat [w/m2]   [+ to atm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SHCXY               ! canopy sen. heat [w/m2]   [+ to atm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SHBXY               ! bare sensible heat [w/m2]  [+ to atm]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  SHBXY               ! bare sensible heat [w/m2]  [+ to atm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  EVGXY               ! veg ground evap. heat [w/m2]  [+ to atm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  EVBXY               ! bare soil evaporation [w/m2]  [+ to atm]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  EVBXY               ! bare soil evaporation [w/m2]  [+ to atm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  GHVXY               ! veg ground heat flux [w/m2]  [+ to soil]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  GHBXY               ! bare ground heat flux [w/m2] [+ to soil]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  IRGXY               ! veg ground net LW rad. [w/m2] [+ to atm]

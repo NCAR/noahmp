@@ -14,6 +14,30 @@ void NoahmpIOVarInitDefault(NoahmpIO_type* noahmpio) {
                                               {noahmpio->xstart, noahmpio->ystart}, 
                                               {noahmpio->xend, noahmpio->yend});
 
+      noahmpio->T_PHY = NoahArray3D<double>(fptr->T_PHY, 
+                                           {noahmpio->xstart, noahmpio->kds, noahmpio->ystart}, 
+                                           {noahmpio->xend, noahmpio->kde, noahmpio->yend});
+
+      noahmpio->U_PHY = NoahArray3D<double>(fptr->U_PHY, 
+                                           {noahmpio->xstart, noahmpio->kds, noahmpio->ystart}, 
+                                           {noahmpio->xend, noahmpio->kde, noahmpio->yend});
+
+      noahmpio->V_PHY = NoahArray3D<double>(fptr->V_PHY, 
+                                           {noahmpio->xstart, noahmpio->kds, noahmpio->ystart}, 
+                                           {noahmpio->xend, noahmpio->kde, noahmpio->yend});
+
+      noahmpio->QV_CURR = NoahArray3D<double>(fptr->QV_CURR, 
+                                             {noahmpio->xstart, noahmpio->kds, noahmpio->ystart}, 
+                                             {noahmpio->xend, noahmpio->kde, noahmpio->yend});
+
+      noahmpio->SHBXY = NoahArray2D<double>(fptr->SHBXY, 
+                                            {noahmpio->xstart, noahmpio->ystart}, 
+                                            {noahmpio->xend, noahmpio->yend});
+
+      noahmpio->EVBXY = NoahArray2D<double>(fptr->EVBXY, 
+                                            {noahmpio->xstart, noahmpio->ystart}, 
+                                            {noahmpio->xend, noahmpio->yend});
+
 };
 
 void NoahmpInitMain(NoahmpIO_type* noahmpio) {

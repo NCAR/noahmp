@@ -109,7 +109,9 @@ contains
     integer                 :: yend                               = 0
     integer, parameter      :: MAX_SOIL_LEVELS                    = 10     ! maximum soil levels in namelist
     real(kind=kind_noahmp), dimension(MAX_SOIL_LEVELS) :: soil_thick_input ! depth to soil interfaces from namelist [m]
-    
+    integer                 :: NSNOW   
+    character(len=256)      :: LLANDUSE = ""
+ 
     namelist / NOAHLSM_OFFLINE /    &
 #ifdef WRF_HYDRO
          finemesh,finemesh_factor,forc_typ, snow_assim , GEO_STATIC_FLNM, HRLDAS_ini_typ, &
@@ -136,7 +138,7 @@ contains
          khour, kday, zlvl, erf_setup_file,                                               &
          spatial_filename, agdata_flnm, tdinput_flnm,                                     &
          external_veg_filename_template, external_lai_filename_template,                  &
-         xstart, xend, ystart, yend
+         xstart, xend, ystart, yend, nsnow, llanduse
 
 
     !---------------------------------------------------------------
@@ -162,6 +164,7 @@ contains
     NoahmpIO%restart_frequency_hours = undefined_int
     NoahmpIO%spinup_loops            = 0
     NoahmpIO%noahmp_output           = 0
+    NoahmpIO%nsnow                   = undefined_int
 
     !---------------------------------------------------------------
     ! read namelist.input
@@ -180,6 +183,8 @@ contains
     NoahmpIO%DTBL            = real(noah_timestep)
     NoahmpIO%soiltstep       = soil_timestep
     NoahmpIO%NSOIL           = nsoil
+    NoahmpIO%NSNOW           = nsnow
+    NoahmpIO%LLANDUSE        = llanduse
 
     !---------------------------------------------------------------------
     !  NAMELIST end

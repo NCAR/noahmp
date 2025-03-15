@@ -17,6 +17,9 @@ module NoahmpIO_fi
 
   ! ---------------------------------------------------------------------------
   ! Mirror of extern C struct
+  !
+  ! DEVNOTE :: The order variables between C struct and the binded Fortran type
+  !            should be consistent for memory managment. 
   ! ---------------------------------------------------------------------------
   type, bind(c), public :: NoahmpIO_type_fi
     type(C_PTR)                                         ::  ids,ide, &          ! d -> domain
@@ -33,6 +36,8 @@ module NoahmpIO_fi
     type(C_PTR) :: nsoil, nsnow
     type(C_PTR) :: llanduse
     type(C_PTR) :: XLAT, WSLAKEXY
+    type(C_PTR) :: U_PHY, T_PHY, V_PHY, QV_CURR
+    type(C_PTR) :: SHBXY, EVBXY
   end type NoahmpIO_type_fi
 
 contains
@@ -85,6 +90,13 @@ contains
 
     NoahmpIO_cptr%XLAT = C_LOC(NoahmpIO%XLAT)
     NoahmpIO_cptr%WSLAKEXY = C_LOC(NoahmpIO%WSLAKEXY)
+    
+    NoahmpIO_cptr%T_PHY = C_LOC(NoahmpIO%T_PHY)
+    NoahmpIO_cptr%U_PHY = C_LOC(NoahmpIO%U_PHY)
+    NoahmpIO_cptr%V_PHY = C_LOC(NoahmpIO%V_PHY)
+    NoahmpIO_cptr%QV_CURR = C_LOC(NoahmpIO%QV_CURR)
+    NoahmpIO_cptr%SHBXY = C_LOC(NoahmpIO%SHBXY)
+    NoahmpIO_cptr%EVBXY = C_LOC(NoahmpIO%EVBXY)
   end subroutine NoahmpIOVarInitDefault_fi
 
   subroutine NoahmpInitMain_fi(NoahmpIO_cptr) bind(C, name="NoahmpInitMain_fi")

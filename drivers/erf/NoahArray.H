@@ -58,4 +58,29 @@ struct NoahArray2D {
 
 };
 
+
+template <typename T>
+struct NoahArray3D {
+    
+    std::array<int,3> begin = {1,1,1};
+    std::array<int,3> end = {0,0,0};
+    T* data;
+
+    constexpr NoahArray3D() noexcept = default;
+
+    constexpr NoahArray3D(NoahArray3D<T> const& rhs) noexcept
+        : data(rhs.data), begin(rhs.begin), end(rhs.end) {}
+
+    constexpr NoahArray3D(T* fortranArray, std::array<int,3> begin, std::array<int,3> end) noexcept
+        : data(fortranArray), begin(begin), end(end) {}
+
+    T& operator()(size_t i, size_t j, size_t k) {
+        return data[i-begin[0] + (end[0]-begin[0]+1)*(j-begin[1]+(end[1]-begin[1]+1)*(k-begin[2]))];
+    }
+
+    const T& operator()(size_t i, size_t j, size_t k) const {
+        return data[i-begin[0] + (end[0]-begin[0]+1)*(j-begin[1] + (end[1]-begin[1]+1)*(k-begin[2]))];
+    }
+};
+
 #endif
