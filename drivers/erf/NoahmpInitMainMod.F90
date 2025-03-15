@@ -268,6 +268,13 @@ contains
 
     endif ! NoahmpIO%restart_flag
 
+    NoahmpIO%NTIME = (NoahmpIO%KHOUR)*3600.0/nint(NoahmpIO%dtbl)*(NoahmpIO%spinup_loops+1)
+    NoahmpIO%spinup_loop = 0
+    NoahmpIO%reset_spinup_date = .false.
+
+    print*, "NTIME = ", NoahmpIO%NTIME , "KHOUR=",NoahmpIO%KHOUR,"dtbl = ", NoahmpIO%dtbl  
+    call system_clock(count=NoahmpIO%clock_count_1)   ! Start a timer
+  
   end subroutine NoahmpInitMain    
 
 end module NoahmpInitMainMod

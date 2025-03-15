@@ -35,7 +35,7 @@ module NoahmpIOVarType
                                                                its,ite, &          ! t -> tile
                                                                jts,jte, &          ! t -> tile
                                                                kts,kte             ! t -> tile
-    integer                                                ::  ITIMESTEP           ! timestep number
+    integer(C_INT), pointer                                ::  ITIMESTEP           ! timestep number
     integer                                                ::  YR                  ! 4-digit year
     integer(C_INT), pointer                                ::  NSOIL               ! number of soil layers
     integer                                                ::  ICE                 ! Sea-ice point
@@ -529,7 +529,7 @@ module NoahmpIOVarType
 ! Timing:
 !------------------------------------------------------------------------
 
-    integer                                                ::  NTIME               ! timesteps
+    integer(C_INT), pointer                                ::  NTIME               ! timesteps
     integer                                                ::  clock_count_1 = 0
     integer                                                ::  clock_count_2 = 0
     integer                                                ::  clock_rate    = 0
