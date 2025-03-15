@@ -6,6 +6,7 @@ module NoahmpIO_fi
   use NoahmpReadNamelistMod, ONLY: NoahmpReadNamelist
   use NoahmpReadTableMod, ONLY: NoahmpReadTable
   use NoahmpReadLandMod, ONLY: NoahmpReadHDRInfo, NoahmpReadLandMain
+  use NoahmpDriverMainMod, ONLY: NoahmpDriverMain
 
   use, intrinsic :: iso_c_binding
 
@@ -137,5 +138,12 @@ contains
     type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
     call NoahmpReadLandMain(NoahmpIO)
   end subroutine NoahmpReadLandMain_fi
+
+  subroutine NoahmpDriverMain_fi(NoahmpIO_cptr) bind(C, name="NoahmpDriverMain_fi")
+    use, intrinsic :: iso_c_binding 
+    implicit none 
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    call NoahmpDriverMain(NoahmpIO)
+  end subroutine NoahmpDriverMain_fi
 
 end module NoahmpIO_fi

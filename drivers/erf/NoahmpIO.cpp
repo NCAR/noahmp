@@ -64,3 +64,8 @@ void NoahmpReadLandMain(NoahmpIO_type* noahmpio) {
      NoahmpIO_type_fi* fptr = &noahmpio->fptr;
      NoahmpReadLandMain_fi(fptr);
 };
+
+void NoahmpDriverMain(NoahmpIO_type* noahmpio) {
+     NoahmpIO_type_fi* fptr = &noahmpio->fptr;
+     NoahmpDriverMain_fi(fptr);
+};

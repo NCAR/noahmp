@@ -45,6 +45,7 @@ extern "C" {
     void NoahmpIOTypeInit_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpReadHDRInfo_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpReadLandMain_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpDriverMain_fi(NoahmpIO_type_fi* noahmpio);
 }
 
 struct NoahmpIO_type {
@@ -85,5 +86,6 @@ extern void NoahmpReadNamelist(NoahmpIO_type* noahmpio);
 extern void NoahmpReadTable(NoahmpIO_type* noahmpio);
 extern void NoahmpReadHDRInfo(NoahmpIO_type* noahmpio);
 extern void NoahmpReadLandMain(NoahmpIO_type* noahmpio);
+extern void NoahmpDriverMain(NoahmpIO_type* NoahmpIO);
 
 #endif // NOAHMP_IO_H
