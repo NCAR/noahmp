@@ -103,10 +103,10 @@ contains
     character(len=256)      :: external_lai_filename_template     = " "
     character(len=256)      :: agdata_flnm                        = " "
     character(len=256)      :: tdinput_flnm                       = " "
-    integer                 :: xstart                             = 1
-    integer                 :: ystart                             = 1
-    integer                 :: xend                               = 0
-    integer                 :: yend                               = 0
+    integer                 :: xstart                             = 0
+    integer                 :: ystart                             = 0
+    integer                 :: xend                               = -1
+    integer                 :: yend                               = -1
     integer, parameter      :: MAX_SOIL_LEVELS                    = 10     ! maximum soil levels in namelist
     real(kind=kind_noahmp), dimension(MAX_SOIL_LEVELS) :: soil_thick_input ! depth to soil interfaces from namelist [m]
     integer                 :: NSNOW   
