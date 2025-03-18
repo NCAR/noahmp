@@ -53,16 +53,6 @@ contains
       real(kind=kind_noahmp), dimension(1:NoahmpIO%nsoil) :: ORGM
 ! -------------------------------------------------------------------------
 
-      !where (NoahmpIO%XLAND > 1.5) NoahmpIO%T_PHY(:, 1, :) = 0.0 ! Prevent some overflow problems with ifort compiler [MB:20150812]
-      !where (NoahmpIO%XLAND > 1.5) NoahmpIO%U_PHY(:, 1, :) = 0.0
-      !where (NoahmpIO%XLAND > 1.5) NoahmpIO%V_PHY(:, 1, :) = 0.0
-      !where (NoahmpIO%XLAND > 1.5) NoahmpIO%QV_CURR(:, 1, :) = 0.0
-      !where (NoahmpIO%XLAND > 1.5) NoahmpIO%P8W(:, 1, :) = 0.0
-      !where (NoahmpIO%XLAND > 1.5) NoahmpIO%GLW = 0.0
-      !where (NoahmpIO%XLAND > 1.5) NoahmpIO%SWDOWN = 0.0
-      !where (NoahmpIO%XLAND > 1.5) NoahmpIO%RAINBL = 0.0
-      !where (NoahmpIO%XLAND > 1.5) NoahmpIO%SNOWBL = 0.0
-
       NoahmpIO%P8W(:, 2, :) = NoahmpIO%P8W(:, 1, :)              ! WRF uses lowest two layers
       NoahmpIO%T_PHY(:, 2, :) = NoahmpIO%T_PHY(:, 1, :)            ! Only pressure is needed in two layer but fill the rest
       NoahmpIO%U_PHY(:, 2, :) = NoahmpIO%U_PHY(:, 1, :)            !
