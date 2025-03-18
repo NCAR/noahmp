@@ -272,6 +272,13 @@ contains
     NoahmpIO%spinup_loop = 0
     NoahmpIO%reset_spinup_date = .false.
 
+    !! TODO: Read these from ERF client code. 
+    NoahmpIO%P8W(:,1,:)     = 1.0
+    NoahmpIO%GLW            = 0.0
+    NoahmpIO%SWDOWN         = 0.0
+    NoahmpIO%RAINBL         = 0.0
+    NoahmpIO%SNOWBL         = 0.0
+
     print*, "NTIME = ", NoahmpIO%NTIME , "KHOUR=",NoahmpIO%KHOUR,"dtbl = ", NoahmpIO%dtbl  
     call system_clock(count=NoahmpIO%clock_count_1)   ! Start a timer
   
