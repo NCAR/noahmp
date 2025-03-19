@@ -278,6 +278,8 @@ contains
     NoahmpIO%SWDOWN         = 0.0
     NoahmpIO%RAINBL         = 0.0
     NoahmpIO%SNOWBL         = 0.0
+    NoahmpIO%SHBXY          = 0.0
+    NoahmpIO%EVBXY          = 0.0
 
     print*, "NTIME = ", NoahmpIO%NTIME , "KHOUR=",NoahmpIO%KHOUR,"dtbl = ", NoahmpIO%dtbl  
     call system_clock(count=NoahmpIO%clock_count_1)   ! Start a timer
