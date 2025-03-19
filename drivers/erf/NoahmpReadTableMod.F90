@@ -656,7 +656,7 @@ contains
        open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if ( ierr /= 0 ) then
-       write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       if (NoahmpIO%rank == 0) write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
     endif
 
     if ( DATASET_IDENTIFIER(1:4) == "USGS" ) then
@@ -666,8 +666,8 @@ contains
        read(15,noahmp_modis_veg_categories)
        read(15,noahmp_modis_parameters)
     else
-       write(*,'("WARNING: Unrecognized DATASET_IDENTIFIER in subroutine ReadNoahmpTable")')
-       write(*,'("WARNING: DATASET_IDENTIFIER = ''", A, "''")') trim(DATASET_IDENTIFIER)
+       if (NoahmpIO%rank == 0) write(*,'("WARNING: Unrecognized DATASET_IDENTIFIER in subroutine ReadNoahmpTable")')
+       if (NoahmpIO%rank == 0) write(*,'("WARNING: DATASET_IDENTIFIER = ''", A, "''")') trim(DATASET_IDENTIFIER)
     endif
     close(15)
 
@@ -783,7 +783,7 @@ contains
        open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if ( ierr /= 0 ) then
-       write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       if (NoahmpIO%rank == 0) write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
     endif
     read(15, noahmp_stas_soil_categories)
     if ( trim(SLTYPE) == "STAS" ) then
@@ -791,8 +791,8 @@ contains
     elseif ( trim(SLTYPE) == "STAS_RUC" ) then
        read(15, noahmp_soil_stas_ruc_parameters)
     else
-       write(*,'("WARNING: Unrecognized SOILTYPE in subroutine ReadNoahmpTable")')
-       write(*,'("WARNING: DATASET_IDENTIFIER = ''", A, "''")') trim(SLTYPE)
+       if (NoahmpIO%rank == 0) write(*,'("WARNING: Unrecognized SOILTYPE in subroutine ReadNoahmpTable")')
+       if (NoahmpIO%rank == 0) write(*,'("WARNING: DATASET_IDENTIFIER = ''", A, "''")') trim(SLTYPE)
     endif
     close(15)
 
@@ -823,7 +823,7 @@ contains
        open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if ( ierr /= 0 ) then
-       write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       if (NoahmpIO%rank == 0) write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
     endif
     read(15, noahmp_general_parameters)
     close(15)
@@ -845,7 +845,7 @@ contains
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       if (NoahmpIO%rank == 0) write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
     endif
     read(15,noahmp_rad_parameters)
     close(15)
@@ -871,7 +871,7 @@ contains
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       if (NoahmpIO%rank == 0) write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
     endif
     read(15,noahmp_global_parameters)
     close(15)
@@ -926,12 +926,12 @@ contains
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       if (NoahmpIO%rank == 0) write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
     endif
     read(15,noahmp_irrigation_parameters)
     close(15)
     if ( (FILOSS < 0.0) .or. (FILOSS > 0.99) ) then
-       write(*,'("WARNING: FILOSS should be >=0.0 and <=0.99")')
+       if (NoahmpIO%rank == 0) write(*,'("WARNING: FILOSS should be >=0.0 and <=0.99")')
        stop "STOP in NoahMP_irrigation_parameters"
     endif
 
@@ -954,7 +954,7 @@ contains
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       if (NoahmpIO%rank == 0) write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
     endif
     read(15,noahmp_crop_parameters)
     close(15)
@@ -1104,7 +1104,7 @@ contains
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       if (NoahmpIO%rank == 0) write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
     endif
     read(15,noahmp_tiledrain_parameters)
     close(15)
@@ -1130,7 +1130,7 @@ contains
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
-       write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       if (NoahmpIO%rank == 0) write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
     endif
     read(15,noahmp_optional_parameters)
     close(15)

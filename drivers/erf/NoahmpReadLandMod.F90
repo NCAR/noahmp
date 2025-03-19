@@ -34,7 +34,7 @@ subroutine NoahmpReadLandHeader(NoahmpIO)
     integer :: i
     integer :: rank
 
-    write(*,'("Noah-MP reading ''", A, "'' headers")') trim(NoahmpIO%erf_setup_file)
+    if (NoahmpIO%rank == 0) write(*,'("Noah-MP reading ''", A, "'' headers")') trim(NoahmpIO%erf_setup_file)
 
     ierr = nf90_open(NoahmpIO%erf_setup_file, NF90_NOWRITE, ncid)
     call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file))
@@ -80,7 +80,7 @@ subroutine NoahmpReadLandHeader(NoahmpIO)
 
     ierr = nf90_get_att(ncid, NF90_GLOBAL, "ISLAKE", NoahmpIO%islake)
     if(ierr /= 0) then
-      write(*,*) "Problems finding global attribute: ISLAKE; setting to -1"
+      if (NoahmpIO%rank == 0) write(*,*) "Problems finding global attribute: ISLAKE; setting to -1"
       NoahmpIO%islake = -1
     end if
 
@@ -123,8 +123,7 @@ subroutine NoahmpReadLandMain(NoahmpIO)
 
     character(len=256) :: titlestr
     character(len=8)   :: name
-    character(len=256) :: ldasin_llanduse
-    integer :: ldasin_version
+    character(len=256) :: llanduse
 
     integer :: ierr_snodep, varid
     integer :: idx, isoil
@@ -141,7 +140,7 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     integer :: i, j
     integer :: iret
 
-    write(*,'("Noah-MP reading ''", A, "'' variables")') trim(NoahmpIO%erf_setup_file)
+    if (NoahmpIO%rank == 0) write(*,'("Noah-MP reading ''", A, "'' variables")') trim(NoahmpIO%erf_setup_file)
 
     ierr = nf90_open(NoahmpIO%erf_setup_file, NF90_NOWRITE, ncid)
     call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file))
@@ -194,39 +193,13 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     NoahmpIO%ITIMESTEP = 1
     NoahmpIO%restart_flag = .false.
 
-    ierr = nf90_get_att(ncid, NF90_GLOBAL, "TITLE", titlestr)
+    ierr = nf90_get_att(ncid, NF90_GLOBAL, "MMINLU", llanduse)
     if (ierr /= 0) then
-       write(*,'("WARNING:  LDASIN file does not have TITLE attribute.")')
-       write(*,'("          This probably means that LDASIN files are from an older release.")')
-       write(*,'("          I assume you know what you are doing.")')
-       ldasin_version = 0
+       if (NoahmpIO%rank == 0) write(*,'("WARNING:  Noah-MP input file does not have MMINLU attribute.")')
+       if (NoahmpIO%rank == 0) write(*,'("          This probably means that the file  is from an older release.")')
+       if (NoahmpIO%rank == 0) write(*,'("          I assume you know what you are doing.")')
     else
-       write(*,'("LDASIN TITLE attribute: ", A)') trim(titlestr)
-       ! Pull out the version number, assuming that the version is identified by vYYYYMMDD, and 
-       ! based on a search for the string "v20".
-       idx = index(trim(titlestr), "v20")
-       if (idx <= 0) then
-          write(*,'("WARNING:  LDASIN file has a perverse version identifier")')
-          !  write(*,'("          I assume you know what you are doing.")')
-          ! stop
-       else
-          read(titlestr(idx+1:), '(I8)', iostat=ierr) ldasin_version
-          if (ierr /= 0) then
-             write(*,'("WARNING:  LDASIN file has a perverse version identifier")')
-             !  write(*,'("          I assume you know what you are doing.")')
-             ! stop
-          endif
-       endif
-    endif
-    write(*, '("ldasin_version = ", I8)') ldasin_version
-
-    ierr = nf90_get_att(ncid, NF90_GLOBAL, "MMINLU", ldasin_llanduse)
-    if (ierr /= 0) then
-       write(*,'("WARNING:  LDASIN file does not have MMINLU attribute.")')
-       write(*,'("          This probably means that LDASIN files are from an older release.")')
-       write(*,'("          I assume you know what you are doing.")')
-    else
-       write(*,'("LDASIN MMNINLU attribute: ", A)') ldasin_llanduse
+       if (NoahmpIO%rank == 0) write(*,'("MMNINLU attribute: ", A)') llanduse
     endif
 
     call get_2d_netcdf("CANWAT", ncid, NoahmpIO%canwat, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
@@ -251,17 +224,17 @@ subroutine NoahmpReadLandMain(NoahmpIO)
 
     call get_netcdf_soillevel("TSLB", ncid, NoahmpIO%nsoil, soildummy, units,  NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
     
-    write(*, '("layer_bottom(1:nsoil) = ", 4F9.4)') layer_bottom(1:NoahmpIO%nsoil)
-    write(*, '("layer_top(1:nsoil)    = ", 4F9.4)') layer_top(1:NoahmpIO%nsoil)
-    write(*, '("Soil depth = ", 10F12.6)') NoahmpIO%dzs
+    if (NoahmpIO%rank == 0) write(*, '("layer_bottom(1:nsoil) = ", 4F9.4)') layer_bottom(1:NoahmpIO%nsoil)
+    if (NoahmpIO%rank == 0) write(*, '("layer_top(1:nsoil)    = ", 4F9.4)') layer_top(1:NoahmpIO%nsoil)
+    if (NoahmpIO%rank == 0) write(*, '("Soil depth = ", 10F12.6)') NoahmpIO%dzs
     
     call init_interp(NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NoahmpIO%nsoil, &
-                     NoahmpIO%dzs, NoahmpIO%tslb, NoahmpIO%nsoil, soildummy, layer_bottom(1:NoahmpIO%nsoil), layer_top(1:NoahmpIO%nsoil))
+                     NoahmpIO%dzs, NoahmpIO%tslb, NoahmpIO%nsoil, soildummy, layer_bottom(1:NoahmpIO%nsoil), layer_top(1:NoahmpIO%nsoil), NoahmpIO%rank)
 
     call get_netcdf_soillevel("SMOIS", ncid, NoahmpIO%nsoil, soildummy, units,  NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
 
     call init_interp(NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NoahmpIO%nsoil, \
-    NoahmpIO%dzs, NoahmpIO%smois, NoahmpIO%nsoil, soildummy, layer_bottom(1:NoahmpIO%nsoil), layer_top(1:NoahmpIO%nsoil))
+    NoahmpIO%dzs, NoahmpIO%smois, NoahmpIO%nsoil, soildummy, layer_bottom(1:NoahmpIO%nsoil), layer_top(1:NoahmpIO%nsoil), NoahmpIO%rank)
 
     NoahmpIO%VEGFRA =  0.0
 
@@ -493,7 +466,7 @@ subroutine get_netcdf_soillevel(name, ncid, nsoil, array, units, xstart, xend, y
     ierr = 0;
 end subroutine get_netcdf_soillevel
 
-subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src, layer_bottom, layer_top)
+subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src, layer_bottom, layer_top, rank)
     implicit none
     integer, intent(in)    :: xstart, xend, ystart, yend, nsoil, nvar
     real, dimension(nsoil) :: sldpth ! the thickness of each layer
@@ -506,14 +479,7 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
     real, dimension(nvar)  :: src_centerpoint
     real :: fraction
     integer :: ierr
-    integer :: rank
-
-#ifdef _PARALLEL_    
-    call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierr)
-    if (ierr /= MPI_SUCCESS) stop "MPI_COMM_RANK"
-#else
-    rank = 0
-#endif
+    integer, intent(in) :: rank
 
     do k = 1, nsoil
        if (k==1) then

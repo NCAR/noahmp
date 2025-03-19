@@ -73,7 +73,7 @@ contains
       NoahmpIO%SWDDIF = NoahmpIO%SWDOWN*0.3                    ! following noahmplsm ATM 30% diffuse radiation
 
       IF (NoahmpIO%ITIMESTEP == 1) THEN
-         write(*,'("Noah-MP ITIMESTEP == 1 setting initial guess for variables")')
+         if (NoahmpIO%rank == 0) write(*,'("Noah-MP ITIMESTEP == 1 setting initial guess for variables")')
          NoahmpIO%EAHXY = (NoahmpIO%P8W(:, 1, :)*NoahmpIO%QV_CURR(:, 1, :))/(0.622+NoahmpIO%QV_CURR(:, 1, :)) ! Initial guess only.
          NoahmpIO%TAHXY = NoahmpIO%T_PHY(:, 1, :)                                                         ! Initial guess only.
          NoahmpIO%CHXY = 0.1
@@ -81,7 +81,7 @@ contains
       END IF
 
       IF (NoahmpIO%ITIMESTEP > 0) THEN
-         write(*,'("Noah-MP running physical processes")')
+         if (NoahmpIO%rank == 0) write(*,'("Noah-MP running physical processes")')
          NoahmpIO%MP_RAINC = NoahmpIO%RAINCV
          NoahmpIO%MP_RAINNC = NoahmpIO%RAINNCV
          NoahmpIO%MP_SHCV = NoahmpIO%RAINSHV

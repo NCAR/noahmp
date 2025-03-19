@@ -173,7 +173,7 @@ contains
     open(30, file="namelist.erf", form="FORMATTED")
     read(30, NOAHLSM_OFFLINE, iostat=ierr)
     if (ierr /= 0) then
-       write(*,'(/," ***** ERROR: Problem reading namelist NOAHLSM_OFFLINE",/)')
+       if (NoahmpIO%rank == 0) write(*,'(/," ***** ERROR: Problem reading namelist NOAHLSM_OFFLINE",/)')
        rewind(30)
        read(30, NOAHLSM_OFFLINE)
        stop " ***** ERROR: Problem reading namelist NOAHLSM_OFFLINE"
@@ -208,37 +208,37 @@ contains
     endif
 
     if ((khour < 0) .and. (kday < 0)) then
-        write(*, '(" ***** Namelist error: ************************************")')
-        write(*, '(" ***** ")')
-        write(*, '(" *****      Either KHOUR or KDAY must be defined.")')
-        write(*, '(" ***** ")')
+        if (NoahmpIO%rank == 0) write(*, '(" ***** Namelist error: ************************************")')
+        if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+        if (NoahmpIO%rank == 0) write(*, '(" *****      Either KHOUR or KDAY must be defined.")')
+        if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
         stop
     else if (( khour < 0 ) .and. (kday > 0)) then
         khour = kday * 24
     else if ((khour > 0) .and. (kday > 0)) then
-        write(*, '("Namelist warning:  KHOUR and KDAY both defined.")')
+        if (NoahmpIO%rank == 0) write(*, '("Namelist warning:  KHOUR and KDAY both defined.")')
     else
         ! all is well.  KHOUR defined
     endif
 
     if (forcing_timestep < 0) then
-        write(*, *)
-        write(*, '(" ***** Namelist error: *****************************************")')
-        write(*, '(" ***** ")')
-        write(*, '(" *****       FORCING_TIMESTEP needs to be set greater than zero.")')
-        write(*, '(" ***** ")')
-        write(*, *)
+        if (NoahmpIO%rank == 0) write(*, *)
+        if (NoahmpIO%rank == 0) write(*, '(" ***** Namelist error: *****************************************")')
+        if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+        if (NoahmpIO%rank == 0) write(*, '(" *****       FORCING_TIMESTEP needs to be set greater than zero.")')
+        if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+        if (NoahmpIO%rank == 0) write(*, *)
         stop
     endif
 
     if (noah_timestep < 0) then
-        write(*, *)
-        write(*, '(" ***** Namelist error: *****************************************")')
-        write(*, '(" ***** ")')
-        write(*, '(" *****       NOAH_TIMESTEP needs to be set greater than zero.")')
-        write(*, '(" *****                     900 seconds is recommended.       ")')
-        write(*, '(" ***** ")')
-        write(*, *)
+        if (NoahmpIO%rank == 0) write(*, *)
+        if (NoahmpIO%rank == 0) write(*, '(" ***** Namelist error: *****************************************")')
+        if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+        if (NoahmpIO%rank == 0) write(*, '(" *****       NOAH_TIMESTEP needs to be set greater than zero.")')
+        if (NoahmpIO%rank == 0) write(*, '(" *****                     900 seconds is recommended.       ")')
+        if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+        if (NoahmpIO%rank == 0) write(*, *)
         stop
     endif
 
@@ -247,14 +247,14 @@ contains
     !
     if (output_timestep /= 0) then
        if (mod(output_timestep, noah_timestep) > 0) then
-         write(*, *)
-         write(*, '(" ***** Namelist error: *********************************************************")')
-         write(*, '(" ***** ")')
-         write(*, '(" *****       OUTPUT_TIMESTEP should set to an integer multiple of NOAH_TIMESTEP.")')
-         write(*, '(" *****            OUTPUT_TIMESTEP = ", I12, " seconds")') output_timestep
-         write(*, '(" *****            NOAH_TIMESTEP   = ", I12, " seconds")') noah_timestep
-         write(*, '(" ***** ")')
-         write(*, *)
+         if (NoahmpIO%rank == 0) write(*, *)
+         if (NoahmpIO%rank == 0) write(*, '(" ***** Namelist error: *********************************************************")')
+         if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+         if (NoahmpIO%rank == 0) write(*, '(" *****       OUTPUT_TIMESTEP should set to an integer multiple of NOAH_TIMESTEP.")')
+         if (NoahmpIO%rank == 0) write(*, '(" *****            OUTPUT_TIMESTEP = ", I12, " seconds")') output_timestep
+         if (NoahmpIO%rank == 0) write(*, '(" *****            NOAH_TIMESTEP   = ", I12, " seconds")') noah_timestep
+         if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+         if (NoahmpIO%rank == 0) write(*, *)
          stop
        endif
     endif
@@ -264,59 +264,59 @@ contains
    !
     if (restart_frequency_hours /= 0) then
        if (mod(restart_frequency_hours*3600, noah_timestep) > 0) then
-         write(*, *)
-         write(*, '(" ***** Namelist error: ******************************************************")')
-         write(*, '(" ***** ")')
-         write(*, '(" *****       RESTART_FREQUENCY_HOURS (converted to seconds) should set to an ")')
-         write(*, '(" *****       integer multiple of NOAH_TIMESTEP.")')
-         write(*, '(" *****            RESTART_FREQUENCY_HOURS = ", I12, " hours:  ", I12, " seconds")') &
+         if (NoahmpIO%rank == 0) write(*, *)
+         if (NoahmpIO%rank == 0) write(*, '(" ***** Namelist error: ******************************************************")')
+         if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+         if (NoahmpIO%rank == 0) write(*, '(" *****       RESTART_FREQUENCY_HOURS (converted to seconds) should set to an ")')
+         if (NoahmpIO%rank == 0) write(*, '(" *****       integer multiple of NOAH_TIMESTEP.")')
+         if (NoahmpIO%rank == 0) write(*, '(" *****            RESTART_FREQUENCY_HOURS = ", I12, " hours:  ", I12, " seconds")') &
                restart_frequency_hours, restart_frequency_hours*3600
-         write(*, '(" *****            NOAH_TIMESTEP           = ", I12, " seconds")') noah_timestep
-         write(*, '(" ***** ")')
-         write(*, *)
+         if (NoahmpIO%rank == 0) write(*, '(" *****            NOAH_TIMESTEP           = ", I12, " seconds")') noah_timestep
+         if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+         if (NoahmpIO%rank == 0) write(*, *)
          stop
        endif
     endif
 
     if (dynamic_veg_option == 2 .or. dynamic_veg_option == 5 .or. dynamic_veg_option == 6) then
       if ( canopy_stomatal_resistance_option /= 1) then
-         write(*, *)
-         write(*, '(" ***** Namelist error: ******************************************************")')
-         write(*, '(" ***** ")')
-         write(*, '(" *****       CANOPY_STOMATAL_RESISTANCE_OPTION must be 1 when DYNAMIC_VEG_OPTION == 2/5/6")')
-         write(*, *)
+         if (NoahmpIO%rank == 0) write(*, *)
+         if (NoahmpIO%rank == 0) write(*, '(" ***** Namelist error: ******************************************************")')
+         if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+         if (NoahmpIO%rank == 0) write(*, '(" *****       CANOPY_STOMATAL_RESISTANCE_OPTION must be 1 when DYNAMIC_VEG_OPTION == 2/5/6")')
+         if (NoahmpIO%rank == 0) write(*, *)
          stop
       endif
     endif
 
     if (soil_data_option == 4 .and. spatial_filename == " ") then
-        write(*, *)
-        write(*, '(" ***** Namelist error: ******************************************************")')
-        write(*, '(" ***** ")')
-        write(*, '(" *****       SPATIAL_FILENAME must be provided when SOIL_DATA_OPTION == 4")')
-        write(*, *)
+        if (NoahmpIO%rank == 0) write(*, *)
+        if (NoahmpIO%rank == 0) write(*, '(" ***** Namelist error: ******************************************************")')
+        if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+        if (NoahmpIO%rank == 0) write(*, '(" *****       SPATIAL_FILENAME must be provided when SOIL_DATA_OPTION == 4")')
+        if (NoahmpIO%rank == 0) write(*, *)
         stop
     endif
 
     if (sf_urban_physics == 2 .or. sf_urban_physics == 3) then
        if ( urban_atmosphere_thickness <= 0.0) then
-         write(*, *)
-         write(*, '(" ***** Namelist error: ******************************************************")')
-         write(*, '(" ***** ")')
-         write(*, '(" *****       When running BEP/BEM, URBAN_ATMOSPHERE_LEVELS must contain at least 3 levels")')
-         write(*, *)
+         if (NoahmpIO%rank == 0) write(*, *)
+         if (NoahmpIO%rank == 0) write(*, '(" ***** Namelist error: ******************************************************")')
+         if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+         if (NoahmpIO%rank == 0) write(*, '(" *****       When running BEP/BEM, URBAN_ATMOSPHERE_LEVELS must contain at least 3 levels")')
+         if (NoahmpIO%rank == 0) write(*, *)
          stop
        endif
        NoahmpIO%num_urban_atmosphere = int(zlvl/urban_atmosphere_thickness)
        if (zlvl - NoahmpIO%num_urban_atmosphere*urban_atmosphere_thickness >= 0.5*urban_atmosphere_thickness)  &
            NoahmpIO%num_urban_atmosphere = NoahmpIO%num_urban_atmosphere + 1
        if ( NoahmpIO%num_urban_atmosphere <= 2) then
-         write(*, *)
-         write(*, '(" ***** Namelist error: ******************************************************")')
-         write(*, '(" ***** ")')
-         write(*, '(" *****       When running BEP/BEM, num_urban_atmosphere must contain at least 3 levels, ")')
-         write(*, '(" *****        decrease URBAN_ATMOSPHERE_THICKNESS")')
-         write(*, *)
+         if (NoahmpIO%rank == 0) write(*, *)
+         if (NoahmpIO%rank == 0) write(*, '(" ***** Namelist error: ******************************************************")')
+         if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+         if (NoahmpIO%rank == 0) write(*, '(" *****       When running BEP/BEM, num_urban_atmosphere must contain at least 3 levels, ")')
+         if (NoahmpIO%rank == 0) write(*, '(" *****        decrease URBAN_ATMOSPHERE_THICKNESS")')
+         if (NoahmpIO%rank == 0) write(*, *)
          stop
        endif
     endif

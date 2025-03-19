@@ -37,7 +37,7 @@ module NoahmpIO_fi
     type(C_PTR) :: xstart, xend, ystart, yend
     type(C_PTR) :: nsoil, nsnow
     type(C_PTR) :: itimestep, ntime
-    type(C_PTR) :: llanduse
+    type(C_PTR) :: llanduse, rank
     type(C_PTR) :: XLAT, WSLAKEXY
     type(C_PTR) :: U_PHY, T_PHY, V_PHY, QV_CURR
     type(C_PTR) :: SHBXY, EVBXY
@@ -84,6 +84,8 @@ contains
 
     call C_F_POINTER(NoahmpIO_cptr%LLANDUSE, NoahmpIO%LLANDUSE)
     NoahmpIO%LLANDUSE => NoahmpIO%LLANDUSE(1:256)
+
+    call C_F_POINTER(NoahmpIO_cptr%RANK, NoahmpIO%RANK)
   end subroutine NoahmpIOTypeInit_fi
 
   subroutine NoahmpIOVarInitDefault_fi(NoahmpIO_cptr) bind(C, name="NoahmpIOVarInitDefault_fi")

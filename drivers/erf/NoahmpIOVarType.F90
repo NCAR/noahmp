@@ -568,7 +568,7 @@ module NoahmpIOVarType
     integer                                                ::  jxpar
     integer                                                ::  xstartpar
     integer                                                ::  ystartpar
-    integer                                                ::  rank = 0
+    integer(C_INT), pointer                                ::  rank
     character(len=256)                                     ::  inflnm,  &
                                                                outflnm, &
                                                                inflnm_template

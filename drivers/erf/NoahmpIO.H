@@ -13,6 +13,7 @@ extern "C" {
         int *nsoil, *nsnow;
         int *itimestep, *ntime;
         char *llanduse;
+        int *rank;
 
         double* XLAT = nullptr;       // latitude [rad]
         double* WSLAKEXY = nullptr;   // lake water storage [mm]
@@ -28,13 +29,13 @@ extern "C" {
           int* ims, int* ime, int* jms, int* jme, int* kms, int* kme,
           int* its, int* ite, int* jts, int* jte, int* kts, int* kte,
           int* xstart, int* xend, int* ystart, int* yend, int* itimestep,
-          int* ntime, int *nsoil, int* nsnow, char* llanduse
+          int* ntime, int *nsoil, int* nsnow, char* llanduse, int* rank
         ):
           ids(ids), ide(ide), jds(jds), jde(jde), kds(kds), kde(kde),
           ims(ims), ime(ime), jms(jms), jme(jme), kms(kms), kme(kme),
           its(its), ite(ite), jts(jts), jte(jte), kts(kts), kte(kte),
           xstart(xstart), xend(xend), ystart(ystart), yend(yend), itimestep(itimestep),
-          ntime(ntime), nsoil(nsoil), nsnow(nsnow), llanduse(llanduse) {}
+          ntime(ntime), nsoil(nsoil), nsnow(nsnow), llanduse(llanduse), rank(rank) {}
     };
 
     // Function to expose the struct to Fortran
@@ -59,6 +60,7 @@ struct NoahmpIO_type {
         int nsoil, nsnow;
         int itimestep, ntime;
         char llanduse[257] = "";
+        int rank;
 
         NoahArray2D<double> XLAT;
         NoahArray2D<double> WSLAKEXY;
@@ -74,7 +76,7 @@ struct NoahmpIO_type {
                &ims, &ime, &jms, &jme, &kms, &kme,
                &its, &ite, &jts, &jte, &kts, &kte,
                &xstart, &xend, &ystart, &yend, &itimestep,
-               &ntime, &nsoil, &nsnow, &llanduse[0]) {
+               &ntime, &nsoil, &nsnow, &llanduse[0], &rank) {
             NoahmpIOTypeInit_fi(&fptr);
        };
 
