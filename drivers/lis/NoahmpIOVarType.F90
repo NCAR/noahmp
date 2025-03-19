@@ -14,6 +14,8 @@ module NoahmpIOVarType
   save
   private
 
+  public :: NoahmpIO
+
   type, public :: NoahmpIO_type
 
 !------------------------------------------------------------------------
@@ -30,15 +32,7 @@ module NoahmpIOVarType
                                                                its,ite, &          ! t -> tile
                                                                jts,jte, &          ! t -> tile
                                                                kts,kte             ! t -> tile
-    integer                                                ::  ITIMESTEP           ! timestep number
-    integer                                                ::  YR                  ! 4-digit year
-    integer                                                ::  NSOIL               ! number of soil layers
-    integer                                                ::  ICE                 ! Sea-ice point
-    integer                                                ::  ISICE               ! land cover category for ice
-    integer                                                ::  ISURBAN             ! land cover category for urban
-    integer                                                ::  ISWATER             ! land cover category for water
-    integer                                                ::  ISLAKE              ! land cover category for lake
-    integer                                                ::  URBTYPE_beg         ! urban type start number - 1
+    ! namelist options
     integer                                                ::  IOPT_DVEG           ! dynamic vegetation   
     integer                                                ::  IOPT_CRS            ! canopy stomatal resistance (1-> Ball-Berry; 2->Jarvis)   
     integer                                                ::  IOPT_BTR            ! soil moisture factor for stomatal resistance (1-> Noah; 2-> CLM; 3-> SSiB)
@@ -64,30 +58,64 @@ module NoahmpIOVarType
     integer                                                ::  IOPT_INFDV          ! infiltration options for dynamic VIC (1->Philip; 2-> Green-Ampt;3->Smith-Parlange)
     integer                                                ::  IOPT_TDRN           ! drainage option (0->off; 1->simple scheme; 2->Hooghoudt's scheme)
     integer                                                ::  IOPT_COMPACT        ! snowpack compaction (1->Anderson1976; 2->Abolafia-Rosenzweig2024)
+    integer                                                ::  sf_urban_physics    ! urban physics option
+    
+    ! basic model info
+    integer                                                ::  year                ! year of the current time step [-]
+    integer                                                ::  month               ! month of the current time step [-]
+    integer                                                ::  day                 ! day of the current time step [-]
+    integer                                                ::  hour                ! hour of the current time step [-]
+    integer                                                ::  minute              ! minute of the current time step [-]
+    integer                                                ::  ttile               ! tile No. [-]
+    integer                                                ::  itimestep           ! timestep number [-]
+    integer                                                ::  nsoil               ! number of soil layers
+    integer                                                ::  nsnow               ! number of snow layers
+    integer                                                ::  YR                  ! 4-digit year
+    integer,                allocatable, dimension(:,:)    ::  ivgtyp              ! vegetation type
+    integer,                allocatable, dimension(:,:)    ::  isltyp              ! soil type
+    integer,                allocatable, dimension(:,:)    ::  urban_vegtype       ! urban land cover type index [-]
+    real(kind=kind_noahmp)                                 ::  dtbl                ! timestep [s]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  xlat                ! latitude in decimal degree [rad]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  xlon                ! longitude in decimal year [rad]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  tmn                 ! deep soil temperature [K]
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  shdfac_monthly      ! monthly values for green vegetation fraction []
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  DZ8W                ! thickness of atmo layers [m]
+    integer                                                ::  ICE                 ! Sea-ice point
     real(kind=kind_noahmp)                                 ::  XICE_THRESHOLD      ! fraction of grid determining seaice
     real(kind=kind_noahmp)                                 ::  JULIAN              ! Julian day
-    real(kind=kind_noahmp)                                 ::  DTBL                ! timestep [s]
     real(kind=kind_noahmp)                                 ::  DX                  ! horizontal grid spacing [m]
     real(kind=kind_noahmp)                                 ::  soiltstep           ! soil time step (s) (default=0: same as main NoahMP timstep)
     logical                                                ::  FNDSNOWH            ! snow depth present in input
     logical                                                ::  calculate_soil      ! logical index for if do soil calculation
     integer                                                ::  soil_update_steps   ! number of model time steps to update soil process
-    integer,                allocatable, dimension(:,:)    ::  IVGTYP              ! vegetation type
-    integer,                allocatable, dimension(:,:)    ::  ISLTYP              ! soil type
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  COSZEN              ! cosine zenith angle
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  XLAT                ! latitude [rad]
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  DZ8W                ! thickness of atmo layers [m]
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  DZS                 ! thickness of soil layers [m]
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  ZSOIL               ! depth to soil interfaces [m]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  VEGFRA              ! vegetation fraction []
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TMN                 ! deep soil temperature [K]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  XLAND               ! =2 ocean; =1 land/seaice
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  XICE                ! fraction of grid that is seaice
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SEAICE              ! seaice fraction
 
-    ! forcings    
+    ! Needed for crop model (OPT_CROP=1)
+    integer, allocatable, dimension(:,:)                   :: PGSXY                ! plant growth stage
+    integer, allocatable, dimension(:,:)                   :: CROPCAT              ! crop category
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: PLANTING             ! planting day
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: HARVEST              ! harvest day
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: SEASON_GDD           ! seasonal GDD
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  :: CROPTYPE             ! crop type
+    
+    ! needed for soil option 2 & 3
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  soilcomp            ! Soil sand and clay content [fraction]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  soilcl1             ! Soil texture class with depth
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  soilcl2             ! Soil texture class with depth
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  soilcl3             ! Soil texture class with depth
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  soilcl4             ! Soil texture class with depth
+
+    ! Needed for TILE DRAINAGE IF IOPT_TDRN = 1 OR 2
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_FRACTION         ! tile drainage fraction
+
+    ! atmospheric forcing
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  T_PHY               ! 3D atmospheric temperature valid at mid-levels [K]
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  QV_CURR             ! 3D water vapor mixing ratio [kg/kg_dry]
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  QV_CURR             ! 3D specific humidity [kg/kg]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  U_PHY               ! 3D U wind component [m/s]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  V_PHY               ! 3D V wind component [m/s]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SWDOWN              ! solar down at surface [W m-2]
@@ -108,64 +136,14 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MP_SNOW             ! snow precipitation entering land model [mm]       ! MB/AN : v3.7 
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MP_GRAUP            ! graupel precipitation entering land model [mm]    ! MB/AN : v3.7
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MP_HAIL             ! hail precipitation entering land model [mm]       ! MB/AN : v3.7 
-    
-#ifdef WRF_HYDRO
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: infxsrt              ! surface infiltration
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: sfcheadrt            ! surface water head
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: soldrain             ! soil drainage
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: qtiledrain           ! tile drainage
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: ZWATBLE2D            ! water table depth
-#endif
-
-    ! Spatially varying fields (for now it is de-activated)
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  soilcomp            ! Soil sand and clay content [fraction]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  soilcl1             ! Soil texture class with depth
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  soilcl2             ! Soil texture class with depth
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  soilcl3             ! Soil texture class with depth
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  soilcl4             ! Soil texture class with depth
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  bexp_3D             ! C-H B exponent  
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  smcdry_3D           ! Soil Moisture Limit: Dry
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  smcwlt_3D           ! Soil Moisture Limit: Wilt
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  smcref_3D           ! Soil Moisture Limit: Reference
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  smcmax_3D           ! Soil Moisture Limit: Max
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  dksat_3D            ! Saturated Soil Conductivity
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  dwsat_3D            ! Saturated Soil Diffusivity
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  psisat_3D           ! Saturated Matric Potential
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  quartz_3D           ! Soil quartz content
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  refdk_2D            ! Reference Soil Conductivity
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  refkdt_2D           ! Soil Infiltration Parameter
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  irr_frac_2D         ! irrigation Fraction
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  irr_har_2D          ! number of days before harvest date to stop irrigation 
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  irr_lai_2D          ! Minimum lai to trigger irrigation
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  irr_mad_2D          ! management allowable deficit (0-1)
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  filoss_2D           ! fraction of flood irrigation loss (0-1) 
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  sprir_rate_2D       ! mm/h, sprinkler irrigation rate
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  micir_rate_2D       ! mm/h, micro irrigation rate
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  firtfac_2D          ! flood application rate factor
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ir_rain_2D          ! maximum precipitation to stop irrigation trigger
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  bvic_2d             ! VIC model infiltration parameter [-] opt_run=6
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  axaj_2D             ! Tension water distribution inflection parameter [-] opt_run=7
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  bxaj_2D             ! Tension water distribution shape parameter [-] opt_run=7
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  xxaj_2D             ! Free water distribution shape parameter [-] opt_run=7
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  bdvic_2d            ! VIC model infiltration parameter [-] opt_run=8
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  gdvic_2d            ! Mean Capillary Drive (m) for infiltration models opt_run=8
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  bbvic_2d            ! DVIC heterogeniety parameter for infiltration [-] opt_run=8
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  KLAT_FAC            ! factor multiplier to hydraulic conductivity
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TDSMC_FAC           ! factor multiplier to field capacity
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_DC               ! drainage coefficient for simple
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_DCOEF            ! drainge coefficient for Hooghoudt 
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_DDRAIN           ! depth of drain
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_RADI             ! tile radius
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_SPAC             ! tile spacing
 
     ! INOUT (with generic LSM equivalent) (as defined in WRF)
+    integer, allocatable, dimension(:,:)                   ::  ISNOWXY             ! actual no. of snow layers
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TSK                 ! surface radiative temperature [K]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  HFX                 ! sensible heat flux [W m-2]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QFX                 ! latent heat flux [kg s-1 m-2]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  LH                  ! latent heat flux [W m-2]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  GRDFLX              ! ground/snow heat flux [W m-2]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SMSTAV              ! soil moisture avail. [not used]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SMSTOT              ! total soil water [mm][not used]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SFCRUNOFF           ! accumulated surface runoff [m]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  UDRUNOFF            ! accumulated sub-surface runoff [m]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ALBEDO              ! total grid albedo []
@@ -181,9 +159,11 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACSNOW              ! accumulated snow on grid
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  EMISS               ! surface bulk emissivity
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QSFC                ! bulk surface specific humidity
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  rivsto              ! river storage [m s-1]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  fldsto              ! flood storage [m s-1]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  fldfrc              ! flooded fraction [-]
 
     ! INOUT (with no Noah LSM equivalent) (as defined in WRF)
-    integer, allocatable, dimension(:,:)                   ::  ISNOWXY             ! actual no. of snow layers
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TVXY                ! vegetation leaf temperature
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TGXY                ! bulk ground surface temperature
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  CANICEXY            ! canopy-intercepted ice (mm)
@@ -283,10 +263,15 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  CHUCXY              ! under canopy exchange coefficient 
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  CHV2XY              ! veg 2m exchange coefficient 
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  CHB2XY              ! bare 2m exchange coefficient 
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RS                  ! Total stomatal resistance [s/m]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  Z0                  ! roughness length output to WRF
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ZNT                 ! roughness length output to WRF
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QTDRAIN             ! tile drain discharge [mm]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RS                  ! Total stomatal resistance [s/m]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  infxsrt             ! surface infiltration
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  sfcheadrt           ! surface water head
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  soldrain            ! soil drainage
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  qtiledrain          ! tile drainage
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ZWATBLE2D           ! water table depth
 
     ! additional output variables
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  PAHXY               ! precipitation advected heat [W/m2]
@@ -331,6 +316,10 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACC_ETRANXY         ! accumulated transpiration per soil timestep [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACC_EDIRXY          ! accumulated net ground (soil/snow) evaporation per soil timestep [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ACC_ETRANIXY        ! accumualted transpiration rate within soil timestep [m/s * dt_soil/dt_main]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FGEV_PET            ! ground evapo flux due to PET [W/m2]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FCEV_PET            ! canopy evapo flux due to PET [W/m2]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FCTR_PET            ! transpiration flux due to PET [W/m2]
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  RELSMC              ! relative soil moisture
 
 !------------------------------------------------------------------------
 ! Needed for MMF_RUNOFF (IOPT_RUN = 5); not part of MP driver in WRF
@@ -356,21 +345,6 @@ module NoahmpIOVarType
     real(kind=kind_noahmp)                                 ::  WTDDT  = 30.0       ! frequency of groundwater call [minutes]
     integer                                                ::  STEPWTD             ! step of groundwater call
 
-!------------------------------------------------------------------------
-! Needed for TILE DRAINAGE IF IOPT_TDRN = 1 OR 2
-!------------------------------------------------------------------------
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_FRACTION         ! tile drainage fraction
-
-!------------------------------------------------------------------------
-! Needed for crop model (OPT_CROP=1)
-!------------------------------------------------------------------------
-
-    integer, allocatable, dimension(:,:)                   :: PGSXY                ! plant growth stage
-    integer, allocatable, dimension(:,:)                   :: CROPCAT              ! crop category
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: PLANTING             ! planting day
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: HARVEST              ! harvest day
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: SEASON_GDD           ! seasonal GDD
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  :: CROPTYPE             ! crop type
 
 !------------------------------------------------------------------------
 ! Single- and Multi-layer Urban Models
@@ -505,14 +479,15 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SWDDIR              ! solar down at surface [W m-2]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SWDDIF
 
+
 !------------------------------------------------------------------------
 ! 2D variables not used in WRF - should be removed?
 !------------------------------------------------------------------------
 
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  XLONG               ! longitude
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TERRAIN             ! terrain height
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  GVFMIN              ! annual minimum in vegetation fraction
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  GVFMAX              ! annual maximum in vegetation fraction
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  VEGFRA              ! vegetation fraction
 
 !------------------------------------------------------------------------
 ! End 2D variables not used in WRF
@@ -542,7 +517,6 @@ module NoahmpIOVarType
     integer                                                ::  J
     integer                                                ::  SLOPETYP
     integer                                                ::  YEARLEN
-    integer                                                ::  NSNOW = 3            ! number of snow layers fixed to 3
     logical                                                ::  update_lai, update_veg
     integer                                                ::  spinup_loop
     logical                                                ::  reset_spinup_date
@@ -605,7 +579,6 @@ module NoahmpIOVarType
     integer                                                ::  output_timestep
     integer                                                ::  spinup_loops
 
-    integer                                                ::  sf_urban_physics
     integer                                                ::  use_wudapt_lcz
     integer                                                ::  num_urban_ndm
     integer                                                ::  num_urban_ng
@@ -667,6 +640,7 @@ module NoahmpIOVarType
     ! vegetation parameters
     character(len=256)                                     :: VEG_DATASET_DESCRIPTION_TABLE
     integer                                                :: NVEG_TABLE                ! number of vegetation types
+    integer                                                :: ISURBAN                   ! urban flag
     integer                                                :: ISURBAN_TABLE             ! urban flag
     integer                                                :: ISWATER_TABLE             ! water flag
     integer                                                :: ISBARREN_TABLE            ! barren ground flag
@@ -685,6 +659,7 @@ module NoahmpIOVarType
     integer                                                :: LCZ_9_TABLE               ! urban LCZ 9
     integer                                                :: LCZ_10_TABLE              ! urban LCZ 10
     integer                                                :: LCZ_11_TABLE              ! urban LCZ 11
+    integer                                                :: URBTYPE_beg               ! urban type start number - 1
     real(kind=kind_noahmp), allocatable, dimension(:)      :: CH2OP_TABLE               ! maximum intercepted h2o per unit lai+sai (mm)
     real(kind=kind_noahmp), allocatable, dimension(:)      :: DLEAF_TABLE               ! characteristic leaf dimension (m)
     real(kind=kind_noahmp), allocatable, dimension(:)      :: Z0MVT_TABLE               ! momentum roughness length (m)
@@ -784,9 +759,9 @@ module NoahmpIOVarType
     real(kind=kind_noahmp)                                 :: ETA0_SNOWCOMPACT_TABLE    ! snow viscosity coefficient [kg-s/m2]
     real(kind=kind_noahmp)                                 :: SNOWCOMPACTm_AR24_TABLE   ! snow compaction m parameter for linear sfc temp fitting from AR24
     real(kind=kind_noahmp)                                 :: SNOWCOMPACTb_AR24_TABLE   ! snow compaction b parameter for linear sfc temp fitting from AR24
-    real(kind=kind_noahmp)                                 :: SNOWCOMPACT_P1_AR24_TABLE ! lower constrain for SnowCompactBurdenFac for high pressure bin from AR24
-    real(kind=kind_noahmp)                                 :: SNOWCOMPACT_P2_AR24_TABLE ! lower constrain for SnowCompactBurdenFac for mid pressure bin from AR24
-    real(kind=kind_noahmp)                                 :: SNOWCOMPACT_P3_AR24_TABLE ! lower constrain for SnowCompactBurdenFac for low pressure bin from AR24
+    real(kind=kind_noahmp)                                 :: SNOWCOMPACT_P1_AR24_TABLE ! lower constraint for SnowCompactBurdenFac for high pressure bin from AR24
+    real(kind=kind_noahmp)                                 :: SNOWCOMPACT_P2_AR24_TABLE ! lower constraint for SnowCompactBurdenFac for mid pressure bin from AR24
+    real(kind=kind_noahmp)                                 :: SNOWCOMPACT_P3_AR24_TABLE ! lower constraint for SnowCompactBurdenFac for low pressure bin from AR24
     real(kind=kind_noahmp)                                 :: SNOWCOMPACT_Up_AR24_TABLE ! upper constraint on SnowCompactBurdenFac from AR24
     real(kind=kind_noahmp)                                 :: SNLIQMAXFRAC_TABLE        ! maximum liquid water fraction in snow
     real(kind=kind_noahmp)                                 :: SWEMAXGLA_TABLE           ! Maximum SWE allowed at glaciers (mm)
@@ -948,6 +923,45 @@ module NoahmpIOVarType
     real(kind=kind_noahmp)                                 :: sr2006_smcmax_a_TABLE           ! sand adjustment
     real(kind=kind_noahmp)                                 :: sr2006_smcmax_b_TABLE           ! constant adjustment
 
+
+    ! Spatially varying fields (for now it is de-activated)
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  bexp_3D             ! C-H B exponent  
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  smcdry_3D           ! Soil Moisture Limit: Dry
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  smcwlt_3D           ! Soil Moisture Limit: Wilt
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  smcref_3D           ! Soil Moisture Limit: Reference
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  smcmax_3D           ! Soil Moisture Limit: Max
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  dksat_3D            ! Saturated Soil Conductivity
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  dwsat_3D            ! Saturated Soil Diffusivity
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  psisat_3D           ! Saturated Matric Potential
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  quartz_3D           ! Soil quartz content
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  refdk_2D            ! Reference Soil Conductivity
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  refkdt_2D           ! Soil Infiltration Parameter
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  irr_frac_2D         ! irrigation Fraction
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  irr_har_2D          ! number of days before harvest date to stop irrigation 
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  irr_lai_2D          ! Minimum lai to trigger irrigation
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  irr_mad_2D          ! management allowable deficit (0-1)
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  filoss_2D           ! fraction of flood irrigation loss (0-1) 
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  sprir_rate_2D       ! mm/h, sprinkler irrigation rate
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  micir_rate_2D       ! mm/h, micro irrigation rate
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  firtfac_2D          ! flood application rate factor
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ir_rain_2D          ! maximum precipitation to stop irrigation trigger
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  bvic_2d             ! VIC model infiltration parameter [-] opt_run=6
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  axaj_2D             ! Tension water distribution inflection parameter [-] opt_run=7
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  bxaj_2D             ! Tension water distribution shape parameter [-] opt_run=7
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  xxaj_2D             ! Free water distribution shape parameter [-] opt_run=7
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  bdvic_2d            ! VIC model infiltration parameter [-] opt_run=8
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  gdvic_2d            ! Mean Capillary Drive (m) for infiltration models opt_run=8
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  bbvic_2d            ! DVIC heterogeniety parameter for infiltration [-] opt_run=8
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  KLAT_FAC            ! factor multiplier to hydraulic conductivity
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TDSMC_FAC           ! factor multiplier to field capacity
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_DC               ! drainage coefficient for simple
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_DCOEF            ! drainge coefficient for Hooghoudt 
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_DDRAIN           ! depth of drain
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_RADI             ! tile radius
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_SPAC             ! tile spacing
+
   end type NoahmpIO_type
+
+  type(NoahmpIO_type) :: NoahmpIO
 
 end module NoahmpIOVarType

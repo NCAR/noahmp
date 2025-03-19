@@ -13,6 +13,7 @@ module WaterVarInTransferMod
   use NoahmpIOVarType
   use NoahmpVarType
   use PedoTransferSR2006Mod
+  use LisNoahmpParamType
 
   implicit none
 
@@ -20,12 +21,13 @@ contains
 
 !=== initialize with input data or table values
 
-  subroutine WaterVarInTransfer(noahmp, NoahmpIO)
+  subroutine WaterVarInTransfer(noahmp, NoahmpIO, LISparam)
 
     implicit none
 
-    type(noahmp_type),   intent(inout) :: noahmp
-    type(NoahmpIO_type), intent(inout) :: NoahmpIO
+    type(noahmp_type),         intent(inout) :: noahmp
+    type(NoahmpIO_type),       intent(inout) :: NoahmpIO
+    type(LisNoahmpParam_type), intent(in)    :: LISparam   ! lis/noahmp parameter
 
     ! local variables 
     integer                            :: IndexSoilLayer
@@ -93,75 +95,75 @@ contains
     noahmp%water%flux%TranspWatLossSoilAcc(1:NumSoilLayer)= NoahmpIO%ACC_ETRANIXY(I,1:NumSoilLayer,J)
 
     ! water parameter variables
-    noahmp%water%param%DrainSoilLayerInd                  = NoahmpIO%DRAIN_LAYER_OPT_TABLE
-    noahmp%water%param%CanopyLiqHoldCap                   = NoahmpIO%CH2OP_TABLE(VegType)
-    noahmp%water%param%SnowCompactBurdenFac               = NoahmpIO%C2_SNOWCOMPACT_TABLE
-    noahmp%water%param%SnowCompactAgingFac1               = NoahmpIO%C3_SNOWCOMPACT_TABLE
-    noahmp%water%param%SnowCompactAgingFac2               = NoahmpIO%C4_SNOWCOMPACT_TABLE
-    noahmp%water%param%SnowCompactAgingFac3               = NoahmpIO%C5_SNOWCOMPACT_TABLE
-    noahmp%water%param%SnowCompactAgingMax                = NoahmpIO%DM_SNOWCOMPACT_TABLE
-    noahmp%water%param%SnowViscosityCoeff                 = NoahmpIO%ETA0_SNOWCOMPACT_TABLE
-    noahmp%water%param%SnowCompactmAR24                   = NoahmpIO%SNOWCOMPACTm_AR24_TABLE
-    noahmp%water%param%SnowCompactbAR24                   = NoahmpIO%SNOWCOMPACTb_AR24_TABLE
-    noahmp%water%param%SnowCompactP1AR24                  = NoahmpIO%SNOWCOMPACT_P1_AR24_TABLE
-    noahmp%water%param%SnowCompactP2AR24                  = NoahmpIO%SNOWCOMPACT_P2_AR24_TABLE
-    noahmp%water%param%SnowCompactP3AR24                  = NoahmpIO%SNOWCOMPACT_P3_AR24_TABLE
-    noahmp%water%param%BurdenFacUpAR24                    = NoahmpIO%SNOWCOMPACT_Up_AR24_TABLE
-    noahmp%water%param%SnowLiqFracMax                     = NoahmpIO%SNLIQMAXFRAC_TABLE
-    noahmp%water%param%SnowLiqHoldCap                     = NoahmpIO%SSI_TABLE
-    noahmp%water%param%SnowLiqReleaseFac                  = NoahmpIO%SNOW_RET_FAC_TABLE
-    noahmp%water%param%IrriFloodRateFac                   = NoahmpIO%FIRTFAC_TABLE
-    noahmp%water%param%IrriMicroRate                      = NoahmpIO%MICIR_RATE_TABLE
-    noahmp%water%param%SoilConductivityRef                = NoahmpIO%REFDK_TABLE
-    noahmp%water%param%SoilInfilFacRef                    = NoahmpIO%REFKDT_TABLE
-    noahmp%water%param%GroundFrzCoeff                     = NoahmpIO%FRZK_TABLE
-    noahmp%water%param%GridTopoIndex                      = NoahmpIO%TIMEAN_TABLE
-    noahmp%water%param%SoilSfcSatFracMax                  = NoahmpIO%FSATMX_TABLE
-    noahmp%water%param%SpecYieldGw                        = NoahmpIO%ROUS_TABLE
-    noahmp%water%param%MicroPoreContent                   = NoahmpIO%CMIC_TABLE
-    noahmp%water%param%WaterStorageLakeMax                = NoahmpIO%WSLMAX_TABLE
-    noahmp%water%param%SnoWatEqvMaxGlacier                = NoahmpIO%SWEMAXGLA_TABLE
-    noahmp%water%param%IrriStopDayBfHarvest               = NoahmpIO%IRR_HAR_TABLE
-    noahmp%water%param%IrriTriggerLaiMin                  = NoahmpIO%IRR_LAI_TABLE
-    noahmp%water%param%SoilWatDeficitAllow                = NoahmpIO%IRR_MAD_TABLE
-    noahmp%water%param%IrriFloodLossFrac                  = NoahmpIO%FILOSS_TABLE
-    noahmp%water%param%IrriSprinklerRate                  = NoahmpIO%SPRIR_RATE_TABLE
-    noahmp%water%param%IrriFracThreshold                  = NoahmpIO%IRR_FRAC_TABLE
-    noahmp%water%param%IrriStopPrecipThr                  = NoahmpIO%IR_RAIN_TABLE
-    noahmp%water%param%SnowfallDensityMax                 = NoahmpIO%SNOWDEN_MAX_TABLE
-    noahmp%water%param%SnowMassFullCoverOld               = NoahmpIO%SWEMX_TABLE
-    noahmp%water%param%SoilMatPotentialWilt               = NoahmpIO%PSIWLT_TABLE
-    noahmp%water%param%SnowMeltFac                        = NoahmpIO%MFSNO_TABLE(VegType)
-    noahmp%water%param%SnowCoverFac                       = NoahmpIO%SCFFAC_TABLE(VegType)
-    noahmp%water%param%InfilFacVic                        = NoahmpIO%BVIC_TABLE(SoilType(1))
-    noahmp%water%param%TensionWatDistrInfl                = NoahmpIO%AXAJ_TABLE(SoilType(1))
-    noahmp%water%param%TensionWatDistrShp                 = NoahmpIO%BXAJ_TABLE(SoilType(1))
-    noahmp%water%param%FreeWatDistrShp                    = NoahmpIO%XXAJ_TABLE(SoilType(1))
-    noahmp%water%param%InfilHeteroDynVic                  = NoahmpIO%BBVIC_TABLE(SoilType(1))
-    noahmp%water%param%InfilCapillaryDynVic               = NoahmpIO%GDVIC_TABLE(SoilType(1))
-    noahmp%water%param%InfilFacDynVic                     = NoahmpIO%BDVIC_TABLE(SoilType(1))
-    noahmp%water%param%TileDrainCoeffSp                   = NoahmpIO%TD_DC_TABLE(SoilType(1))
-    noahmp%water%param%TileDrainTubeDepth                 = NoahmpIO%TD_DEPTH_TABLE(SoilType(1))
-    noahmp%water%param%DrainFacSoilWat                    = NoahmpIO%TDSMC_FAC_TABLE(SoilType(1))
-    noahmp%water%param%TileDrainCoeff                     = NoahmpIO%TD_DCOEF_TABLE(SoilType(1))
-    noahmp%water%param%DrainDepthToImperv                 = NoahmpIO%TD_ADEPTH_TABLE(SoilType(1))
-    noahmp%water%param%LateralWatCondFac                  = NoahmpIO%KLAT_FAC_TABLE(SoilType(1))
-    noahmp%water%param%TileDrainDepth                     = NoahmpIO%TD_DDRAIN_TABLE(SoilType(1))
-    noahmp%water%param%DrainTubeDist                      = NoahmpIO%TD_SPAC_TABLE(SoilType(1))
-    noahmp%water%param%DrainTubeRadius                    = NoahmpIO%TD_RADI_TABLE(SoilType(1))
-    noahmp%water%param%DrainWatDepToImperv                = NoahmpIO%TD_D_TABLE(SoilType(1))
-    noahmp%water%param%NumSoilLayerRoot                   = NoahmpIO%NROOT_TABLE(VegType)
-    noahmp%water%param%SoilDrainSlope                     = NoahmpIO%SLOPE_TABLE(RunoffSlopeType)
+    noahmp%water%param%DrainSoilLayerInd                  = LISparam%DRAIN_LAYER_OPT
+    noahmp%water%param%CanopyLiqHoldCap                   = LISparam%CH2OP
+    noahmp%water%param%SnowCompactBurdenFac               = LISparam%C2_SNOWCOMPACT
+    noahmp%water%param%SnowCompactAgingFac1               = LISparam%C3_SNOWCOMPACT
+    noahmp%water%param%SnowCompactAgingFac2               = LISparam%C4_SNOWCOMPACT
+    noahmp%water%param%SnowCompactAgingFac3               = LISparam%C5_SNOWCOMPACT
+    noahmp%water%param%SnowCompactAgingMax                = LISparam%DM_SNOWCOMPACT
+    noahmp%water%param%SnowViscosityCoeff                 = LISparam%ETA0_SNOWCOMPACT
+    noahmp%water%param%SnowCompactmAR24                   = LISparam%SNOWCOMPACTm_AR24
+    noahmp%water%param%SnowCompactbAR24                   = LISparam%SNOWCOMPACTb_AR24
+    noahmp%water%param%SnowCompactP1AR24                  = LISparam%SNOWCOMPACT_P1_AR24
+    noahmp%water%param%SnowCompactP2AR24                  = LISparam%SNOWCOMPACT_P2_AR24
+    noahmp%water%param%SnowCompactP3AR24                  = LISparam%SNOWCOMPACT_P3_AR24
+    noahmp%water%param%BurdenFacUpAR24                    = LISparam%SNOWCOMPACT_Up_AR24
+    noahmp%water%param%SnowLiqFracMax                     = LISparam%SNLIQMAXFRAC
+    noahmp%water%param%SnowLiqHoldCap                     = LISparam%SSI
+    noahmp%water%param%SnowLiqReleaseFac                  = LISparam%SNOW_RET_FAC
+    noahmp%water%param%IrriFloodRateFac                   = LISparam%FIRTFAC
+    noahmp%water%param%IrriMicroRate                      = LISparam%MICIR_RATE
+    noahmp%water%param%SoilConductivityRef                = LISparam%REFDK
+    noahmp%water%param%SoilInfilFacRef                    = LISparam%REFKDT
+    noahmp%water%param%GroundFrzCoeff                     = LISparam%FRZK
+    noahmp%water%param%GridTopoIndex                      = LISparam%TIMEAN
+    noahmp%water%param%SoilSfcSatFracMax                  = LISparam%FSATMX
+    noahmp%water%param%SpecYieldGw                        = LISparam%ROUS
+    noahmp%water%param%MicroPoreContent                   = LISparam%CMIC
+    noahmp%water%param%WaterStorageLakeMax                = LISparam%WSLMAX
+    noahmp%water%param%SnoWatEqvMaxGlacier                = LISparam%SWEMAXGLA
+    noahmp%water%param%IrriStopDayBfHarvest               = LISparam%IRR_HAR
+    noahmp%water%param%IrriTriggerLaiMin                  = LISparam%IRR_LAI
+    noahmp%water%param%SoilWatDeficitAllow                = LISparam%IRR_MAD
+    noahmp%water%param%IrriFloodLossFrac                  = LISparam%FILOSS
+    noahmp%water%param%IrriSprinklerRate                  = LISparam%SPRIR_RATE
+    noahmp%water%param%IrriFracThreshold                  = LISparam%IRR_FRAC
+    noahmp%water%param%IrriStopPrecipThr                  = LISparam%IR_RAIN
+    noahmp%water%param%SnowfallDensityMax                 = LISparam%SNOWDEN_MAX
+    noahmp%water%param%SnowMassFullCoverOld               = LISparam%SWEMX
+    noahmp%water%param%SoilMatPotentialWilt               = LISparam%PSIWLT
+    noahmp%water%param%SnowMeltFac                        = LISparam%MFSNO
+    noahmp%water%param%SnowCoverFac                       = LISparam%SCFFAC
+    noahmp%water%param%InfilFacVic                        = LISparam%BVIC
+    noahmp%water%param%TensionWatDistrInfl                = LISparam%AXAJ
+    noahmp%water%param%TensionWatDistrShp                 = LISparam%BXAJ
+    noahmp%water%param%FreeWatDistrShp                    = LISparam%XXAJ
+    noahmp%water%param%InfilHeteroDynVic                  = LISparam%BBVIC
+    noahmp%water%param%InfilCapillaryDynVic               = LISparam%GDVIC
+    noahmp%water%param%InfilFacDynVic                     = LISparam%BDVIC
+    noahmp%water%param%TileDrainCoeffSp                   = LISparam%TD_DC
+    noahmp%water%param%TileDrainTubeDepth                 = LISparam%TD_DEPTH
+    noahmp%water%param%DrainFacSoilWat                    = LISparam%TDSMC_FAC
+    noahmp%water%param%TileDrainCoeff                     = LISparam%TD_DCOEF
+    noahmp%water%param%DrainDepthToImperv                 = LISparam%TD_ADEPTH
+    noahmp%water%param%LateralWatCondFac                  = LISparam%KLAT_FAC
+    noahmp%water%param%TileDrainDepth                     = LISparam%TD_DDRAIN
+    noahmp%water%param%DrainTubeDist                      = LISparam%TD_SPAC
+    noahmp%water%param%DrainTubeRadius                    = LISparam%TD_RADI
+    noahmp%water%param%DrainWatDepToImperv                = LISparam%TD_D
+    noahmp%water%param%NumSoilLayerRoot                   = LISparam%NROOT
+    noahmp%water%param%SoilDrainSlope                     = LISparam%SLOPE
 
     do IndexSoilLayer = 1, size(SoilType)
-       noahmp%water%param%SoilMoistureSat       (IndexSoilLayer) = NoahmpIO%SMCMAX_TABLE(SoilType(IndexSoilLayer))
-       noahmp%water%param%SoilMoistureWilt      (IndexSoilLayer) = NoahmpIO%SMCWLT_TABLE(SoilType(IndexSoilLayer))
-       noahmp%water%param%SoilMoistureFieldCap  (IndexSoilLayer) = NoahmpIO%SMCREF_TABLE(SoilType(IndexSoilLayer))
-       noahmp%water%param%SoilMoistureDry       (IndexSoilLayer) = NoahmpIO%SMCDRY_TABLE(SoilType(IndexSoilLayer))
-       noahmp%water%param%SoilWatDiffusivitySat (IndexSoilLayer) = NoahmpIO%DWSAT_TABLE (SoilType(IndexSoilLayer))
-       noahmp%water%param%SoilWatConductivitySat(IndexSoilLayer) = NoahmpIO%DKSAT_TABLE (SoilType(IndexSoilLayer))
-       noahmp%water%param%SoilExpCoeffB         (IndexSoilLayer) = NoahmpIO%BEXP_TABLE  (SoilType(IndexSoilLayer))
-       noahmp%water%param%SoilMatPotentialSat   (IndexSoilLayer) = NoahmpIO%PSISAT_TABLE(SoilType(IndexSoilLayer))
+       noahmp%water%param%SoilMoistureSat       (IndexSoilLayer) = LISparam%SMCMAX(IndexSoilLayer)
+       noahmp%water%param%SoilMoistureWilt      (IndexSoilLayer) = LISparam%SMCWLT(IndexSoilLayer)
+       noahmp%water%param%SoilMoistureFieldCap  (IndexSoilLayer) = LISparam%SMCREF(IndexSoilLayer)
+       noahmp%water%param%SoilMoistureDry       (IndexSoilLayer) = LISparam%SMCDRY(IndexSoilLayer)
+       noahmp%water%param%SoilWatDiffusivitySat (IndexSoilLayer) = LISparam%DWSAT(IndexSoilLayer)
+       noahmp%water%param%SoilWatConductivitySat(IndexSoilLayer) = LISparam%DKSAT(IndexSoilLayer)
+       noahmp%water%param%SoilExpCoeffB         (IndexSoilLayer) = LISparam%BEXP(IndexSoilLayer)
+       noahmp%water%param%SoilMatPotentialSat   (IndexSoilLayer) = LISparam%PSISAT(IndexSoilLayer)
     enddo
    
     ! spatial varying soil texture and properties directly from input

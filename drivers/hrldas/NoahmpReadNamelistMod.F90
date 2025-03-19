@@ -80,6 +80,7 @@ contains
     integer                 :: radiative_transfer_option          = 3
     integer                 :: snow_albedo_option                 = 1
     integer                 :: snow_thermal_conductivity          = 1
+    integer                 :: snow_compaction_option             = 2 
     integer                 :: pcp_partition_option               = 1
     integer                 :: tbot_option                        = 2
     integer                 :: temp_time_scheme_option            = 1
@@ -122,11 +123,11 @@ contains
          forcing_name_T,forcing_name_Q,forcing_name_U,forcing_name_V,forcing_name_P,      &
          forcing_name_LW,forcing_name_SW,forcing_name_PR,forcing_name_SN,                 &
          dynamic_veg_option, canopy_stomatal_resistance_option,                           &
-         btr_option, surface_drag_option, supercooled_water_option,        &
+         btr_option, surface_drag_option, supercooled_water_option,                       &
          frozen_soil_option, radiative_transfer_option, snow_albedo_option,               &
          snow_thermal_conductivity, surface_runoff_option, subsurface_runoff_option,      &
          pcp_partition_option, tbot_option, temp_time_scheme_option,                      &
-         glacier_option, surface_resistance_option,                                       &
+         glacier_option, surface_resistance_option, snow_compaction_option,               &
          irrigation_option, irrigation_method, dvic_infiltration_option,                  &
          tile_drainage_option,soil_data_option, pedotransfer_option, crop_option,         &
          sf_urban_physics,use_wudapt_lcz,num_urban_hi,urban_atmosphere_thickness,         &
@@ -343,6 +344,7 @@ contains
     NoahmpIO%IOPT_IRRM                         = irrigation_method
     NoahmpIO%IOPT_INFDV                        = dvic_infiltration_option
     NoahmpIO%IOPT_TDRN                         = tile_drainage_option
+    NoahmpIO%IOPT_COMPACT                      = snow_compaction_option
     ! basic model setup variables
     NoahmpIO%indir                             = indir
     NoahmpIO%forcing_timestep                  = forcing_timestep

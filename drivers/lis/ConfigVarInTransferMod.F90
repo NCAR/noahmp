@@ -137,7 +137,7 @@ contains
            noahmp%config%domain%VegType = NoahmpIO%NATURAL_TABLE  ! set rural vegetation type based on table natural
                                                                   ! urban is handled by explicit urban scheme outside Noah-MP
            NoahmpIO%GVFMAX(I,J)         = 0.96 * 100.0            ! unit: %
-       endif
+       endif         
     endif
 
     ! treatment for crop point

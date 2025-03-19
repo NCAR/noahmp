@@ -3,6 +3,7 @@ module NoahmpDriverMainMod
   use Machine
   use NoahmpVarType
   use NoahmpIOVarType
+  use LisNoahmpParamType
   use ConfigVarInitMod
   use EnergyVarInitMod
   use ForcingVarInitMod
@@ -20,16 +21,12 @@ module NoahmpDriverMainMod
   use BiochemVarOutTransferMod
   use NoahmpMainMod
   use NoahmpMainGlacierMod
-  use module_ra_gfdleta,  only: cal_mon_day
-#if ( WRF_CHEM == 1 )
-  USE module_data_gocart_dust
-#endif
 
   implicit none
   
 contains  
 
-  subroutine NoahmpDriverMain(NoahmpIO)
+  subroutine NoahmpDriverMain(NoahmpIO, LISparam)
   
 ! ------------------------ Code history -----------------------------------
 ! Original Noah-MP subroutine: noahmplsm
@@ -38,8 +35,9 @@ contains
 ! ------------------------------------------------------------------------- 
  
     implicit none 
-    
-    type(NoahmpIO_type), intent(inout)  :: NoahmpIO
+
+    type(LisNoahmpParam_type), intent(in)    :: LISparam  ! lis/noahmp parameter    
+    type(NoahmpIO_type),       intent(inout) :: NoahmpIO
     
     ! local variables
     type(noahmp_type)                   :: noahmp
@@ -86,10 +84,8 @@ contains
        end if
     endif
 
-    !if ( mod(NoahmpIO%ITIMESTEP, NoahmpIO%SOIL_UPDATE_STEPS) == 0 ) NoahmpIO%CALCULATE_SOIL = .true.
-    ! Prevent stale values of calculate_soil from leaking across cpu threads in if-statement above
-    NoahmpIO%CALCULATE_SOIL = mod(NoahmpIO%ITIMESTEP, NoahmpIO%SOIL_UPDATE_STEPS) == 0
-
+    if ( mod(NoahmpIO%ITIMESTEP, NoahmpIO%SOIL_UPDATE_STEPS) == 0 ) NoahmpIO%CALCULATE_SOIL = .true.
+ 
     !---------------------------------------------------------------------
     !  Prepare Noah-MP driver
     !---------------------------------------------------------------------
@@ -119,16 +115,12 @@ contains
           do I = NoahmpIO%ITS, NoahmpIO%ITE
              if ( (NoahmpIO%XLAND(I,J)-1.5) >= 0.0 ) then  ! Open water point
                 if ( NoahmpIO%XICE(I,J) == 1.0 ) print*,' sea-ice at water point, I=',I,'J=',J
-                NoahmpIO%SMSTAV(I,J) = 1.0
-                NoahmpIO%SMSTOT(I,J) = 1.0
                 do K = 1, NoahmpIO%NSOIL
                    NoahmpIO%SMOIS(I,K,J) = 1.0
                    NoahmpIO%TSLB(I,K,J)  = 273.16
                 enddo
              else
                 if ( NoahmpIO%XICE(I,J) == 1.0 ) then      ! Sea-ice case
-                   NoahmpIO%SMSTAV(I,J) = 1.0
-                   NoahmpIO%SMSTOT(I,J) = 1.0
                    do K = 1, NoahmpIO%NSOIL
                       NoahmpIO%SMOIS(I,K,J) = 1.0
                    enddo
@@ -141,7 +133,7 @@ contains
 
           NoahmpIO%I = I
           if ( NoahmpIO%XICE(I,J) >= NoahmpIO%XICE_THRESHOLD ) then  ! Sea-ice point
-             NoahmpIO%ICE                         = 1
+             NoahmpIO%ICE                        = 1
              NoahmpIO%SH2O(I,1:NoahmpIO%NSOIL,J) = 1.0
              NoahmpIO%LAI (I,J)                  = 0.01
              cycle ILOOP                                             ! Skip any sea-ice points
@@ -156,11 +148,11 @@ contains
              call ForcingVarInitDefault (noahmp)
              call ForcingVarInTransfer  (noahmp, NoahmpIO)
              call EnergyVarInitDefault  (noahmp)
-             call EnergyVarInTransfer   (noahmp, NoahmpIO)
+             call EnergyVarInTransfer   (noahmp, NoahmpIO, LISparam)
              call WaterVarInitDefault   (noahmp)
-             call WaterVarInTransfer    (noahmp, NoahmpIO)
+             call WaterVarInTransfer    (noahmp, NoahmpIO, LISparam)
              call BiochemVarInitDefault (noahmp)
-             call BiochemVarInTransfer  (noahmp, NoahmpIO)
+             call BiochemVarInTransfer  (noahmp, NoahmpIO, LISparam)
 
              !---------------------------------------------------------------------
              !  hydrological processes for vegetation in urban model
@@ -170,7 +162,7 @@ contains
              if ( (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISURBAN_TABLE) .or. &
                   (NoahmpIO%IVGTYP(I,J) > NoahmpIO%URBTYPE_beg) ) then
                 if ( (NoahmpIO%SF_URBAN_PHYSICS > 0) .and. (NoahmpIO%IRI_URBAN == 1) ) then
-                   SOLAR_TIME = (NoahmpIO%JULIAN - int(NoahmpIO%JULIAN))*24 + NoahmpIO%XLONG(I,J)/15.0
+                   SOLAR_TIME = (NoahmpIO%JULIAN - int(NoahmpIO%JULIAN))*24 + NoahmpIO%XLON(I,J)/15.0
                    if ( SOLAR_TIME < 0.0 ) SOLAR_TIME = SOLAR_TIME + 24.0
                    call CAL_MON_DAY(int(NoahmpIO%JULIAN), NoahmpIO%YR, JMONTH, JDAY)
                    if ( (SOLAR_TIME >= 21.0) .and. (SOLAR_TIME <= 23.0) .and. &
@@ -213,5 +205,43 @@ contains
     enddo  JLOOP    ! J loop
               
   end subroutine NoahmpDriverMain
-  
+
+
+! TODO: utility for urban irrigation; need to separate urban-related process out in future
+  subroutine CAL_MON_DAY(JULDAY,julyr,Jmonth,Jday)     
+
+    implicit none
+
+    integer, intent(in)  :: JULDAY,julyr
+    integer, intent(out) :: Jmonth,Jday
+    ! local
+    logical              :: LEAP,NOT_FIND_DATE
+    integer              :: MONTH (12),itmpday,itmpmon,i
+    DATA MONTH/31,28,31,30,31,30,31,31,30,31,30,31/
+! ------------------------------------------------------------------------- 
+
+    NOT_FIND_DATE = .true.
+    itmpday       = JULDAY
+    itmpmon       = 1
+    LEAP          = .false.
+
+    if ( mod(julyr, 4) == 0) then
+      MONTH(2) = 29
+      LEAP     = .true.
+    endif
+
+    i = 1
+    do while(NOT_FIND_DATE)
+       if ( itmpday > MONTH(i) ) then
+         itmpday = itmpday - MONTH(i)
+       else
+         Jday          = itmpday
+         Jmonth        = i
+         NOT_FIND_DATE = .false.
+       endif
+       i = i+1
+    enddo
+
+  end subroutine CAL_MON_DAY
+
 end module NoahmpDriverMainMod  

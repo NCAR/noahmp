@@ -17,11 +17,12 @@ contains
 
 !=== read Noahmp Table values
 
-  subroutine NoahmpReadTable(NoahmpIO)
+  subroutine NoahmpReadTable(LANDDATA_name,MPTABLE_file)
 
     implicit none
 
-    type(NoahmpIO_type), intent(inout)  :: NoahmpIO
+    character(len=*),  intent(in)     :: LANDDATA_name
+    character(len=*),  intent(in)     :: MPTABLE_file 
 
     !-------------------------------------------------------
     !=== define key dimensional variables
@@ -39,7 +40,6 @@ contains
     !-------------------------------------------------------
     
     ! vegetation parameters
-    character(len=256)                     :: DATASET_IDENTIFIER
     character(len=256)                     :: VEG_DATASET_DESCRIPTION
     logical                                :: file_named
     integer                                :: ierr, IK, IM
@@ -657,32 +657,33 @@ contains
 
     !---------------- NoahmpTable.TBL vegetation parameters
 
-    DATASET_IDENTIFIER = NoahmpIO%LLANDUSE
-
-    inquire( file='NoahmpTable.TBL', exist=file_named )
+    inquire( file=trim(MPTABLE_file), exist=file_named )
     if ( file_named ) then
-       open(15, file="NoahmpTable.TBL", status='old', form='formatted', action='read', iostat=ierr)
+       open(15, file=trim(MPTABLE_file), status='old', form='formatted', action='read', iostat=ierr)
     else
        open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if ( ierr /= 0 ) then
        write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       stop "ERROR: NoahmpTable.TBL vegetation parameter"
     endif
 
-    if ( trim(DATASET_IDENTIFIER) == "USGS" ) then
+    if ( trim(LANDDATA_name) == "USGS" ) then
        read(15, noahmp_usgs_veg_categories)
        read(15, noahmp_usgs_parameters)
-    elseif ( trim(DATASET_IDENTIFIER) == "MODIFIED_IGBP_MODIS_NOAH" ) then
+    elseif ( trim(LANDDATA_name) == "MODIFIED_IGBP_MODIS_NOAH" ) then
        read(15,noahmp_modis_veg_categories)
        read(15,noahmp_modis_parameters)
     else
-       write(*,'("WARNING: Unrecognized DATASET_IDENTIFIER in subroutine ReadNoahmpTable")')
-       write(*,'("WARNING: DATASET_IDENTIFIER = ''", A, "''")') trim(DATASET_IDENTIFIER)
+       write(*,'("WARNING: Unrecognized LANDDATA_name in subroutine ReadNoahmpTable")')
+       write(*,'("WARNING: LANDDATA_name = ''", A, "''")') trim(LANDDATA_name)
+       stop "ERROR: land dataset name"
     endif
     close(15)
 
     ! assign values
     NoahmpIO%ISURBAN_TABLE         = ISURBAN
+    NoahmpIO%ISURBAN               = ISURBAN
     NoahmpIO%ISWATER_TABLE         = ISWATER
     NoahmpIO%ISBARREN_TABLE        = ISBARREN
     NoahmpIO%ISICE_TABLE           = ISICE
@@ -786,14 +787,15 @@ contains
     NoahmpIO%TAUS_TABLE(1:NVEG,2)  = TAUS_NIR(1:NVEG) !stem transmittance: 1=vis, 2=nir
 
     !---------------- NoahmpTable.TBL soil parameters
-    inquire( file='NoahmpTable.TBL', exist=file_named )
+    inquire( file=trim(MPTABLE_file), exist=file_named )
     if ( file_named ) then
-       open(15, file="NoahmpTable.TBL", status='old', form='formatted', action='read', iostat=ierr)
+       open(15, file=trim(MPTABLE_file), status='old', form='formatted', action='read', iostat=ierr)
     else
        open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if ( ierr /= 0 ) then
        write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       stop "ERROR: NoahmpTable.TBL soil parameter"
     endif
     read(15, noahmp_stas_soil_categories)
     if ( trim(SLTYPE) == "STAS" ) then
@@ -802,7 +804,8 @@ contains
        read(15, noahmp_soil_stas_ruc_parameters)
     else
        write(*,'("WARNING: Unrecognized SOILTYPE in subroutine ReadNoahmpTable")')
-       write(*,'("WARNING: DATASET_IDENTIFIER = ''", A, "''")') trim(SLTYPE)
+       write(*,'("WARNING: SOIL Dataset = ''", A, "''")') trim(SLTYPE)
+       stop "ERROR: Soil dataset"
     endif
     close(15)
 
@@ -826,14 +829,15 @@ contains
     NoahmpIO%BBVIC_TABLE (1:SLCATS) = BBVIC (1:SLCATS)
 
     !---------------- NoahmpTable.TBL general parameters
-    inquire( file='NoahmpTable.TBL', exist=file_named )
+    inquire( file=trim(MPTABLE_file), exist=file_named )
     if ( file_named ) then
-       open(15, file="NoahmpTable.TBL", status='old', form='formatted', action='read', iostat=ierr)
+       open(15, file=trim(MPTABLE_file), status='old', form='formatted', action='read', iostat=ierr)
     else
        open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if ( ierr /= 0 ) then
        write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       stop "ERROR: NoahmpTable.TBL general parameter"
     endif
     read(15, noahmp_general_parameters)
     close(15)
@@ -848,14 +852,15 @@ contains
     NoahmpIO%CZIL_TABLE               = CZIL_DATA
 
     !---------------- NoahmpTable.TBL radiation parameters
-    inquire( file='NoahmpTable.TBL', exist=file_named )
+    inquire( file=trim(MPTABLE_file), exist=file_named )
     if ( file_named ) then
-      open(15, file="NoahmpTable.TBL", status='old', form='formatted', action='read', iostat=ierr)
+      open(15, file=trim(MPTABLE_file), status='old', form='formatted', action='read', iostat=ierr)
     else
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
        write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       stop "ERROR: NoahmpTable.TBL radiation parameter"
     endif
     read(15,noahmp_rad_parameters)
     close(15)
@@ -874,14 +879,15 @@ contains
     NoahmpIO%EICE_TABLE        = EICE
 
     !---------------- NoahmpTable.TBL global parameters
-    inquire( file='NoahmpTable.TBL', exist=file_named )
+    inquire( file=trim(MPTABLE_file), exist=file_named )
     if ( file_named ) then
-      open(15, file="NoahmpTable.TBL", status='old', form='formatted', action='read', iostat=ierr)
+      open(15, file=trim(MPTABLE_file), status='old', form='formatted', action='read', iostat=ierr)
     else
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
        write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       stop "ERROR: NoahmpTable.TBL global parameter"
     endif
     read(15,noahmp_global_parameters)
     close(15)
@@ -935,14 +941,15 @@ contains
     NoahmpIO%Z0LAKE_TABLE              = Z0LAKE
 
     !---------------- NoahmpTable.TBL irrigation parameters
-    inquire( file='NoahmpTable.TBL', exist=file_named )
+    inquire( file=trim(MPTABLE_file), exist=file_named )
     if ( file_named ) then
-      open(15, file="NoahmpTable.TBL", status='old', form='formatted', action='read', iostat=ierr)
+      open(15, file=trim(MPTABLE_file), status='old', form='formatted', action='read', iostat=ierr)
     else
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
        write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       stop "ERROR: NoahmpTable.TBL irrigation parameter"
     endif
     read(15,noahmp_irrigation_parameters)
     close(15)
@@ -963,14 +970,15 @@ contains
     NoahmpIO%IR_RAIN_TABLE    = IR_RAIN 
 
     !---------------- NoahmpTable.TBL crop parameters
-    inquire( file='NoahmpTable.TBL', exist=file_named )
+    inquire( file=trim(MPTABLE_file), exist=file_named )
     if ( file_named ) then
-      open(15, file="NoahmpTable.TBL", status='old', form='formatted', action='read', iostat=ierr)
+      open(15, file=trim(MPTABLE_file), status='old', form='formatted', action='read', iostat=ierr)
     else
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
        write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       stop "ERROR: NoahmpTable.TBL crop parameter"
     endif
     read(15,noahmp_crop_parameters)
     close(15)
@@ -1113,14 +1121,15 @@ contains
     NoahmpIO%RTCT_TABLE   (:,8)     = RTCT_S8
 
     !---------------- NoahmpTable.TBL tile drainage parameters
-    inquire( file='NoahmpTable.TBL', exist=file_named )
+    inquire( file=trim(MPTABLE_file), exist=file_named )
     if ( file_named ) then
-      open(15, file="NoahmpTable.TBL", status='old', form='formatted', action='read', iostat=ierr)
+      open(15, file=trim(MPTABLE_file), status='old', form='formatted', action='read', iostat=ierr)
     else
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
        write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       stop "ERROR: NoahmpTable.TBL tile drainage parameter"
     endif
     read(15,noahmp_tiledrain_parameters)
     close(15)
@@ -1139,14 +1148,15 @@ contains
     NoahmpIO%KLAT_FAC_TABLE (1:NSOILTYPE) = KLAT_FAC (1:NSOILTYPE)
 
     !---------------- NoahmpTable.TBL optional parameters
-    inquire( file='NoahmpTable.TBL', exist=file_named )
+    inquire( file=trim(MPTABLE_file), exist=file_named )
     if ( file_named ) then
-      open(15, file="NoahmpTable.TBL", status='old', form='formatted', action='read', iostat=ierr)
+      open(15, file=trim(MPTABLE_file), status='old', form='formatted', action='read', iostat=ierr)
     else
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if
     if (ierr /= 0) then
        write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+       stop "ERROR: NoahmpTable.TBL optional parameter"
     endif
     read(15,noahmp_optional_parameters)
     close(15)
