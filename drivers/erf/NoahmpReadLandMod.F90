@@ -312,7 +312,7 @@ subroutine get_2d_netcdf_cfloat(name, ncid, array, units, xstart, xend, ystart, 
     iret = nf90_get_att(ncid, varid, "units", units)
     if (iret /= 0) units = "units unknown"
 
-    iret = nf90_get_var(ncid, varid, values=array, start=(/1,1/), count=(/xend-xstart+1,yend-ystart+1/))
+    iret = nf90_get_var(ncid, varid, values=array, start=(/xstart+1,ystart+1/), count=(/xend-xstart+1,yend-ystart+1/))
 
     if (iret /= 0) then
        if (FATAL_IF_ERROR) then
@@ -360,7 +360,7 @@ subroutine get_2d_netcdf_ffloat(name, ncid, array, units, xstart, xend, ystart, 
     iret = nf90_get_att(ncid, varid, "units", units)
     if (iret /= 0) units = "units unknown"
 
-    iret = nf90_get_var(ncid, varid, values=array, start=(/1,1/), count=(/xend-xstart+1,yend-ystart+1/))
+    iret = nf90_get_var(ncid, varid, values=array, start=(/xstart+1,ystart+1/), count=(/xend-xstart+1,yend-ystart+1/))
 
     if (iret /= 0) then
        if (FATAL_IF_ERROR) then
@@ -417,7 +417,7 @@ subroutine get_landuse_netcdf(ncid, array, units, xstart, xend, ystart, yend)
        stop "MODULE_NOAHLSM_ERF_INPUT:  get_landuse_netcdf:  nf90_inq_varid"
     endif
 
-    iret = nf90_get_var(ncid, varid, array, (/1, 1/), (/xend-xstart+1, yend-ystart+1/))
+    iret = nf90_get_var(ncid, varid, array, (/xstart+1, ystart+1/), (/xend-xstart+1, yend-ystart+1/))
     if (iret /= 0) then
        print*, 'name = "', trim(name)//'"'
        stop "MODULE_NOAHLSM_ERF_INPUT:  get_landuse_netcdf:  nf90_get_var"
@@ -438,7 +438,7 @@ subroutine get_soilcat_netcdf(ncid, array, units, xstart, xend, ystart, yend)
     iret = nf90_inq_varid(ncid,  trim(name),  varid)
     call error_handler(iret, "Problem finding variable '"//trim(name)//"' in the wrfinput file.")
 
-    iret = nf90_get_var(ncid, varid, array, (/1, 1/), (/xend-xstart+1, yend-ystart+1/))
+    iret = nf90_get_var(ncid, varid, array, (/xstart+1, ystart+1/), (/xend-xstart+1, yend-ystart+1/))
     call error_handler(iret, "Problem retrieving variable "//trim(name)//" from the wrfinput file.")
 
 end subroutine get_soilcat_netcdf
@@ -473,7 +473,7 @@ subroutine get_netcdf_soillevel(name, ncid, nsoil, array, units, xstart, xend, y
     iret = nf90_get_att(ncid, varid, "units", units)
     if (iret /= 0) units = "units unknown"
 
-    iret = nf90_get_var(ncid, varid, values=insoil, start=(/1,1,1,1/), count=(/xend-xstart+1,yend-ystart+1,nsoil,1/))
+    iret = nf90_get_var(ncid, varid, values=insoil, start=(/xstart+1,ystart+1,1,1/), count=(/xend-xstart+1,yend-ystart+1,nsoil,1/))
     do isoil = 1,nsoil
       array(:,isoil,:) = insoil(:,:,isoil)
     end do
