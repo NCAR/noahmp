@@ -4808,9 +4808,9 @@ ENDIF   ! CROPTYPE == 0
 ! ----------------------------------------------------------------------
 ! LECH'S SURFACE FUNCTIONS
     PSLMU (ZZ)= -0.96* log (1.0-4.5* ZZ)
-    PSLMS (ZZ)= ZZ * RRIC -2.076* (1.0 -1.0/ (ZZ +1.0))
+    PSLMS (ZZ)= (ZZ / RFC) -2.076* (1.0 -1.0/ (ZZ +1.0))
     PSLHU (ZZ)= -0.96* log (1.0-4.5* ZZ)
-    PSLHS (ZZ)= ZZ * RFAC -2.076* (1.0 -1.0/ (ZZ +1.0))
+    PSLHS (ZZ)= ZZ * RFAC -2.076* (1.0 - exp(-1.2 * ZZ))
 ! PAULSON'S SURFACE FUNCTIONS
     PSPMU (XX)= -2.0* log ( (XX +1.0)*0.5) - log ( (XX * XX +1.0)*0.5)   &
          &        +2.0* ATAN (XX)                                            &
