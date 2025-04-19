@@ -75,6 +75,7 @@ contains
     noahmp%water%state%PrecipAreaFrac              = undefined_real
     noahmp%water%state%TileDrainFrac               = undefined_real
     noahmp%water%state%FrozenPrecipFrac            = undefined_real
+    noahmp%water%state%WaterStorageWetland         = undefined_real
 
     if ( .not. allocated(noahmp%water%state%IndexPhaseChange) )     &
        allocate( noahmp%water%state%IndexPhaseChange(-NumSnowLayerMax+1:NumSoilLayer) )
@@ -181,6 +182,7 @@ contains
     noahmp%water%flux%WaterToAtmosTotal            = undefined_real
     noahmp%water%flux%EvapSoilSfcLiqAcc            = undefined_real
     noahmp%water%flux%SoilSfcInflowAcc             = undefined_real
+    noahmp%water%flux%GlacierExcessFlowAcc         = undefined_real
     noahmp%water%flux%SfcWaterTotChgAcc            = undefined_real
     noahmp%water%flux%PrecipTotAcc                 = undefined_real
     noahmp%water%flux%EvapCanopyNetAcc             = undefined_real
@@ -282,6 +284,7 @@ contains
     noahmp%water%param%SoilMatPotentialWilt        = undefined_real
     noahmp%water%param%SnowMeltFac                 = undefined_real
     noahmp%water%param%SnowCoverFac                = undefined_real
+    noahmp%water%param%WetlandCapMax               = undefined_real
 
     if ( .not. allocated(noahmp%water%param%SoilMoistureSat) )        &
        allocate( noahmp%water%param%SoilMoistureSat(1:NumSoilLayer) )

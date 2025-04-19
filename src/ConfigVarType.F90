@@ -123,7 +123,10 @@ module ConfigVarType
     integer :: OptSnowCompaction           ! options for ground snow compaction
                                               ! 1 -> original scheme from Anderson (1976)
                                               ! 2 -> new scheme from Abolafia-Rosenzweig et al. (2024)
-
+    integer :: OptWetlandModel             ! option for wetland model
+                                              ! 0 -> No Wetland model (default)
+                                              ! 1 -> Single-point/uniform parameter (Zhang, et al. 2022 WRR)
+                                              ! 2 -> 2-D regional parameter input (Zhang, et al. 2022 WRR)
   end type namelist_type
 
 

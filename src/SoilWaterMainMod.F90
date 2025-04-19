@@ -14,6 +14,7 @@ module SoilWaterMainMod
   use RunoffSurfaceVicMod,               only : RunoffSurfaceVIC
   use RunoffSurfaceXinAnJiangMod,        only : RunoffSurfaceXinAnJiang
   use RunoffSurfaceDynamicVicMod,        only : RunoffSurfaceDynamicVic
+  use RunoffSurfaceWetlandMod,           only : RunoffSurfaceWetland
   use RunoffSubSurfaceEquiWaterTableMod, only : RunoffSubSurfaceEquiWaterTable
   use RunoffSubSurfaceGroundWaterMod,    only : RunoffSubSurfaceGroundWater
   use RunoffSubSurfaceDrainageMod,       only : RunoffSubSurfaceDrainage
@@ -68,6 +69,7 @@ contains
               OptRunoffSurface       => noahmp%config%nmlist%OptRunoffSurface       ,& ! in,    options for surface runoff
               OptRunoffSubsurface    => noahmp%config%nmlist%OptRunoffSubsurface    ,& ! in,    options for subsurface runoff
               OptTileDrainage        => noahmp%config%nmlist%OptTileDrainage        ,& ! in,    options for tile drainage
+              OptWetlandModel        => noahmp%config%nmlist%OptWetlandModel        ,& ! in,    options for wetland model
               SoilIce                => noahmp%water%state%SoilIce                  ,& ! in,    soil ice content [m3/m3]
               TileDrainFrac          => noahmp%water%state%TileDrainFrac            ,& ! in,    tile drainage map (fraction)
               SoilSfcInflowMean      => noahmp%water%flux%SoilSfcInflowMean         ,& ! in,    mean water input on soil surface [m/s]
@@ -148,6 +150,7 @@ contains
     if ( OptRunoffSurface == 6 ) call RunoffSurfaceVIC(noahmp,SoilTimeStep)
     if ( OptRunoffSurface == 7 ) call RunoffSurfaceXinAnJiang(noahmp,SoilTimeStep)
     if ( OptRunoffSurface == 8 ) call RunoffSurfaceDynamicVic(noahmp,SoilTimeStep,InfilSfcAcc)
+    if ( OptWetlandModel  >  0 ) call RunoffSurfaceWetland(noahmp)
 
     ! determine iteration times  to solve soil water diffusion and moisture
     NumIterSoilWat = 3

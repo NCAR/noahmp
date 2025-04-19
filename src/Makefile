@@ -36,6 +36,8 @@ OBJS = ConstantDefineMod.o \
        RunoffSurfaceTopModelMmfMod.o \
        RunoffSurfaceVicMod.o \
        RunoffSurfaceXinAnJiangMod.o \
+       RunoffSurfaceWetlandMod.o \
+       WaterWetlandMod.o \
        ShallowWaterTableMmfMod.o \
        SnowfallBelowCanopyMod.o \
        SnowLayerCombineMod.o \
@@ -198,6 +200,8 @@ RunoffSurfaceTopModelGrdMod.o:        ../utility/Machine.o NoahmpVarType.o Const
 RunoffSurfaceTopModelMmfMod.o:        ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 RunoffSurfaceVicMod.o:                ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 RunoffSurfaceXinAnJiangMod.o:         ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
+RunoffSurfaceWetlandMod.o:            ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
+SurfaceWetlandMod.o:                  ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 ShallowWaterTableMmfMod.o:            ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SnowfallBelowCanopyMod.o:             ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SnowLayerCombineMod.o:                ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
@@ -231,7 +235,8 @@ SoilWaterMainMod.o:                   ../utility/Machine.o NoahmpVarType.o Const
                                       RunoffSubSurfaceEquiWaterTableMod.o RunoffSubSurfaceGroundWaterMod.o \
                                       RunoffSubSurfaceDrainageMod.o RunoffSubSurfaceShallowMmfMod.o \
                                       SoilWaterDiffusionRichardsMod.o SoilMoistureSolverMod.o \
-                                      TileDrainageSimpleMod.o TileDrainageHooghoudtMod.o
+                                      TileDrainageSimpleMod.o TileDrainageHooghoudtMod.o \
+				      RunoffSurfaceWetlandMod.o
 TileDrainageEquiDepthMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 TileDrainageHooghoudtMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       TileDrainageEquiDepthMod.o WaterTableDepthSearchMod.o \
@@ -239,7 +244,7 @@ TileDrainageHooghoudtMod.o:           ../utility/Machine.o NoahmpVarType.o Const
 TileDrainageSimpleMod.o:              ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 WaterMainMod.o:                       ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       CanopyHydrologyMod.o SnowWaterMainMod.o IrrigationFloodMod.o \
-                                      IrrigationMicroMod.o SoilWaterMainMod.o
+                                      IrrigationMicroMod.o SoilWaterMainMod.o WaterWetlandMod.o
 WaterTableDepthSearchMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 WaterTableEquilibriumMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 IrrigationTriggerMod.o:               ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o

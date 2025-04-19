@@ -300,6 +300,7 @@ contains
     if ( .not. allocated (NoahmpIO%ACC_QINSURXY)) allocate ( NoahmpIO%ACC_QINSURXY (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%ACC_QSEVAXY) ) allocate ( NoahmpIO%ACC_QSEVAXY  (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%ACC_ETRANIXY)) allocate ( NoahmpIO%ACC_ETRANIXY (XSTART:XEND,1:NSOIL,YSTART:YEND) )
+    if ( .not. allocated (NoahmpIO%ACC_GLAFLWXY)) allocate ( NoahmpIO%ACC_GLAFLWXY (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%FGEV_PET)    ) allocate ( NoahmpIO%FGEV_PET     (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%FCEV_PET)    ) allocate ( NoahmpIO%FCEV_PET     (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%FCTR_PET)    ) allocate ( NoahmpIO%FCTR_PET     (XSTART:XEND,        YSTART:YEND) )
@@ -330,6 +331,14 @@ contains
     if ( .not. allocated (NoahmpIO%HARVEST)   ) allocate ( NoahmpIO%HARVEST    (XSTART:XEND,  YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%SEASON_GDD)) allocate ( NoahmpIO%SEASON_GDD (XSTART:XEND,  YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%CROPTYPE)  ) allocate ( NoahmpIO%CROPTYPE   (XSTART:XEND,5,YSTART:YEND) )
+
+    ! Needed for Zhang et al. 2022 wetland model (OPT_WETLAND=1 or 2)
+    if ( NoahmpIO%IOPT_WETLAND > 0 ) then
+       if ( .not. allocated (NoahmpIO%FSATXY) ) allocate ( NoahmpIO%FSATXY     (XSTART:XEND,  YSTART:YEND) ) ! saturated fraction of the grid (-)
+       if ( .not. allocated (NoahmpIO%WSURFXY)) allocate ( NoahmpIO%WSURFXY    (XSTART:XEND,  YSTART:YEND) ) ! wetland water storage [mm]
+       if ( .not. allocated (NoahmpIO%FSATMX) ) allocate ( NoahmpIO%FSATMX     (XSTART:XEND,  YSTART:YEND) ) ! maximum saturated fraction
+       if ( .not. allocated (NoahmpIO%WCAP)   ) allocate ( NoahmpIO%WCAP       (XSTART:XEND,  YSTART:YEND) ) ! maximum wetland capacity
+    endif
 
     ! Single- and Multi-layer Urban Models
     if ( NoahmpIO%SF_URBAN_PHYSICS > 0 )  then
@@ -656,6 +665,7 @@ contains
     NoahmpIO%ACC_ECANXY      = 0.0
     NoahmpIO%ACC_ETRANXY     = 0.0
     NoahmpIO%ACC_EDIRXY      = 0.0
+    NoahmpIO%ACC_GLAFLWXY    = 0.0
     NoahmpIO%FGEV_PET        = undefined_real
     NoahmpIO%FCEV_PET        = undefined_real
     NoahmpIO%FCTR_PET        = undefined_real
@@ -708,6 +718,14 @@ contains
     NoahmpIO%IRFIVOL         = 0.0
     NoahmpIO%IRRSPLH         = 0.0
     NoahmpIO%LOCTIM          = undefined_real
+
+    ! wetland model (Zhang et al. 2022)
+    if ( NoahmpIO%IOPT_WETLAND > 0 ) then
+       NoahmpIO%FSATXY       = undefined_real
+       NoahmpIO%WSURFXY      = undefined_real
+       NoahmpIO%FSATMX       = undefined_real
+       NoahmpIO%WCAP         = undefined_real
+    endif
 
     ! spatial varying soil texture
     if ( NoahmpIO%IOPT_SOIL > 1 ) then

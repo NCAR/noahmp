@@ -114,7 +114,7 @@ contains
                                                 SNOWCOMPACTm_AR24,SNOWCOMPACTb_AR24,SNOWCOMPACT_P1_AR24, SNOWCOMPACT_P2_AR24,&
                                                 SNOWCOMPACT_P3_AR24, SNOWCOMPACT_Up_AR24,                                    &
                                                 WSLMAX, ROUS, CMIC, SNOWDEN_MAX, CLASS_ALB_REF, CLASS_SNO_AGE, CLASS_ALB_NEW,&
-                                                PSIWLT, Z0SOIL, Z0LAKE
+                                                PSIWLT, Z0SOIL, Z0LAKE, WCAP
     namelist / noahmp_global_parameters /       CO2, O2, TIMEAN, FSATMX, Z0SNO, SSI, SNOW_RET_FAC ,SNOW_EMIS, SWEMX, TAU0,   &
                                                 GRAIN_GROWTH, EXTRA_GROWTH, DIRT_SOOT, BATS_COSZ, BATS_VIS_NEW,              &
                                                 BATS_NIR_NEW, BATS_VIS_AGE, BATS_NIR_AGE, BATS_VIS_DIR, BATS_NIR_DIR,        &
@@ -123,7 +123,7 @@ contains
                                                 SNOWCOMPACTm_AR24,SNOWCOMPACTb_AR24,SNOWCOMPACT_P1_AR24, SNOWCOMPACT_P2_AR24,&
                                                 SNOWCOMPACT_P3_AR24, SNOWCOMPACT_Up_AR24,                                    &
                                                 WSLMAX, ROUS, CMIC, SNOWDEN_MAX, CLASS_ALB_REF, CLASS_SNO_AGE, CLASS_ALB_NEW,&
-                                                PSIWLT, Z0SOIL, Z0LAKE
+                                                PSIWLT, Z0SOIL, Z0LAKE, WCAP
 
     ! irrigation parameters
     integer                                  :: IRR_HAR
@@ -531,6 +531,7 @@ contains
     NoahmpIO%PSIWLT_TABLE              = undefined_real
     NoahmpIO%Z0SOIL_TABLE              = undefined_real
     NoahmpIO%Z0LAKE_TABLE              = undefined_real
+    NoahmpIO%WCAP_TABLE                = undefined_real
 
     ! irrigation parameters
     NoahmpIO%IRR_HAR_TABLE          = undefined_int
@@ -933,6 +934,7 @@ contains
     NoahmpIO%PSIWLT_TABLE              = PSIWLT
     NoahmpIO%Z0SOIL_TABLE              = Z0SOIL
     NoahmpIO%Z0LAKE_TABLE              = Z0LAKE
+    NoahmpIO%WCAP_TABLE                = WCAP
 
     !---------------- NoahmpTable.TBL irrigation parameters
     inquire( file='NoahmpTable.TBL', exist=file_named )

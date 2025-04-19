@@ -476,6 +476,8 @@
  PSIWLT           = -150.0      ! metric potential for wilting point (m)
  Z0SOIL           = 0.002       ! Bare-soil roughness length (m) (i.e., under the canopy)
  Z0LAKE           = 0.01        ! Lake surface roughness length (m)
+ ! wetland parameter
+ WCAP             = 0.10        ! maximum wetland water holding capacity [m] (tunable) from Zhang et al. 2022
 /
 
 &noahmp_irrigation_parameters

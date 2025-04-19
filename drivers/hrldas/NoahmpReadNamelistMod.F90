@@ -93,6 +93,7 @@ contains
     integer                 :: irrigation_method                  = 0
     integer                 :: dvic_infiltration_option           = 1
     integer                 :: tile_drainage_option               = 0
+    integer                 :: wetland_option                     = 0 
     integer                 :: split_output_count                 = 1
     logical                 :: skip_first_output                  = .false.
     integer                 :: khour                              = -9999
@@ -126,7 +127,7 @@ contains
          btr_option, surface_drag_option, supercooled_water_option,                       &
          frozen_soil_option, radiative_transfer_option, snow_albedo_option,               &
          snow_thermal_conductivity, surface_runoff_option, subsurface_runoff_option,      &
-         pcp_partition_option, tbot_option, temp_time_scheme_option,                      &
+         pcp_partition_option, tbot_option, temp_time_scheme_option, wetland_option,      &
          glacier_option, surface_resistance_option, snow_compaction_option,               &
          irrigation_option, irrigation_method, dvic_infiltration_option,                  &
          tile_drainage_option,soil_data_option, pedotransfer_option, crop_option,         &
@@ -345,6 +346,7 @@ contains
     NoahmpIO%IOPT_INFDV                        = dvic_infiltration_option
     NoahmpIO%IOPT_TDRN                         = tile_drainage_option
     NoahmpIO%IOPT_COMPACT                      = snow_compaction_option
+    NoahmpIO%IOPT_WETLAND                      = wetland_option
     ! basic model setup variables
     NoahmpIO%indir                             = indir
     NoahmpIO%forcing_timestep                  = forcing_timestep
