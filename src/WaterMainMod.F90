@@ -6,12 +6,12 @@ module WaterMainMod
   use Machine
   use NoahmpVarType
   use ConstantDefineMod
-  use CanopyHydrologyMod,  only : CanopyHydrology
-  use SnowWaterMainMod,    only : SnowWaterMain
-  use IrrigationFloodMod,  only : IrrigationFlood
-  use IrrigationMicroMod,  only : IrrigationMicro
-  use SoilWaterMainMod,    only : SoilWaterMain
-  use WaterWetlandMod,     only : WaterWetland
+  use CanopyHydrologyMod,     only : CanopyHydrology
+  use SnowWaterMainMod,       only : SnowWaterMain
+  use IrrigationFloodMod,     only : IrrigationFlood
+  use IrrigationMicroMod,     only : IrrigationMicro
+  use SoilWaterMainMod,       only : SoilWaterMain
+  use WetlandWaterZhang22Mod, only : WetlandWaterZhang22
 
   implicit none
 
@@ -209,7 +209,7 @@ contains
 
     ! call surface wetland scheme (Zhang et al. 2022)
     if ( OptWetlandModel  > 0 ) then
-       call WaterWetland(noahmp,MainTimeStep)
+       call WetlandWaterZhang22(noahmp,MainTimeStep)
     endif 
 
     end associate

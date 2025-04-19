@@ -1,4 +1,4 @@
-module WaterWetlandMod
+module WetlandWaterZhang22Mod
 
 !!! Calculate wetland water processes (Zhang et al., 2022), evaporation is estimated based on Priestley Taylor (P-T) Method
 
@@ -10,7 +10,7 @@ module WaterWetlandMod
 
 contains
 
-  subroutine WaterWetland(noahmp,TimeStep)
+  subroutine WetlandWaterZhang22(noahmp,TimeStep)
 
 ! ------------------------ Code history --------------------------------------------------
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
@@ -97,6 +97,6 @@ contains
 
     end associate
 
-  end subroutine WaterWetland
+  end subroutine WetlandWaterZhang22
 
-end module WaterWetlandMod
+end module WetlandWaterZhang22Mod

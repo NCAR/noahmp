@@ -37,7 +37,7 @@ OBJS = ConstantDefineMod.o \
        RunoffSurfaceVicMod.o \
        RunoffSurfaceXinAnJiangMod.o \
        RunoffSurfaceWetlandMod.o \
-       WaterWetlandMod.o \
+       WetlandWaterZhang22Mod.o \
        ShallowWaterTableMmfMod.o \
        SnowfallBelowCanopyMod.o \
        SnowLayerCombineMod.o \
@@ -201,7 +201,7 @@ RunoffSurfaceTopModelMmfMod.o:        ../utility/Machine.o NoahmpVarType.o Const
 RunoffSurfaceVicMod.o:                ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 RunoffSurfaceXinAnJiangMod.o:         ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 RunoffSurfaceWetlandMod.o:            ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
-SurfaceWetlandMod.o:                  ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
+WetlandWaterZhang22Mod.o:             ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 ShallowWaterTableMmfMod.o:            ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SnowfallBelowCanopyMod.o:             ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SnowLayerCombineMod.o:                ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
@@ -244,7 +244,7 @@ TileDrainageHooghoudtMod.o:           ../utility/Machine.o NoahmpVarType.o Const
 TileDrainageSimpleMod.o:              ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 WaterMainMod.o:                       ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       CanopyHydrologyMod.o SnowWaterMainMod.o IrrigationFloodMod.o \
-                                      IrrigationMicroMod.o SoilWaterMainMod.o WaterWetlandMod.o
+                                      IrrigationMicroMod.o SoilWaterMainMod.o WetlandWaterZhang22Mod.o
 WaterTableDepthSearchMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 WaterTableEquilibriumMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 IrrigationTriggerMod.o:               ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
