@@ -53,6 +53,7 @@ contains
     noahmp%config%domain%LandUseDataName             = "MODIFIED_IGBP_MODIS_NOAH"
     noahmp%config%domain%FlagUrban                   = .false.
     noahmp%config%domain%FlagCropland                = .false.
+    noahmp%config%domain%FlagWetland                 = .false.
     noahmp%config%domain%FlagDynamicCrop             = .false.
     noahmp%config%domain%FlagDynamicVeg              = .false.
     noahmp%config%domain%FlagSoilProcess             = .false.

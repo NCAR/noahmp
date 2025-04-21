@@ -38,6 +38,7 @@ contains
               SoilTimeStep           => noahmp%config%domain%SoilTimeStep           ,& ! in,    soil process timestep [s]
               SurfaceType            => noahmp%config%domain%SurfaceType            ,& ! in,    surface type 1-soil; 2-lake 
               FlagCropland           => noahmp%config%domain%FlagCropland           ,& ! in,    flag to identify croplands
+              FlagWetland            => noahmp%config%domain%FlagCropland           ,& ! in,    flag to identify wetlands
               FlagUrban              => noahmp%config%domain%FlagUrban              ,& ! in,    urban point flag
               FlagSoilProcess        => noahmp%config%domain%FlagSoilProcess        ,& ! in,    flag to calculate soil processes
               NumSoilTimeStep        => noahmp%config%domain%NumSoilTimeStep        ,& ! in,    number of timesteps for soil process calculation
@@ -208,7 +209,7 @@ contains
     endif
 
     ! call surface wetland scheme (Zhang et al. 2022)
-    if ( OptWetlandModel  > 0 ) then
+    if ( (FlagWetland .eqv. .true.) .and. (OptWetlandModel > 0) ) then
        call WetlandWaterZhang22(noahmp,MainTimeStep)
     endif 
 

@@ -348,7 +348,7 @@ module NoahmpIOVarType
     integer                                                ::  STEPWTD             ! step of groundwater call
 
 !------------------------------------------------------------------------
-! Needed for wetland model (OPT_WETLAND=1)
+! Needed for wetland model (OPT_WETLAND = 1 or 2)
 !------------------------------------------------------------------------
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FSATXY              ! saturated fraction of the grid (-)
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  WSURFXY             ! wetland water storage

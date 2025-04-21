@@ -136,6 +136,7 @@ module ConfigVarType
     character(len=256)     :: LandUseDataName             ! landuse dataset name (USGS or MODIFIED_IGBP_MODIS_NOAH)
     logical                :: FlagUrban                   ! flag for urban grid
     logical                :: FlagCropland                ! flag to identify croplands
+    logical                :: FlagWetland                 ! flag to identify wetlands
     logical                :: FlagDynamicCrop             ! flag to activate dynamic crop model
     logical                :: FlagDynamicVeg              ! flag to activate dynamic vegetation scheme
     logical                :: FlagSoilProcess             ! flag to determine if calculating soil processes

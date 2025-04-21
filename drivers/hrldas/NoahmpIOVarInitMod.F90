@@ -330,6 +330,8 @@ contains
     if ( NoahmpIO%IOPT_WETLAND > 0 ) then
        if ( .not. allocated (NoahmpIO%FSATXY) ) allocate ( NoahmpIO%FSATXY     (XSTART:XEND,  YSTART:YEND) ) ! saturated fraction of the grid (-)
        if ( .not. allocated (NoahmpIO%WSURFXY)) allocate ( NoahmpIO%WSURFXY    (XSTART:XEND,  YSTART:YEND) ) ! wetland water storage [mm]
+    endif
+    if ( NoahmpIO%IOPT_WETLAND == 2 ) then
        if ( .not. allocated (NoahmpIO%FSATMX) ) allocate ( NoahmpIO%FSATMX     (XSTART:XEND,  YSTART:YEND) ) ! maximum saturated fraction
        if ( .not. allocated (NoahmpIO%WCAP)   ) allocate ( NoahmpIO%WCAP       (XSTART:XEND,  YSTART:YEND) ) ! maximum wetland capacity [m]
     endif
@@ -714,6 +716,8 @@ contains
     if ( NoahmpIO%IOPT_WETLAND > 0 ) then
        NoahmpIO%FSATXY       = undefined_real
        NoahmpIO%WSURFXY      = undefined_real
+    endif
+    if ( NoahmpIO%IOPT_WETLAND == 2 ) then
        NoahmpIO%FSATMX       = undefined_real
        NoahmpIO%WCAP         = undefined_real
     endif

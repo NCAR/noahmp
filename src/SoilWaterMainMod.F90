@@ -66,6 +66,7 @@ contains
               SoilTimeStep           => noahmp%config%domain%SoilTimeStep           ,& ! in,    noahmp soil time step [s]
               ThicknessSnowSoilLayer => noahmp%config%domain%ThicknessSnowSoilLayer ,& ! in,    thickness of snow/soil layers [m]
               FlagUrban              => noahmp%config%domain%FlagUrban              ,& ! in,    logical flag for urban grid
+              FlagWetland            => noahmp%config%domain%FlagWetland            ,& ! in,    logical flag for wetland grid
               OptRunoffSurface       => noahmp%config%nmlist%OptRunoffSurface       ,& ! in,    options for surface runoff
               OptRunoffSubsurface    => noahmp%config%nmlist%OptRunoffSubsurface    ,& ! in,    options for subsurface runoff
               OptTileDrainage        => noahmp%config%nmlist%OptTileDrainage        ,& ! in,    options for tile drainage
@@ -150,7 +151,9 @@ contains
     if ( OptRunoffSurface == 6 ) call RunoffSurfaceVIC(noahmp,SoilTimeStep)
     if ( OptRunoffSurface == 7 ) call RunoffSurfaceXinAnJiang(noahmp,SoilTimeStep)
     if ( OptRunoffSurface == 8 ) call RunoffSurfaceDynamicVic(noahmp,SoilTimeStep,InfilSfcAcc)
-    if ( OptWetlandModel  >  0 ) call RunoffSurfaceWetland(noahmp)
+
+    ! special treatment for wetland points
+    if ( (FlagWetland .eqv. .true.) .and. (OptWetlandModel > 0) ) call RunoffSurfaceWetland(noahmp)
 
     ! determine iteration times  to solve soil water diffusion and moisture
     NumIterSoilWat = 3
