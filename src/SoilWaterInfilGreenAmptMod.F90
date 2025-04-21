@@ -34,6 +34,7 @@ contains
     real(kind=kind_noahmp)                :: SoilWatDiffusivity     ! soil water diffusivity [m2/s]
     real(kind=kind_noahmp)                :: SoilWatConductivity    ! soil water conductivity[m/s]
     real(kind=kind_noahmp)                :: InfilFacTmp            ! temporary infiltrability variable
+    real(kind=kind_noahmp)                :: IniSoilIce             ! zero soil ice
 
 ! --------------------------------------------------------------------
     associate(                                                                     &
@@ -48,12 +49,13 @@ contains
               )
 ! ----------------------------------------------------------------------
 
+    IniSoilIce = 0.0
     IndSoil = 1
     if ( IndInfilMax == 1 ) then
 
        ! estimate initial soil hydraulic conductivty (Ki in the equation) (m/s)
        call SoilDiffusivityConductivityOpt2(noahmp, SoilWatDiffusivity, SoilWatConductivity, &
-                                            SoilMoistureWilt(IndSoil), 0.0, IndSoil)
+                                            SoilMoistureWilt(IndSoil), IniSoilIce, IndSoil)
 
        ! Maximum infiltrability based on the Eq. 6.25. (m/s)
        InfilFacTmp = InfilCapillaryDynVic * (SoilMoistureSat(IndSoil) - SoilMoistureWilt(IndSoil)) * &

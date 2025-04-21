@@ -21,6 +21,7 @@ contains
 ! Original Noah-MP subroutine: TSNOSOI_GLACIER
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! SNICAR: Adding snicar solar fluxes redistribution in snow layer (T.-S. Lin, C. He et al. 2023)
 ! ----------------------------------------------------------------------------------------
 
     implicit none
@@ -29,6 +30,7 @@ contains
     type(noahmp_type)     , intent(inout) :: noahmp
 
 ! local variable
+    integer                                           :: IndLoop   ! snow and soil layer loop
     real(kind=kind_noahmp), allocatable, dimension(:) :: MatRight  ! right-hand side term of the matrix
     real(kind=kind_noahmp), allocatable, dimension(:) :: MatLeft1  ! left-hand side term of the matrix
     real(kind=kind_noahmp), allocatable, dimension(:) :: MatLeft2  ! left-hand side term of the matrix
@@ -38,10 +40,13 @@ contains
     associate(                                                                    &
               NumSoilLayer          => noahmp%config%domain%NumSoilLayer         ,& ! in,  number of glacier/soil layers
               NumSnowLayerMax       => noahmp%config%domain%NumSnowLayerMax      ,& ! in,  maximum number of snow layers
+              OptSnowAlbedo         => noahmp%config%nmlist%OptSnowAlbedo        ,& ! in,  options for ground snow surface albedo
               NumSnowLayerNeg       => noahmp%config%domain%NumSnowLayerNeg      ,& ! in,  actual number of snow layers (negative)
               MainTimeStep          => noahmp%config%domain%MainTimeStep         ,& ! in,  main noahmp timestep [s]
               DepthSoilTempBottom   => noahmp%config%domain%DepthSoilTempBottom  ,& ! in,  depth [m] from glacier surface for lower soil temperature boundary
               SnowDepth             => noahmp%water%state%SnowDepth              ,& ! in,  snow depth [m]
+              RadSwAbsSnowSoilLayer => noahmp%energy%flux%RadSwAbsSnowSoilLayer  ,& ! in,  total absorbed solar radiation by snow for each layer [W/m2]
+              RadSwAbsGrd           => noahmp%energy%flux%RadSwAbsGrd            ,& ! in,  solar radiation absorbed by ground [W/m2]
               DepthSoilTempBotToSno => noahmp%energy%state%DepthSoilTempBotToSno ,& ! out, depth of lower boundary condition [m] from snow surface
               RadSwPenetrateGrd     => noahmp%energy%flux%RadSwPenetrateGrd       & ! out, light penetrating through snow/ice [W/m2]
              )
@@ -58,7 +63,17 @@ contains
     MatLeft3(:) = 0.0
 
     ! compute solar penetration through water, needs more work
-    RadSwPenetrateGrd(NumSnowLayerNeg+1:NumSoilLayer) = 0.0
+    RadSwPenetrateGrd(-NumSnowLayerMax+1:NumSoilLayer) = 0.0
+
+    if (NumSnowLayerNeg < 0 .and. sum(RadSwAbsSnowSoilLayer) > 0.0 .and. OptSnowAlbedo == 3) then
+       do IndLoop = NumSnowLayerNeg+1, 1, 1
+          if (IndLoop == NumSnowLayerNeg+1) then
+             RadSwPenetrateGrd (IndLoop) = RadSwAbsSnowSoilLayer (IndLoop) - RadSwAbsGrd
+          else
+             RadSwPenetrateGrd (IndLoop) = RadSwAbsSnowSoilLayer (IndLoop)
+          endif
+       enddo
+    endif
 
     ! adjust DepthSoilTempBottom from glacier ice surface to DepthSoilTempBotToSno from snow surface
     DepthSoilTempBotToSno = DepthSoilTempBottom - SnowDepth
