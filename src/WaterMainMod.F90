@@ -208,8 +208,9 @@ contains
        SpecHumidity2mBare = SpecHumiditySfc
     endif
 
-    ! call surface wetland scheme (Zhang et al. 2022)
-    if ( (FlagWetland .eqv. .true.) .and. (OptWetlandModel > 0) ) then
+    ! call surface wetland scheme (due to subgrid wetland treatment, currently no flag control)
+    !if ( (FlagWetland .eqv. .true.) .and. (OptWetlandModel > 0) ) then
+    if ( OptWetlandModel > 0 ) then
        call WetlandWaterZhang22(noahmp,MainTimeStep)
     endif 
 

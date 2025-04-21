@@ -152,8 +152,9 @@ contains
     if ( OptRunoffSurface == 7 ) call RunoffSurfaceXinAnJiang(noahmp,SoilTimeStep)
     if ( OptRunoffSurface == 8 ) call RunoffSurfaceDynamicVic(noahmp,SoilTimeStep,InfilSfcAcc)
 
-    ! special treatment for wetland points
-    if ( (FlagWetland .eqv. .true.) .and. (OptWetlandModel > 0) ) call RunoffSurfaceWetland(noahmp)
+    ! special treatment for wetland points (due to subgrid wetland treatment, currently no flag control)
+    !if ( (FlagWetland .eqv. .true.) .and. (OptWetlandModel > 0) ) call RunoffSurfaceWetland(noahmp)
+    if ( OptWetlandModel > 0 ) call RunoffSurfaceWetland(noahmp)
 
     ! determine iteration times  to solve soil water diffusion and moisture
     NumIterSoilWat = 3
