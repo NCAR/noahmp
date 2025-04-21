@@ -64,6 +64,7 @@ module NoahmpIOVarType
     integer                                                ::  IOPT_INFDV          ! infiltration options for dynamic VIC (1->Philip; 2-> Green-Ampt;3->Smith-Parlange)
     integer                                                ::  IOPT_TDRN           ! drainage option (0->off; 1->simple scheme; 2->Hooghoudt's scheme)
     integer                                                ::  IOPT_COMPACT        ! snowpack compaction (1->Anderson1976; 2->Abolafia-Rosenzweig2024)
+    integer                                                ::  IOPT_WETLAND        ! wetland model option (0->off; 1->Zhang2022 fixed parameter; 2->Zhang2022 read in 2D parameter)
     real(kind=kind_noahmp)                                 ::  XICE_THRESHOLD      ! fraction of grid determining seaice
     real(kind=kind_noahmp)                                 ::  JULIAN              ! Julian day
     real(kind=kind_noahmp)                                 ::  DTBL                ! timestep [s]
@@ -331,6 +332,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACC_ETRANXY         ! accumulated transpiration per soil timestep [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACC_EDIRXY          ! accumulated net ground (soil/snow) evaporation per soil timestep [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ACC_ETRANIXY        ! accumualted transpiration rate within soil timestep [m/s * dt_soil/dt_main]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACC_GLAFLWXY        ! accumulated glacier excessive flow [mm] per soil timestep
 
 !------------------------------------------------------------------------
 ! Needed for MMF_RUNOFF (IOPT_RUN = 5); not part of MP driver in WRF
@@ -371,6 +373,14 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    :: HARVEST              ! harvest day
     real(kind=kind_noahmp), allocatable, dimension(:,:)    :: SEASON_GDD           ! seasonal GDD
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  :: CROPTYPE             ! crop type
+
+!------------------------------------------------------------------------
+! Needed for wetland model (OPT_WETLAND=1 or 2)
+!------------------------------------------------------------------------
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FSATXY              ! saturated fraction of the grid (-)
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  WSURFXY             ! wetland water storage [mm]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FSATMX              ! maximum saturated fraction
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  WCAP                ! maximum wetland capacity [m]
 
 !------------------------------------------------------------------------
 ! Single- and Multi-layer Urban Models
@@ -877,6 +887,9 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    :: STCT_TABLE                ! fraction of carbohydrate translocation from stem to grain
     real(kind=kind_noahmp), allocatable, dimension(:,:)    :: RTCT_TABLE                ! fraction of carbohydrate translocation from root to grain
     real(kind=kind_noahmp), allocatable, dimension(:)      :: BIO2LAI_TABLE             ! leaf area per living leaf biomass [m2/kg]
+
+    ! wetland parameter (OPT_WETLAND=1)
+    real(kind=kind_noahmp)                                 :: WCAP_TABLE                ! maximum surface wetland capacity
 
     ! soil parameters
     integer                                                :: SLCATS_TABLE              ! number of soil categories

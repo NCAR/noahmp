@@ -70,6 +70,7 @@ module WaterVarType
     real(kind=kind_noahmp) :: EvapCanopyNetAcc           ! accumulated net evaporation of canopy intercepted water per soil timestep [mm]
     real(kind=kind_noahmp) :: TranspirationAcc           ! accumulated transpiration per soil timestep [mm]
     real(kind=kind_noahmp) :: EvapGroundNetAcc           ! accumulated net ground (soil/snow) evaporation per soil timestep [mm]
+    real(kind=kind_noahmp) :: GlacierExcessFlowAcc       ! accumulated glacier excessive flow [mm] per soil timestep
     real(kind=kind_noahmp) :: EvapSoilSfcLiqMean         ! mean soil surface water evaporation during soil timestep [m/s]
     real(kind=kind_noahmp) :: SoilSfcInflowMean          ! mean water input on soil surface during soil timestep [m/s]
 
@@ -123,6 +124,7 @@ module WaterVarType
     real(kind=kind_noahmp) :: WaterStorageAquifer        ! water storage in aquifer [mm]
     real(kind=kind_noahmp) :: WaterStorageSoilAqf        ! water storage in aquifer + saturated soil [mm]
     real(kind=kind_noahmp) :: WaterStorageLake           ! water storage in lake (can be negative) [mm] 
+    real(kind=kind_noahmp) :: WaterStorageWetland        ! water storage in wetland [mm]
     real(kind=kind_noahmp) :: WaterHeadSfc               ! surface water head [mm]
     real(kind=kind_noahmp) :: IrrigationFracGrid         ! total irrigation fraction from input for a grid
     real(kind=kind_noahmp) :: PrecipAreaFrac             ! fraction of the gridcell that receives precipitation
@@ -225,6 +227,7 @@ module WaterVarType
     real(kind=kind_noahmp) :: SoilMatPotentialWilt       ! soil metric potential for wilting point [m]
     real(kind=kind_noahmp) :: SnowMeltFac                ! snowmelt m parameter in snow cover fraction calculation
     real(kind=kind_noahmp) :: SnowCoverFac               ! snow cover factor [m] (originally hard-coded 2.5*z0 in SCF formulation)
+    real(kind=kind_noahmp) :: WetlandCapMax              ! maximum wetland capacity [m]
 
     real(kind=kind_noahmp), allocatable, dimension(:) :: SoilMoistureSat        ! saturated value of soil moisture [m3/m3]
     real(kind=kind_noahmp), allocatable, dimension(:) :: SoilMoistureWilt       ! wilting point soil moisture [m3/m3]

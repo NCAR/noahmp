@@ -60,6 +60,7 @@ contains
     noahmp%config%nmlist%OptRunoffSubsurface         = NoahmpIO%IOPT_RUNSUB
     noahmp%config%nmlist%OptGlacierTreatment         = NoahmpIO%IOPT_GLA
     noahmp%config%nmlist%OptSnowCompaction           = NoahmpIO%IOPT_COMPACT
+    noahmp%config%nmlist%OptWetlandModel             = NoahmpIO%IOPT_WETLAND
 
     ! config domain variable
     noahmp%config%domain%SurfaceType                 = 1

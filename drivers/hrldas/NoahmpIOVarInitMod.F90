@@ -297,6 +297,7 @@ contains
     if ( .not. allocated (NoahmpIO%ACC_QINSURXY)) allocate ( NoahmpIO%ACC_QINSURXY (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%ACC_QSEVAXY) ) allocate ( NoahmpIO%ACC_QSEVAXY  (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%ACC_ETRANIXY)) allocate ( NoahmpIO%ACC_ETRANIXY (XSTART:XEND,1:NSOIL,YSTART:YEND) )
+    if ( .not. allocated (NoahmpIO%ACC_GLAFLWXY)) allocate ( NoahmpIO%ACC_GLAFLWXY (XSTART:XEND,        YSTART:YEND) )
 
     ! Needed for MMF_RUNOFF (IOPT_RUN = 5); not part of MP driver in WRF
     if ( .not. allocated (NoahmpIO%MSFTX)      ) allocate ( NoahmpIO%MSFTX       (XSTART:XEND,YSTART:YEND) ) 
@@ -325,6 +326,16 @@ contains
     if ( .not. allocated (NoahmpIO%SEASON_GDD)) allocate ( NoahmpIO%SEASON_GDD (XSTART:XEND,  YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%CROPTYPE)  ) allocate ( NoahmpIO%CROPTYPE   (XSTART:XEND,5,YSTART:YEND) )
 
+    ! Needed for Zhang et al. 2022 wetland model (OPT_WETLAND=1 or 2)
+    if ( NoahmpIO%IOPT_WETLAND > 0 ) then
+       if ( .not. allocated (NoahmpIO%FSATXY) ) allocate ( NoahmpIO%FSATXY     (XSTART:XEND,  YSTART:YEND) ) ! saturated fraction of the grid (-)
+       if ( .not. allocated (NoahmpIO%WSURFXY)) allocate ( NoahmpIO%WSURFXY    (XSTART:XEND,  YSTART:YEND) ) ! wetland water storage [mm]
+    endif
+    if ( NoahmpIO%IOPT_WETLAND == 2 ) then
+       if ( .not. allocated (NoahmpIO%FSATMX) ) allocate ( NoahmpIO%FSATMX     (XSTART:XEND,  YSTART:YEND) ) ! maximum saturated fraction
+       if ( .not. allocated (NoahmpIO%WCAP)   ) allocate ( NoahmpIO%WCAP       (XSTART:XEND,  YSTART:YEND) ) ! maximum wetland capacity [m]
+    endif
+
     ! Single- and Multi-layer Urban Models
     if ( NoahmpIO%SF_URBAN_PHYSICS > 0 )  then
        if ( .not. allocated (NoahmpIO%sh_urb2d)   ) allocate ( NoahmpIO%sh_urb2d    (XSTART:XEND,YSTART:YEND) ) 
@@ -339,7 +350,6 @@ contains
        if ( .not. allocated (NoahmpIO%lb_urb2d)   ) allocate ( NoahmpIO%lb_urb2d    (XSTART:XEND,YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%hgt_urb2d)  ) allocate ( NoahmpIO%hgt_urb2d   (XSTART:XEND,YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%ust)        ) allocate ( NoahmpIO%ust         (XSTART:XEND,YSTART:YEND) )
-       !ENDIF
          
        !IF(NoahmpIO%SF_URBAN_PHYSICS == 1 ) THEN  ! single layer urban model  
        if ( .not. allocated (NoahmpIO%cmr_sfcdif)   ) allocate ( NoahmpIO%cmr_sfcdif    (XSTART:XEND,        YSTART:YEND) )
@@ -651,6 +661,7 @@ contains
     NoahmpIO%ACC_ECANXY      = 0.0
     NoahmpIO%ACC_ETRANXY     = 0.0
     NoahmpIO%ACC_EDIRXY      = 0.0
+    NoahmpIO%ACC_GLAFLWXY    = 0.0
 
     ! MMF Groundwater
     NoahmpIO%TERRAIN         = undefined_real
@@ -700,6 +711,16 @@ contains
     NoahmpIO%IRFIVOL         = 0.0
     NoahmpIO%IRRSPLH         = 0.0
     NoahmpIO%LOCTIM          = undefined_real
+
+    ! wetland model (Zhang et al. 2022)
+    if ( NoahmpIO%IOPT_WETLAND > 0 ) then
+       NoahmpIO%FSATXY       = undefined_real
+       NoahmpIO%WSURFXY      = undefined_real
+    endif
+    if ( NoahmpIO%IOPT_WETLAND == 2 ) then
+       NoahmpIO%FSATMX       = undefined_real
+       NoahmpIO%WCAP         = undefined_real
+    endif
 
     ! spatial varying soil texture
     if ( NoahmpIO%IOPT_SOIL > 1 ) then

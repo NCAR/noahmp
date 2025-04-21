@@ -123,7 +123,10 @@ module ConfigVarType
     integer :: OptSnowCompaction           ! options for ground snow compaction
                                               ! 1 -> original scheme from Anderson (1976)
                                               ! 2 -> new scheme from Abolafia-Rosenzweig et al. (2024)
-
+    integer :: OptWetlandModel             ! option for wetland model
+                                              ! 0 -> No Wetland model (default)
+                                              ! 1 -> Single-point/uniform parameter (Zhang, et al. 2022 WRR)
+                                              ! 2 -> 2-D regional parameter input (Zhang, et al. 2022 WRR)
   end type namelist_type
 
 
@@ -133,6 +136,7 @@ module ConfigVarType
     character(len=256)     :: LandUseDataName             ! landuse dataset name (USGS or MODIFIED_IGBP_MODIS_NOAH)
     logical                :: FlagUrban                   ! flag for urban grid
     logical                :: FlagCropland                ! flag to identify croplands
+    logical                :: FlagWetland                 ! flag to identify wetlands
     logical                :: FlagDynamicCrop             ! flag to activate dynamic crop model
     logical                :: FlagDynamicVeg              ! flag to activate dynamic vegetation scheme
     logical                :: FlagSoilProcess             ! flag to determine if calculating soil processes

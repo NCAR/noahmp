@@ -79,6 +79,10 @@ contains
     noahmp%water%state%SoilMoistureEqui  (1:NumSoilLayer) = NoahmpIO%SMOISEQ    (I,1:NumSoilLayer,J)
     noahmp%water%state%RechargeGwDeepWT                   = 0.0
     noahmp%water%state%RechargeGwShallowWT                = 0.0
+    if ( noahmp%config%nmlist%OptWetlandModel > 0 ) then
+       noahmp%water%state%SoilSaturateFrac                = NoahmpIO%FSATXY     (I,J)
+       noahmp%water%state%WaterStorageWetland             = NoahmpIO%WSURFXY    (I,J)
+    endif
 #ifdef WRF_HYDRO
     noahmp%water%state%WaterTableHydro                    = NoahmpIO%ZWATBLE2D  (I,J)
     noahmp%water%state%WaterHeadSfc                       = NoahmpIO%sfcheadrt  (I,J)
@@ -93,6 +97,7 @@ contains
     noahmp%water%flux%TranspirationAcc                    = NoahmpIO%ACC_ETRANXY (I,J)
     noahmp%water%flux%EvapGroundNetAcc                    = NoahmpIO%ACC_EDIRXY  (I,J)
     noahmp%water%flux%TranspWatLossSoilAcc(1:NumSoilLayer)= NoahmpIO%ACC_ETRANIXY(I,1:NumSoilLayer,J)
+    noahmp%water%flux%GlacierExcessFlowAcc                = NoahmpIO%ACC_GLAFLWXY(I,J)
 
     ! water parameter variables
     noahmp%water%param%DrainSoilLayerInd                  = LISparam%DRAIN_LAYER_OPT
@@ -154,6 +159,7 @@ contains
     noahmp%water%param%DrainWatDepToImperv                = LISparam%TD_D
     noahmp%water%param%NumSoilLayerRoot                   = LISparam%NROOT
     noahmp%water%param%SoilDrainSlope                     = LISparam%SLOPE
+    noahmp%water%param%WetlandCapMax                      = LISparam%WCAP
 
     do IndexSoilLayer = 1, size(SoilType)
        noahmp%water%param%SoilMoistureSat       (IndexSoilLayer) = LISparam%SMCMAX(IndexSoilLayer)
@@ -205,6 +211,12 @@ contains
        noahmp%water%param%TileDrainDepth         = NoahmpIO%TD_DDRAIN(I,J)                ! depth of drain
        noahmp%water%param%DrainTubeRadius        = NoahmpIO%TD_RADI  (I,J)                ! tile tube radius
        noahmp%water%param%DrainTubeDist          = NoahmpIO%TD_SPAC  (I,J)                ! tile spacing
+    endif
+
+    ! spatial varying wetland parameters from input
+    if ( noahmp%config%nmlist%OptWetlandModel == 2 ) then
+       noahmp%water%param%SoilSfcSatFracMax      = NoahmpIO%FSATMX(I,J)
+       noahmp%water%param%WetlandCapMax          = NoahmpIO%WCAP(I,J)
     endif
 
     ! derived water parameters
