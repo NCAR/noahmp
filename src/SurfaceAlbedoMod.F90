@@ -112,8 +112,11 @@ contains
     enddo
     VegAreaIndEff = LeafAreaIndEff + StemAreaIndEff
 
+    ! snow aging (allow nighttime BATS snow albedo aging)
+    call SnowAgingBats(noahmp)
+
+    ! snow grain size and aging for SNICAR
     if ( OptSnowAlbedo == 3 ) then
-    ! snow radius
        call SnowFreshRadius(noahmp)
        call SnowAgingSnicar(noahmp)
     endif
@@ -128,9 +131,6 @@ contains
           ReflectanceVeg(IndBand)   = max(ReflectanceLeaf(IndBand)*LeafWgt+ReflectanceStem(IndBand)*StemWgt, MinThr)
           TransmittanceVeg(IndBand) = max(TransmittanceLeaf(IndBand)*LeafWgt+TransmittanceStem(IndBand)*StemWgt, MinThr)
        enddo
-
-       ! snow aging
-       call SnowAgingBats(noahmp)
 
        ! snow albedos
        if ( OptSnowAlbedo == 1 )  call SnowAlbedoBats(noahmp)

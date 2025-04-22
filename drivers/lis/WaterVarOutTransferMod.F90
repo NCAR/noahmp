@@ -118,6 +118,7 @@ contains
     NoahmpIO%ACC_ECANXY  (I,J) = noahmp%water%flux%EvapCanopyNetAcc
     NoahmpIO%ACC_ETRANXY (I,J) = noahmp%water%flux%TranspirationAcc
     NoahmpIO%ACC_EDIRXY  (I,J) = noahmp%water%flux%EvapGroundNetAcc
+    NoahmpIO%ACC_GLAFLWXY(I,J) = noahmp%water%flux%GlacierExcessFlowAcc
     NoahmpIO%RECHXY      (I,J) = NoahmpIO%RECHXY(I,J) + (noahmp%water%state%RechargeGwShallowWT*1.0e3)
     NoahmpIO%DEEPRECHXY  (I,J) = NoahmpIO%DEEPRECHXY(I,J) + noahmp%water%state%RechargeGwDeepWT
     NoahmpIO%SMCWTDXY    (I,J) = noahmp%water%state%SoilMoistureToWT
@@ -141,6 +142,12 @@ contains
     NoahmpIO%IRMIVOL   (I,J) = NoahmpIO%IRMIVOL(I,J)+(noahmp%water%flux%IrrigationRateMicro*1000.0)
     NoahmpIO%IRFIVOL   (I,J) = NoahmpIO%IRFIVOL(I,J)+(noahmp%water%flux%IrrigationRateFlood*1000.0)
     NoahmpIO%IRELOSS   (I,J) = NoahmpIO%IRELOSS(I,J)+(noahmp%water%flux%EvapIrriSprinkler*NoahmpIO%DTBL)
+
+    ! wetland (Zhang2022)
+    if ( noahmp%config%nmlist%OptWetlandModel > 0 ) then
+       NoahmpIO%WSURFXY(I,J) = noahmp%water%state%WaterStorageWetland
+       NoahmpIO%FSATXY (I,J) = noahmp%water%state%SoilSaturateFrac
+    endif   
 
 #ifdef WRF_HYDRO
     NoahmpIO%infxsrt   (I,J) = max(noahmp%water%flux%RunoffSurface, 0.0)               ! mm, surface runoff

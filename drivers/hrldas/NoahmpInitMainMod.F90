@@ -151,6 +151,10 @@ contains
              NoahmpIO%QSNOWXY(I,J)  = 0.0
              NoahmpIO%QRAINXY(I,J)  = 0.0
              NoahmpIO%WSLAKEXY(I,J) = 0.0
+             if ( NoahmpIO%IOPT_WETLAND > 0 ) then
+                NoahmpIO%FSATXY(I,J)   = 0.0
+                NoahmpIO%WSURFXY(I,J)  = 0.0
+             endif
              if ( NoahmpIO%IOPT_RUNSUB /= 5 ) then 
                 NoahmpIO%WAXY(I,J)   = 4900.0 
                 NoahmpIO%WTXY(I,J)   = NoahmpIO%WAXY(i,j) 

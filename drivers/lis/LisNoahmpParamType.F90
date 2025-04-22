@@ -126,6 +126,12 @@ module LisNoahmpParamType
     real(kind=kind_noahmp)      :: C5_SNOWCOMPACT      ! snow desctructive metamorphism compaction parameter3
     real(kind=kind_noahmp)      :: DM_SNOWCOMPACT      ! upper Limit on destructive metamorphism compaction [kg/m3]
     real(kind=kind_noahmp)      :: ETA0_SNOWCOMPACT    ! snow viscosity coefficient [kg-s/m2]
+    real(kind=kind_noahmp)      :: SNOWCOMPACTm_AR24   ! snow compaction m parameter for linear sfc temp fitting from AR24
+    real(kind=kind_noahmp)      :: SNOWCOMPACTb_AR24   ! snow compaction b parameter for linear sfc temp fitting from AR24
+    real(kind=kind_noahmp)      :: SNOWCOMPACT_P1_AR24 ! lower constraint for SnowCompactBurdenFac for high pressure bin from AR24
+    real(kind=kind_noahmp)      :: SNOWCOMPACT_P2_AR24 ! lower constraint for SnowCompactBurdenFac for mid pressure bin from AR24
+    real(kind=kind_noahmp)      :: SNOWCOMPACT_P3_AR24 ! lower constraint for SnowCompactBurdenFac for low pressure bin from AR24
+    real(kind=kind_noahmp)      :: SNOWCOMPACT_Up_AR24 ! upper constraint on SnowCompactBurdenFac from AR24
     real(kind=kind_noahmp)      :: SNLIQMAXFRAC        ! maximum liquid water fraction in snow
     real(kind=kind_noahmp)      :: SWEMAXGLA           ! Maximum SWE allowed at glaciers (mm)
     real(kind=kind_noahmp)      :: WSLMAX              ! maximum lake water storage (mm)
@@ -203,6 +209,9 @@ module LisNoahmpParamType
     real(kind=kind_noahmp)      :: STCT(NSTAGE)        ! fraction of carbohydrate translocation from stem to grain
     real(kind=kind_noahmp)      :: RTCT(NSTAGE)        ! fraction of carbohydrate translocation from root to grain
     real(kind=kind_noahmp)      :: BIO2LAI             ! leaf area per living leaf biomass [m2/kg]
+
+    ! wetland parameters
+    real(kind=kind_noahmp)      :: WCAP                ! maximum wetland water holding capacity [m] (tunable) for opt_wetland=1
 
     ! soil parameters
     real(kind=kind_noahmp)      :: BEXP(NSOIL)         ! soil B parameter

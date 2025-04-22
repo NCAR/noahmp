@@ -122,7 +122,13 @@ module ConfigVarType
     integer :: OptGlacierTreatment         ! options for glacier treatment
                                               ! 1 -> include phase change of ice (default)
                                               ! 2 -> ice treatment more like original Noah
-    !SNICAR
+    integer :: OptSnowCompaction           ! options for ground snow compaction
+                                              ! 1 -> original scheme from Anderson (1976)
+                                              ! 2 -> new scheme from Abolafia-Rosenzweig et al. (2024)
+    integer :: OptWetlandModel             ! option for wetland model
+                                              ! 0 -> No Wetland model (default)
+                                              ! 1 -> Single-point/uniform parameter (Zhang, et al. 2022 WRR)
+                                              ! 2 -> 2-D regional parameter input (Zhang, et al. 2022 WRR)
     integer :: OptSnicarSnowShape          ! options for snow grain shape in SNICAR (He et al. 2017 JC)
                                               ! 1 -> sphere
                                               ! 2 -> spheroid
@@ -134,14 +140,14 @@ module ConfigVarType
     logical :: FlagSnicarSnowBCIntmix      ! flag to determine SNICAR, false->external mixing for all BC  ; true->internal mixing for hydrophilic BC
     logical :: FlagSnicarSnowDustIntmix    ! flag to determine SNICAR, false->external mixing for all dust; true->internal mixing for all dust
     logical :: FlagSnicarUseAerosol        ! option to turn on/off aerosol deposition flux effect in snow in SNICAR
-                                             !  .false. -> without aerosol deposition flux effect
-                                             !  .true.  -> with aerosol deposition flux effect
+                                              ! .false. -> without aerosol deposition flux effect
+                                              ! .true.  -> with aerosol deposition flux effect
     logical :: FlagSnicarUseOC             ! option to activate OC in snow in SNICAR
-                                             !  .false. -> without organic carbon in snow
-                                             !  .true.  -> with organic carbon in snow
+                                              !  .false. -> without organic carbon in snow
+                                              !  .true.  -> with organic carbon in snow
     logical :: FlagSnicarAerosolReadTable  ! option to read aerosol deposition fluxes from table or not
-                                             !  .false. -> data read from NetCDF forcing file
-                                             !  .true.  -> data read from table
+                                              !  .false. -> data read from NetCDF forcing file
+                                              !  .true.  -> data read from table
    end type namelist_type
 
 
@@ -151,6 +157,7 @@ module ConfigVarType
     character(len=256)     :: LandUseDataName             ! landuse dataset name (USGS or MODIFIED_IGBP_MODIS_NOAH)
     logical                :: FlagUrban                   ! flag for urban grid
     logical                :: FlagCropland                ! flag to identify croplands
+    logical                :: FlagWetland                 ! flag to identify wetlands
     logical                :: FlagDynamicCrop             ! flag to activate dynamic crop model
     logical                :: FlagDynamicVeg              ! flag to activate dynamic vegetation scheme
     logical                :: FlagSoilProcess             ! flag to determine if calculating soil processes

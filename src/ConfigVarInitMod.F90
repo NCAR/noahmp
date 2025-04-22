@@ -46,11 +46,14 @@ contains
     noahmp%config%nmlist%OptSoilProperty             = undefined_int
     noahmp%config%nmlist%OptPedotransfer             = undefined_int
     noahmp%config%nmlist%OptGlacierTreatment         = undefined_int
+    noahmp%config%nmlist%OptSnowCompaction           = undefined_int 
+    noahmp%config%nmlist%OptWetlandModel             = undefined_int
 
     ! config domain variable
     noahmp%config%domain%LandUseDataName             = "MODIFIED_IGBP_MODIS_NOAH"
     noahmp%config%domain%FlagUrban                   = .false.
     noahmp%config%domain%FlagCropland                = .false.
+    noahmp%config%domain%FlagWetland                 = .false.
     noahmp%config%domain%FlagDynamicCrop             = .false.
     noahmp%config%domain%FlagDynamicVeg              = .false.
     noahmp%config%domain%FlagSoilProcess             = .false.

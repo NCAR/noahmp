@@ -6,12 +6,13 @@ module SnowWaterMainMod
   use Machine
   use NoahmpVarType
   use ConstantDefineMod
-  use SnowfallBelowCanopyMod, only : SnowfallAfterCanopyIntercept
-  use SnowpackCompactionMod,  only : SnowpackCompaction
-  use SnowLayerCombineMod,    only : SnowLayerCombine
-  use SnowLayerDivideMod,     only : SnowLayerDivide
-  use SnowpackHydrologyMod,   only : SnowpackHydrology
-  use SnowAerosolSnicarMod
+  use SnowfallBelowCanopyMod,    only : SnowfallAfterCanopyIntercept
+  use SnowpackCompactionMod,     only : SnowpackCompaction
+  use SnowpackCompactionAR24Mod, only : SnowpackCompactionAR24 
+  use SnowLayerCombineMod,       only : SnowLayerCombine
+  use SnowLayerDivideMod,        only : SnowLayerDivide
+  use SnowpackHydrologyMod,      only : SnowpackHydrology
+  use SnowAerosolSnicarMod,      only : SnowAerosolSnicar
 
   implicit none
 
@@ -41,6 +42,7 @@ contains
               MainTimeStep           => noahmp%config%domain%MainTimeStep           ,& ! in,    noahmp main time step [s]
               OptSnowAlbedo          => noahmp%config%nmlist%OptSnowAlbedo          ,& ! in,    options for ground snow surface albedo
               DepthSoilLayer         => noahmp%config%domain%DepthSoilLayer         ,& ! in,    depth [m] of layer-bottom from soil surface
+              OptSnowCompaction      => noahmp%config%nmlist%OptSnowCompaction      ,& ! in,    options for ground snowpack compaction
               SnoWatEqvMaxGlacier    => noahmp%water%param%SnoWatEqvMaxGlacier      ,& ! in,    Maximum SWE allowed at glaciers [mm]
               ThicknessSnowSoilLayer => noahmp%config%domain%ThicknessSnowSoilLayer ,& ! inout, thickness of snow/soil layers [m]
               DepthSnowSoilLayer     => noahmp%config%domain%DepthSnowSoilLayer     ,& ! inout, depth of snow/soil layer-bottom [m]
@@ -76,8 +78,9 @@ contains
 
     ! do following snow layer compaction, combination, and division only for multi-layer snowpack
 
-    ! snowpack compaction
-    if ( NumSnowLayerNeg < 0 ) call SnowpackCompaction(noahmp)
+    ! snowpack compaction (option: 1->original,Anderson1976; 2->new,Abolafia-Rosenzweig2024)
+    if ( NumSnowLayerNeg < 0 .and. OptSnowCompaction == 1) call SnowpackCompaction(noahmp)
+    if ( NumSnowLayerNeg < 0 .and. OptSnowCompaction == 2) call SnowpackCompactionAR24(noahmp)
 
     ! snow layer combination
     if ( NumSnowLayerNeg < 0 ) call SnowLayerCombine(noahmp)

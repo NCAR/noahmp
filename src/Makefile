@@ -36,12 +36,15 @@ OBJS = ConstantDefineMod.o \
        RunoffSurfaceTopModelMmfMod.o \
        RunoffSurfaceVicMod.o \
        RunoffSurfaceXinAnJiangMod.o \
+       RunoffSurfaceWetlandMod.o \
+       WetlandWaterZhang22Mod.o \
        ShallowWaterTableMmfMod.o \
        SnowfallBelowCanopyMod.o \
        SnowLayerCombineMod.o \
        SnowLayerDivideMod.o \
        SnowLayerWaterComboMod.o \
        SnowpackCompactionMod.o \
+       SnowpackCompactionAR24Mod.o \
        SnowpackHydrologyMod.o \
        SnowWaterMainMod.o \
        SoilHydraulicPropertyMod.o \
@@ -203,6 +206,8 @@ RunoffSurfaceTopModelGrdMod.o:        ../utility/Machine.o NoahmpVarType.o Const
 RunoffSurfaceTopModelMmfMod.o:        ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 RunoffSurfaceVicMod.o:                ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 RunoffSurfaceXinAnJiangMod.o:         ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
+RunoffSurfaceWetlandMod.o:            ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
+WetlandWaterZhang22Mod.o:             ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 ShallowWaterTableMmfMod.o:            ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SnowfallBelowCanopyMod.o:             ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SnowLayerCombineMod.o:                ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
@@ -211,11 +216,13 @@ SnowLayerDivideMod.o:                 ../utility/Machine.o NoahmpVarType.o Const
                                       SnowLayerWaterComboMod.o
 SnowLayerWaterComboMod.o:             ../utility/Machine.o ConstantDefineMod.o
 SnowpackCompactionMod.o:              ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
+SnowpackCompactionAR24Mod.o:          ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SnowpackHydrologyMod.o:               ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       SnowLayerCombineMod.o
 SnowWaterMainMod.o:                   ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       SnowfallBelowCanopyMod.o SnowpackCompactionMod.o SnowLayerDivideMod.o \
-                                      SnowLayerCombineMod.o SnowpackHydrologyMod.o SnowAerosolSnicarMod.o
+                                      SnowLayerCombineMod.o SnowpackHydrologyMod.o SnowpackCompactionAR24Mod.o \
+                                      SnowAerosolSnicarMod.o
 SoilHydraulicPropertyMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SoilMoistureSolverMod.o:              ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       MatrixSolverTriDiagonalMod.o
@@ -235,7 +242,8 @@ SoilWaterMainMod.o:                   ../utility/Machine.o NoahmpVarType.o Const
                                       RunoffSubSurfaceEquiWaterTableMod.o RunoffSubSurfaceGroundWaterMod.o \
                                       RunoffSubSurfaceDrainageMod.o RunoffSubSurfaceShallowMmfMod.o \
                                       SoilWaterDiffusionRichardsMod.o SoilMoistureSolverMod.o \
-                                      TileDrainageSimpleMod.o TileDrainageHooghoudtMod.o
+                                      TileDrainageSimpleMod.o TileDrainageHooghoudtMod.o \
+				                              RunoffSurfaceWetlandMod.o
 TileDrainageEquiDepthMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 TileDrainageHooghoudtMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       TileDrainageEquiDepthMod.o WaterTableDepthSearchMod.o \
@@ -243,7 +251,7 @@ TileDrainageHooghoudtMod.o:           ../utility/Machine.o NoahmpVarType.o Const
 TileDrainageSimpleMod.o:              ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 WaterMainMod.o:                       ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       CanopyHydrologyMod.o SnowWaterMainMod.o IrrigationFloodMod.o \
-                                      IrrigationMicroMod.o SoilWaterMainMod.o
+                                      IrrigationMicroMod.o SoilWaterMainMod.o WetlandWaterZhang22Mod.o
 WaterTableDepthSearchMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 WaterTableEquilibriumMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 IrrigationTriggerMod.o:               ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
@@ -355,7 +363,7 @@ ResistanceGroundEvaporationGlacierMod.o: ../utility/Machine.o NoahmpVarType.o Co
 SnowCoverGlacierMod.o:                   ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SnowWaterMainGlacierMod.o:               ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o SnowfallBelowCanopyMod.o \
                                          SnowpackCompactionMod.o SnowLayerCombineMod.o SnowLayerDivideMod.o \
-                                         SnowpackHydrologyGlacierMod.o SnowAerosolSnicarMod.o 
+                                         SnowpackHydrologyGlacierMod.o SnowpackCompactionAR24Mod.o SnowAerosolSnicarMod.o
 SnowpackHydrologyGlacierMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o SnowLayerCombineMod.o
 SurfaceAlbedoGlacierMod.o:               ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o SnowAgingBatsMod.o \
                                          SnowAlbedoBatsMod.o SnowAlbedoClassMod.o GroundAlbedoGlacierMod.o SnowAlbedoSnicarMod.o \

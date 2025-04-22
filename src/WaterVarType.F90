@@ -71,6 +71,7 @@ module WaterVarType
     real(kind=kind_noahmp) :: EvapCanopyNetAcc           ! accumulated net evaporation of canopy intercepted water per soil timestep [mm]
     real(kind=kind_noahmp) :: TranspirationAcc           ! accumulated transpiration per soil timestep [mm]
     real(kind=kind_noahmp) :: EvapGroundNetAcc           ! accumulated net ground (soil/snow) evaporation per soil timestep [mm]
+    real(kind=kind_noahmp) :: GlacierExcessFlowAcc       ! accumulated glacier excessive flow [mm] per soil timestep
     real(kind=kind_noahmp) :: EvapSoilSfcLiqMean         ! mean soil surface water evaporation during soil timestep [m/s]
     real(kind=kind_noahmp) :: SoilSfcInflowMean          ! mean water input on soil surface during soil timestep [m/s]
 
@@ -126,6 +127,7 @@ module WaterVarType
     real(kind=kind_noahmp) :: WaterStorageAquifer        ! water storage in aquifer [mm]
     real(kind=kind_noahmp) :: WaterStorageSoilAqf        ! water storage in aquifer + saturated soil [mm]
     real(kind=kind_noahmp) :: WaterStorageLake           ! water storage in lake (can be negative) [mm] 
+    real(kind=kind_noahmp) :: WaterStorageWetland        ! water storage in wetland [mm]
     real(kind=kind_noahmp) :: WaterHeadSfc               ! surface water head [mm]
     real(kind=kind_noahmp) :: IrrigationFracGrid         ! total irrigation fraction from input for a grid
     real(kind=kind_noahmp) :: PrecipAreaFrac             ! fraction of the gridcell that receives precipitation
@@ -196,6 +198,12 @@ module WaterVarType
     real(kind=kind_noahmp) :: SnowCompactAgingFac3       ! snow desctructive metamorphism compaction parameter3 
     real(kind=kind_noahmp) :: SnowCompactAgingMax        ! upper Limit on destructive metamorphism compaction [kg/m3]
     real(kind=kind_noahmp) :: SnowViscosityCoeff         ! snow viscosity coefficient [kg-s/m2], Anderson1979: 0.52e6~1.38e6
+    real(kind=kind_noahmp) :: SnowCompactmAR24           ! snow compaction m parameter for linear sfc temp fitting from AR24
+    real(kind=kind_noahmp) :: SnowCompactbAR24           ! snow compaction b parameter for linear sfc temp fitting from AR24
+    real(kind=kind_noahmp) :: SnowCompactP1AR24          ! lower constraint for SnowCompactBurdenFac for high pressure bin from AR24
+    real(kind=kind_noahmp) :: SnowCompactP2AR24          ! lower constraint for SnowCompactBurdenFac for mid pressure bin from AR24
+    real(kind=kind_noahmp) :: SnowCompactP3AR24          ! lower constraint for SnowCompactBurdenFac for low pressure bin from AR24
+    real(kind=kind_noahmp) :: BurdenFacUpAR24            ! upper constraint on SnowCompactBurdenFac from AR24
     real(kind=kind_noahmp) :: SnowLiqFracMax             ! maximum liquid water fraction in snow
     real(kind=kind_noahmp) :: SnowLiqHoldCap             ! liquid water holding capacity for snowpack [m3/m3]
     real(kind=kind_noahmp) :: SnowLiqReleaseFac          ! snowpack water release timescale factor [1/s]
@@ -242,6 +250,7 @@ module WaterVarType
     real(kind=kind_noahmp) :: SoilMatPotentialWilt       ! soil metric potential for wilting point [m]
     real(kind=kind_noahmp) :: SnowMeltFac                ! snowmelt m parameter in snow cover fraction calculation
     real(kind=kind_noahmp) :: SnowCoverFac               ! snow cover factor [m] (originally hard-coded 2.5*z0 in SCF formulation)
+    real(kind=kind_noahmp) :: WetlandCapMax              ! maximum wetland capacity [m]
     real(kind=kind_noahmp) :: SnowRadiusMin              ! minimum allowed snow effective radius for SNICAR (also cold "fresh snow" value) [microns]
     real(kind=kind_noahmp) :: FreshSnowRadiusMax         ! maximum warm fresh snow effective radius [microns]
     real(kind=kind_noahmp) :: SnowRadiusRefrz            ! Effective radius of re-frozen snow [microns]

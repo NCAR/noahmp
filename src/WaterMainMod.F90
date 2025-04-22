@@ -6,11 +6,12 @@ module WaterMainMod
   use Machine
   use NoahmpVarType
   use ConstantDefineMod
-  use CanopyHydrologyMod,  only : CanopyHydrology
-  use SnowWaterMainMod,    only : SnowWaterMain
-  use IrrigationFloodMod,  only : IrrigationFlood
-  use IrrigationMicroMod,  only : IrrigationMicro
-  use SoilWaterMainMod,    only : SoilWaterMain
+  use CanopyHydrologyMod,     only : CanopyHydrology
+  use SnowWaterMainMod,       only : SnowWaterMain
+  use IrrigationFloodMod,     only : IrrigationFlood
+  use IrrigationMicroMod,     only : IrrigationMicro
+  use SoilWaterMainMod,       only : SoilWaterMain
+  use WetlandWaterZhang22Mod, only : WetlandWaterZhang22
 
   implicit none
 
@@ -37,9 +38,11 @@ contains
               SoilTimeStep           => noahmp%config%domain%SoilTimeStep           ,& ! in,    soil process timestep [s]
               SurfaceType            => noahmp%config%domain%SurfaceType            ,& ! in,    surface type 1-soil; 2-lake 
               FlagCropland           => noahmp%config%domain%FlagCropland           ,& ! in,    flag to identify croplands
+              FlagWetland            => noahmp%config%domain%FlagWetland            ,& ! in,    flag to identify wetlands
               FlagUrban              => noahmp%config%domain%FlagUrban              ,& ! in,    urban point flag
               FlagSoilProcess        => noahmp%config%domain%FlagSoilProcess        ,& ! in,    flag to calculate soil processes
               NumSoilTimeStep        => noahmp%config%domain%NumSoilTimeStep        ,& ! in,    number of timesteps for soil process calculation
+              OptWetlandModel        => noahmp%config%nmlist%OptWetlandModel        ,& ! in,    options for wetland model
               VaporizeGrd            => noahmp%water%flux%VaporizeGrd               ,& ! in,    ground vaporize rate total (evap+sublim) [mm/s]
               CondenseVapGrd         => noahmp%water%flux%CondenseVapGrd            ,& ! in,    ground vapor condense rate total (dew+frost) [mm/s]
               RainfallGround         => noahmp%water%flux%RainfallGround            ,& ! in,    ground surface rain rate [mm/s]
@@ -71,6 +74,7 @@ contains
               SublimSnowSfcIce       => noahmp%water%flux%SublimSnowSfcIce          ,& ! inout, snow surface sublimation rate[mm/s]
               TranspWatLossSoil      => noahmp%water%flux%TranspWatLossSoil         ,& ! inout, transpiration water loss from soil layers [m/s]
               GlacierExcessFlow      => noahmp%water%flux%GlacierExcessFlow         ,& ! inout, glacier excess flow [mm/s]
+              GlacierExcessFlowAcc   => noahmp%water%flux%GlacierExcessFlowAcc      ,& ! inout, accumulated glacier excess flow [mm]
               SoilSfcInflowAcc       => noahmp%water%flux%SoilSfcInflowAcc          ,& ! inout, accumulated water flux into soil during soil timestep [m/s * dt_soil/dt_main]
               EvapSoilSfcLiqAcc      => noahmp%water%flux%EvapSoilSfcLiqAcc         ,& ! inout, accumulated soil surface evaporation during soil timestep [m/s * dt_soil/dt_main]
               TranspWatLossSoilAcc   => noahmp%water%flux%TranspWatLossSoilAcc      ,& ! inout, accumualted transpiration water loss during soil timestep [m/s * dt_soil/dt_main]
@@ -94,10 +98,9 @@ contains
 
     ! initialize
     TranspWatLossSoil  = 0.0
-    GlacierExcessFlow  = 0.0
-    RunoffSubsurface   = 0.0
-    RunoffSurface      = 0.0
     SoilSfcInflow      = 0.0
+    RunoffSurface      = 0.0
+    RunoffSubsurface   = 0.0
     TileDrain          = 0.0
 
     ! prepare for water process
@@ -127,6 +130,9 @@ contains
 
     ! snowpack water processs
     call SnowWaterMain(noahmp)
+
+    ! accumulate glacier excessive flow [mm]
+    GlacierExcessFlowAcc = GlacierExcessFlowAcc + GlacierExcessFlow * MainTimeStep
 
     ! treat frozen ground/soil
     if ( FlagFrozenGround .eqv. .true. ) then
@@ -190,10 +196,10 @@ contains
           call SoilWaterMain(noahmp)
        endif
 
-    endif ! FlagSoilProcess soil timestep
+       ! merge excess glacier snow flow to subsurface runoff
+       RunoffSubsurface = RunoffSubsurface + GlacierExcessFlowAcc  ! mm per soil timestep
 
-    ! merge excess glacier snow flow to subsurface runoff
-    RunoffSubsurface = RunoffSubsurface + GlacierExcessFlow * MainTimeStep  ! mm per soil timestep
+    endif ! FlagSoilProcess soil timestep
 
     ! update surface water vapor flux ! urban - jref
     WaterToAtmosTotal = Transpiration + EvapCanopyNet + EvapGroundNet
@@ -201,6 +207,12 @@ contains
        SpecHumiditySfc    = WaterToAtmosTotal / (DensityAirRefHeight*ExchCoeffShSfc) + SpecHumidityRefHeight
        SpecHumidity2mBare = SpecHumiditySfc
     endif
+
+    ! call surface wetland scheme (due to subgrid wetland treatment, currently no flag control)
+    !if ( (FlagWetland .eqv. .true.) .and. (OptWetlandModel > 0) ) then
+    if ( OptWetlandModel > 0 ) then
+       call WetlandWaterZhang22(noahmp,MainTimeStep)
+    endif 
 
     end associate
 
