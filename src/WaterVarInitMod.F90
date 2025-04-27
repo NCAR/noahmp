@@ -22,12 +22,12 @@ contains
 
     type(noahmp_type), intent(inout) :: noahmp
 
-    associate(                                                         &
-              NumSnowLayerMax => noahmp%config%domain%NumSnowLayerMax ,&
-              NumSoilLayer    => noahmp%config%domain%NumSoilLayer    ,&
-              idx_rhos_max    => noahmp%config%domain%idx_rhos_max    ,&
-              idx_Tgrd_max    => noahmp%config%domain%idx_Tgrd_max    ,&
-              idx_T_max       => noahmp%config%domain%idx_T_max        &
+    associate(                                                                         &
+              NumSnowLayerMax         => noahmp%config%domain%NumSnowLayerMax         ,&
+              NumSoilLayer            => noahmp%config%domain%NumSoilLayer            ,&
+              NumDensitySnwAgeSnicar  => noahmp%config%domain%NumDensitySnwAgeSnicar  ,&
+              NumTempGradSnwAgeSnicar => noahmp%config%domain%NumTempGradSnwAgeSnicar ,&
+              NumTempSnwAgeSnicar     => noahmp%config%domain%NumTempSnwAgeSnicar      &
              )
 
     ! water state variables
@@ -142,6 +142,69 @@ contains
     noahmp%water%state%SoilTranspFac      (:)      = undefined_real
     noahmp%water%state%SoilMatPotential   (:)      = undefined_real
 
+    ! SNICAR
+    if ( noahmp%config%nmlist%OptSnowAlbedo == 3 )then
+       if ( .not. allocated(noahmp%water%state%SnowRadius) )             &
+       allocate( noahmp%water%state%SnowRadius(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassBChydropho) )         &
+       allocate( noahmp%water%state%MassBChydropho(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassBChydrophi) )         &
+       allocate( noahmp%water%state%MassBChydrophi(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassOChydropho) )         &
+       allocate( noahmp%water%state%MassOChydropho(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassOChydrophi) )         &
+       allocate( noahmp%water%state%MassOChydrophi(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassDust1) )              &
+       allocate( noahmp%water%state%MassDust1(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassDust2) )              &
+       allocate( noahmp%water%state%MassDust2(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassDust3) )              &
+       allocate( noahmp%water%state%MassDust3(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassDust4) )              &
+       allocate( noahmp%water%state%MassDust4(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassDust5) )              &
+       allocate( noahmp%water%state%MassDust5(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassConcBChydropho) )     &
+       allocate( noahmp%water%state%MassConcBChydropho(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassConcBChydrophi) )     &
+       allocate( noahmp%water%state%MassConcBChydrophi(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassConcOChydropho) )     &
+       allocate( noahmp%water%state%MassConcOChydropho(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassConcOChydrophi) )     &
+       allocate( noahmp%water%state%MassConcOChydrophi(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassConcDust1) )          &
+       allocate( noahmp%water%state%MassConcDust1(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassConcDust2) )          &
+       allocate( noahmp%water%state%MassConcDust2(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassConcDust3) )          &
+       allocate( noahmp%water%state%MassConcDust3(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassConcDust4) )          &
+       allocate( noahmp%water%state%MassConcDust4(-NumSnowLayerMax+1:0) )
+       if ( .not. allocated(noahmp%water%state%MassConcDust5) )          &
+       allocate( noahmp%water%state%MassConcDust5(-NumSnowLayerMax+1:0) )
+
+       noahmp%water%state%SnowRadiusFresh          = undefined_real
+       noahmp%water%state%SnowRadius        (:)    = undefined_real
+       noahmp%water%state%MassBChydropho    (:)    = undefined_real
+       noahmp%water%state%MassBChydrophi    (:)    = undefined_real
+       noahmp%water%state%MassOChydropho    (:)    = undefined_real
+       noahmp%water%state%MassOChydrophi    (:)    = undefined_real
+       noahmp%water%state%MassDust1         (:)    = undefined_real
+       noahmp%water%state%MassDust2         (:)    = undefined_real
+       noahmp%water%state%MassDust3         (:)    = undefined_real
+       noahmp%water%state%MassDust4         (:)    = undefined_real
+       noahmp%water%state%MassDust5         (:)    = undefined_real
+       noahmp%water%state%MassConcBChydropho(:)    = undefined_real
+       noahmp%water%state%MassConcBChydrophi(:)    = undefined_real
+       noahmp%water%state%MassConcOChydropho(:)    = undefined_real
+       noahmp%water%state%MassConcOChydrophi(:)    = undefined_real
+       noahmp%water%state%MassConcDust1     (:)    = undefined_real
+       noahmp%water%state%MassConcDust2     (:)    = undefined_real
+       noahmp%water%state%MassConcDust3     (:)    = undefined_real
+       noahmp%water%state%MassConcDust4     (:)    = undefined_real
+       noahmp%water%state%MassConcDust5     (:)    = undefined_real
+    endif
+
     ! water flux variables
     noahmp%water%flux%PrecipTotRefHeight           = undefined_real
     noahmp%water%flux%RainfallRefHeight            = undefined_real
@@ -225,6 +288,14 @@ contains
     noahmp%water%flux%TranspWatLossSoilAcc (:)     = undefined_real
     noahmp%water%flux%TranspWatLossSoilMean(:)     = undefined_real
     noahmp%water%flux%OutflowSnowLayer     (:)     = undefined_real
+
+    ! SNICAR
+    if ( noahmp%config%nmlist%OptSnowAlbedo == 3 )then
+       if ( .not. allocated(noahmp%water%flux%SnowFreezeRate) )     &
+       allocate( noahmp%water%flux%SnowFreezeRate(-NumSnowLayerMax+1:0) )
+
+       noahmp%water%flux%SnowFreezeRate(:)         = undefined_real
+    endif
 
     ! water parameter variables
     noahmp%water%param%DrainSoilLayerInd           = undefined_int
@@ -318,90 +389,35 @@ contains
     noahmp%water%param%SoilExpCoeffB         (:)   = undefined_real
     noahmp%water%param%SoilMatPotentialSat   (:)   = undefined_real
 
-    !SNICAR
-    if (noahmp%config%nmlist%OptSnowAlbedo == 3 )then
-
-       if ( .not. allocated(noahmp%water%state%SnowRadius) )     &
-       allocate( noahmp%water%state%SnowRadius(-NumSnowLayerMax+1:0) )
-
-       if ( .not. allocated(noahmp%water%state%MassBChydropho) )     &
-       allocate( noahmp%water%state%MassBChydropho(-NumSnowLayerMax+1:0) )
-       if ( .not. allocated(noahmp%water%state%MassBChydrophi) )     &
-       allocate( noahmp%water%state%MassBChydrophi(-NumSnowLayerMax+1:0) )
-       if ( .not. allocated(noahmp%water%state%MassOChydropho) )     &
-       allocate( noahmp%water%state%MassOChydropho(-NumSnowLayerMax+1:0) )
-       if ( .not. allocated(noahmp%water%state%MassOChydrophi) )     &
-       allocate( noahmp%water%state%MassOChydrophi(-NumSnowLayerMax+1:0) )
-       if ( .not. allocated(noahmp%water%state%MassDust1) )     &
-       allocate( noahmp%water%state%MassDust1(-NumSnowLayerMax+1:0) )
-       if ( .not. allocated(noahmp%water%state%MassDust2) )     &
-       allocate( noahmp%water%state%MassDust2(-NumSnowLayerMax+1:0) )
-       if ( .not. allocated(noahmp%water%state%MassDust3) )     &
-       allocate( noahmp%water%state%MassDust3(-NumSnowLayerMax+1:0) )
-       if ( .not. allocated(noahmp%water%state%MassDust4) )     &
-       allocate( noahmp%water%state%MassDust4(-NumSnowLayerMax+1:0) )
-       if ( .not. allocated(noahmp%water%state%MassDust5) )     &
-       allocate( noahmp%water%state%MassDust5(-NumSnowLayerMax+1:0) )
-
-       if ( .not. allocated(noahmp%water%state%MassConcBChydropho) )     &
-       allocate( noahmp%water%state%MassConcBChydropho(-NumSnowLayerMax+1:0) )
-       if ( .not. allocated(noahmp%water%state%MassConcBChydrophi) )     &
-       allocate( noahmp%water%state%MassConcBChydrophi(-NumSnowLayerMax+1:0) )
-       if ( .not. allocated(noahmp%water%state%MassConcOChydropho) )     &
-       allocate( noahmp%water%state%MassConcOChydropho(-NumSnowLayerMax+1:0) )
-       if ( .not. allocated(noahmp%water%state%MassConcOChydrophi) )     &
-       allocate( noahmp%water%state%MassConcOChydrophi(-NumSnowLayerMax+1:0) )
-       if ( .not. allocated(noahmp%water%state%MassConcDust1) )     &
-       allocate( noahmp%water%state%MassConcDust1(-NumSnowLayerMax+1:0) )
-       if ( .not. allocated(noahmp%water%state%MassConcDust2) )     &
-       allocate( noahmp%water%state%MassConcDust2(-NumSnowLayerMax+1:0) )
-       if ( .not. allocated(noahmp%water%state%MassConcDust3) )     &
-       allocate( noahmp%water%state%MassConcDust3(-NumSnowLayerMax+1:0) )
-       if ( .not. allocated(noahmp%water%state%MassConcDust4) )     &
-       allocate( noahmp%water%state%MassConcDust4(-NumSnowLayerMax+1:0) )
-       if ( .not. allocated(noahmp%water%state%MassConcDust5) )     &
-       allocate( noahmp%water%state%MassConcDust5(-NumSnowLayerMax+1:0) )
-
-       noahmp%water%state%SnowRadiusFresh             = undefined_real
-       noahmp%water%state%SnowRadius        (:)       = undefined_real
-       noahmp%water%state%MassBChydropho    (:)       = undefined_real
-       noahmp%water%state%MassBChydrophi    (:)       = undefined_real    
-       noahmp%water%state%MassOChydropho    (:)       = undefined_real   
-       noahmp%water%state%MassOChydrophi    (:)       = undefined_real   
-       noahmp%water%state%MassDust1         (:)       = undefined_real       
-       noahmp%water%state%MassDust2         (:)       = undefined_real       
-       noahmp%water%state%MassDust3         (:)       = undefined_real      
-       noahmp%water%state%MassDust4         (:)       = undefined_real     
-       noahmp%water%state%MassDust5         (:)       = undefined_real
-       noahmp%water%state%MassConcBChydropho(:)       = undefined_real
-       noahmp%water%state%MassConcBChydrophi(:)       = undefined_real
-       noahmp%water%state%MassConcOChydropho(:)       = undefined_real
-       noahmp%water%state%MassConcOChydrophi(:)       = undefined_real
-       noahmp%water%state%MassConcDust1     (:)       = undefined_real
-       noahmp%water%state%MassConcDust2     (:)       = undefined_real
-       noahmp%water%state%MassConcDust3     (:)       = undefined_real
-       noahmp%water%state%MassConcDust4     (:)       = undefined_real
-       noahmp%water%state%MassConcDust5     (:)       = undefined_real
-
-       if ( .not. allocated(noahmp%water%flux%SnowFreezeRate) )     &
-       allocate( noahmp%water%flux%SnowFreezeRate(-NumSnowLayerMax+1:0) )
-
-       noahmp%water%flux%SnowFreezeRate     (:)       = undefined_real
-
-       if ( .not. allocated(noahmp%water%param%snowage_tau) )    &
-       allocate( noahmp%water%param%snowage_tau(idx_rhos_max,idx_Tgrd_max,idx_T_max) )
+    ! SNICAR
+    if ( noahmp%config%nmlist%OptSnowAlbedo == 3 )then
+       if ( .not. allocated(noahmp%water%param%snowage_tau) )      &
+       allocate( noahmp%water%param%snowage_tau(NumDensitySnwAgeSnicar,NumTempGradSnwAgeSnicar,NumTempSnwAgeSnicar) )
        if ( .not. allocated(noahmp%water%param%snowage_kappa) )    &
-       allocate( noahmp%water%param%snowage_kappa(idx_rhos_max,idx_Tgrd_max,idx_T_max) )
+       allocate( noahmp%water%param%snowage_kappa(NumDensitySnwAgeSnicar,NumTempGradSnwAgeSnicar,NumTempSnwAgeSnicar) )
        if ( .not. allocated(noahmp%water%param%snowage_drdt0) )    &
-       allocate( noahmp%water%param%snowage_drdt0(idx_rhos_max,idx_Tgrd_max,idx_T_max) )
+       allocate( noahmp%water%param%snowage_drdt0(NumDensitySnwAgeSnicar,NumTempGradSnwAgeSnicar,NumTempSnwAgeSnicar) )
 
-       noahmp%water%param%snowage_tau       (:,:,:)   = undefined_real
-       noahmp%water%param%snowage_kappa     (:,:,:)   = undefined_real
-       noahmp%water%param%snowage_drdt0     (:,:,:)   = undefined_real
-       noahmp%water%param%SnowRadiusMin               = undefined_real
-       noahmp%water%param%FreshSnowRadiusMax          = undefined_real
-       noahmp%water%param%SnowRadiusRefrz             = undefined_real
-
+       noahmp%water%param%snowage_tau  (:,:,:)     = undefined_real
+       noahmp%water%param%snowage_kappa(:,:,:)     = undefined_real
+       noahmp%water%param%snowage_drdt0(:,:,:)     = undefined_real
+       noahmp%water%param%SnowRadiusMin            = undefined_real
+       noahmp%water%param%FreshSnowRadiusMax       = undefined_real
+       noahmp%water%param%SnowRadiusRefrz          = undefined_real
+       noahmp%water%param%ScavEffMeltScale         = undefined_real
+       noahmp%water%param%ScavEffMeltBCphi         = undefined_real
+       noahmp%water%param%ScavEffMeltBCpho         = undefined_real
+       noahmp%water%param%ScavEffMeltOCphi         = undefined_real
+       noahmp%water%param%ScavEffMeltOCpho         = undefined_real
+       noahmp%water%param%ScavEffMeltDust1         = undefined_real
+       noahmp%water%param%ScavEffMeltDust2         = undefined_real
+       noahmp%water%param%ScavEffMeltDust3         = undefined_real
+       noahmp%water%param%ScavEffMeltDust4         = undefined_real
+       noahmp%water%param%ScavEffMeltDust5         = undefined_real
+       noahmp%water%param%SnowRadiusMax            = undefined_real
+       noahmp%water%param%SnowWetAgeC1Brun89       = undefined_real
+       noahmp%water%param%SnowWetAgeC2Brun89       = undefined_real
+       noahmp%water%param%SnowAgeScaleFac          = undefined_real
     endif
 
     end associate

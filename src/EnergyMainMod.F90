@@ -342,6 +342,7 @@ contains
     else
        AlbedoSfc = undefined_real
     endif
+
     end associate
 
   end subroutine EnergyMain

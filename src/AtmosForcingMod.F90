@@ -50,8 +50,8 @@ contains
               RadSwDownRefHeight      => noahmp%forcing%RadSwDownRefHeight           ,& ! in,  downward shortwave radiation [W/m2] at reference height
               WindEastwardRefHeight   => noahmp%forcing%WindEastwardRefHeight        ,& ! in,  wind speed [m/s] in eastward direction at reference height
               WindNorthwardRefHeight  => noahmp%forcing%WindNorthwardRefHeight       ,& ! in,  wind speed [m/s] in northward direction at reference height
-              VisFrac                 => noahmp%forcing%VisFrac                      ,& ! in,
-              DirFrac                 => noahmp%forcing%DirFrac                      ,& ! in,
+              RadSwVisFrac            => noahmp%forcing%RadSwVisFrac                 ,& ! in,  downward solar radiation visible band fraction
+              RadSwDirFrac            => noahmp%forcing%RadSwDirFrac                 ,& ! in,  downward solar radiation direct beam fraction
               SnowfallDensityMax      => noahmp%water%param%SnowfallDensityMax       ,& ! in,  maximum fresh snowfall density [kg/m3]
               TemperaturePotRefHeight => noahmp%energy%state%TemperaturePotRefHeight ,& ! out, surface potential temperature [K]
               PressureVaporRefHeight  => noahmp%energy%state%PressureVaporRefHeight  ,& ! out, vapor pressure air [Pa] at reference height
@@ -81,16 +81,16 @@ contains
     RadDirFrac = 0.7
     RadVisFrac = 0.5
 
-    if (DirFrac >=0.0 .and. DirFrac <=1.0) then
-       RadDirFrac=DirFrac
+    if ( RadSwDirFrac >= 0.0 .and. RadSwDirFrac <= 1.0 ) then
+       RadDirFrac   = RadSwDirFrac
     else
-       DirFrac=RadDirFrac
+       RadSwDirFrac = RadDirFrac
     endif
 
-    if (VisFrac >=0.0 .and. VisFrac <=1.0) then 
-       RadVisFrac=VisFrac
+    if ( RadSwVisFrac >= 0.0 .and. RadSwVisFrac <= 1.0 ) then 
+       RadVisFrac   = RadSwVisFrac
     else
-       VisFrac=RadVisFrac
+       RadSwVisFrac = RadVisFrac
     endif
 
     if ( CosSolarZenithAngle <= 0.0 ) RadSwDownRefHeight = 0.0                  ! filter by solar zenith angle

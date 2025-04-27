@@ -12,7 +12,7 @@ module SnowWaterMainGlacierMod
   use SnowLayerCombineMod,         only : SnowLayerCombine
   use SnowLayerDivideMod,          only : SnowLayerDivide
   use SnowpackHydrologyGlacierMod, only : SnowpackHydrologyGlacier
-  use SnowAerosolSnicarMod
+  use SnowAerosolSnicarMod,        only : SnowAerosolSnicar
 
   implicit none
 
@@ -40,18 +40,18 @@ contains
               NumSnowLayerMax        => noahmp%config%domain%NumSnowLayerMax        ,& ! in,    maximum number of snow layers
               NumSoilLayer           => noahmp%config%domain%NumSoilLayer           ,& ! in,    number of soil layers
               MainTimeStep           => noahmp%config%domain%MainTimeStep           ,& ! in,    noahmp main time step [s]
-              OptSnowAlbedo          => noahmp%config%nmlist%OptSnowAlbedo          ,& ! in,    options for ground snow surface albedo
               DepthSoilLayer         => noahmp%config%domain%DepthSoilLayer         ,& ! in,    depth [m] of layer-bottom from soil surface
+              OptSnowAlbedo          => noahmp%config%nmlist%OptSnowAlbedo          ,& ! in,    options for ground snow surface albedo
               OptSnowCompaction      => noahmp%config%nmlist%OptSnowCompaction      ,& ! in,    options for ground snowpack compaction
               SnoWatEqvMaxGlacier    => noahmp%water%param%SnoWatEqvMaxGlacier      ,& ! in,    Maximum SWE allowed at glaciers [mm]
               ThicknessSnowSoilLayer => noahmp%config%domain%ThicknessSnowSoilLayer ,& ! inout, thickness of snow/soil layers [m]
               DepthSnowSoilLayer     => noahmp%config%domain%DepthSnowSoilLayer     ,& ! inout, depth of snow/soil layer-bottom [m]
               NumSnowLayerNeg        => noahmp%config%domain%NumSnowLayerNeg        ,& ! inout, actual number of snow layers (negative)
+              TemperatureSoilSnow    => noahmp%energy%state%TemperatureSoilSnow     ,& ! inout, snow and soil layer temperature [K]
               SnowDepth              => noahmp%water%state%SnowDepth                ,& ! inout, snow depth [m]
               SnowWaterEquiv         => noahmp%water%state%SnowWaterEquiv           ,& ! inout, snow water equivalent [mm]
               SnowIce                => noahmp%water%state%SnowIce                  ,& ! inout, snow layer ice [mm]
               SnowLiqWater           => noahmp%water%state%SnowLiqWater             ,& ! inout, snow layer liquid water [mm]
-              TemperatureSoilSnow    => noahmp%energy%state%TemperatureSoilSnow     ,& ! inout, snow and soil layer temperature [K]
               MassBChydropho         => noahmp%water%state%MassBChydropho           ,& ! inout, mass of hydrophobic Black Carbon in snow [kg m-2]
               MassBChydrophi         => noahmp%water%state%MassBChydrophi           ,& ! inout, mass of hydrophillic Black Carbon in snow [kg m-2]
               MassOChydropho         => noahmp%water%state%MassOChydropho           ,& ! inout, mass of hydrophobic Organic Carbon in snow [kg m-2]
@@ -63,7 +63,7 @@ contains
               MassDust5              => noahmp%water%state%MassDust5                ,& ! inout, mass of dust species 5 in snow [kg m-2]
               GlacierExcessFlow      => noahmp%water%flux%GlacierExcessFlow         ,& ! out,   glacier excess flow [mm/s]
               PondSfcThinSnwComb     => noahmp%water%state%PondSfcThinSnwComb       ,& ! out,   surface ponding [mm] from liquid in thin snow layer combination
-              PondSfcThinSnwTrans    => noahmp%water%state%PondSfcThinSnwTrans       & ! out,   surface ponding [mm] from thin snow liquid during transition from multilayer to no layer
+              PondSfcThinSnwTrans    => noahmp%water%state%PondSfcThinSnwTrans       & ! out,   surface ponding [mm] from thin snow when changing from multilayer to no layer
              )
 ! ----------------------------------------------------------------------
 
@@ -100,17 +100,16 @@ contains
        DepthSnowSoilLayer(LoopInd)     = 0.0
 
        if ( (OptSnowAlbedo == 3) .and. (NumSnowLayerNeg < 0) ) then
-          MassBChydropho(LoopInd)         = 0.0
-          MassBChydrophi(LoopInd)         = 0.0
-          MassOChydropho(LoopInd)         = 0.0
-          MassOChydrophi(LoopInd)         = 0.0
-          MassDust1(LoopInd)              = 0.0
-          MassDust2(LoopInd)              = 0.0
-          MassDust3(LoopInd)              = 0.0
-          MassDust4(LoopInd)              = 0.0
-          MassDust5(LoopInd)              = 0.0
+          MassBChydropho(LoopInd)      = 0.0
+          MassBChydrophi(LoopInd)      = 0.0
+          MassOChydropho(LoopInd)      = 0.0
+          MassOChydrophi(LoopInd)      = 0.0
+          MassDust1(LoopInd)           = 0.0
+          MassDust2(LoopInd)           = 0.0
+          MassDust3(LoopInd)           = 0.0
+          MassDust4(LoopInd)           = 0.0
+          MassDust5(LoopInd)           = 0.0
        endif
-
     enddo
 
     ! to obtain equilibrium state of snow in glacier region
@@ -133,11 +132,10 @@ contains
           MassDust4(0)            = MassDust4(0) * GlacierExcessRemainFrac
           MassDust5(0)            = MassDust5(0) * GlacierExcessRemainFrac
        endif
-
     endif
 
-    !SNICAR
-    if ( OptSnowAlbedo == 3 )    call SnowAerosolSnicar(noahmp)
+    ! SNICAR
+    if ( OptSnowAlbedo == 3 ) call SnowAerosolSnicar(noahmp)
 
     ! sum up snow mass for layered snow
     if ( NumSnowLayerNeg < 0 ) then  ! MB: only do for multi-layer

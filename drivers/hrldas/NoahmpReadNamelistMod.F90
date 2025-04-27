@@ -59,7 +59,6 @@ contains
     real(kind=kind_noahmp)  :: urban_atmosphere_thickness = 2.0
     real(kind=kind_noahmp)  :: soil_timestep    = 0.0   ! soil timestep (default=0: same as main noahmp timestep)
 
-    ! derived urban dimensions
     character(len=256)      :: forcing_name_T  = "T2D"
     character(len=256)      :: forcing_name_Q  = "Q2D"
     character(len=256)      :: forcing_name_U  = "U2D"
@@ -105,12 +104,15 @@ contains
     character(len=256)      :: external_lai_filename_template     = " "
     character(len=256)      :: agdata_flnm                        = " "
     character(len=256)      :: tdinput_flnm                       = " "
+    character(len=256)      :: snicar_optic_flnm                  = "snicar_optics_5bnd_c013122.nc"
+    character(len=256)      :: snicar_age_flnm                    = "snicar_drdt_bst_fit_60_c070416.nc"
     integer                 :: xstart                             = 1
     integer                 :: ystart                             = 1
     integer                 :: xend                               = 0
     integer                 :: yend                               = 0
     integer, parameter      :: MAX_SOIL_LEVELS                    = 10     ! maximum soil levels in namelist
     real(kind=kind_noahmp), dimension(MAX_SOIL_LEVELS) :: soil_thick_input ! depth to soil interfaces from namelist [m]
+
     ! Snow, Ice, and Aerosol Radiative (SNICAR) model parameters
     integer                 :: snicar_bandnumber_option           = 1
     integer                 :: snicar_solarspec_option            = 1
@@ -120,18 +122,18 @@ contains
     integer                 :: snicar_snowshape_option            = 3
     logical                 :: snicar_use_aerosol                 = .true.
     logical                 :: snicar_snowbc_intmix               = .true.
-    logical                 :: snicar_snowdust_intmix             = .true.
-    logical                 :: snicar_use_oc                      = .true.
+    logical                 :: snicar_snowdust_intmix             = .false.
+    logical                 :: snicar_use_oc                      = .false.
     logical                 :: snicar_aerosol_readtable           = .false.
-    character(len=256)      :: forcing_name_BCPHI  = "BCPHI"
-    character(len=256)      :: forcing_name_BCPHO  = "BCPHO"
-    character(len=256)      :: forcing_name_OCPHI  = "OCPHI"
-    character(len=256)      :: forcing_name_OCPHO  = "OCPHO"
-    character(len=256)      :: forcing_name_DUST1  = "DUST1"
-    character(len=256)      :: forcing_name_DUST2  = "DUST2"
-    character(len=256)      :: forcing_name_DUST3  = "DUST3"
-    character(len=256)      :: forcing_name_DUST4  = "DUST4"
-    character(len=256)      :: forcing_name_DUST5  = "DUST5"
+    character(len=256)      :: forcing_name_BCPHI                 = "BCPHI"
+    character(len=256)      :: forcing_name_BCPHO                 = "BCPHO"
+    character(len=256)      :: forcing_name_OCPHI                 = "OCPHI"
+    character(len=256)      :: forcing_name_OCPHO                 = "OCPHO"
+    character(len=256)      :: forcing_name_DUST1                 = "DUST1"
+    character(len=256)      :: forcing_name_DUST2                 = "DUST2"
+    character(len=256)      :: forcing_name_DUST3                 = "DUST3"
+    character(len=256)      :: forcing_name_DUST4                 = "DUST4"
+    character(len=256)      :: forcing_name_DUST5                 = "DUST5"
 
     namelist / NOAHLSM_OFFLINE /    &
 #ifdef WRF_HYDRO
@@ -157,7 +159,7 @@ contains
          num_urban_nf ,num_urban_nz,num_urban_nbui,num_urban_ngr ,                        &
          split_output_count,                                                              & 
          khour, kday, zlvl, hrldas_setup_file,                                            &
-         spatial_filename, agdata_flnm, tdinput_flnm,                                     &
+         spatial_filename, agdata_flnm, tdinput_flnm, snicar_optic_flnm, snicar_age_flnm, &
          external_veg_filename_template, external_lai_filename_template,                  &
          xstart, xend, ystart, yend,                                                      &
          snicar_bandnumber_option, snicar_solarspec_option, snicar_snowoptics_option,     &
@@ -427,6 +429,8 @@ contains
     NoahmpIO%MAX_SOIL_LEVELS                   = MAX_SOIL_LEVELS
     NoahmpIO%soil_thick_input                  = soil_thick_input 
     ! SNICAR
+    NoahmpIO%snicar_optic_flnm                 = snicar_optic_flnm
+    NoahmpIO%snicar_age_flnm                   = snicar_age_flnm
     NoahmpIO%SNICAR_BANDNUMBER_OPT             = snicar_bandnumber_option
     NoahmpIO%SNICAR_SOLARSPEC_OPT              = snicar_solarspec_option
     NoahmpIO%SNICAR_SNOWOPTICS_OPT             = snicar_snowoptics_option

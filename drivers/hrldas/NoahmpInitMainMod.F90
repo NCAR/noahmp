@@ -38,12 +38,11 @@ contains
     jde = NoahmpIO%jde+1 
     its = NoahmpIO%its
     jts = NoahmpIO%jts
+    itf = min0(NoahmpIO%ite, ide-1)
+    jtf = min0(NoahmpIO%jte, jde-1)
 
     ! only initialize for non-restart case
     if ( .not. NoahmpIO%restart_flag ) then
-
-       itf = min0(NoahmpIO%ite, ide-1)
-       jtf = min0(NoahmpIO%jte, jde-1)
 
        ! initialize physical snow height SNOWH
        if ( .not. NoahmpIO%FNDSNOWH ) then
@@ -269,42 +268,38 @@ contains
           NoahmpIO%STEPWTD = max(NoahmpIO%STEPWTD,1)
        endif
 
-    else
-
-       if (NoahmpIO%IOPT_ALB == 3 )then
-          itf = min0(NoahmpIO%ite, ide-1)
-          jtf = min0(NoahmpIO%jte, jde-1)
-          do J = jts, jtf
-             do I = its, itf
-                do IZ = -NoahmpIO%NSNOW+1, 0
-                   if ((NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J)) > 0.0) then
-                      NoahmpIO%MassConcBCPHIXY (I,IZ,J)  = NoahmpIO%BCPHIXY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
-                      NoahmpIO%MassConcBCPHOXY (I,IZ,J)  = NoahmpIO%BCPHOXY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
-                      NoahmpIO%MassConcOCPHIXY (I,IZ,J)  = NoahmpIO%OCPHIXY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
-                      NoahmpIO%MassConcOCPHOXY (I,IZ,J)  = NoahmpIO%OCPHOXY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
-                      NoahmpIO%MassConcDUST1XY (I,IZ,J)  = NoahmpIO%DUST1XY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
-                      NoahmpIO%MassConcDUST2XY (I,IZ,J)  = NoahmpIO%DUST2XY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
-                      NoahmpIO%MassConcDUST3XY (I,IZ,J)  = NoahmpIO%DUST3XY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
-                      NoahmpIO%MassConcDUST4XY (I,IZ,J)  = NoahmpIO%DUST4XY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
-                      NoahmpIO%MassConcDUST5XY (I,IZ,J)  = NoahmpIO%DUST5XY (I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J))
-                   else
-                      NoahmpIO%MassConcBCPHIXY (I,IZ,J)  = 0.0
-                      NoahmpIO%MassConcBCPHOXY (I,IZ,J)  = 0.0
-                      NoahmpIO%MassConcOCPHIXY (I,IZ,J)  = 0.0
-                      NoahmpIO%MassConcOCPHOXY (I,IZ,J)  = 0.0
-                      NoahmpIO%MassConcDUST1XY (I,IZ,J)  = 0.0
-                      NoahmpIO%MassConcDUST2XY (I,IZ,J)  = 0.0
-                      NoahmpIO%MassConcDUST3XY (I,IZ,J)  = 0.0
-                      NoahmpIO%MassConcDUST4XY (I,IZ,J)  = 0.0
-                      NoahmpIO%MassConcDUST5XY (I,IZ,J)  = 0.0
-                   endif
-                enddo
-             enddo
-          enddo            
-       endif
-
     endif ! NoahmpIO%restart_flag
- 
+
+    if ( NoahmpIO%IOPT_ALB == 3 ) then ! initialize SNICAR aerosol content in snow
+       do J = jts, jtf
+          do I = its, itf
+             do IZ = -NoahmpIO%NSNOW+1, 0
+                if ( (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J)) > 0.0 ) then
+                   NoahmpIO%MassConcBCPHIXY(I,IZ,J) = NoahmpIO%BCPHIXY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                   NoahmpIO%MassConcBCPHOXY(I,IZ,J) = NoahmpIO%BCPHOXY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                   NoahmpIO%MassConcOCPHIXY(I,IZ,J) = NoahmpIO%OCPHIXY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                   NoahmpIO%MassConcOCPHOXY(I,IZ,J) = NoahmpIO%OCPHOXY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                   NoahmpIO%MassConcDUST1XY(I,IZ,J) = NoahmpIO%DUST1XY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                   NoahmpIO%MassConcDUST2XY(I,IZ,J) = NoahmpIO%DUST2XY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                   NoahmpIO%MassConcDUST3XY(I,IZ,J) = NoahmpIO%DUST3XY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                   NoahmpIO%MassConcDUST4XY(I,IZ,J) = NoahmpIO%DUST4XY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                   NoahmpIO%MassConcDUST5XY(I,IZ,J) = NoahmpIO%DUST5XY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                else
+                   NoahmpIO%MassConcBCPHIXY(I,IZ,J) = 0.0
+                   NoahmpIO%MassConcBCPHOXY(I,IZ,J) = 0.0
+                   NoahmpIO%MassConcOCPHIXY(I,IZ,J) = 0.0
+                   NoahmpIO%MassConcOCPHOXY(I,IZ,J) = 0.0
+                   NoahmpIO%MassConcDUST1XY(I,IZ,J) = 0.0
+                   NoahmpIO%MassConcDUST2XY(I,IZ,J) = 0.0
+                   NoahmpIO%MassConcDUST3XY(I,IZ,J) = 0.0
+                   NoahmpIO%MassConcDUST4XY(I,IZ,J) = 0.0
+                   NoahmpIO%MassConcDUST5XY(I,IZ,J) = 0.0
+                endif
+             enddo
+          enddo
+       enddo            
+    endif
+
   end subroutine NoahmpInitMain    
 
 end module NoahmpInitMainMod

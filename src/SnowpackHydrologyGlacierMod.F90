@@ -134,16 +134,16 @@ contains
        SnowLiqWater(LoopInd)     = SnowLiqWater(LoopInd) + InflowSnowLayer
        SnowLiqVol(LoopInd)       = SnowLiqWater(LoopInd) / (ThicknessSnowSoilLayer(LoopInd)*ConstDensityWater)
        OutflowSnowLayer(LoopInd) = max(0.0, (SnowLiqVol(LoopInd) - SnowLiqHoldCap*SnowEffPorosity(LoopInd)) * &
-                                     ThicknessSnowSoilLayer(LoopInd))
+                                       ThicknessSnowSoilLayer(LoopInd))
        if ( LoopInd == 0 ) then
           OutflowSnowLayer(LoopInd) = max((SnowLiqVol(LoopInd)-SnowEffPorosity(LoopInd)) * ThicknessSnowSoilLayer(LoopInd), &
-                                        SnowLiqReleaseFac * MainTimeStep * OutflowSnowLayer(LoopInd))
+                                          SnowLiqReleaseFac * MainTimeStep * OutflowSnowLayer(LoopInd))
        endif
-       OutflowSnowLayer(LoopInd)    = OutflowSnowLayer(LoopInd) * ConstDensityWater
-       SnowLiqWater(LoopInd) = SnowLiqWater(LoopInd) - OutflowSnowLayer(LoopInd)
+       OutflowSnowLayer(LoopInd) = OutflowSnowLayer(LoopInd) * ConstDensityWater
+       SnowLiqWater(LoopInd)     = SnowLiqWater(LoopInd) - OutflowSnowLayer(LoopInd)
        if ( ( SnowLiqWater(LoopInd) / (SnowIce(LoopInd)+SnowLiqWater(LoopInd)) ) > SnowLiqFracMax ) then
           OutflowSnowLayer(LoopInd) = OutflowSnowLayer(LoopInd) + &
-                                        (SnowLiqWater(LoopInd) - SnowLiqFracMax/(1.0-SnowLiqFracMax) * SnowIce(LoopInd))
+                                      (SnowLiqWater(LoopInd) - SnowLiqFracMax/(1.0-SnowLiqFracMax) * SnowIce(LoopInd))
           SnowLiqWater(LoopInd) = SnowLiqFracMax / (1.0 - SnowLiqFracMax) * SnowIce(LoopInd)
        endif
        InflowSnowLayer = OutflowSnowLayer(LoopInd)
@@ -156,7 +156,7 @@ contains
     enddo
 
     ! Liquid water from snow bottom to soil (mm/s)
-    SnowBotOutflow = OutflowSnowLayer(0) / MainTimeStep
+    SnowBotOutflow      = OutflowSnowLayer(0) / MainTimeStep
     OutflowSnowLayer(:) = OutflowSnowLayer(:) / MainTimeStep
 
     ! deallocate local arrays to avoid memory leaks

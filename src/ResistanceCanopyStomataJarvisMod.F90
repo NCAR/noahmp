@@ -71,7 +71,6 @@ contains
     if ( IndexShade == 0 ) RadPhotoActAbsTmp = RadPhotoActAbsSunlit / max(VegFrac,1.0e-6) ! Sunlit case
     if ( IndexShade == 1 ) RadPhotoActAbsTmp = RadPhotoActAbsShade  / max(VegFrac,1.0e-6) ! Shaded case
 
-
     ! compute MixingRatioTmp and MixingRatioSat
     SpecHumidityTmp = 0.622 * PressureVaporCanAir / (PressureAirRefHeight - 0.378*PressureVaporCanAir) ! specific humidity
     MixingRatioTmp  = SpecHumidityTmp / (1.0 - SpecHumidityTmp)   ! convert to mixing ratio [kg/kg]

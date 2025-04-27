@@ -82,17 +82,15 @@ contains
           if ( SoilIce < 0.0 ) SoilIce = 0.0
 1001      Continue
           if ( .not. ((NumIter < 10) .and. (IndCnt == 0)) ) goto 1002
-          NumIter    = NumIter +1
+          NumIter = NumIter +1
 #ifdef DOUBLE_PREC
-
-          DF         = dlog((SoilMatPotentialSat(IndSoil)*ConstGravityAcc/ConstLatHeatFusion) * &
-                       ((1.0 + CK*SoilIce)**2.0) * (SoilMoistureSat(IndSoil)/(SoilMoisture - SoilIce))**SoilExpB) - &
-                       dlog(-(SoilTemperature - ConstFreezePoint) / SoilTemperature)
+          DF = dlog((SoilMatPotentialSat(IndSoil)*ConstGravityAcc/ConstLatHeatFusion) * &
+               ((1.0 + CK*SoilIce)**2.0) * (SoilMoistureSat(IndSoil)/(SoilMoisture - SoilIce))**SoilExpB) - &
+               dlog(-(SoilTemperature - ConstFreezePoint) / SoilTemperature)
 #else
-          DF         = alog((SoilMatPotentialSat(IndSoil)*ConstGravityAcc/ConstLatHeatFusion) * &
-                       ((1.0 + CK*SoilIce)**2.0) * (SoilMoistureSat(IndSoil)/(SoilMoisture - SoilIce))**SoilExpB) - &
-                       alog(-(SoilTemperature - ConstFreezePoint) / SoilTemperature)
-
+          DF = alog((SoilMatPotentialSat(IndSoil)*ConstGravityAcc/ConstLatHeatFusion) * &
+               ((1.0 + CK*SoilIce)**2.0) * (SoilMoistureSat(IndSoil)/(SoilMoisture - SoilIce))**SoilExpB) - &
+               alog(-(SoilTemperature - ConstFreezePoint) / SoilTemperature)
 #endif
           Denom      = 2.0 * CK / (1.0 + CK * SoilIce) + SoilExpB / (SoilMoisture - SoilIce)
           SoilIceTmp = SoilIce - DF / Denom

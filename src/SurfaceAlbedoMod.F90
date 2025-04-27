@@ -25,7 +25,6 @@ contains
 ! Original Noah-MP subroutine: ALBEDO
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
-! SNICAR: Adding snicar snow albedo (T.-S. Lin, C. He et al. 2023)
 ! -------------------------------------------------------------------------
 
     implicit none
@@ -55,8 +54,6 @@ contains
               AlbedoGrdDif        => noahmp%energy%state%AlbedoGrdDif         ,& ! out, ground albedo (diffuse: vis, nir)
               AlbedoSnowDir       => noahmp%energy%state%AlbedoSnowDir        ,& ! out, snow albedo for direct(1=vis, 2=nir)
               AlbedoSnowDif       => noahmp%energy%state%AlbedoSnowDif        ,& ! out, snow albedo for diffuse(1=vis, 2=nir)
-              FracRadSwAbsSnowDir => noahmp%energy%flux%FracRadSwAbsSnowDir   ,& ! out, direct solar flux factor absorbed by snow [frc] (-NumSnowLayerMax+1:1,NumSwRadBand)
-              FracRadSwAbsSnowDif => noahmp%energy%flux%FracRadSwAbsSnowDif   ,& ! out, diffuse solar flux factor absorbed by snow [frc] (-NumSnowLayerMax+1:1,NumSwRadBand)
               AlbedoSfcDir        => noahmp%energy%state%AlbedoSfcDir         ,& ! out, surface albedo (direct)
               AlbedoSfcDif        => noahmp%energy%state%AlbedoSfcDif         ,& ! out, surface albedo (diffuse)
               CanopySunlitFrac    => noahmp%energy%state%CanopySunlitFrac     ,& ! out, sunlit fraction of canopy
@@ -69,6 +66,8 @@ contains
               TransmittanceVeg    => noahmp%energy%state%TransmittanceVeg     ,& ! out, leaf/stem transmittance weighted by fraction LAI and SAI
               VegAreaIndEff       => noahmp%energy%state%VegAreaIndEff        ,& ! out, one-sided leaf+stem area index [m2/m2]
               VegAreaProjDir      => noahmp%energy%state%VegAreaProjDir       ,& ! out, projected leaf+stem area in solar direction
+              FracRadSwAbsSnowDir => noahmp%energy%flux%FracRadSwAbsSnowDir   ,& ! out, direct solar flux factor absorbed by snow [frc]
+              FracRadSwAbsSnowDif => noahmp%energy%flux%FracRadSwAbsSnowDif   ,& ! out, diffuse solar flux factor absorbed by snow [frc]
               RadSwAbsVegDir      => noahmp%energy%flux%RadSwAbsVegDir        ,& ! out, flux abs by veg (per unit direct flux)
               RadSwAbsVegDif      => noahmp%energy%flux%RadSwAbsVegDif        ,& ! out, flux abs by veg (per unit diffuse flux)
               RadSwDirTranGrdDir  => noahmp%energy%flux%RadSwDirTranGrdDir    ,& ! out, down direct flux below veg (per unit dir flux)
@@ -113,7 +112,7 @@ contains
     VegAreaIndEff = LeafAreaIndEff + StemAreaIndEff
 
     ! snow aging (allow nighttime BATS snow albedo aging)
-    call SnowAgingBats(noahmp)
+    if ( OptSnowAlbedo == 1 ) call SnowAgingBats(noahmp)
 
     ! snow grain size and aging for SNICAR
     if ( OptSnowAlbedo == 3 ) then
@@ -133,9 +132,9 @@ contains
        enddo
 
        ! snow albedos
-       if ( OptSnowAlbedo == 1 )  call SnowAlbedoBats(noahmp)
-       if ( OptSnowAlbedo == 2 )  call SnowAlbedoClass(noahmp)
-       if ( OptSnowAlbedo == 3 )  call SnowAlbedoSnicar(noahmp)
+       if ( OptSnowAlbedo == 1 ) call SnowAlbedoBats(noahmp)
+       if ( OptSnowAlbedo == 2 ) call SnowAlbedoClass(noahmp)
+       if ( OptSnowAlbedo == 3 ) call SnowAlbedoSnicar(noahmp)
 
        ! ground surface albedo
        call GroundAlbedo(noahmp)

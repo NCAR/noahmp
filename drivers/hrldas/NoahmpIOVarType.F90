@@ -111,11 +111,11 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MP_HAIL             ! hail precipitation entering land model [mm]       ! MB/AN : v3.7 
     
 #ifdef WRF_HYDRO
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: infxsrt              ! surface infiltration
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: sfcheadrt            ! surface water head
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: soldrain             ! soil drainage
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: qtiledrain           ! tile drainage
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    :: ZWATBLE2D            ! water table depth
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  infxsrt             ! surface infiltration
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  sfcheadrt           ! surface water head
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  soldrain            ! soil drainage
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  qtiledrain          ! tile drainage
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ZWATBLE2D           ! water table depth
 #endif
 
     ! Spatially varying fields (for now it is de-activated)
@@ -362,6 +362,7 @@ module NoahmpIOVarType
 !------------------------------------------------------------------------
 ! Needed for SNICAR SNOW ALBEDO (IOPT_ALB = 3)
 !------------------------------------------------------------------------
+
     integer                                                ::  SNICAR_BANDNUMBER_OPT         !number of wavelength bands used in SNICAR snow albedo calculation
                                                                                              ! 1->5;2->480
     integer                                                ::  SNICAR_SOLARSPEC_OPT          !type of downward solar radiation spectrum for SNICAR snow albedo calculation
@@ -390,9 +391,15 @@ module NoahmpIOVarType
     integer                                                ::  idx_T_max         = 11        ! maxiumum temperature index used in aging lookup table [idx]
     integer                                                ::  idx_Tgrd_max      = 31        ! maxiumum temperature gradient index used in aging lookup table [idx]
     integer                                                ::  idx_rhos_max      = 8         ! maxiumum snow density index used in aging lookup table [idx]
-    integer                                                ::  idx_T_min         = 1         ! minimum temperature index used in aging lookup table [idx]
-    integer                                                ::  idx_Tgrd_min      = 1         ! minimum temperature gradient index used in aging lookup table [idx]
-    integer                                                ::  idx_rhos_min      = 1         ! minimum snow density index used in aging lookup table [idx]
+    character(len=256)                                     ::  forcing_name_BCPHI            ! forcing variable for hydrophilic black carbon deposition flux [kg/m2/s]
+    character(len=256)                                     ::  forcing_name_BCPHO            ! forcing variable for hydrophobic black carbon deposition flux [kg/m2/s]
+    character(len=256)                                     ::  forcing_name_OCPHI            ! forcing variable for hydrophilic organic carbon deposition flux [kg/m2/s]
+    character(len=256)                                     ::  forcing_name_OCPHO            ! forcing variable for hydrophobic organic carbon deposition flux [kg/m2/s]
+    character(len=256)                                     ::  forcing_name_DUST1            ! forcing variable for dust size bin 1 deposition flux [kg/m2/s]
+    character(len=256)                                     ::  forcing_name_DUST2            ! forcing variable for dust size bin 2 deposition flux [kg/m2/s]
+    character(len=256)                                     ::  forcing_name_DUST3            ! forcing variable for dust size bin 3 deposition flux [kg/m2/s]
+    character(len=256)                                     ::  forcing_name_DUST4            ! forcing variable for dust size bin 4 deposition flux [kg/m2/s]
+    character(len=256)                                     ::  forcing_name_DUST5            ! forcing variable for dust size bin 5 deposition flux [kg/m2/s]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ss_alb_snw_drc                ! Mie single scatter albedos for direct-beam ice
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  asm_prm_snw_drc               ! asymmetry parameter of direct-beam ice  
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ext_cff_mss_snw_drc           ! mass extinction coefficient for direct-beam ice [m2/kg]
@@ -433,8 +440,6 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  snowage_drdt0                 ! Snow aging parameters retrieved from lookup table [m2 kg-1 hr-1]        
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  SNRDSXY                       ! snow layer effective grain radius [microns, m-6]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  SNFRXY                        ! snow layer rate of snow freezing [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSOILDIRXY                  ! soil albedo (direct)
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSOILDIFXY                  ! soil albedo (diffuse)
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  BCPHIXY                       ! mass of hydrophillic Black Carbon in snow [kg/m2]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  BCPHOXY                       ! mass of hydrophobic Black Carbon in snow [kg/m2]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  OCPHIXY                       ! mass of hydrophillic Organic Carbon in snow [kg/m2]
@@ -462,33 +467,14 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  DepDust3XY                    ! dust species 3 deposition [kg m-2 s-1]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  DepDust4XY                    ! dust species 4 deposition [kg m-2 s-1]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  DepDust5XY                    ! dust species 5 deposition [kg m-2 s-1]
-    real(kind=kind_noahmp)                                 ::  DepBChydropho_TABLE           ! hydrophobic Black Carbon deposition [kg m-2 s-1], assume constant read from table
-    real(kind=kind_noahmp)                                 ::  DepBChydrophi_TABLE           ! hydrophillic Black Carbon deposition [kg m-2 s-1], assume constant read from table
-    real(kind=kind_noahmp)                                 ::  DepOChydropho_TABLE           ! hydrophobic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
-    real(kind=kind_noahmp)                                 ::  DepOChydrophi_TABLE           ! hydrophillic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
-    real(kind=kind_noahmp)                                 ::  DepDust1_TABLE                ! dust species 1 deposition [kg m-2 s-1], assume constant read from table
-    real(kind=kind_noahmp)                                 ::  DepDust2_TABLE                ! dust species 2 deposition [kg m-2 s-1], assume constant read from table
-    real(kind=kind_noahmp)                                 ::  DepDust3_TABLE                ! dust species 3 deposition [kg m-2 s-1], assume constant read from table
-    real(kind=kind_noahmp)                                 ::  DepDust4_TABLE                ! dust species 4 deposition [kg m-2 s-1], assume constant read from table
-    real(kind=kind_noahmp)                                 ::  DepDust5_TABLE                ! dust species 5 deposition [kg m-2 s-1], assume constant read from table
-    real(kind=kind_noahmp)                                 ::  SnowRadiusMin_TABLE           ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
-    real(kind=kind_noahmp)                                 ::  FreshSnowRadiusMax_TABLE      ! maximum warm fresh snow effective radius [microns]
-    real(kind=kind_noahmp)                                 ::  SnowRadiusRefrz_TABLE         ! effective radius of re-frozen snow [microns]
-    character(len=256)                                     ::  forcing_name_BCPHI
-    character(len=256)                                     ::  forcing_name_BCPHO
-    character(len=256)                                     ::  forcing_name_OCPHI
-    character(len=256)                                     ::  forcing_name_OCPHO
-    character(len=256)                                     ::  forcing_name_DUST1
-    character(len=256)                                     ::  forcing_name_DUST2
-    character(len=256)                                     ::  forcing_name_DUST3
-    character(len=256)                                     ::  forcing_name_DUST4
-    character(len=256)                                     ::  forcing_name_DUST5
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSNOWDIRXY        ! snow albedo (direct)
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSNOWDIFXY        ! snow albedo (diffuse)
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIRXY         ! surface albedo (direct)
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIFXY         ! surface albedo (diffuse)
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  VisFrac             ! fraction of visible band
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  DirFrac             ! fraction of direct band
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSOILDIRXY                  ! soil albedo (direct)
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSOILDIFXY                  ! soil albedo (diffuse)
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSNOWDIRXY                  ! snow albedo (direct)
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSNOWDIFXY                  ! snow albedo (diffuse)
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIRXY                   ! surface albedo (direct)
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIFXY                   ! surface albedo (diffuse)
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RadSwVisFrac                  ! fraction of downward solar visible band
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RadSwDirFrac                  ! fraction of downward solar direct band
 
 !------------------------------------------------------------------------
 ! Needed for TILE DRAINAGE IF IOPT_TDRN = 1 OR 2
@@ -796,6 +782,8 @@ module NoahmpIOVarType
     character(len=256)                                     ::  external_lai_filename_template
     character(len=256)                                     ::  agdata_flnm
     character(len=256)                                     ::  tdinput_flnm
+    character(len=256)                                     ::  snicar_optic_flnm  ! SNICAR filename for optics parameters
+    character(len=256)                                     ::  snicar_age_flnm    ! SNICAR filename for snow aging parameters
     integer                                                ::  xstart
     integer                                                ::  ystart
     integer                                                ::  xend
@@ -943,6 +931,34 @@ module NoahmpIOVarType
     real(kind=kind_noahmp)                                 :: PSIWLT_TABLE              ! soil metric potential for wilting point (m)
     real(kind=kind_noahmp)                                 :: Z0SOIL_TABLE              ! Bare-soil roughness length (m) (i.e., under the canopy)
     real(kind=kind_noahmp)                                 :: Z0LAKE_TABLE              ! Lake surface roughness length (m)
+
+    ! SNICAR scheme parameters
+    real(kind=kind_noahmp)                                 :: DepBChydropho_TABLE      ! hydrophobic Black Carbon deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)                                 :: DepBChydrophi_TABLE      ! hydrophillic Black Carbon deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)                                 :: DepOChydropho_TABLE      ! hydrophobic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)                                 :: DepOChydrophi_TABLE      ! hydrophillic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)                                 :: DepDust1_TABLE           ! dust species 1 deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)                                 :: DepDust2_TABLE           ! dust species 2 deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)                                 :: DepDust3_TABLE           ! dust species 3 deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)                                 :: DepDust4_TABLE           ! dust species 4 deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)                                 :: DepDust5_TABLE           ! dust species 5 deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)                                 :: SnowRadiusMin_TABLE      ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
+    real(kind=kind_noahmp)                                 :: FreshSnowRadiusMax_TABLE ! maximum warm fresh snow effective radius [microns]
+    real(kind=kind_noahmp)                                 :: SnowRadiusRefrz_TABLE    ! effective radius of re-frozen snow [microns]
+    real(kind=kind_noahmp)                                 :: ScavEffMeltScale_TABLE   ! Scaling factor modifying scavenging factors for aerosol in meltwater (-)
+    real(kind=kind_noahmp)                                 :: ScavEffMeltBCphi_TABLE   ! scavenging factor for hydrophillic BC inclusion in meltwater [frc]
+    real(kind=kind_noahmp)                                 :: ScavEffMeltBCpho_TABLE   ! scavenging factor for hydrophobic BC inclusion in meltwater  [frc]
+    real(kind=kind_noahmp)                                 :: ScavEffMeltOCphi_TABLE   ! scavenging factor for hydrophillic OC inclusion in meltwater [frc]
+    real(kind=kind_noahmp)                                 :: ScavEffMeltOCpho_TABLE   ! scavenging factor for hydrophobic OC inclusion in meltwater  [frc]
+    real(kind=kind_noahmp)                                 :: ScavEffMeltDust1_TABLE   ! scavenging factor for dust species 1 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp)                                 :: ScavEffMeltDust2_TABLE   ! scavenging factor for dust species 2 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp)                                 :: ScavEffMeltDust3_TABLE   ! scavenging factor for dust species 3 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp)                                 :: ScavEffMeltDust4_TABLE   ! scavenging factor for dust species 4 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp)                                 :: ScavEffMeltDust5_TABLE   ! scavenging factor for dust species 5 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp)                                 :: SnowRadiusMax_TABLE      ! maximum allowed snow effective radius [microns]
+    real(kind=kind_noahmp)                                 :: SnowWetAgeC1Brun89_TABLE ! constant for liquid water grain growth [m3 s-1], from Brun89
+    real(kind=kind_noahmp)                                 :: SnowWetAgeC2Brun89_TABLE ! Constant for liquid water grain growth [m3 s-1], from Brun89: corrected for LWC 
+    real(kind=kind_noahmp)                                 :: SnowAgeScaleFac_TABLE    ! Arbitrary scaling factor applied to snow aging rate (-)
 
     ! irrigation parameters
     integer                                                :: IRR_HAR_TABLE             ! number of days before harvest date to stop irrigation 

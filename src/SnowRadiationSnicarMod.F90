@@ -1,55 +1,51 @@
 module SnowRadiationSnicarMod
 
-! Determine reflectance of, and vertically-resolved solar absorption in, 
-! snow with impurities.
-!
-! Original references on physical models of snow reflectance include: 
-! Wiscombe and Warren [1980] and Warren and Wiscombe [1980],
-! Journal of Atmospheric Sciences, 37,
-!
-! The multi-layer solution for multiple-scattering used here is from:
-! Toon et al. [1989], Rapid calculation of radiative heating rates 
-! and photodissociation rates in inhomogeneous multiple scattering atmospheres, 
-! J. Geophys. Res., 94, D13, 16287-16301
-! The implementation of the SNICAR model in CLM/CSIM is described in:
-! Flanner, M., C. Zender, J. Randerson, and P. Rasch [2007], 
-! Present-day climate forcing and response from black carbon in snow,
-! J. Geophys. Res., 112, D11202, doi: 10.1029/2006JD008003
-!
-! Updated radiative transfer solver:
-!
-! The multi-layer solution for multiple-scattering used here is from:
-! Briegleb, P. and Light, B.: A Delta-Eddington mutiple scattering
-! parameterization for solar radiation in the sea ice component of the
-! community climate system model, 2007.
-! The implementation of the SNICAR-AD model in CLM is described in:
-! Dang et al.2019, Inter-comparison and improvement of 2-stream shortwave
-! radiative transfer models for unified treatment of cryospheric surfaces
-! in ESMs; and Flanner et al. 2021, SNICAR-ADv3: a community tool for modeling 
-! spectral snow albedo
-!
-! To use this new adding-doubling solver, set snicar_rt_solver=2 in CLM namelist
+!!! Determine reflectance of, and vertically-resolved solar absorption in, 
+!!! snow with impurities.
+!!! Original references on physical models of snow reflectance include: 
+!!! Wiscombe and Warren [1980] and Warren and Wiscombe [1980],Journal of Atmospheric Sciences, 37,
+!!! The multi-layer solution for multiple-scattering used here is from:
+!!! Toon et al. [1989], Rapid calculation of radiative heating rates 
+!!! and photodissociation rates in inhomogeneous multiple scattering atmospheres, 
+!!! J. Geophys. Res., 94, D13, 16287-16301
+!!! The implementation of the SNICAR model in CLM/CSIM is described in:
+!!! Flanner, M., C. Zender, J. Randerson, and P. Rasch [2007], 
+!!! Present-day climate forcing and response from black carbon in snow,
+!!! J. Geophys. Res., 112, D11202, doi: 10.1029/2006JD008003
+!!! Updated radiative transfer solver:
+!!! The multi-layer solution for multiple-scattering used here is from:
+!!! Briegleb, P. and Light, B.: A Delta-Eddington mutiple scattering
+!!! parameterization for solar radiation in the sea ice component of the
+!!! community climate system model, 2007.
+!!! The implementation of the SNICAR-AD model in CLM is described in:
+!!! Dang et al.2019, Inter-comparison and improvement of 2-stream shortwave
+!!! radiative transfer models for unified treatment of cryospheric surfaces
+!!! in ESMs; and Flanner et al. 2021, SNICAR-ADv3: a community tool for modeling 
+!!! spectral snow albedo
 
   use Machine
   use NoahmpVarType
   use ConstantDefineMod
   use PiecewiseLinearInterp1dMod
+
   implicit none
 
 contains
 
-  subroutine SnowRadiationSnicar(noahmp,flg_slr_in)
+  subroutine SnowRadiationSnicar(noahmp,FlagSwRadType)
 
 ! ------------------------ Code history -----------------------------------
-! Original CTSM subroutine: SNICAR_RT
-! Refactered code: T.-S. Lin, C. He, et al. (2023)
+! Implementation: T.-S. Lin, C. He, et al. (2025, JHM)
+! Adapted from SNICAR module SNICAR_RT from CTSM
 ! -------------------------------------------------------------------------
 
     implicit none
 
     type(noahmp_type), intent(inout)   :: noahmp
-    integer,           intent(in)      :: flg_slr_in              ! flag: =1 for direct-beam incident flux,=2 for diffuse incident flux
+    integer,           intent(in)      :: FlagSwRadType           ! flag: =1 for direct-beam incident flux,=2 for diffuse incident flux
+
 ! local variables
+    ! general local variables
     integer                            :: i,idb,igb
     integer                            :: j                       ! aerosol number index [idx]
     integer                            :: n                       ! tridiagonal matrix index [idx]
@@ -84,7 +80,7 @@ contains
     real(kind=kind_noahmp)             :: F_abs_sum               ! total absorbed energy in column [W/m^2]
     real(kind=kind_noahmp)             :: flx_sum                 ! temporary summation variable for NIR weighting
 
-    ! cconstant and coefficients used for SZA parameterization
+    ! local constant and coefficients used for SZA parameterization
     real(kind=kind_noahmp)             :: sza_a0 =  0.085730
     real(kind=kind_noahmp)             :: sza_a1 = -0.630883
     real(kind=kind_noahmp)             :: sza_a2 =  1.303723
@@ -99,7 +95,7 @@ contains
     real(kind=kind_noahmp)             :: flx_sza_adjust          ! direct NIR flux adjustment from sza_factor
     real(kind=kind_noahmp)             :: mu0                     ! incident solar zenith angle
 
-    ! constants used in algorithm
+    ! local constants used in algorithm
     real(kind=kind_noahmp)             :: mu_not                  ! cosine of solar zenith angle (used locally) [frc]
     real(kind=kind_noahmp)             :: c0     = 0.0
     real(kind=kind_noahmp)             :: c1     = 1.0
@@ -126,7 +122,8 @@ contains
     real(kind=kind_noahmp)             :: g_Cg_intp               ! interpolated asymmetry factor correction coeff to target bands
     real(kind=kind_noahmp)             :: gg_F07_intp             ! interpolated asymmetry factor related to geometric reflection & refraction
     real(kind=kind_noahmp)             :: g_ice_F07               ! asymmetry factor for Fu 2007 parameterization value
-    ! variables used for nonspherical snow grain treatment (He et al. 2017 J of Climate):
+
+    ! local variables used for nonspherical snow grain treatment (He et al. 2017 J of Climate):
     ! Constants and parameters for aspherical ice particles    
     ! asymmetry factor parameterization coefficients (6 bands) from Table 3 & Eqs. 6-7 in He et al. (2017)
     real(kind=kind_noahmp)             :: g_wvl(1:8)              ! wavelength (um) division point
@@ -161,7 +158,8 @@ contains
     real(kind=kind_noahmp)             :: enh_omg_bcint_intp2      ! BC-induced enhancement in snow 1-omega interpolated to CLM wavelength
     real(kind=kind_noahmp)             :: wvl_doint                ! wavelength doing BC-snow int mixing (<=1.2um)
     integer                            :: ibb                      ! loop index
-    ! variables used for dust-snow internal mixing (He et al. 2019 JAMES):
+
+    ! local variables used for dust-snow internal mixing (He et al. 2019 JAMES):
     real(kind=kind_noahmp)             :: enh_omg_dstint           ! dust-induced enhancement in snow single-scattering co-albedo (1-omega)
     real(kind=kind_noahmp)             :: enh_omg_dstint_tmp(1:6)  ! temporary dust-induced enhancement in snow 1-omega
     real(kind=kind_noahmp)             :: enh_omg_dstint_tmp2(1:6) ! temporary dust-induced enhancement in snow 1-omega
@@ -173,16 +171,17 @@ contains
     real(kind=kind_noahmp)             :: enh_omg_dstint_intp      ! dust-induced enhancement in snow 1-omega (logscale) interpolated to CLM wavelength
     real(kind=kind_noahmp)             :: enh_omg_dstint_intp2     ! dust-induced enhancement in snow 1-omega interpolated to CLM wavelength
     real(kind=kind_noahmp)             :: tot_dst_snw_conc         ! total dust content in snow across all size bins (ppm=ug/g)
-    real(kind=kind_noahmp), allocatable, dimension(:) :: sno_shp ! Snow shape type: 1=sphere; 2=spheroid; 3=hexagonal plate; 4=koch snowflake
-                                                                 ! currently only assuming same shapes for all snow layers
-    real(kind=kind_noahmp), allocatable, dimension(:) :: sno_fs  ! Snow shape factor: ratio of nonspherical grain effective radii to that of equal-volume sphere
-                                                                 ! only activated when OptSnicarSnowShape > 1 (i.e. nonspherical)
-                                                                 ! 0=use recommended default value (He et al. 2017);
-                                                                 ! others(0<sno_fs<1)= user-specified value
-    real(kind=kind_noahmp), allocatable, dimension(:) :: sno_AR  ! Snow grain aspect ratio: ratio of grain width to length
-                                                                 ! only activated when snicar_snw_shape > 1 (i.e. nonspherical)
-                                                                 ! 0=use recommended default value (He et al. 2017);
-                                                                 ! others(0.1<fs<20)= use user-specified value
+    real(kind=kind_noahmp), allocatable, dimension(:) :: sno_shp   ! Snow shape type: 1=sphere; 2=spheroid; 3=hexagonal plate; 4=koch snowflake
+                                                                   ! currently only assuming same shapes for all snow layers
+    real(kind=kind_noahmp), allocatable, dimension(:) :: sno_fs    ! Snow shape factor: ratio of nonspherical grain effective radii to that of equal-volume sphere
+                                                                   ! only activated when OptSnicarSnowShape > 1 (i.e. nonspherical)
+                                                                   ! 0=use recommended default value (He et al. 2017);
+                                                                   ! others(0<sno_fs<1)= user-specified value
+    real(kind=kind_noahmp), allocatable, dimension(:) :: sno_AR    ! Snow grain aspect ratio: ratio of grain width to length
+                                                                   ! only activated when snicar_snw_shape > 1 (i.e. nonspherical)
+                                                                   ! 0=use recommended default value (He et al. 2017);
+                                                                   ! others(0.1<fs<20)= use user-specified value
+    ! other local snow and energy flux variables
     real(kind=kind_noahmp), allocatable, dimension(:) :: h2osno_liq_lcl       ! liquid water mass [kg/m2]
     real(kind=kind_noahmp), allocatable, dimension(:) :: h2osno_ice_lcl       ! ice mass [kg/m2]
     real(kind=kind_noahmp), allocatable, dimension(:) :: albsfc_lcl           ! albedo of underlying surface [frc]
@@ -213,198 +212,182 @@ contains
     real(kind=kind_noahmp), allocatable, dimension(:,:) :: flx_abs_lcl        ! absorbed flux per unit incident flux at top of snowpack (lyr,bnd) [frc]
     real(kind=kind_noahmp), allocatable, dimension(:,:) :: mss_cnc_aer_lcl    ! aerosol mass concentration [kg/kg]
 
-    !-----------------------------------------------------------------------
-    ! variables used for Toon et al. 1989 2-stream solver (Flanner et al. 2007):
+    ! local variables used for Toon et al. 1989 2-stream solver (Flanner et al. 2007):
     ! intermediate variables for radiative transfer approximation:
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: gamma1                  ! two-stream coefficient from Toon et al. (lyr) [unitless]
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: gamma2                  ! two-stream coefficient from Toon et al. (lyr) [unitless]
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: gamma3                  ! two-stream coefficient from Toon et al. (lyr) [unitless]
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: gamma4                  ! two-stream coefficient from Toon et al. (lyr) [unitless]
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: lambda                  ! two-stream coefficient from Toon et al. (lyr) [unitless]
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: GAMMA                   ! two-stream coefficient from Toon et al. (lyr) [unitless]
-    real(kind=kind_noahmp)                              :: mu_one                  ! two-stream coefficient from Toon et al. (lyr) [unitless]
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: e1                      ! tri-diag intermediate variable from Toon et al. (lyr)
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: e2                      ! tri-diag intermediate variable from Toon et al. (lyr)
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: e3                      ! tri-diag intermediate variable from Toon et al. (lyr)
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: e4                      ! tri-diag intermediate variable from Toon et al. (lyr)
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: C_pls_btm               ! intermediate variable: upward flux at bottom interface (lyr) [W/m2]
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: C_mns_btm               ! intermediate variable: downward flux at bottom interface (lyr) [W/m2]
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: C_pls_top               ! intermediate variable: upward flux at top interface (lyr) [W/m2]
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: C_mns_top               ! intermediate variable: downward flux at top interface (lyr) [W/m2]
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: A                       ! tri-diag intermediate variable from Toon et al. (2*lyr)
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: B                       ! tri-diag intermediate variable from Toon et al. (2*lyr)
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: D                       ! tri-diag intermediate variable from Toon et al. (2*lyr)
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: E                       ! tri-diag intermediate variable from Toon et al. (2*lyr)
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: AS                      ! tri-diag intermediate variable from Toon et al. (2*lyr)
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: DS                      ! tri-diag intermediate variable from Toon et al. (2*lyr)
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: X                       ! tri-diag intermediate variable from Toon et al. (2*lyr)
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: Y                       ! tri-diag intermediate variable from Toon et al. (2*lyr)
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: gamma1             ! two-stream coefficient from Toon et al. (lyr) [unitless]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: gamma2             ! two-stream coefficient from Toon et al. (lyr) [unitless]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: gamma3             ! two-stream coefficient from Toon et al. (lyr) [unitless]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: gamma4             ! two-stream coefficient from Toon et al. (lyr) [unitless]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: lambda             ! two-stream coefficient from Toon et al. (lyr) [unitless]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: GAMMA              ! two-stream coefficient from Toon et al. (lyr) [unitless]
+    real(kind=kind_noahmp)                              :: mu_one             ! two-stream coefficient from Toon et al. (lyr) [unitless]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: e1                 ! tri-diag intermediate variable from Toon et al. (lyr)
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: e2                 ! tri-diag intermediate variable from Toon et al. (lyr)
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: e3                 ! tri-diag intermediate variable from Toon et al. (lyr)
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: e4                 ! tri-diag intermediate variable from Toon et al. (lyr)
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: C_pls_btm          ! intermediate variable: upward flux at bottom interface (lyr) [W/m2]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: C_mns_btm          ! intermediate variable: downward flux at bottom interface (lyr) [W/m2]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: C_pls_top          ! intermediate variable: upward flux at top interface (lyr) [W/m2]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: C_mns_top          ! intermediate variable: downward flux at top interface (lyr) [W/m2]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: A                  ! tri-diag intermediate variable from Toon et al. (2*lyr)
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: B                  ! tri-diag intermediate variable from Toon et al. (2*lyr)
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: D                  ! tri-diag intermediate variable from Toon et al. (2*lyr)
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: E                  ! tri-diag intermediate variable from Toon et al. (2*lyr)
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: AS                 ! tri-diag intermediate variable from Toon et al. (2*lyr)
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: DS                 ! tri-diag intermediate variable from Toon et al. (2*lyr)
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: X                  ! tri-diag intermediate variable from Toon et al. (2*lyr)
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: Y                  ! tri-diag intermediate variable from Toon et al. (2*lyr)
 
-    ! variables used for Adding-doubling 2-stream solver based on SNICAR-ADv3 version
+    ! local variables used for Adding-doubling 2-stream solver based on SNICAR-ADv3 version
     ! (Dang et al. 2019; Flanner et al. 2021)
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: trndir                  ! solar beam down transmission from top
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: trntdr                  ! total transmission to direct beam for layers above
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: trndif                  ! diffuse transmission to diffuse beam for layers above
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: rupdir                  ! reflectivity to direct radiation for layers below
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: rupdif                  ! reflectivity to diffuse radiation for layers below
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: rdndif                  ! reflectivity to diffuse radiation for layers above
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: dfdir                   ! down-up flux at interface due to direct beam at top surface
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: dfdif                   ! down-up flux at interface due to diffuse beam at top surface
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: dftmp                   ! temporary variable for down-up flux at interface
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: rdir                    ! layer reflectivity to direct radiation
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: rdif_a                  ! layer reflectivity to diffuse radiation from above
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: rdif_b                  ! layer reflectivity to diffuse radiation from below
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: tdir                    ! layer transmission to direct radiation (solar beam + diffuse)
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: tdif_a                  ! layer transmission to diffuse radiation from above
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: tdif_b                  ! layer transmission to diffuse radiation from below
-    real(kind=kind_noahmp), allocatable, dimension(:)   :: trnlay                  ! solar beam transm for layer (direct beam only)
-
-    real(kind=kind_noahmp)                              :: ts                      ! layer delta-scaled extinction optical depth
-    real(kind=kind_noahmp)                              :: ws                      ! layer delta-scaled single scattering albedo
-    real(kind=kind_noahmp)                              :: gs                      ! layer delta-scaled asymmetry parameter
-    real(kind=kind_noahmp)                              :: extins                  ! extinction
-    real(kind=kind_noahmp)                              :: alp                     ! temporary for alpha
-    real(kind=kind_noahmp)                              :: gam                     ! temporary for agamm
-    real(kind=kind_noahmp)                              :: amg                     ! alp - gam
-    real(kind=kind_noahmp)                              :: apg                     ! alp + gam
-    real(kind=kind_noahmp)                              :: ue                      ! temporary for u
-    real(kind=kind_noahmp)                              :: refk                    ! interface multiple scattering
-    real(kind=kind_noahmp)                              :: refkp1                  ! interface multiple scattering for k+1
-    real(kind=kind_noahmp)                              :: refkm1                  ! interface multiple scattering for k-1
-    real(kind=kind_noahmp)                              :: tdrrdir                 ! direct tran times layer direct ref
-    real(kind=kind_noahmp)                              :: tdndif                  ! total down diffuse = tot tran - direct tran
-    real(kind=kind_noahmp)                              :: taus                    ! scaled extinction optical depth
-    real(kind=kind_noahmp)                              :: omgs                    ! scaled single particle scattering albedo
-    real(kind=kind_noahmp)                              :: asys                    ! scaled asymmetry parameter
-    real(kind=kind_noahmp)                              :: lm                      ! temporary for el
-    real(kind=kind_noahmp)                              :: mu                      ! cosine solar zenith for either snow or water
-    real(kind=kind_noahmp)                              :: ne                      ! temporary for n
-    real(kind=kind_noahmp)                              :: R1                      ! perpendicular polarization reflection amplitude
-    real(kind=kind_noahmp)                              :: R2                      ! parallel polarization reflection amplitude
-    real(kind=kind_noahmp)                              :: T1                      ! perpendicular polarization transmission amplitude
-    real(kind=kind_noahmp)                              :: T2                      ! parallel polarization transmission amplitude
-    real(kind=kind_noahmp)                              :: Rf_dir_a                ! fresnel reflection to direct radiation
-    real(kind=kind_noahmp)                              :: Tf_dir_a                ! fresnel transmission to direct radiation
-    real(kind=kind_noahmp)                              :: Rf_dif_a                ! fresnel reflection to diff radiation from above
-    real(kind=kind_noahmp)                              :: Rf_dif_b                ! fresnel reflection to diff radiation from below
-    real(kind=kind_noahmp)                              :: Tf_dif_a                ! fresnel transmission to diff radiation from above
-    real(kind=kind_noahmp)                              :: Tf_dif_b                ! fresnel transmission to diff radiation from below
-    real(kind=kind_noahmp)                              :: gwt                     ! gaussian weight
-    real(kind=kind_noahmp)                              :: swt                     ! sum of weights
-    real(kind=kind_noahmp)                              :: trn                     ! layer transmission
-    real(kind=kind_noahmp)                              :: rdr                     ! rdir for gaussian integration
-    real(kind=kind_noahmp)                              :: tdr                     ! tdir for gaussian integration
-    real(kind=kind_noahmp)                              :: smr                     ! accumulator for rdif gaussian integration
-    real(kind=kind_noahmp)                              :: smt                     ! accumulator for tdif gaussian integration
-    real(kind=kind_noahmp)                              :: exp_min                 ! minimum exponential value
-    real(kind=kind_noahmp)                              :: difgauspt(1:8)          ! Gaussian integration angle
-    real(kind=kind_noahmp)                              :: difgauswt(1:8)          ! Gaussian integration coefficients/weights
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: trndir             ! solar beam down transmission from top
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: trntdr             ! total transmission to direct beam for layers above
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: trndif             ! diffuse transmission to diffuse beam for layers above
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: rupdir             ! reflectivity to direct radiation for layers below
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: rupdif             ! reflectivity to diffuse radiation for layers below
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: rdndif             ! reflectivity to diffuse radiation for layers above
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: dfdir              ! down-up flux at interface due to direct beam at top surface
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: dfdif              ! down-up flux at interface due to diffuse beam at top surface
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: dftmp              ! temporary variable for down-up flux at interface
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: rdir               ! layer reflectivity to direct radiation
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: rdif_a             ! layer reflectivity to diffuse radiation from above
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: rdif_b             ! layer reflectivity to diffuse radiation from below
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: tdir               ! layer transmission to direct radiation (solar beam + diffuse)
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: tdif_a             ! layer transmission to diffuse radiation from above
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: tdif_b             ! layer transmission to diffuse radiation from below
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: trnlay             ! solar beam transm for layer (direct beam only)
+    real(kind=kind_noahmp)                              :: ts                 ! layer delta-scaled extinction optical depth
+    real(kind=kind_noahmp)                              :: ws                 ! layer delta-scaled single scattering albedo
+    real(kind=kind_noahmp)                              :: gs                 ! layer delta-scaled asymmetry parameter
+    real(kind=kind_noahmp)                              :: extins             ! extinction
+    real(kind=kind_noahmp)                              :: alp                ! temporary for alpha
+    real(kind=kind_noahmp)                              :: gam                ! temporary for agamm
+    real(kind=kind_noahmp)                              :: amg                ! alp - gam
+    real(kind=kind_noahmp)                              :: apg                ! alp + gam
+    real(kind=kind_noahmp)                              :: ue                 ! temporary for u
+    real(kind=kind_noahmp)                              :: refk               ! interface multiple scattering
+    real(kind=kind_noahmp)                              :: refkp1             ! interface multiple scattering for k+1
+    real(kind=kind_noahmp)                              :: refkm1             ! interface multiple scattering for k-1
+    real(kind=kind_noahmp)                              :: tdrrdir            ! direct tran times layer direct ref
+    real(kind=kind_noahmp)                              :: tdndif             ! total down diffuse = tot tran - direct tran
+    real(kind=kind_noahmp)                              :: taus               ! scaled extinction optical depth
+    real(kind=kind_noahmp)                              :: omgs               ! scaled single particle scattering albedo
+    real(kind=kind_noahmp)                              :: asys               ! scaled asymmetry parameter
+    real(kind=kind_noahmp)                              :: lm                 ! temporary for el
+    real(kind=kind_noahmp)                              :: mu                 ! cosine solar zenith for either snow or water
+    real(kind=kind_noahmp)                              :: ne                 ! temporary for n
+    real(kind=kind_noahmp)                              :: R1                 ! perpendicular polarization reflection amplitude
+    real(kind=kind_noahmp)                              :: R2                 ! parallel polarization reflection amplitude
+    real(kind=kind_noahmp)                              :: T1                 ! perpendicular polarization transmission amplitude
+    real(kind=kind_noahmp)                              :: T2                 ! parallel polarization transmission amplitude
+    real(kind=kind_noahmp)                              :: Rf_dir_a           ! fresnel reflection to direct radiation
+    real(kind=kind_noahmp)                              :: Tf_dir_a           ! fresnel transmission to direct radiation
+    real(kind=kind_noahmp)                              :: Rf_dif_a           ! fresnel reflection to diff radiation from above
+    real(kind=kind_noahmp)                              :: Rf_dif_b           ! fresnel reflection to diff radiation from below
+    real(kind=kind_noahmp)                              :: Tf_dif_a           ! fresnel transmission to diff radiation from above
+    real(kind=kind_noahmp)                              :: Tf_dif_b           ! fresnel transmission to diff radiation from below
+    real(kind=kind_noahmp)                              :: gwt                ! gaussian weight
+    real(kind=kind_noahmp)                              :: swt                ! sum of weights
+    real(kind=kind_noahmp)                              :: trn                ! layer transmission
+    real(kind=kind_noahmp)                              :: rdr                ! rdir for gaussian integration
+    real(kind=kind_noahmp)                              :: tdr                ! tdir for gaussian integration
+    real(kind=kind_noahmp)                              :: smr                ! accumulator for rdif gaussian integration
+    real(kind=kind_noahmp)                              :: smt                ! accumulator for tdif gaussian integration
+    real(kind=kind_noahmp)                              :: exp_min            ! minimum exponential value
+    real(kind=kind_noahmp)                              :: difgauspt(1:8)     ! Gaussian integration angle
+    real(kind=kind_noahmp)                              :: difgauswt(1:8)     ! Gaussian integration coefficients/weights
 
 ! --------------------------------------------------------------------
-    associate(                                                                          &  
-              IndicatorIceSfc        => noahmp%config%domain%IndicatorIceSfc           ,& ! in, indicator for ice surface/point (1=sea ice, 0=non-ice, -1=land ice)
-              OptSnicarSnowShape     => noahmp%config%nmlist%OptSnicarSnowShape        ,& ! in, Snow shape type: 
-                                                                                          !     1=sphere; 2=spheroid; 3=hexagonal plate; 4=koch snowflake
-                                                                                          !     currently only assuming same shapes for all snow layers
-              OptSnicarRTSolver      => noahmp%config%nmlist%OptSnicarRTSolver         ,& ! in, SNICAR radiative transfer solver
-                                                                                          !     1=Toon et a 1989 2-stream (Flanner et al. 2007)
-                                                                                          !     2=Adding-doubling 2-stream (Dang et al.2019)
-              FlagSnicarSnowBCIntmix => noahmp%config%nmlist%FlagSnicarSnowBCIntmix    ,& ! in,option to activate BC-snow internal mixing in SNICAR (He et al. 2017 JC)
-                                                                                          !     .false. -> external mixing for all BC
-                                                                                          !     .true.  -> internal mixing for hydrophilic BC
-              FlagSnicarSnowDustIntmix => noahmp%config%nmlist%FlagSnicarSnowDustIntmix,& ! in,option to activate dust-snow internal mixing in SNICAR (He et al. 2017 JC)
-                                                                                          !     .false. -> external mixing for all dust
-                                                                                          !     .true.  -> internal mixing for all dust
-              FlagSnicarUseAerosol   => noahmp%config%nmlist%FlagSnicarUseAerosol      ,& ! option to turn on/off aerosol deposition flux effect in snow in SNICAR
-                                                                                          !     .false. -> without aerosol deposition flux effect
-                                                                                          !     .true.  -> with aerosol deposition flux effect
-              FlagSnicarUseOC        => noahmp%config%nmlist%FlagSnicarUseOC           ,& ! option to activate OC in snow in SNICAR
-                                                                                          !     .false. -> without organic carbon in snow
-                                                                                          !     .true.  -> with organic carbon in snow
-              NumSnicarRadBand       => noahmp%config%domain%NumSnicarRadBand          ,& ! in, wavelength bands used in SNICAR snow albedo calculation
-              NumSwRadBand           => noahmp%config%domain%NumSwRadBand              ,& ! in, number of shortwave radiation bands 
-              NumSnowLayerMax        => noahmp%config%domain%NumSnowLayerMax           ,& ! in, maximum number of snow layers
-              NumSnowLayerNeg        => noahmp%config%domain%NumSnowLayerNeg           ,& ! in, actual number of snow layers (negative)
-              CosSolarZenithAngle    => noahmp%config%domain%CosSolarZenithAngle       ,& ! in, cosine solar zenith angle
-              SnowIce                => noahmp%water%state%SnowIce                     ,& ! in, snow layer ice [mm]
-              SnowLiqWater           => noahmp%water%state%SnowLiqWater                ,& ! in, snow layer liquid water [mm]
-              SnowWaterEquiv         => noahmp%water%state%SnowWaterEquiv              ,& ! in, snow water equivalent [mm]
-              SnowRadius             => noahmp%water%state%SnowRadius                  ,& ! in, effective grain radius [microns, m-6]
-              AlbedoSoilDif          => noahmp%energy%state%AlbedoSoilDif              ,& ! in, soil albedo (diffuse)
-              AlbedoSoilDir          => noahmp%energy%state%AlbedoSoilDir              ,& ! in, soil albedo (direct)
-              AlbedoLandIce          => noahmp%energy%param%AlbedoLandIce              ,& ! in,  albedo land ice: 1=vis, 2=nir
-              flx_wgt_dir            => noahmp%energy%param%flx_wgt_dir                ,& ! in, downward solar radiation spectral weights (direct)
-              flx_wgt_dif            => noahmp%energy%param%flx_wgt_dif                ,& ! in, downward solar radiation spectral weights (diffuse)
-              ss_alb_snw_drc         => noahmp%energy%param%ss_alb_snw_drc             ,& ! in, Mie single scatter albedos for direct-beam ice
-              asm_prm_snw_drc        => noahmp%energy%param%asm_prm_snw_drc            ,& ! in, asymmetry parameter of direct-beam ice  
-              ext_cff_mss_snw_drc    => noahmp%energy%param%ext_cff_mss_snw_drc        ,& ! in, mass extinction coefficient for direct-beam ice [m2/kg]
-              ss_alb_snw_dfs         => noahmp%energy%param%ss_alb_snw_dfs             ,& ! in, Mie single scatter albedos for diffuse ice
-              asm_prm_snw_dfs        => noahmp%energy%param%asm_prm_snw_dfs            ,& ! in, asymmetry parameter of diffuse ice  
-              ext_cff_mss_snw_dfs    => noahmp%energy%param%ext_cff_mss_snw_dfs        ,& ! in, mass extinction coefficient for diffuse ice [m2/kg]
-              ss_alb_bc1             => noahmp%energy%param%ss_alb_bc1                 ,& ! in, Mie single scatter albedos for hydrophillic BC
-              asm_prm_bc1            => noahmp%energy%param%asm_prm_bc1                ,& ! in, asymmetry parameter for hydrophillic BC
-              ext_cff_mss_bc1        => noahmp%energy%param%ext_cff_mss_bc1            ,& ! in, mass extinction coefficient for hydrophillic BC [m2/kg]
-              ss_alb_bc2             => noahmp%energy%param%ss_alb_bc2                 ,& ! in, Mie single scatter albedos for hydrophobic BC
-              asm_prm_bc2            => noahmp%energy%param%asm_prm_bc2                ,& ! in, asymmetry parameter for hydrophobic BC
-              ext_cff_mss_bc2        => noahmp%energy%param%ext_cff_mss_bc2            ,& ! in, mass extinction coefficient for hydrophobic BC [m2/kg]
-              ss_alb_oc1             => noahmp%energy%param%ss_alb_oc1                 ,& ! in, Mie single scatter albedos for hydrophillic OC
-              asm_prm_oc1            => noahmp%energy%param%asm_prm_oc1                ,& ! in, asymmetry parameter for hydrophillic OC
-              ext_cff_mss_oc1        => noahmp%energy%param%ext_cff_mss_oc1            ,& ! in, mass extinction coefficient for hydrophillic OC [m2/kg]
-              ss_alb_oc2             => noahmp%energy%param%ss_alb_oc2                 ,& ! in, Mie single scatter albedos for hydrophobic OC
-              asm_prm_oc2            => noahmp%energy%param%asm_prm_oc2                ,& ! in, asymmetry parameter for hydrophobic OC
-              ext_cff_mss_oc2        => noahmp%energy%param%ext_cff_mss_oc2            ,& ! in, mass extinction coefficient for hydrophobic OC [m2/kg]
-              ss_alb_dst1            => noahmp%energy%param%ss_alb_dst1                ,& ! in, Mie single scatter albedos for dust species 1
-              asm_prm_dst1           => noahmp%energy%param%asm_prm_dst1               ,& ! in, asymmetry parameter for dust species 1
-              ext_cff_mss_dst1       => noahmp%energy%param%ext_cff_mss_dst1           ,& ! in, mass extinction coefficient for dust species 1 [m2/kg]
-              ss_alb_dst2            => noahmp%energy%param%ss_alb_dst2                ,& ! in, Mie single scatter albedos for dust species 2
-              asm_prm_dst2           => noahmp%energy%param%asm_prm_dst2               ,& ! in, asymmetry parameter for dust species 2
-              ext_cff_mss_dst2       => noahmp%energy%param%ext_cff_mss_dst2           ,& ! in, mass extinction coefficient for dust species 2 [m2/kg]
-              ss_alb_dst3            => noahmp%energy%param%ss_alb_dst3                ,& ! in, Mie single scatter albedos for dust species 3
-              asm_prm_dst3           => noahmp%energy%param%asm_prm_dst3               ,& ! in, asymmetry parameter for dust species 3
-              ext_cff_mss_dst3       => noahmp%energy%param%ext_cff_mss_dst3           ,& ! in, mass extinction coefficient for dust species 3 [m2/kg]
-              ss_alb_dst4            => noahmp%energy%param%ss_alb_dst4                ,& ! in, Mie single scatter albedos for dust species 4
-              asm_prm_dst4           => noahmp%energy%param%asm_prm_dst4               ,& ! in, asymmetry parameter for dust species 4
-              ext_cff_mss_dst4       => noahmp%energy%param%ext_cff_mss_dst4           ,& ! in, mass extinction coefficient for dust species 4 [m2/kg]
-              ss_alb_dst5            => noahmp%energy%param%ss_alb_dst5                ,& ! in, Mie single scatter albedos for dust species 5
-              asm_prm_dst5           => noahmp%energy%param%asm_prm_dst5               ,& ! in, asymmetry parameter for dust species 5
-              ext_cff_mss_dst5       => noahmp%energy%param%ext_cff_mss_dst5           ,& ! in, mass extinction coefficient for dust species 5 [m2/kg]
-              MassConcBChydropho     => noahmp%water%state%MassConcBChydropho          ,& ! in, mass concentration of hydrophobic Black Carbon in snow [kg/kg]
-              MassConcBChydrophi     => noahmp%water%state%MassConcBChydrophi          ,& ! in, mass concentration of hydrophillic Black Carbon in snow [kg/kg]
-              MassConcOChydropho     => noahmp%water%state%MassConcOChydropho          ,& ! in, mass concentration of hydrophobic Organic Carbon in snow [kg/kg]
-              MassConcOChydrophi     => noahmp%water%state%MassConcOChydrophi          ,& ! in, mass concentration of hydrophillic Organic Carbon in snow [kg/kg]
-              MassConcDust1          => noahmp%water%state%MassConcDust1               ,& ! in, mass concentration of dust species 1 in snow [kg/kg]
-              MassConcDust2          => noahmp%water%state%MassConcDust2               ,& ! in, mass concentration of dust species 2 in snow [kg/kg]
-              MassConcDust3          => noahmp%water%state%MassConcDust3               ,& ! in, mass concentration of dust species 3 in snow [kg/kg]
-              MassConcDust4          => noahmp%water%state%MassConcDust4               ,& ! in, mass concentration of dust species 4 in snow [kg/kg]
-              MassConcDust5          => noahmp%water%state%MassConcDust5               ,& ! in, mass concentration of dust species 5 in snow [kg/kg]
-              AlbedoSnowDir          => noahmp%energy%state%AlbedoSnowDir              ,& ! out, snow albedo for direct(1=vis, 2=nir)
-              AlbedoSnowDif          => noahmp%energy%state%AlbedoSnowDif              ,& ! out, snow albedo for diffuse(1=vis, 2=nir)
-              FracRadSwAbsSnowDir    => noahmp%energy%flux%FracRadSwAbsSnowDir         ,& ! out, direct solar flux factor absorbed by snow [frc] (-NumSnowLayerMax+1:1,NumSwRadBand)
-              FracRadSwAbsSnowDif    => noahmp%energy%flux%FracRadSwAbsSnowDif          & ! out, diffuse solar flux factor absorbed by snow [frc] (-NumSnowLayerMax+1:1,NumSwRadBand)
+    associate(                                                                            &  
+              IndicatorIceSfc          => noahmp%config%domain%IndicatorIceSfc           ,& ! in,  indicator for ice surface/point (1=sea ice, 0=non-ice, -1=land ice)
+              OptSnicarSnowShape       => noahmp%config%nmlist%OptSnicarSnowShape        ,& ! in,  Snow shape: 1=sphere; 2=spheroid; 3=hexagonal plate; 4=koch snowflake  
+              OptSnicarRTSolver        => noahmp%config%nmlist%OptSnicarRTSolver         ,& ! in,  SNICAR radiative transfer solver
+              FlagSnicarSnowBCIntmix   => noahmp%config%nmlist%FlagSnicarSnowBCIntmix    ,& ! in,  flag to activate BC-snow internal mixing in SNICAR (He et al. 2017 JC)
+              FlagSnicarSnowDustIntmix => noahmp%config%nmlist%FlagSnicarSnowDustIntmix  ,& ! in,  flag to activate dust-snow internal mixing in SNICAR (He et al. 2017 JC)
+              FlagSnicarUseAerosol     => noahmp%config%nmlist%FlagSnicarUseAerosol      ,& ! in,  flag to turn on/off aerosol deposition flux effect in snow in SNICAR
+              FlagSnicarUseOC          => noahmp%config%nmlist%FlagSnicarUseOC           ,& ! in,  flag to activate OC in snow in SNICAR
+              NumSnicarRadBand         => noahmp%config%domain%NumSnicarRadBand          ,& ! in,  wavelength bands used in SNICAR snow albedo calculation
+              NumSwRadBand             => noahmp%config%domain%NumSwRadBand              ,& ! in,  number of shortwave radiation bands 
+              NumSnowLayerMax          => noahmp%config%domain%NumSnowLayerMax           ,& ! in,  maximum number of snow layers
+              NumSnowLayerNeg          => noahmp%config%domain%NumSnowLayerNeg           ,& ! in,  actual number of snow layers (negative)
+              CosSolarZenithAngle      => noahmp%config%domain%CosSolarZenithAngle       ,& ! in,  cosine solar zenith angle
+              SnowIce                  => noahmp%water%state%SnowIce                     ,& ! in,  snow layer ice [mm]
+              SnowLiqWater             => noahmp%water%state%SnowLiqWater                ,& ! in,  snow layer liquid water [mm]
+              SnowWaterEquiv           => noahmp%water%state%SnowWaterEquiv              ,& ! in,  snow water equivalent [mm]
+              SnowRadius               => noahmp%water%state%SnowRadius                  ,& ! in,  effective grain radius [microns, m-6]
+              AlbedoSoilDif            => noahmp%energy%state%AlbedoSoilDif              ,& ! in,  soil albedo (diffuse)
+              AlbedoSoilDir            => noahmp%energy%state%AlbedoSoilDir              ,& ! in,  soil albedo (direct)
+              AlbedoLandIce            => noahmp%energy%param%AlbedoLandIce              ,& ! in,  albedo land ice: 1=vis, 2=nir
+              flx_wgt_dir              => noahmp%energy%param%flx_wgt_dir                ,& ! in,  downward solar radiation spectral weights (direct)
+              flx_wgt_dif              => noahmp%energy%param%flx_wgt_dif                ,& ! in,  downward solar radiation spectral weights (diffuse)
+              ss_alb_snw_drc           => noahmp%energy%param%ss_alb_snw_drc             ,& ! in,  Mie single scatter albedos for direct-beam ice
+              asm_prm_snw_drc          => noahmp%energy%param%asm_prm_snw_drc            ,& ! in,  asymmetry parameter of direct-beam ice  
+              ext_cff_mss_snw_drc      => noahmp%energy%param%ext_cff_mss_snw_drc        ,& ! in,  mass extinction coefficient for direct-beam ice [m2/kg]
+              ss_alb_snw_dfs           => noahmp%energy%param%ss_alb_snw_dfs             ,& ! in,  Mie single scatter albedos for diffuse ice
+              asm_prm_snw_dfs          => noahmp%energy%param%asm_prm_snw_dfs            ,& ! in,  asymmetry parameter of diffuse ice  
+              ext_cff_mss_snw_dfs      => noahmp%energy%param%ext_cff_mss_snw_dfs        ,& ! in,  mass extinction coefficient for diffuse ice [m2/kg]
+              ss_alb_bc1               => noahmp%energy%param%ss_alb_bc1                 ,& ! in,  Mie single scatter albedos for hydrophillic BC
+              asm_prm_bc1              => noahmp%energy%param%asm_prm_bc1                ,& ! in,  asymmetry parameter for hydrophillic BC
+              ext_cff_mss_bc1          => noahmp%energy%param%ext_cff_mss_bc1            ,& ! in,  mass extinction coefficient for hydrophillic BC [m2/kg]
+              ss_alb_bc2               => noahmp%energy%param%ss_alb_bc2                 ,& ! in,  Mie single scatter albedos for hydrophobic BC
+              asm_prm_bc2              => noahmp%energy%param%asm_prm_bc2                ,& ! in,  asymmetry parameter for hydrophobic BC
+              ext_cff_mss_bc2          => noahmp%energy%param%ext_cff_mss_bc2            ,& ! in,  mass extinction coefficient for hydrophobic BC [m2/kg]
+              ss_alb_oc1               => noahmp%energy%param%ss_alb_oc1                 ,& ! in,  Mie single scatter albedos for hydrophillic OC
+              asm_prm_oc1              => noahmp%energy%param%asm_prm_oc1                ,& ! in,  asymmetry parameter for hydrophillic OC
+              ext_cff_mss_oc1          => noahmp%energy%param%ext_cff_mss_oc1            ,& ! in,  mass extinction coefficient for hydrophillic OC [m2/kg]
+              ss_alb_oc2               => noahmp%energy%param%ss_alb_oc2                 ,& ! in,  Mie single scatter albedos for hydrophobic OC
+              asm_prm_oc2              => noahmp%energy%param%asm_prm_oc2                ,& ! in,  asymmetry parameter for hydrophobic OC
+              ext_cff_mss_oc2          => noahmp%energy%param%ext_cff_mss_oc2            ,& ! in,  mass extinction coefficient for hydrophobic OC [m2/kg]
+              ss_alb_dst1              => noahmp%energy%param%ss_alb_dst1                ,& ! in,  Mie single scatter albedos for dust species 1
+              asm_prm_dst1             => noahmp%energy%param%asm_prm_dst1               ,& ! in,  asymmetry parameter for dust species 1
+              ext_cff_mss_dst1         => noahmp%energy%param%ext_cff_mss_dst1           ,& ! in,  mass extinction coefficient for dust species 1 [m2/kg]
+              ss_alb_dst2              => noahmp%energy%param%ss_alb_dst2                ,& ! in,  Mie single scatter albedos for dust species 2
+              asm_prm_dst2             => noahmp%energy%param%asm_prm_dst2               ,& ! in,  asymmetry parameter for dust species 2
+              ext_cff_mss_dst2         => noahmp%energy%param%ext_cff_mss_dst2           ,& ! in,  mass extinction coefficient for dust species 2 [m2/kg]
+              ss_alb_dst3              => noahmp%energy%param%ss_alb_dst3                ,& ! in,  Mie single scatter albedos for dust species 3
+              asm_prm_dst3             => noahmp%energy%param%asm_prm_dst3               ,& ! in,  asymmetry parameter for dust species 3
+              ext_cff_mss_dst3         => noahmp%energy%param%ext_cff_mss_dst3           ,& ! in,  mass extinction coefficient for dust species 3 [m2/kg]
+              ss_alb_dst4              => noahmp%energy%param%ss_alb_dst4                ,& ! in,  Mie single scatter albedos for dust species 4
+              asm_prm_dst4             => noahmp%energy%param%asm_prm_dst4               ,& ! in,  asymmetry parameter for dust species 4
+              ext_cff_mss_dst4         => noahmp%energy%param%ext_cff_mss_dst4           ,& ! in,  mass extinction coefficient for dust species 4 [m2/kg]
+              ss_alb_dst5              => noahmp%energy%param%ss_alb_dst5                ,& ! in,  Mie single scatter albedos for dust species 5
+              asm_prm_dst5             => noahmp%energy%param%asm_prm_dst5               ,& ! in,  asymmetry parameter for dust species 5
+              ext_cff_mss_dst5         => noahmp%energy%param%ext_cff_mss_dst5           ,& ! in,  mass extinction coefficient for dust species 5 [m2/kg]
+              MassConcBChydropho       => noahmp%water%state%MassConcBChydropho          ,& ! in,  mass concentration of hydrophobic Black Carbon in snow [kg/kg]
+              MassConcBChydrophi       => noahmp%water%state%MassConcBChydrophi          ,& ! in,  mass concentration of hydrophillic Black Carbon in snow [kg/kg]
+              MassConcOChydropho       => noahmp%water%state%MassConcOChydropho          ,& ! in,  mass concentration of hydrophobic Organic Carbon in snow [kg/kg]
+              MassConcOChydrophi       => noahmp%water%state%MassConcOChydrophi          ,& ! in,  mass concentration of hydrophillic Organic Carbon in snow [kg/kg]
+              MassConcDust1            => noahmp%water%state%MassConcDust1               ,& ! in,  mass concentration of dust species 1 in snow [kg/kg]
+              MassConcDust2            => noahmp%water%state%MassConcDust2               ,& ! in,  mass concentration of dust species 2 in snow [kg/kg]
+              MassConcDust3            => noahmp%water%state%MassConcDust3               ,& ! in,  mass concentration of dust species 3 in snow [kg/kg]
+              MassConcDust4            => noahmp%water%state%MassConcDust4               ,& ! in,  mass concentration of dust species 4 in snow [kg/kg]
+              MassConcDust5            => noahmp%water%state%MassConcDust5               ,& ! in,  mass concentration of dust species 5 in snow [kg/kg]
+              AlbedoSnowDir            => noahmp%energy%state%AlbedoSnowDir              ,& ! out, snow albedo for direct(1=vis, 2=nir)
+              AlbedoSnowDif            => noahmp%energy%state%AlbedoSnowDif              ,& ! out, snow albedo for diffuse(1=vis, 2=nir)
+              FracRadSwAbsSnowDir      => noahmp%energy%flux%FracRadSwAbsSnowDir         ,& ! out, direct solar flux factor absorbed by snow [frc]
+              FracRadSwAbsSnowDif      => noahmp%energy%flux%FracRadSwAbsSnowDif          & ! out, diffuse solar flux factor absorbed by snow [frc]
              )
 ! ----------------------------------------------------------------------
+
     ! initialize
-    if (.not. allocated(snw_rds_lcl)   )  allocate(snw_rds_lcl   (-NumSnowLayerMax+1:0))
-    if (.not. allocated(sno_shp)       )  allocate(sno_shp       (-NumSnowLayerMax+1:0))
-    if (.not. allocated(sno_fs)        )  allocate(sno_fS        (-NumSnowLayerMax+1:0))
-    if (.not. allocated(sno_AR)        )  allocate(sno_AR        (-NumSnowLayerMax+1:0))
+    if (.not. allocated(snw_rds_lcl   ))  allocate(snw_rds_lcl   (-NumSnowLayerMax+1:0))
+    if (.not. allocated(sno_shp       ))  allocate(sno_shp       (-NumSnowLayerMax+1:0))
+    if (.not. allocated(sno_fs        ))  allocate(sno_fS        (-NumSnowLayerMax+1:0))
+    if (.not. allocated(sno_AR        ))  allocate(sno_AR        (-NumSnowLayerMax+1:0))
     if (.not. allocated(h2osno_liq_lcl))  allocate(h2osno_liq_lcl(-NumSnowLayerMax+1:0))
     if (.not. allocated(h2osno_ice_lcl))  allocate(h2osno_ice_lcl(-NumSnowLayerMax+1:0))
     if (.not. allocated(F_direct      ))  allocate(F_direct      (-NumSnowLayerMax+1:0))
     if (.not. allocated(F_net         ))  allocate(F_net         (-NumSnowLayerMax+1:0))
     if (.not. allocated(F_abs         ))  allocate(F_abs         (-NumSnowLayerMax+1:0))
-
     if (.not. allocated(L_snw         ))  allocate(L_snw         (-NumSnowLayerMax+1:0))
     if (.not. allocated(tau_snw       ))  allocate(tau_snw       (-NumSnowLayerMax+1:0))
     if (.not. allocated(tau           ))  allocate(tau           (-NumSnowLayerMax+1:0))
     if (.not. allocated(omega         ))  allocate(omega         (-NumSnowLayerMax+1:0))
     if (.not. allocated(g             ))  allocate(g             (-NumSnowLayerMax+1:0))
-
     if (.not. allocated(tau_star      ))  allocate(tau_star      (-NumSnowLayerMax+1:0))
     if (.not. allocated(omega_star    ))  allocate(omega_star    (-NumSnowLayerMax+1:0))
     if (.not. allocated(g_star        ))  allocate(g_star        (-NumSnowLayerMax+1:0))
     if (.not. allocated(tau_clm       ))  allocate(tau_clm       (-NumSnowLayerMax+1:0))
-
     if (.not. allocated(ss_alb_snw_lcl     ))  allocate(ss_alb_snw_lcl     (-NumSnowLayerMax+1:0))
     if (.not. allocated(asm_prm_snw_lcl    ))  allocate(asm_prm_snw_lcl    (-NumSnowLayerMax+1:0))
     if (.not. allocated(ext_cff_mss_snw_lcl))  allocate(ext_cff_mss_snw_lcl(-NumSnowLayerMax+1:0))
@@ -433,8 +416,7 @@ contains
     if (.not. allocated(X                  ))  allocate(X                  (-2*NumSnowLayerMax+1:0))
     if (.not. allocated(Y                  ))  allocate(Y                  (-2*NumSnowLayerMax+1:0))
     
-    !Adding-doubling 2-stream solver based on SNICAR-ADv3 version
-
+    ! Adding-doubling 2-stream solver based on SNICAR-ADv3 version
     if (.not. allocated(trndir             ))  allocate(trndir             (-NumSnowLayerMax+1:1))
     if (.not. allocated(trntdr             ))  allocate(trntdr             (-NumSnowLayerMax+1:1))
     if (.not. allocated(trndif             ))  allocate(trndif             (-NumSnowLayerMax+1:1))
@@ -444,50 +426,43 @@ contains
     if (.not. allocated(dfdir              ))  allocate(dfdir              (-NumSnowLayerMax+1:1))
     if (.not. allocated(dfdif              ))  allocate(dfdif              (-NumSnowLayerMax+1:1))
     if (.not. allocated(dftmp              ))  allocate(dftmp              (-NumSnowLayerMax+1:1))
-
     if (.not. allocated(rdir               ))  allocate(rdir               (-NumSnowLayerMax+1:0))
     if (.not. allocated(rdif_a             ))  allocate(rdif_a             (-NumSnowLayerMax+1:0))
     if (.not. allocated(rdif_b             ))  allocate(rdif_b             (-NumSnowLayerMax+1:0))
-
     if (.not. allocated(tdir               ))  allocate(tdir               (-NumSnowLayerMax+1:0))
     if (.not. allocated(tdif_a             ))  allocate(tdif_a             (-NumSnowLayerMax+1:0))
     if (.not. allocated(tdif_b             ))  allocate(tdif_b             (-NumSnowLayerMax+1:0))
     if (.not. allocated(trnlay             ))  allocate(trnlay             (-NumSnowLayerMax+1:0))
+    if (.not. allocated(ss_alb_aer_lcl     ))  allocate(ss_alb_aer_lcl     (1:NumSnicarAerosol  ))
+    if (.not. allocated(asm_prm_aer_lcl    ))  allocate(asm_prm_aer_lcl    (1:NumSnicarAerosol  ))
+    if (.not. allocated(ext_cff_mss_aer_lcl))  allocate(ext_cff_mss_aer_lcl(1:NumSnicarAerosol  ))
+    if (.not. allocated(albsfc_lcl         ))  allocate(albsfc_lcl         (1:NumSnicarRadBand  ))
+    if (.not. allocated(flx_wgt            ))  allocate(flx_wgt            (1:NumSnicarRadBand  ))
+    if (.not. allocated(flx_slrd_lcl       ))  allocate(flx_slrd_lcl       (1:NumSnicarRadBand  ))
+    if (.not. allocated(flx_slri_lcl       ))  allocate(flx_slri_lcl       (1:NumSnicarRadBand  ))
+    if (.not. allocated(albout_lcl         ))  allocate(albout_lcl         (1:NumSnicarRadBand  ))
+    if (.not. allocated(L_aer              ))  allocate(L_aer              (-NumSnowLayerMax+1:0,NumSnicarAerosol))
+    if (.not. allocated(tau_aer            ))  allocate(tau_aer            (-NumSnowLayerMax+1:0,NumSnicarAerosol))
+    if (.not. allocated(flx_abs_lcl        ))  allocate(flx_abs_lcl        (-NumSnowLayerMax+1:1,NumSnicarRadBand))
+    if (.not. allocated(mss_cnc_aer_lcl    ))  allocate(mss_cnc_aer_lcl    (-NumSnowLayerMax+1:0,NumSnicarAerosol))
 
-
-    if (.not. allocated(ss_alb_aer_lcl     ))  allocate(ss_alb_aer_lcl(1:NumSnicarAerosol))
-    if (.not. allocated(asm_prm_aer_lcl    ))  allocate(asm_prm_aer_lcl(1: NumSnicarAerosol))
-    if (.not. allocated(ext_cff_mss_aer_lcl))  allocate(ext_cff_mss_aer_lcl(1: NumSnicarAerosol))
-
-    if (.not. allocated(albsfc_lcl)           )  allocate(albsfc_lcl         (1:NumSnicarRadBand))
-    if (.not. allocated(flx_wgt)              )  allocate(flx_wgt            (1:NumSnicarRadBand))
-    if (.not. allocated(flx_slrd_lcl)         )  allocate(flx_slrd_lcl       (1:NumSnicarRadBand))
-    if (.not. allocated(flx_slri_lcl)         )  allocate(flx_slri_lcl       (1:NumSnicarRadBand))
-    if (.not. allocated(albout_lcl)           )  allocate(albout_lcl         (1:NumSnicarRadBand))
-
-    if (.not. allocated(L_aer                ))  allocate(L_aer         (-NumSnowLayerMax+1:0,NumSnicarAerosol))
-    if (.not. allocated(tau_aer              ))  allocate(tau_aer       (-NumSnowLayerMax+1:0,NumSnicarAerosol))
-
-    if (.not. allocated(flx_abs_lcl)          )  allocate(flx_abs_lcl        (-NumSnowLayerMax+1:1,NumSnicarRadBand))
-    if (.not. allocated(mss_cnc_aer_lcl)      )  allocate(mss_cnc_aer_lcl    (-NumSnowLayerMax+1:0,NumSnicarAerosol))
-
+    ! determin band start and end index
     if (NumSnicarRadBand == 5)   nir_bnd_bgn = 2
     if (NumSnicarRadBand == 480) nir_bnd_bgn = 51
-    nir_bnd_end    = NumSnicarRadBand
+    nir_bnd_end = NumSnicarRadBand
 
-    ! initialize for adding-doubling solver
-
+    ! initialize for adding-doubling solver parameter
     difgauspt(1:8) = & ! gaussian angles (radians)
                       (/ 0.9894009,  0.9445750, &
                          0.8656312,  0.7554044, &
                          0.6178762,  0.4580168, &
                          0.2816036,  0.0950125/)
-
     difgauswt(1:8) = & ! gaussian weights
                       (/ 0.0271525,  0.0622535, &
                          0.0951585,  0.1246290, &
                          0.1495960,  0.1691565, &
                          0.1826034,  0.1894506/)
+
     ! initialize for nonspherical snow grains
     sno_shp(:) = OptSnicarSnowShape ! currently only assuming same shapes for all snow layers
     sno_fs(:)  = 0.0
@@ -497,7 +472,7 @@ contains
     g_wvl(1:8)    = (/ 0.25, 0.70, 1.41, 1.90, &
                        2.50, 3.50, 4.00, 5.00 /)
     g_wvl_ct(1:7) = g_wvl(2:8) / 2.0 + g_wvl(1:7) / 2.0
-    g_b0(1:7)     = (/  9.76029E-1,  9.67798E-1,  1.00111, 1.00224, &
+    g_b0(1:7)     = (/  9.76029E-1,  9.67798E-1,  1.00111, 1.00224,        &
                         9.64295E-1,  9.97475E-1,  9.97475E-1 /)
     g_b1(1:7)     = (/  5.21042E-1,  4.96181E-1,  1.83711E-1,  1.37082E-1, &
                         5.50598E-2,  8.48743E-2,  8.48743E-2 /)
@@ -520,7 +495,7 @@ contains
 
     ! initialize for BC-snow internal mixing
     ! Eq. 8b & Table 4 in He et al., 2017 J. Climate (wavelength>1.2um, no BC-snow int mixing effect)
-    bcint_wvl(1:17) = (/ 0.20, 0.25, 0.30, 0.33, 0.36, 0.40, 0.44, 0.48, &
+    bcint_wvl(1:17) = (/ 0.20, 0.25, 0.30, 0.33, 0.36, 0.40, 0.44, 0.48,       &
                          0.52, 0.57, 0.64, 0.69, 0.75, 0.78, 0.87, 1.0, 1.2 /)
     bcint_wvl_ct(1:16) = bcint_wvl(2:17)/2.0 + bcint_wvl(1:16)/2.0
     bcint_d0(1:16)  = (/ 2.48045   , 4.70305   , 4.68619   , 4.67369   , 4.65040   , &
@@ -558,7 +533,6 @@ contains
        flx_abs_lcl(LoopInd,:)   = 0.0
     enddo
 
-
     ! set threshold for precision
     if (NumSnicarRadBand == 480) then 
        SnowWaterEquivMin = 1.0e-1
@@ -570,6 +544,7 @@ contains
     ! minimum amount of snow on ground. 
     ! Otherwise, set snow albedo to zero
     if (SnowWaterEquiv >= SnowWaterEquivMin) then
+
        ! If there is snow, but zero snow layers, we must create a layer locally.
        ! This layer is presumed to have the fresh snow effective radius.
           if (NumSnowLayerNeg > -1) then
@@ -611,10 +586,10 @@ contains
 
        ! Set spectral underlying surface albedos to their corresponding VIS or NIR albedos
        if (IndicatorIceSfc == 0) then
-          if (flg_slr_in == 1) then
+          if (FlagSwRadType == 1) then
              albsfc_lcl(1:(nir_bnd_bgn-1))       = AlbedoSoilDir(1)  
              albsfc_lcl(nir_bnd_bgn:nir_bnd_end) = AlbedoSoilDir(2) 
-          elseif (flg_slr_in == 2) then
+          elseif (FlagSwRadType == 2) then
              albsfc_lcl(1:(nir_bnd_bgn-1))       = AlbedoSoilDif(1) 
              albsfc_lcl(nir_bnd_bgn:nir_bnd_end) = AlbedoSoilDif(2) 
           endif
@@ -623,7 +598,7 @@ contains
           albsfc_lcl(nir_bnd_bgn:nir_bnd_end) = AlbedoLandIce(2)
        endif
 
-            ! Error check for snow grain size:
+       ! Error check for snow grain size:
        do i=SnowLayerTop,SnowLayerBottom,1
           if ((snw_rds_lcl(i) < snw_rds_min_tbl) .or. (snw_rds_lcl(i) > snw_rds_max_tbl)) then
              write (*,*) "SNICAR ERROR: snow grain radius of ", snw_rds_lcl(i), " out of bounds."
@@ -632,7 +607,6 @@ contains
              stop
           endif
        enddo
-
 
 
        ! Incident flux weighting parameters
@@ -655,22 +629,22 @@ contains
        ! 3-band weights
        if (NumSnicarRadBand == 3) then
           ! Direct:
-          if (flg_slr_in == 1) then
+          if (FlagSwRadType == 1) then
              flx_wgt(1) = 1.0
              flx_wgt(2) = 0.66628670195247
              flx_wgt(3) = 0.33371329804753
           ! Diffuse:
-          elseif (flg_slr_in == 2) then
+          elseif (FlagSwRadType == 2) then
              flx_wgt(1) = 1.0
              flx_wgt(2) = 0.77887652162877
              flx_wgt(3) = 0.22112347837123
           endif
        else   ! works for both 5-band & 480-band, flux weights directly read from input data, cenlin
           ! Direct:
-          if (flg_slr_in == 1) then
+          if (FlagSwRadType == 1) then
              flx_wgt(1:NumSnicarRadBand) = flx_wgt_dir(1:NumSnicarRadBand)  ! VIS or NIR band sum is already normalized to 1.0 in input data
           ! Diffuse:
-          elseif (flg_slr_in == 2) then
+          elseif (FlagSwRadType == 2) then
              flx_wgt(1:NumSnicarRadBand) = flx_wgt_dif(1:NumSnicarRadBand)  ! VIS or NIR band sum is already normalized to 1.0 in input data
           endif
        endif
@@ -679,6 +653,7 @@ contains
 
        ! Loop over snow spectral bands
        do LoopInd = 1,NumSnicarRadBand
+
           ! Toon et al 2-stream
           if (OptSnicarRTSolver == 1) then
              mu_not = CosSolarZenithAngle    ! must set here, because of error handling
@@ -758,7 +733,7 @@ contains
 
              ! Set direct or diffuse incident irradiance to 1
              ! (This has to be within the bnd loop because mu_not is adjusted in rare cases)
-             if (flg_slr_in == 1) then
+             if (FlagSwRadType == 1) then
                 flx_slrd_lcl(LoopInd) = 1.0/(mu_not*ConstPI) ! this corresponds to incident irradiance of 1.0
                 flx_slri_lcl(LoopInd) = 0.0
              else
@@ -783,7 +758,7 @@ contains
              !--------------------------- Start snow & aerosol optics --------------------------------
              ! Define local Mie parameters based on snow grain size and aerosol species retrieved from a lookup table.
              ! Spherical snow: single-scatter albedo, mass extinction coefficient, asymmetry factor
-             if (flg_slr_in == 1) then
+             if (FlagSwRadType == 1) then
                 do i=SnowLayerTop,SnowLayerBottom,1
                    rds_idx = snw_rds_lcl(i) - snw_rds_min_tbl + 1
                    ! snow optical properties (direct radiation)
@@ -791,7 +766,7 @@ contains
                    ext_cff_mss_snw_lcl(i) = ext_cff_mss_snw_drc(rds_idx,LoopInd)
                    if (sno_shp(i) == 1) asm_prm_snw_lcl(i) = asm_prm_snw_drc(rds_idx,LoopInd)
                 enddo
-             elseif (flg_slr_in == 2) then
+             elseif (FlagSwRadType == 2) then
                 do i=SnowLayerTop,SnowLayerBottom,1
                    rds_idx = snw_rds_lcl(i) - snw_rds_min_tbl + 1
                    ! snow optical properties (diffuse radiation)
@@ -1053,6 +1028,7 @@ contains
              enddo
              !--------------------------- End of snow & aerosol optics --------------------------------
 
+
              !--------------------------- Start Toon et al. RT solver  --------------------------------
              if (OptSnicarRTSolver == 1) then
                 ! Total column optical depth:
@@ -1114,7 +1090,7 @@ contains
                 enddo !Snow layer
 
                 do i=SnowLayerTop,SnowLayerBottom,1
-                   if (flg_slr_in == 1) then
+                   if (FlagSwRadType == 1) then
                       C_pls_btm(i) = (omega_star(i)*ConstPI*flx_slrd_lcl(LoopInd)* &
                               exp(-(tau_clm(i)+tau_star(i))/mu_not)*   &
                               (((gamma1(i)-(1/mu_not))*gamma3(i))+     &
@@ -1217,7 +1193,6 @@ contains
 
                 flx_abs_lcl(1,LoopInd) = F_btm_net
 
-
                 if (flg_nosnl == 1) then
                    ! If there are no snow layers (but still snow), all absorbed energy must be in top soil layer
                    !flx_abs_lcl(:,bnd_idx) = 0._r8
@@ -1230,7 +1205,6 @@ contains
                    flx_abs_lcl(0,LoopInd) = F_abs(0)
                    flx_abs_lcl(1,LoopInd) = F_btm_net
                 endif
-
 
                 !Underflow check (we've already tripped the error condition above)
                 do i=SnowLayerTop,1,1
@@ -1283,6 +1257,7 @@ contains
                 endif
 
              endif ! end if OptSnicarRTSolver == 1
+
 
              !--------------------------- Start Adding-doubling RT solver  --------------------------------
              if (OptSnicarRTSolver == 2) then
@@ -1437,14 +1412,14 @@ contains
                 ! set the underlying ground albedo == albedo of near-IR
                 ! unless bnd_idx < nir_bnd_bgn, for visible
                 if (IndicatorIceSfc == 0) then
-                   if (flg_slr_in == 1) then
+                   if (FlagSwRadType == 1) then
                       rupdir(snl_btm_itf) = AlbedoSoilDir(2)
                       rupdif(snl_btm_itf) = AlbedoSoilDir(2)
                       if (LoopInd < nir_bnd_bgn) then
                          rupdir(snl_btm_itf) = AlbedoSoilDir(1)
                          rupdif(snl_btm_itf) = AlbedoSoilDir(1)
                       endif
-                   elseif (flg_slr_in == 2) then
+                   elseif (FlagSwRadType == 2) then
                       rupdir(snl_btm_itf) = AlbedoSoilDif(2)
                       rupdif(snl_btm_itf) = AlbedoSoilDif(2)
                       if (LoopInd < nir_bnd_bgn) then
@@ -1522,7 +1497,7 @@ contains
 
                 ! SNICAR_AD_RT is called twice for direct and diffuse incident fluxes
                 ! direct incident
-                if (flg_slr_in == 1) then
+                if (FlagSwRadType == 1) then
                    albedo = rupdir(SnowLayerTop)
                    dftmp  = dfdir
                    refk   = c1/(c1 - rdndif(SnowLayerTop)*rupdif(SnowLayerTop))
@@ -1631,7 +1606,7 @@ contains
               write (*,*) "SNICAR STATS: albout_lcl(bnd)= ",albout_lcl(LoopInd), &
                        " albsfc_lcl(bnd_idx)= ",albsfc_lcl(LoopInd)
               write (*,*) "SNICAR STATS: h2osno_total= ", SnowWaterEquiv, " snl= ", snl_lcl
-              write (*,*) "SNICAR STATS: coszen= ", CosSolarZenithAngle, " flg_slr= ", flg_slr_in
+              write (*,*) "SNICAR STATS: coszen= ", CosSolarZenithAngle, " flg_slr= ", FlagSwRadType
               write (*,*) "SNICAR STATS: BCphi(-2)= ", mss_cnc_aer_lcl(-2,1)
               write (*,*) "SNICAR STATS: BCphi(-1)= ", mss_cnc_aer_lcl(-1,1)
               write (*,*) "SNICAR STATS: BCphi(0)= ", mss_cnc_aer_lcl(0,1)
@@ -1652,9 +1627,9 @@ contains
        ! Weight output NIR albedo appropriately
        ! for 5- and 3-band cases
        if (NumSnicarRadBand <= 5) then
-          if (flg_slr_in == 1) then
+          if (FlagSwRadType == 1) then
               AlbedoSnowDir(1) = albout_lcl(1)
-          elseif (flg_slr_in == 2)then
+          elseif (FlagSwRadType == 2)then
               AlbedoSnowDif(1) = albout_lcl(1)
           endif
 
@@ -1663,9 +1638,9 @@ contains
               flx_sum = flx_sum + flx_wgt(LoopInd)*albout_lcl(LoopInd)
           end do
 
-          if (flg_slr_in == 1) then
+          if (FlagSwRadType == 1) then
               AlbedoSnowDir(2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
-          elseif (flg_slr_in == 2)then
+          elseif (FlagSwRadType == 2)then
               AlbedoSnowDif(2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
           endif
 
@@ -1679,9 +1654,9 @@ contains
              flx_sum = flx_sum + flx_wgt(LoopInd)*albout_lcl(LoopInd)
           end do
 
-          if (flg_slr_in == 1) then
+          if (FlagSwRadType == 1) then
              AlbedoSnowDir(1) = flx_sum / sum(flx_wgt(1:(nir_bnd_bgn-1)))
-          elseif (flg_slr_in == 2)then
+          elseif (FlagSwRadType == 2)then
              AlbedoSnowDif(1) = flx_sum / sum(flx_wgt(1:(nir_bnd_bgn-1)))
           endif
 
@@ -1691,18 +1666,18 @@ contains
              flx_sum = flx_sum + flx_wgt(LoopInd)*albout_lcl(LoopInd)
           end do
 
-          if (flg_slr_in == 1) then
+          if (FlagSwRadType == 1) then
               AlbedoSnowDir(2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
-          elseif (flg_slr_in == 2) then
+          elseif (FlagSwRadType == 2) then
               AlbedoSnowDif(2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
           endif
 
        end if
 
        if (NumSnicarRadBand <= 5) then
-          if (flg_slr_in == 1) then
+          if (FlagSwRadType == 1) then
              FracRadSwAbsSnowDir(:,1) = flx_abs_lcl(:,1)
-          elseif (flg_slr_in == 2) then
+          elseif (FlagSwRadType == 2) then
              FracRadSwAbsSnowDif(:,1) = flx_abs_lcl(:,1)
           endif
 
@@ -1713,9 +1688,9 @@ contains
                 flx_sum = flx_sum + flx_wgt(LoopInd)*flx_abs_lcl(i,LoopInd)
              enddo
 
-          if (flg_slr_in == 1) then
+          if (FlagSwRadType == 1) then
              FracRadSwAbsSnowDir(i,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
-          elseif (flg_slr_in == 2) then
+          elseif (FlagSwRadType == 2) then
              FracRadSwAbsSnowDif(i,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
           endif
  
@@ -1733,9 +1708,9 @@ contains
                 flx_sum = flx_sum + flx_wgt(LoopInd)*flx_abs_lcl(i,LoopInd)
              enddo
 
-             if (flg_slr_in == 1) then
+             if (FlagSwRadType == 1) then
                 FracRadSwAbsSnowDir(i,1)=flx_sum / sum(flx_wgt(1:(nir_bnd_bgn-1)))
-             elseif (flg_slr_in == 2) then
+             elseif (FlagSwRadType == 2) then
                 FracRadSwAbsSnowDif(i,1)=flx_sum / sum(flx_wgt(1:(nir_bnd_bgn-1)))
              endif
 
@@ -1745,9 +1720,9 @@ contains
                 flx_sum = flx_sum + flx_wgt(LoopInd)*flx_abs_lcl(i,LoopInd)
              enddo
 
-             if (flg_slr_in == 1) then
+             if (FlagSwRadType == 1) then
                 FracRadSwAbsSnowDir(i,2)=flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
-             elseif (flg_slr_in == 2) then
+             elseif (FlagSwRadType == 2) then
                 FracRadSwAbsSnowDif(i,2)=flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
              endif
            end do
@@ -1760,7 +1735,7 @@ contains
           ! near-IR direct albedo/absorption adjustment for high solar zenith angles
           ! solar zenith angle parameterization
           ! calculate the scaling factor for NIR direct albedo if SZA>75 degree
-          if ((mu_not < mu_75) .and. (flg_slr_in == 1)) then
+          if ((mu_not < mu_75) .and. (FlagSwRadType == 1)) then
              sza_c1 = sza_a0 + sza_a1 * mu_not + sza_a2 * mu_not**2
              sza_c0 = sza_b0 + sza_b1 * mu_not + sza_b2 * mu_not**2
              sza_factor = sza_c1 * (log10(snw_rds_lcl(SnowLayerTop) * c1) - c6) + sza_c0
@@ -1775,10 +1750,10 @@ contains
     elseif ((SnowWaterEquiv < SnowWaterEquivMin) .and. (SnowWaterEquiv > 0.0) ) then
 
        if (IndicatorIceSfc == 0) then
-          if (flg_slr_in == 1) then
+          if (FlagSwRadType == 1) then
              AlbedoSnowDir(1) = AlbedoSoilDir(1) 
              AlbedoSnowDir(2) = AlbedoSoilDir(2) 
-          elseif (flg_slr_in == 2) then
+          elseif (FlagSwRadType == 2) then
              AlbedoSnowDif(1) = AlbedoSoilDif(1)
              AlbedoSnowDif(2) = AlbedoSoilDif(2)
           endif
@@ -1789,26 +1764,26 @@ contains
     ! There is either zero snow, or no sun
     else
 
-       if (flg_slr_in == 1) then
+       if (FlagSwRadType == 1) then
           AlbedoSnowDir(1) = 0.0
           AlbedoSnowDir(2) = 0.0
-       elseif (flg_slr_in == 2) then
+       elseif (FlagSwRadType == 2) then
           AlbedoSnowDif(1) = 0.0
           AlbedoSnowDif(2) = 0.0
        endif
 
     endif ! if column has mim snow
 
-    if (flg_slr_in == 1) then
+    if (FlagSwRadType == 1) then
        if (AlbedoSnowDir(1)<0.0 .or. AlbedoSnowDir(2)<0.0 .or. AlbedoSnowDir(1)>1.0 .or. AlbedoSnowDir(2)>1.0)then
-          print *,'snow albedo',flg_slr_in,AlbedoSnowDir(1),AlbedoSnowDir(2),CosSolarZenithAngle
+          print *,'Error in SNICAR direct snow albedo: ',FlagSwRadType,AlbedoSnowDir(1),AlbedoSnowDir(2),CosSolarZenithAngle
           stop
        endif
     endif
 
-    if (flg_slr_in == 2) then
+    if (FlagSwRadType == 2) then
        if (AlbedoSnowDif(1)<0.0 .or. AlbedoSnowDif(2)<0.0 .or. AlbedoSnowDif(1)>1.0 .or. AlbedoSnowDif(2)>1.0)then
-          print *,'snow albedo',flg_slr_in,AlbedoSnowDif(1),AlbedoSnowDif(2),CosSolarZenithAngle
+          print *,'Error in SNICAR diffuse snow albedo',FlagSwRadType,AlbedoSnowDif(1),AlbedoSnowDif(2),CosSolarZenithAngle
           stop
        endif
     endif

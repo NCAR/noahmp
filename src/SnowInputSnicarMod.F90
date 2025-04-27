@@ -1,5 +1,8 @@
 module SnowInputSnicarMod
 
+!!! read in required SNICAR snow albedo parameter datasets
+!!! This module should be called in host model driver but archived here in NoahMP src cold
+
   use netcdf
   use Machine
   use NoahmpIOVarType
@@ -15,21 +18,18 @@ contains
   subroutine SnowInputSnicar(NoahmpIO)
 
 ! ------------------------ Code history -----------------------------------
-! Code: T.-S. Lin, C. He, et al. (2023)
-! Required input parameters for snow albedo SNICAR scheme (Flanner et al. (2021) GMD)
+! Code: T.-S. Lin, C. He, et al. (2025, JHM)
 ! -------------------------------------------------------------------------
 
     implicit none
 
     type(NoahmpIO_type), intent(inout) :: NoahmpIO
 
-    !local variables
-    character(len= 34) :: subname_optics                                    ! file name
-    character(len= 34) :: subname_age = 'snicar_drdt_bst_fit_60_c070416.nc' ! file name
-    character(len= 30) :: name
-    integer :: rank
-    integer :: ierr,iret
-    integer :: ncid, varid
+! local variables
+    character(len=30) :: name
+    integer           :: rank
+    integer           :: ierr,iret
+    integer           :: ncid, varid
 
 ! --------------------------------------------------------------------
     associate(                                                              &
@@ -41,6 +41,8 @@ contains
               snicar_snw_optics       => NoahmpIO%SNICAR_SNOWOPTICS_OPT    ,& ! in,  snow optics type using different refractive index databases in SNICAR
               snicar_dust_optics      => NoahmpIO%SNICAR_DUSTOPTICS_OPT    ,& ! in,  dust optics type for SNICAR snow albedo calculation
               snicar_solarspec        => NoahmpIO%SNICAR_SOLARSPEC_OPT     ,& ! in,  type of downward solar radiation spectrum for SNICAR snow albedo calculation
+              snicar_optic_flnm       => NoahmpIO%snicar_optic_flnm        ,& ! in,  filename for SNICAR optics parameters
+              snicar_age_flnm         => NoahmpIO%snicar_age_flnm          ,& ! in,  filename for snow aging parameters
               ss_alb_snw_drc          => NoahmpIO%ss_alb_snw_drc           ,& ! out, Mie single scatter albedos for direct-beam ice  
               asm_prm_snw_drc         => NoahmpIO%asm_prm_snw_drc          ,& ! out, asymmetry parameter of direct-beam ice
               ext_cff_mss_snw_drc     => NoahmpIO%ext_cff_mss_snw_drc      ,& ! out, mass extinction coefficient for direct-beam ice [m2/kg]
@@ -82,12 +84,6 @@ contains
              )
 ! ----------------------------------------------------------------------
 
-    if (snicar_numrad_snw==5) then
-       subname_optics='snicar_optics_5bnd_c013122.nc'
-    elseif (snicar_numrad_snw==480) then
-       subname_optics = 'snicar_optics_480bnd_c012422.nc'
-    endif  
-
 #ifdef _PARALLEL_  
     call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierr)
     if (ierr /= MPI_SUCCESS) stop "MPI_COMM_RANK"
@@ -95,15 +91,17 @@ contains
     rank = 0
 #endif
 
+    !=================== read in SNICAR snow and aerosol optics parameters =========================
+
     ! Open the NetCDF file.
-    if (rank == 0) write(*,'("Snicar SnowOptics init: ''", A, "''")') trim(subname_optics)
+    if (rank == 0) write(*,'("Snicar SnowOptics init: ''", A, "''")') trim(snicar_optic_flnm)
 #ifdef _PARALLEL_
-    ierr = nf90_open_par(subname_optics, NF90_NOWRITE, MPI_COMM_WORLD, MPI_INFO_NULL, ncid)
+    ierr = nf90_open_par(snicar_optic_flnm, NF90_NOWRITE, MPI_COMM_WORLD, MPI_INFO_NULL, ncid)
 #else
-    ierr = nf90_open(subname_optics, NF90_NOWRITE, ncid)
+    ierr = nf90_open(snicar_optic_flnm, NF90_NOWRITE, ncid)
 #endif
     if (ierr /= 0) then
-       write(*,'("read_snicar_data:  Problem opening file: ''", A, "''")') trim(subname_optics)
+       write(*,'("read_snicar_data:  Problem opening file: ''", A, "''")') trim(snicar_optic_flnm)
 #ifdef _PARALLEL_
        call mpi_finalize(ierr)
        if (ierr /= 0) write(*, '("Problem with MPI_finalize.")')
@@ -4004,9 +4002,9 @@ contains
 
           endif
       
-       endif !end of snicar_solarspec
+       endif ! end of snicar_solarspec
  
-    endif    !end snicar five bands
+    endif ! end snicar five bands
 
     if (snicar_numrad_snw==480) then
    
@@ -4748,7 +4746,8 @@ contains
 
        endif
 
-   endif
+   endif ! end of 480-band read in
+
     ! Close the NetCDF file
     ierr = nf90_close(ncid)
     if (ierr /= 0) stop "MODULE_NOAHLSM_HRLDAS_INPUT:  read_snicar_data:  NF90_CLOSE"
@@ -4774,15 +4773,18 @@ contains
     write (*,*) 'SNICAR: Mie single scatter albedos for dust species 4: ', &
              ss_alb_dst4(1), ss_alb_dst4(2), ss_alb_dst4(3), ss_alb_dst4(4), ss_alb_dst4(5)
 
+
+    !=================== read in SNICAR aging parameters =========================
+
     ! Open the NetCDF file.
-    if (rank == 0) write(*,'("Snicar SnowAge init: ''", A, "''")') trim(subname_age)
+    if (rank == 0) write(*,'("Snicar SnowAge init: ''", A, "''")') trim(snicar_age_flnm)
 #ifdef _PARALLEL_
-    ierr = nf90_open_par(subname_age, NF90_NOWRITE, MPI_COMM_WORLD, MPI_INFO_NULL, ncid)
+    ierr = nf90_open_par(snicar_age_flnm, NF90_NOWRITE, MPI_COMM_WORLD, MPI_INFO_NULL, ncid)
 #else
-    ierr = nf90_open(subname_age, NF90_NOWRITE, ncid)
+    ierr = nf90_open(snicar_age_flnm, NF90_NOWRITE, ncid)
 #endif
     if (ierr /= 0) then
-       write(*,'("read_snicar_data:  Problem opening file: ''", A, "''")') trim(subname_age)
+       write(*,'("read_snicar_data:  Problem opening file: ''", A, "''")') trim(snicar_age_flnm)
 #ifdef _PARALLEL_
        call mpi_finalize(ierr)
        if (ierr /= 0) write(*, '("Problem with MPI_finalize.")')

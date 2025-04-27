@@ -171,7 +171,6 @@ contains
 ! Original Noah-MP subroutine: ERROR
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
-! SNICAR: Adding snicar solar radiation check (T.-S. Lin, C. He et al. 2023)
 ! -------------------------------------------------------------------------
 
     implicit none
@@ -186,7 +185,7 @@ contains
               RadSwDownRefHeight   => noahmp%forcing%RadSwDownRefHeight       ,& ! in,  downward shortwave radiation [W/m2] at reference height
               VegFrac              => noahmp%energy%state%VegFrac             ,& ! in,  greeness vegetation fraction
               RadSwAbsSfc          => noahmp%energy%flux%RadSwAbsSfc          ,& ! in,  total absorbed solar radiation [W/m2]
-              RadSwAbsSnowSoilLayer=> noahmp%energy%flux%RadSwAbsSnowSoilLayer,& ! in, total absorbed solar radiation by snow for each layer [W/m2]
+              RadSwAbsSnowSoilLayer=> noahmp%energy%flux%RadSwAbsSnowSoilLayer,& ! in,  total absorbed solar radiation by snow/soil for each layer [W/m2]
               RadSwReflSfc         => noahmp%energy%flux%RadSwReflSfc         ,& ! in,  total reflected solar radiation [W/m2]
               RadSwReflVeg         => noahmp%energy%flux%RadSwReflVeg         ,& ! in,  reflected solar radiation by vegetation [W/m2]
               RadSwReflGrd         => noahmp%energy%flux%RadSwReflGrd         ,& ! in,  reflected solar radiation by ground [W/m2]
@@ -213,6 +212,7 @@ contains
 
     ! error in shortwave radiation balance should be <0.01 W/m2
     RadSwBalanceError = RadSwDownRefHeight - (RadSwAbsSfc + RadSwReflSfc)
+
     ! print out diagnostics when error is large
     if ( abs(RadSwBalanceError) > 0.01 ) then
        write(*,*) "GridIndexI, GridIndexJ              = ", GridIndexI, GridIndexJ
@@ -234,19 +234,20 @@ contains
        stop "Error: Solar radiation budget problem in NoahMP LSM"
     endif
 
-    !SNICAR
-    if ( OptSnowAlbedo == 3 .and. abs(RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer))>0.001) then !original check is 0.0001, precision issue
+    ! SNICAR
+    if ( OptSnowAlbedo == 3 .and. abs(RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer))>0.001 ) then ! original check is 0.0001, precision issue
        write(*,*) "RadSwAbsGrd gridmean                            = ", RadSwAbsGrd
        write(*,*) "sum(RadSwAbsSnowSoilLayer) gridmean             = ", sum(RadSwAbsSnowSoilLayer)   
        write(*,*) "RadSwAbsSnowSoilLayer gridmean                  = ", RadSwAbsSnowSoilLayer
        write(*,*) "RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer) gridmean = ", RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer)
-       stop
+       stop "Error: SNICAR snow albedo radiation budget problem in NoahMP LSM"
     endif
 
     ! error in surface energy balance should be <0.01 W/m2
     EnergyBalanceError = RadSwAbsVeg + RadSwAbsGrd + HeatPrecipAdvSfc -                     &
                         (RadLwNetSfc + HeatSensibleSfc + HeatLatentCanopy + HeatLatentGrd + &
                          HeatLatentTransp + HeatGroundTot + HeatLatentIrriEvap + HeatCanStorageChg)
+
     ! print out diagnostics when error is large
     if ( abs(EnergyBalanceError) > 0.01 ) then
        write(*,*) 'EnergyBalanceError = ', EnergyBalanceError, ' at GridIndexI,GridIndexJ: ', GridIndexI, GridIndexJ
@@ -260,8 +261,9 @@ contains
        write(*,'(a17,F10.4)' ) "Sprinkler:        ", HeatLatentIrriEvap
        write(*,'(a17,F10.4)' ) "Canopy heat storage change: ", HeatCanStorageChg
        write(*,'(a17,4F10.4)') "Precip advected:  ", HeatPrecipAdvSfc,HeatPrecipAdvCanopy,HeatPrecipAdvVegGrd,HeatPrecipAdvBareGrd
-       write(*,*) "Light through soil/snow water:", RadSwPenetrateGrd,sum(RadSwPenetrateGrd) 
        write(*,'(a17,F10.4)' ) "Veg fraction:     ", VegFrac
+       write(*,'(a17,F10.4)' ) "Light through soil/snow layer total:  ", sum(RadSwPenetrateGrd) 
+       write(*,'(a17,4F10.4)') "Light through soil/snow layer:  ", RadSwPenetrateGrd
        stop "Error: Energy budget problem in NoahMP LSM"
     endif
 

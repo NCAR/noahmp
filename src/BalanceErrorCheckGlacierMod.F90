@@ -105,7 +105,6 @@ contains
 ! Original Noah-MP subroutine: ERROR_GLACIER
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
-! SNICAR: Adding snicar solar radiation check (T.-S. Lin, C. He et al. 2023)
 ! -------------------------------------------------------------------------
 
     implicit none
@@ -119,7 +118,7 @@ contains
               OptSnowAlbedo        => noahmp%config%nmlist%OptSnowAlbedo      ,& ! in,  options for ground snow surface albedo
               RadSwDownRefHeight   => noahmp%forcing%RadSwDownRefHeight       ,& ! in,  downward shortwave radiation [W/m2] at reference height
               RadSwAbsSfc          => noahmp%energy%flux%RadSwAbsSfc          ,& ! in,  total absorbed solar radiation [W/m2]
-              RadSwAbsSnowSoilLayer=> noahmp%energy%flux%RadSwAbsSnowSoilLayer,& ! in, total absorbed solar radiation by snow for each layer [W/m2]
+              RadSwAbsSnowSoilLayer=> noahmp%energy%flux%RadSwAbsSnowSoilLayer,& ! in,  total absorbed solar radiation by snow/soil for each layer [W/m2]
               RadSwReflSfc         => noahmp%energy%flux%RadSwReflSfc         ,& ! in,  total reflected solar radiation [W/m2]
               RadLwNetSfc          => noahmp%energy%flux%RadLwNetSfc          ,& ! in,  total net longwave rad [W/m2] (+ to atm)
               HeatSensibleSfc      => noahmp%energy%flux%HeatSensibleSfc      ,& ! in,  total sensible heat [W/m2] (+ to atm)
@@ -134,6 +133,7 @@ contains
 
     ! error in shortwave radiation balance should be <0.01 W/m2
     RadSwBalanceError = RadSwDownRefHeight - (RadSwAbsSfc + RadSwReflSfc)
+
     ! print out diagnostics when error is large
     if ( abs(RadSwBalanceError) > 0.01 ) then
        write(*,*) "GridIndexI, GridIndexJ = ", GridIndexI, GridIndexJ
@@ -145,13 +145,13 @@ contains
        stop "Error: Solar radiation budget problem in NoahMP LSM"
     endif
 
-    !SNICAR
-    if ( OptSnowAlbedo == 3 .and. abs(RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer))>0.001) then !original check is 0.0001, precision issue
+    ! SNICAR
+    if ( OptSnowAlbedo == 3 .and. abs(RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer))>0.001) then ! original check is 0.0001, precision issue
        write(*,*) "RadSwAbsGrd gridmean                            = ", RadSwAbsGrd
        write(*,*) "sum(RadSwAbsSnowSoilLayer) gridmean             = ", sum(RadSwAbsSnowSoilLayer)
        write(*,*) "RadSwAbsSnowSoilLayer gridmean                  = ", RadSwAbsSnowSoilLayer
        write(*,*) "RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer) gridmean = ", RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer)
-       stop
+       stop "Error: SNICAR snow albedo radiation budget problem in NoahMP LSM"
     endif
 
     ! error in surface energy balance should be <0.01 W/m2

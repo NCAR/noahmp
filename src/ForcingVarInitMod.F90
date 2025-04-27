@@ -47,9 +47,8 @@ contains
     noahmp%forcing%DepDust3                 = undefined_real
     noahmp%forcing%DepDust4                 = undefined_real
     noahmp%forcing%DepDust5                 = undefined_real
-
-    noahmp%forcing%VisFrac                  = undefined_real
-    noahmp%forcing%DirFrac                  = undefined_real
+    noahmp%forcing%RadSwVisFrac             = undefined_real
+    noahmp%forcing%RadSwDirFrac             = undefined_real
 
   end subroutine ForcingVarInitDefault
 

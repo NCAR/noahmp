@@ -6,7 +6,6 @@ module WaterVarType
 ! ------------------------ Code history -----------------------------------
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
-! SNICAR: Adding related variables (T.-S. Lin, C. He et al. 2023)
 ! -------------------------------------------------------------------------
 
   use Machine
@@ -139,7 +138,7 @@ module WaterVarType
     real(kind=kind_noahmp) :: WaterStorageTotBeg         ! total water storage [mm] at the begining before NoahMP process
     real(kind=kind_noahmp) :: WaterBalanceError          ! water balance error [mm]
     real(kind=kind_noahmp) :: WaterStorageTotEnd         ! total water storage [mm] at the end of NoahMP process
-    real(kind=kind_noahmp) :: SnowRadiusFresh            ! fresh snow radius [microns
+    real(kind=kind_noahmp) :: SnowRadiusFresh            ! fresh snow radius [microns]
 
     integer               , allocatable, dimension(:) :: IndexPhaseChange      ! phase change index (0-none;1-melt;2-refreeze)
     real(kind=kind_noahmp), allocatable, dimension(:) :: SnowIce               ! snow layer ice [mm]
@@ -222,7 +221,7 @@ module WaterVarType
     real(kind=kind_noahmp) :: TileDrainCoeffSp           ! drainage coefficient [mm d^-1] for simple scheme
     real(kind=kind_noahmp) :: DrainFacSoilWat            ! drainage factor for soil moisture
     real(kind=kind_noahmp) :: TileDrainCoeff             ! drainage coefficent [m d^-1] for Hooghoudt scheme
-    real(kind=kind_noahmp) :: DrainDepthToImperv         ! Actual depth of tile drainage to impermeable layer form surface
+    real(kind=kind_noahmp) :: DrainDepthToImperv         ! actual depth of tile drainage to impermeable layer form surface
     real(kind=kind_noahmp) :: LateralWatCondFac          ! multiplication factor to determine lateral hydraulic conductivity
     real(kind=kind_noahmp) :: TileDrainDepth             ! Depth of drain [m] for Hooghoudt scheme
     real(kind=kind_noahmp) :: DrainTubeDist              ! distance between two drain tubes or tiles [m]
@@ -236,9 +235,9 @@ module WaterVarType
     real(kind=kind_noahmp) :: MicroPoreContent           ! microprore content (0.0-1.0), 0.0: close to free drainage
     real(kind=kind_noahmp) :: WaterStorageLakeMax        ! maximum lake water storage [mm]
     real(kind=kind_noahmp) :: SnoWatEqvMaxGlacier        ! Maximum SWE allowed at glaciers [mm]
-    real(kind=kind_noahmp) :: SoilConductivityRef        ! Reference Soil Conductivity parameter (used in runoff formulation)
-    real(kind=kind_noahmp) :: SoilInfilFacRef            ! Reference Soil Infiltration Parameter (used in runoff formulation)
-    real(kind=kind_noahmp) :: GroundFrzCoeff             ! Frozen ground parameter to compute frozen soil impervious fraction
+    real(kind=kind_noahmp) :: SoilConductivityRef        ! reference Soil Conductivity parameter (used in runoff formulation)
+    real(kind=kind_noahmp) :: SoilInfilFacRef            ! reference Soil Infiltration Parameter (used in runoff formulation)
+    real(kind=kind_noahmp) :: GroundFrzCoeff             ! frozen ground parameter to compute frozen soil impervious fraction
     real(kind=kind_noahmp) :: IrriTriggerLaiMin          ! minimum lai to trigger irrigation
     real(kind=kind_noahmp) :: SoilWatDeficitAllow        ! management allowable deficit (0-1)
     real(kind=kind_noahmp) :: IrriFloodLossFrac          ! factor of flood irrigation loss
@@ -254,6 +253,20 @@ module WaterVarType
     real(kind=kind_noahmp) :: SnowRadiusMin              ! minimum allowed snow effective radius for SNICAR (also cold "fresh snow" value) [microns]
     real(kind=kind_noahmp) :: FreshSnowRadiusMax         ! maximum warm fresh snow effective radius [microns]
     real(kind=kind_noahmp) :: SnowRadiusRefrz            ! Effective radius of re-frozen snow [microns]
+    real(kind=kind_noahmp) :: ScavEffMeltScale           ! Scaling factor modifying scavenging factors for aerosol in meltwater (-)
+    real(kind=kind_noahmp) :: ScavEffMeltBCphi           ! scavenging factor for hydrophillic BC inclusion in meltwater [frc]
+    real(kind=kind_noahmp) :: ScavEffMeltBCpho           ! scavenging factor for hydrophobic BC inclusion in meltwater  [frc]
+    real(kind=kind_noahmp) :: ScavEffMeltOCphi           ! scavenging factor for hydrophillic OC inclusion in meltwater [frc]
+    real(kind=kind_noahmp) :: ScavEffMeltOCpho           ! scavenging factor for hydrophobic OC inclusion in meltwater  [frc]
+    real(kind=kind_noahmp) :: ScavEffMeltDust1           ! scavenging factor for dust species 1 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp) :: ScavEffMeltDust2           ! scavenging factor for dust species 2 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp) :: ScavEffMeltDust3           ! scavenging factor for dust species 3 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp) :: ScavEffMeltDust4           ! scavenging factor for dust species 4 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp) :: ScavEffMeltDust5           ! scavenging factor for dust species 5 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp) :: SnowRadiusMax              ! maximum allowed snow effective radius [microns]
+    real(kind=kind_noahmp) :: SnowWetAgeC1Brun89         ! constant for liquid water grain growth [m3 s-1], from Brun89
+    real(kind=kind_noahmp) :: SnowWetAgeC2Brun89         ! constant for liquid water grain growth [m3 s-1], from Brun89: corrected for LWC
+    real(kind=kind_noahmp) :: SnowAgeScaleFac            ! arbitrary tuning/scaling factor applied to snow aging rate (-)
 
     real(kind=kind_noahmp), allocatable, dimension(:)     :: SoilMoistureSat        ! saturated value of soil moisture [m3/m3]
     real(kind=kind_noahmp), allocatable, dimension(:)     :: SoilMoistureWilt       ! wilting point soil moisture [m3/m3]
@@ -266,6 +279,7 @@ module WaterVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:,:) :: snowage_tau            ! snowage tau from table [hours]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:) :: snowage_kappa          ! snowage kappa from table [unitless]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:) :: snowage_drdt0          ! snowage dr/dt_0 from table [m2/kg/hr]
+
   end type parameter_type
 
 

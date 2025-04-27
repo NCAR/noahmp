@@ -319,13 +319,13 @@ contains
     if ( .not. allocated (NoahmpIO%RIVERMASK)  ) allocate ( NoahmpIO%RIVERMASK   (XSTART:XEND,YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%NONRIVERXY) ) allocate ( NoahmpIO%NONRIVERXY  (XSTART:XEND,YSTART:YEND) )
 
-    ! Needed for SNICAR_SNOW_ALBEDO (IOPT_ALB = 3)
+    ! Needed for SNICAR SNOW ALBEDO (IOPT_ALB = 3)
     if ( NoahmpIO%IOPT_ALB == 3 ) then
 
-       if (NoahmpIO%SNICAR_BANDNUMBER_OPT == 1) then
-         NoahmpIO%snicar_numrad_snw=5
-       elseif (NoahmpIO%SNICAR_BANDNUMBER_OPT == 2) then
-         NoahmpIO%snicar_numrad_snw=480
+       if ( NoahmpIO%SNICAR_BANDNUMBER_OPT == 1 ) then
+          NoahmpIO%snicar_numrad_snw = 5
+       elseif ( NoahmpIO%SNICAR_BANDNUMBER_OPT == 2 ) then
+          NoahmpIO%snicar_numrad_snw = 480
        endif
 
        if ( .not. allocated (NoahmpIO%ss_alb_snw_drc)      ) allocate ( NoahmpIO%ss_alb_snw_drc      (NoahmpIO%idx_Mie_snw_mx,NoahmpIO%snicar_numrad_snw) )
@@ -366,46 +366,45 @@ contains
        if ( .not. allocated (NoahmpIO%snowage_tau)     )     allocate ( NoahmpIO%snowage_tau         (NoahmpIO%idx_rhos_max,NoahmpIO%idx_Tgrd_max,NoahmpIO%idx_T_max) )
        if ( .not. allocated (NoahmpIO%snowage_kappa)   )     allocate ( NoahmpIO%snowage_kappa       (NoahmpIO%idx_rhos_max,NoahmpIO%idx_Tgrd_max,NoahmpIO%idx_T_max) )
        if ( .not. allocated (NoahmpIO%snowage_drdt0)   )     allocate ( NoahmpIO%snowage_drdt0       (NoahmpIO%idx_rhos_max,NoahmpIO%idx_Tgrd_max,NoahmpIO%idx_T_max) )
-       if ( .not. allocated (NoahmpIO%ALBSOILDIRXY))         allocate ( NoahmpIO%ALBSOILDIRXY        (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! soil albedo (direct)
-       if ( .not. allocated (NoahmpIO%ALBSOILDIFXY))         allocate ( NoahmpIO%ALBSOILDIFXY        (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! soil albedo (diffuse)
-       if ( .not. allocated (NoahmpIO%SNRDSXY)   )           allocate ( NoahmpIO%SNRDSXY             (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) ) ! snow layer effective grain radius [microns, m-6]
-       if ( .not. allocated (NoahmpIO%SNFRXY)    )           allocate ( NoahmpIO%SNFRXY              (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) ) ! snow layer rate of snow freezing [mm/s]
-       if ( .not. allocated (NoahmpIO%BCPHIXY)    )          allocate ( NoahmpIO%BCPHIXY             (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) ) 
-       if ( .not. allocated (NoahmpIO%BCPHOXY)    )          allocate ( NoahmpIO%BCPHOXY             (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%OCPHIXY)    )          allocate ( NoahmpIO%OCPHIXY             (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%OCPHOXY)    )          allocate ( NoahmpIO%OCPHOXY             (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%DUST1XY)    )          allocate ( NoahmpIO%DUST1XY             (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%DUST2XY)    )          allocate ( NoahmpIO%DUST2XY             (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%DUST3XY)    )          allocate ( NoahmpIO%DUST3XY             (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%DUST4XY)    )          allocate ( NoahmpIO%DUST4XY             (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%DUST5XY)    )          allocate ( NoahmpIO%DUST5XY             (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%MassConcBCPHIXY)    )  allocate ( NoahmpIO%MassConcBCPHIXY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%MassConcBCPHOXY)    )  allocate ( NoahmpIO%MassConcBCPHOXY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%MassConcOCPHIXY)    )  allocate ( NoahmpIO%MassConcOCPHIXY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%MassConcOCPHOXY)    )  allocate ( NoahmpIO%MassConcOCPHOXY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%MassConcDUST1XY)    )  allocate ( NoahmpIO%MassConcDUST1XY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%MassConcDUST2XY)    )  allocate ( NoahmpIO%MassConcDUST2XY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%MassConcDUST3XY)    )  allocate ( NoahmpIO%MassConcDUST3XY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%MassConcDUST4XY)    )  allocate ( NoahmpIO%MassConcDUST4XY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%MassConcDUST5XY)    )  allocate ( NoahmpIO%MassConcDUST5XY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%DepBChydrophoXY)    )  allocate ( NoahmpIO%DepBChydrophoXY     (XSTART:XEND,YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%DepBChydrophiXY)    )  allocate ( NoahmpIO%DepBChydrophiXY     (XSTART:XEND,YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%DepOChydrophoXY)    )  allocate ( NoahmpIO%DepOChydrophoXY     (XSTART:XEND,YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%DepOChydrophiXY)    )  allocate ( NoahmpIO%DepOChydrophiXY     (XSTART:XEND,YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%DepDust1XY)         )  allocate ( NoahmpIO%DepDust1XY          (XSTART:XEND,YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%DepDust2XY)         )  allocate ( NoahmpIO%DepDust2XY          (XSTART:XEND,YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%DepDust3XY)         )  allocate ( NoahmpIO%DepDust3XY          (XSTART:XEND,YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%DepDust4XY)         )  allocate ( NoahmpIO%DepDust4XY          (XSTART:XEND,YSTART:YEND) )
-       if ( .not. allocated (NoahmpIO%DepDust5XY)         )  allocate ( NoahmpIO%DepDust5XY          (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%SNRDSXY) )             allocate ( NoahmpIO%SNRDSXY             (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) ) ! snow layer effective grain radius [microns, m-6]
+       if ( .not. allocated (NoahmpIO%SNFRXY)  )             allocate ( NoahmpIO%SNFRXY              (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) ) ! snow layer rate of snow freezing [mm/s]
+       if ( .not. allocated (NoahmpIO%BCPHIXY) )             allocate ( NoahmpIO%BCPHIXY             (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) ) 
+       if ( .not. allocated (NoahmpIO%BCPHOXY) )             allocate ( NoahmpIO%BCPHOXY             (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%OCPHIXY) )             allocate ( NoahmpIO%OCPHIXY             (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%OCPHOXY) )             allocate ( NoahmpIO%OCPHOXY             (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DUST1XY) )             allocate ( NoahmpIO%DUST1XY             (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DUST2XY) )             allocate ( NoahmpIO%DUST2XY             (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DUST3XY) )             allocate ( NoahmpIO%DUST3XY             (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DUST4XY) )             allocate ( NoahmpIO%DUST4XY             (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DUST5XY) )             allocate ( NoahmpIO%DUST5XY             (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%MassConcBCPHIXY) )     allocate ( NoahmpIO%MassConcBCPHIXY     (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%MassConcBCPHOXY) )     allocate ( NoahmpIO%MassConcBCPHOXY     (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%MassConcOCPHIXY) )     allocate ( NoahmpIO%MassConcOCPHIXY     (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%MassConcOCPHOXY) )     allocate ( NoahmpIO%MassConcOCPHOXY     (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%MassConcDUST1XY) )     allocate ( NoahmpIO%MassConcDUST1XY     (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%MassConcDUST2XY) )     allocate ( NoahmpIO%MassConcDUST2XY     (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%MassConcDUST3XY) )     allocate ( NoahmpIO%MassConcDUST3XY     (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%MassConcDUST4XY) )     allocate ( NoahmpIO%MassConcDUST4XY     (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%MassConcDUST5XY) )     allocate ( NoahmpIO%MassConcDUST5XY     (XSTART:XEND,-NSNOW+1:0,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepBChydrophoXY) )     allocate ( NoahmpIO%DepBChydrophoXY     (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepBChydrophiXY) )     allocate ( NoahmpIO%DepBChydrophiXY     (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepOChydrophoXY) )     allocate ( NoahmpIO%DepOChydrophoXY     (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepOChydrophiXY) )     allocate ( NoahmpIO%DepOChydrophiXY     (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepDust1XY)      )     allocate ( NoahmpIO%DepDust1XY          (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepDust2XY)      )     allocate ( NoahmpIO%DepDust2XY          (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepDust3XY)      )     allocate ( NoahmpIO%DepDust3XY          (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepDust4XY)      )     allocate ( NoahmpIO%DepDust4XY          (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%DepDust5XY)      )     allocate ( NoahmpIO%DepDust5XY          (XSTART:XEND,YSTART:YEND) )
     endif
 
-    if ( .not. allocated (NoahmpIO%ALBSNOWDIRXY)) allocate ( NoahmpIO%ALBSNOWDIRXY (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! snow albedo (direct)
-    if ( .not. allocated (NoahmpIO%ALBSNOWDIFXY)) allocate ( NoahmpIO%ALBSNOWDIFXY (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! snow albedo (diffuse)
-    if ( .not. allocated (NoahmpIO%ALBSFCDIRXY))  allocate ( NoahmpIO%ALBSFCDIRXY  (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! surface albedo (direct)
-    if ( .not. allocated (NoahmpIO%ALBSFCDIFXY))  allocate ( NoahmpIO%ALBSFCDIFXY  (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! surface albedo (diffuse)
-
-    if ( .not. allocated (NoahmpIO%VisFrac) )     allocate ( NoahmpIO%VisFrac      (XSTART:XEND,YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%DirFrac) )     allocate ( NoahmpIO%DirFrac      (XSTART:XEND,YSTART:YEND) )
+    if ( .not. allocated (NoahmpIO%ALBSNOWDIRXY) ) allocate ( NoahmpIO%ALBSNOWDIRXY (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! snow albedo (direct)
+    if ( .not. allocated (NoahmpIO%ALBSNOWDIFXY) ) allocate ( NoahmpIO%ALBSNOWDIFXY (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! snow albedo (diffuse)
+    if ( .not. allocated (NoahmpIO%ALBSFCDIRXY)  ) allocate ( NoahmpIO%ALBSFCDIRXY  (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! surface albedo (direct)
+    if ( .not. allocated (NoahmpIO%ALBSFCDIFXY)  ) allocate ( NoahmpIO%ALBSFCDIFXY  (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! surface albedo (diffuse)
+    if ( .not. allocated (NoahmpIO%ALBSOILDIRXY) ) allocate ( NoahmpIO%ALBSOILDIRXY (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! soil albedo (direct)
+    if ( .not. allocated (NoahmpIO%ALBSOILDIFXY) ) allocate ( NoahmpIO%ALBSOILDIFXY (XSTART:XEND,1:NUMRAD,YSTART:YEND) ) ! soil albedo (diffuse)
+    if ( .not. allocated (NoahmpIO%RadSwVisFrac) ) allocate ( NoahmpIO%RadSwVisFrac (XSTART:XEND,YSTART:YEND) ) ! downward solar radation visible fraction
+    if ( .not. allocated (NoahmpIO%RadSwDirFrac) ) allocate ( NoahmpIO%RadSwDirFrac (XSTART:XEND,YSTART:YEND) ) ! downward solar radation direct fraction
 
     ! Needed for crop model (OPT_CROP=1)
     if ( .not. allocated (NoahmpIO%PGSXY)     ) allocate ( NoahmpIO%PGSXY      (XSTART:XEND,  YSTART:YEND) )
@@ -629,8 +628,6 @@ contains
     NoahmpIO%TSNOXY          = undefined_real
     NoahmpIO%SNICEXY         = undefined_real
     NoahmpIO%SNLIQXY         = undefined_real
-    NoahmpIO%ALBSNOWDIRXY    = undefined_real
-    NoahmpIO%ALBSNOWDIFXY    = undefined_real
     NoahmpIO%LFMASSXY        = undefined_real
     NoahmpIO%RTMASSXY        = undefined_real
     NoahmpIO%STMASSXY        = undefined_real
@@ -696,6 +693,14 @@ contains
     NoahmpIO%CANHSXY         = undefined_real
     NoahmpIO%Z0              = undefined_real
     NoahmpIO%ZNT             = undefined_real
+    NoahmpIO%ALBSNOWDIRXY    = undefined_real
+    NoahmpIO%ALBSNOWDIFXY    = undefined_real
+    NoahmpIO%ALBSFCDIRXY     = undefined_real
+    NoahmpIO%ALBSFCDIFXY     = undefined_real
+    NoahmpIO%ALBSOILDIRXY    = undefined_real
+    NoahmpIO%ALBSOILDIFXY    = undefined_real
+    NoahmpIO%RadSwVisFrac    = undefined_real
+    NoahmpIO%RadSwDirFrac    = undefined_real
     NoahmpIO%TAUSSXY         = 0.0
     NoahmpIO%DEEPRECHXY      = 0.0
     NoahmpIO%RECHXY          = 0.0
@@ -815,8 +820,6 @@ contains
        NoahmpIO%snowage_drdt0            = undefined_real
        NoahmpIO%SNRDSXY                  = undefined_real
        NoahmpIO%SNFRXY                   = undefined_real
-       NoahmpIO%ALBSOILDIRXY             = undefined_real
-       NoahmpIO%ALBSOILDIFXY             = undefined_real
        NoahmpIO%BCPHOXY                  = undefined_real
        NoahmpIO%BCPHIXY                  = undefined_real
        NoahmpIO%OCPHOXY                  = undefined_real

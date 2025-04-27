@@ -14,7 +14,7 @@ contains
 ! Piecewise linear interpolation method for 1-dimensional data
 ! Original author: John Burkardt, Florida State University, 09/22/2012
 ! Added and modified by Cenlin He (NCAR) in CTSM, 01/27/2022
-! Added in Noah-MP by T.-S. Lin
+! Added in Noah-MP by T.-S. Lin (NCAR), 2024
 ! ----------------------------------------------------------------------------------------
 
     implicit none
@@ -31,7 +31,7 @@ contains
     real(kind=kind_noahmp)                              :: T
 ! ------------------------------------------------------------
 
-     YI = 0.
+     YI = 0.0
 
      ! if only one data point
      if ( ND == 1 ) then
@@ -42,15 +42,15 @@ contains
      ! if multiple data points
      if ( XI < XD(1) ) then ! extrapolate
         T  = ( XI - XD(1) ) / ( XD(2) - XD(1) )
-        YI = (1. - T) * YD(1) + T * YD(2)
+        YI = (1.0 - T) * YD(1) + T * YD(2)
      elseif ( XI > XD(ND) ) then ! extrapolate
         T  = ( XI - XD(ND-1) ) / ( XD(ND) - XD(ND-1) )
-        YI = (1. - T) * YD(ND-1) + T * YD(ND)
+        YI = (1.0 - T) * YD(ND-1) + T * YD(ND)
      else  ! piecsewise interpolate
         do K = 2, ND
            if ( (XD(K-1) <= XI) .and. (XI <= XD(K)) ) then
               T  = ( XI - XD(K-1) ) / ( XD(K) - XD(K-1) )
-              YI = (1. - T) * YD(K-1) + T * YD(K)
+              YI = (1.0 - T) * YD(K-1) + T * YD(K)
               exit
            endif
         enddo

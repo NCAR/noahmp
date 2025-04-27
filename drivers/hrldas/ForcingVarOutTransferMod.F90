@@ -25,9 +25,9 @@ contains
     type(NoahmpIO_type), intent(inout) :: NoahmpIO
 
 ! -------------------------------------------------------------------------
-    associate(                                                         &
-              I               => noahmp%config%domain%GridIndexI      ,&
-              J               => noahmp%config%domain%GridIndexJ       &
+    associate(                                      &
+              I => noahmp%config%domain%GridIndexI ,&
+              J => noahmp%config%domain%GridIndexJ  &
              )
 ! -------------------------------------------------------------------------
 
@@ -36,10 +36,8 @@ contains
     NoahmpIO%FORCPLSM  (I,J) = noahmp%forcing%PressureAirRefHeight
     NoahmpIO%FORCWLSM  (I,J) = sqrt(noahmp%forcing%WindEastwardRefHeight**2 + &
                                     noahmp%forcing%WindNorthwardRefHeight**2)
-
-    NoahmpIO%DirFrac   (I,J) = noahmp%forcing%DirFrac
-    NoahmpIO%VisFrac   (I,J) = noahmp%forcing%VisFrac
-
+    NoahmpIO%RadSwDirFrac(I,J) = noahmp%forcing%RadSwDirFrac
+    NoahmpIO%RadSwVisFrac(I,J) = noahmp%forcing%RadSwVisFrac
 
     end associate
 

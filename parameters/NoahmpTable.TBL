@@ -480,6 +480,35 @@
  WCAP             = 0.10        ! maximum wetland water holding capacity [m] (tunable) from Zhang et al. 2022
 /
 
+&noahmp_snicar_parameters
+ SnowRadiusMin       = 54.526   ! minimum allowed snow effective radius (also cold "fresh snow" value), can't be lower than 30.0 [microns]
+ SnowRadiusMax       = 1500     ! maximum allowed snow effective radius [microns], needs to be lower than that covered by SNICAR input database
+ FreshSnowRadiusMax  = 204.526  ! maximum warm fresh snow effective radius [microns]
+ SnowRadiusRefrz     = 1000.0   ! Effective radius of re-frozen snow [microns]
+ DepBChydropho       = 0.0      ! hydrophobic Black Carbon deposition [kg m-2 s-1], assume constant read from table
+ DepBChydrophi       = 0.0      ! hydrophillic Black Carbon deposition [kg m-2 s-1], assume constant read from table
+ DepOChydropho       = 0.0      ! hydrophobic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
+ DepOChydrophi       = 0.0      ! hydrophillic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
+ DepDust1            = 0.0      ! dust species 1 deposition [kg m-2 s-1], assume constant read from table
+ DepDust2            = 0.0      ! dust species 2 deposition [kg m-2 s-1], assume constant read from table
+ DepDust3            = 0.0      ! dust species 3 deposition [kg m-2 s-1], assume constant read from table
+ DepDust4            = 0.0      ! dust species 4 deposition [kg m-2 s-1], assume constant read from table
+ DepDust5            = 0.0      ! dust species 5 deposition [kg m-2 s-1], assume constant read from table
+ ScavEffMeltScale    = 1.0      ! Scaling factor modifying scavenging factors for aerosol in meltwater (-)
+ ScavEffMeltBCphi    = 0.20     ! scavenging factor for hydrophillic BC inclusion in meltwater [frc]
+ ScavEffMeltBCpho    = 0.03     ! scavenging factor for hydrophobic BC inclusion in meltwater  [frc]
+ ScavEffMeltOCphi    = 0.20     ! scavenging factor for hydrophillic OC inclusion in meltwater [frc]
+ ScavEffMeltOCpho    = 0.03     ! scavenging factor for hydrophobic OC inclusion in meltwater  [frc]
+ ScavEffMeltDust1    = 0.02     ! scavenging factor for dust species 1 inclusion in meltwater  [frc]
+ ScavEffMeltDust2    = 0.02     ! scavenging factor for dust species 2 inclusion in meltwater  [frc]
+ ScavEffMeltDust3    = 0.01     ! scavenging factor for dust species 3 inclusion in meltwater  [frc]
+ ScavEffMeltDust4    = 0.01     ! scavenging factor for dust species 4 inclusion in meltwater  [frc]
+ ScavEffMeltDust5    = 0.01     ! scavenging factor for dust species 5 inclusion in meltwater  [frc]
+ SnowWetAgeC1Brun89  = 0.0      ! constant for liquid water grain growth [m3 s-1], from Brun89
+ SnowWetAgeC2Brun89  = 4.22e-13 ! Constant for liquid water grain growth [m3 s-1], from Brun89: corrected for LWC [%]
+ SnowAgeScaleFac     = 1.0      ! Arbitrary tuning/scaling factor applied to snow aging rate (-)
+/
+
 &noahmp_irrigation_parameters
  IRR_FRAC         = 0.10        ! irrigation Fraction
  IRR_HAR          = 20          ! number of days before harvest date to stop irrigation 
@@ -867,17 +896,3 @@
  GDVIC   =    0.050,    0.070,    0.130,    0.200,    0.170,    0.110,    0.260,    0.350,    0.260,    0.300,    0.380,    0.410,    0.500,    0.001,    0.010,    0.001,    0.001,    0.050,    0.020
 /
 
-&noahmp_snicar_parameters
- SnowRadiusMin      = 54.526  ! minimum allowed snow effective radius (also cold "fresh snow" value), can't be lower than 30.0 [microns]
- FreshSnowRadiusMax = 204.526 ! maximum warm fresh snow effective radius [microns]
- SnowRadiusRefrz    = 1000.0  ! Effective radius of re-frozen snow [microns]
- DepBChydropho      = 0.0     ! hydrophobic Black Carbon deposition [kg m-2 s-1], assume constant read from table
- DepBChydrophi      = 0.0     ! hydrophillic Black Carbon deposition [kg m-2 s-1], assume constant read from table
- DepOChydropho      = 0.0     ! hydrophobic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
- DepOChydrophi      = 0.0     ! hydrophillic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
- DepDust1           = 0.0     ! dust species 1 deposition [kg m-2 s-1], assume constant read from table
- DepDust2           = 0.0     ! dust species 2 deposition [kg m-2 s-1], assume constant read from table
- DepDust3           = 0.0     ! dust species 3 deposition [kg m-2 s-1], assume constant read from table
- DepDust4           = 0.0     ! dust species 4 deposition [kg m-2 s-1], assume constant read from table
- DepDust5           = 0.0     ! dust species 5 deposition [kg m-2 s-1], assume constant read from table
-/

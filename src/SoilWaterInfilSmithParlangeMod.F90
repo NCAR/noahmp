@@ -50,9 +50,9 @@ contains
 ! ----------------------------------------------------------------------
 
     ! smith-parlang weighing parameter, Gamma
-    WeighFac = 0.82
+    WeighFac   = 0.82
     IniSoilIce = 0.0
-    IndSoil  = 1
+    IndSoil    = 1
 
     ! check whether we are estimating infiltration for current SoilMoisture or SoilMoistureWilt
     if ( IndInfilMax == 1 ) then ! not active for now as the maximum infiltration is estimated based on table values
