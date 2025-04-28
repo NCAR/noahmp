@@ -68,6 +68,8 @@ contains
     character(len=256)      :: forcing_name_SW = "SWDOWN"
     character(len=256)      :: forcing_name_PR = "RAINRATE"
     character(len=256)      :: forcing_name_SN = ""
+    character(len=256)      :: forcing_name_DirFrac = ""
+    character(len=256)      :: forcing_name_VisFrac = ""
     integer                 :: dynamic_veg_option                 = 4
     integer                 :: canopy_stomatal_resistance_option  = 1
     integer                 :: btr_option                         = 1
@@ -146,6 +148,7 @@ contains
          spinup_loops,                                                                    &
          forcing_name_T,forcing_name_Q,forcing_name_U,forcing_name_V,forcing_name_P,      &
          forcing_name_LW,forcing_name_SW,forcing_name_PR,forcing_name_SN,                 &
+         forcing_name_DirFrac, forcing_name_VisFrac,                                      &
          dynamic_veg_option, canopy_stomatal_resistance_option,                           &
          btr_option, surface_drag_option, supercooled_water_option,                       &
          frozen_soil_option, radiative_transfer_option, snow_albedo_option,               &
@@ -411,6 +414,8 @@ contains
     NoahmpIO%forcing_name_SW                   = forcing_name_SW
     NoahmpIO%forcing_name_PR                   = forcing_name_PR
     NoahmpIO%forcing_name_SN                   = forcing_name_SN
+    NoahmpIO%forcing_name_DirFrac              = forcing_name_DirFrac
+    NoahmpIO%forcing_name_VisFrac              = forcing_name_VisFrac
     NoahmpIO%split_output_count                = split_output_count
     NoahmpIO%skip_first_output                 = skip_first_output
     NoahmpIO%khour                             = khour

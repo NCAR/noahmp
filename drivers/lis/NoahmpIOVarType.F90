@@ -740,6 +740,8 @@ module NoahmpIOVarType
     character(len=256)                                     ::  forcing_name_SW
     character(len=256)                                     ::  forcing_name_PR
     character(len=256)                                     ::  forcing_name_SN
+    character(len=256)                                     ::  forcing_name_DirFrac
+    character(len=256)                                     ::  forcing_name_VisFrac
 
     integer                                                ::  noahmp_output       ! =0: default output; >0 include additional output
     integer                                                ::  split_output_count
