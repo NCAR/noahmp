@@ -134,46 +134,46 @@ contains
     noahmp%energy%param%ScatterCoeffSnow (1:NumSwRadBand)         = NoahmpIO%OMEGAS_TABLE(1:NumSwRadBand)
 
     if ( noahmp%config%nmlist%OptSnowAlbedo == 3 ) then ! SNICAR variables
-       noahmp%energy%param%flx_wgt_dif        (1:NumSnicarRadBand) = NoahmpIO%flx_wgt_dif(1:NumSnicarRadBand)
-       noahmp%energy%param%flx_wgt_dir        (1:NumSnicarRadBand) = NoahmpIO%flx_wgt_dir(1:NumSnicarRadBand)
-       noahmp%energy%param%ss_alb_bc1         (1:NumSnicarRadBand) = NoahmpIO%ss_alb_bc1       (1:NumSnicarRadBand) 
-       noahmp%energy%param%asm_prm_bc1        (1:NumSnicarRadBand) = NoahmpIO%asm_prm_bc1      (1:NumSnicarRadBand)
-       noahmp%energy%param%ext_cff_mss_bc1    (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_bc1  (1:NumSnicarRadBand)
-       noahmp%energy%param%ss_alb_bc2         (1:NumSnicarRadBand) = NoahmpIO%ss_alb_bc2       (1:NumSnicarRadBand)
-       noahmp%energy%param%asm_prm_bc2        (1:NumSnicarRadBand) = NoahmpIO%asm_prm_bc2      (1:NumSnicarRadBand)
-       noahmp%energy%param%ext_cff_mss_bc2    (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_bc2  (1:NumSnicarRadBand)
-       noahmp%energy%param%ss_alb_oc1         (1:NumSnicarRadBand) = NoahmpIO%ss_alb_oc1       (1:NumSnicarRadBand)
-       noahmp%energy%param%asm_prm_oc1        (1:NumSnicarRadBand) = NoahmpIO%asm_prm_oc1      (1:NumSnicarRadBand)
-       noahmp%energy%param%ext_cff_mss_oc1    (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_oc1  (1:NumSnicarRadBand)
-       noahmp%energy%param%ss_alb_oc2         (1:NumSnicarRadBand) = NoahmpIO%ss_alb_oc2       (1:NumSnicarRadBand)
-       noahmp%energy%param%asm_prm_oc2        (1:NumSnicarRadBand) = NoahmpIO%asm_prm_oc2      (1:NumSnicarRadBand)
-       noahmp%energy%param%ext_cff_mss_oc2    (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_oc2  (1:NumSnicarRadBand)
-       noahmp%energy%param%ss_alb_dst1        (1:NumSnicarRadBand) = NoahmpIO%ss_alb_dst1      (1:NumSnicarRadBand)
-       noahmp%energy%param%asm_prm_dst1       (1:NumSnicarRadBand) = NoahmpIO%asm_prm_dst1     (1:NumSnicarRadBand)
-       noahmp%energy%param%ext_cff_mss_dst1   (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_dst1 (1:NumSnicarRadBand)
-       noahmp%energy%param%ss_alb_dst2        (1:NumSnicarRadBand) = NoahmpIO%ss_alb_dst2      (1:NumSnicarRadBand)
-       noahmp%energy%param%asm_prm_dst2       (1:NumSnicarRadBand) = NoahmpIO%asm_prm_dst2     (1:NumSnicarRadBand)
-       noahmp%energy%param%ext_cff_mss_dst2   (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_dst2 (1:NumSnicarRadBand)
-       noahmp%energy%param%ss_alb_dst3        (1:NumSnicarRadBand) = NoahmpIO%ss_alb_dst3      (1:NumSnicarRadBand)
-       noahmp%energy%param%asm_prm_dst3       (1:NumSnicarRadBand) = NoahmpIO%asm_prm_dst3     (1:NumSnicarRadBand)
-       noahmp%energy%param%ext_cff_mss_dst3   (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_dst3 (1:NumSnicarRadBand)
-       noahmp%energy%param%ss_alb_dst4        (1:NumSnicarRadBand) = NoahmpIO%ss_alb_dst4      (1:NumSnicarRadBand)
-       noahmp%energy%param%asm_prm_dst4       (1:NumSnicarRadBand) = NoahmpIO%asm_prm_dst4     (1:NumSnicarRadBand)
-       noahmp%energy%param%ext_cff_mss_dst4   (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_dst4 (1:NumSnicarRadBand)
-       noahmp%energy%param%ss_alb_dst5        (1:NumSnicarRadBand) = NoahmpIO%ss_alb_dst5      (1:NumSnicarRadBand)
-       noahmp%energy%param%asm_prm_dst5       (1:NumSnicarRadBand) = NoahmpIO%asm_prm_dst5     (1:NumSnicarRadBand)
-       noahmp%energy%param%ext_cff_mss_dst5   (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_dst5 (1:NumSnicarRadBand)
-       noahmp%energy%param%ss_alb_snw_drc     (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
+       noahmp%energy%param%RadSwWgtDif        (1:NumSnicarRadBand) = NoahmpIO%flx_wgt_dif(1:NumSnicarRadBand)
+       noahmp%energy%param%RadSwWgtDir        (1:NumSnicarRadBand) = NoahmpIO%flx_wgt_dir(1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbBCphi         (1:NumSnicarRadBand) = NoahmpIO%ss_alb_bc1       (1:NumSnicarRadBand) 
+       noahmp%energy%param%AsyPrmBCphi        (1:NumSnicarRadBand) = NoahmpIO%asm_prm_bc1      (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassBCphi    (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_bc1  (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbBCpho         (1:NumSnicarRadBand) = NoahmpIO%ss_alb_bc2       (1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmBCpho        (1:NumSnicarRadBand) = NoahmpIO%asm_prm_bc2      (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassBCpho    (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_bc2  (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbOCphi         (1:NumSnicarRadBand) = NoahmpIO%ss_alb_oc1       (1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmOCphi        (1:NumSnicarRadBand) = NoahmpIO%asm_prm_oc1      (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassOCphi    (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_oc1  (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbOCpho         (1:NumSnicarRadBand) = NoahmpIO%ss_alb_oc2       (1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmOCpho        (1:NumSnicarRadBand) = NoahmpIO%asm_prm_oc2      (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassOCpho    (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_oc2  (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbDustB1        (1:NumSnicarRadBand) = NoahmpIO%ss_alb_dst1      (1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmDustB1       (1:NumSnicarRadBand) = NoahmpIO%asm_prm_dst1     (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassDustB1   (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_dst1 (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbDustB2        (1:NumSnicarRadBand) = NoahmpIO%ss_alb_dst2      (1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmDustB2       (1:NumSnicarRadBand) = NoahmpIO%asm_prm_dst2     (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassDustB2   (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_dst2 (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbDustB3        (1:NumSnicarRadBand) = NoahmpIO%ss_alb_dst3      (1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmDustB3       (1:NumSnicarRadBand) = NoahmpIO%asm_prm_dst3     (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassDustB3   (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_dst3 (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbDustB4        (1:NumSnicarRadBand) = NoahmpIO%ss_alb_dst4      (1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmDustB4       (1:NumSnicarRadBand) = NoahmpIO%asm_prm_dst4     (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassDustB4   (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_dst4 (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbDustB5        (1:NumSnicarRadBand) = NoahmpIO%ss_alb_dst5      (1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmDustB5       (1:NumSnicarRadBand) = NoahmpIO%asm_prm_dst5     (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassDustB5   (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_dst5 (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbSnwRadDir     (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
                   NoahmpIO%ss_alb_snw_drc     (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand)
-       noahmp%energy%param%asm_prm_snw_drc    (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
+       noahmp%energy%param%AsyPrmSnwRadDir    (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
                   NoahmpIO%asm_prm_snw_drc    (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand)
-       noahmp%energy%param%ext_cff_mss_snw_drc(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
+       noahmp%energy%param%ExtCffMassSnwRadDir(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
                   NoahmpIO%ext_cff_mss_snw_drc(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand)
-       noahmp%energy%param%ss_alb_snw_dfs     (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
+       noahmp%energy%param%SsAlbSnwRadDif     (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
                   NoahmpIO%ss_alb_snw_dfs     (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand)
-       noahmp%energy%param%asm_prm_snw_dfs    (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
+       noahmp%energy%param%AsyPrmSnwRadDif    (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
                   NoahmpIO%asm_prm_snw_dfs    (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand)
-       noahmp%energy%param%ext_cff_mss_snw_dfs(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
+       noahmp%energy%param%ExtCffMassSnwRadDif(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
                   NoahmpIO%ext_cff_mss_snw_dfs(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand)
     endif
 

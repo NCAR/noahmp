@@ -411,112 +411,112 @@ contains
 
     ! SNICAR
     if ( noahmp%config%nmlist%OptSnowAlbedo == 3 ) then
-       if ( .not. allocated(noahmp%energy%param%flx_wgt_dir) )         &
-          allocate( noahmp%energy%param%flx_wgt_dir(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%flx_wgt_dif) )         &
-          allocate( noahmp%energy%param%flx_wgt_dif(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ss_alb_snw_drc) )      &
-          allocate( noahmp%energy%param%ss_alb_snw_drc(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%asm_prm_snw_drc) )     &
-          allocate( noahmp%energy%param%asm_prm_snw_drc(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ext_cff_mss_snw_drc) ) &
-          allocate( noahmp%energy%param%ext_cff_mss_snw_drc(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ss_alb_snw_dfs) )      &
-          allocate( noahmp%energy%param%ss_alb_snw_dfs(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%asm_prm_snw_dfs) )     &
-          allocate( noahmp%energy%param%asm_prm_snw_dfs(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ext_cff_mss_snw_dfs) ) &
-          allocate( noahmp%energy%param%ext_cff_mss_snw_dfs(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ss_alb_bc1) )          &
-          allocate( noahmp%energy%param%ss_alb_bc1(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%asm_prm_bc1) )         &
-          allocate( noahmp%energy%param%asm_prm_bc1(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ext_cff_mss_bc1) )     &
-          allocate( noahmp%energy%param%ext_cff_mss_bc1(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ss_alb_bc2) )          &
-          allocate( noahmp%energy%param%ss_alb_bc2(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%asm_prm_bc2) )         &
-          allocate( noahmp%energy%param%asm_prm_bc2(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ext_cff_mss_bc2) )     &
-          allocate( noahmp%energy%param%ext_cff_mss_bc2(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ss_alb_oc1) )          &
-          allocate( noahmp%energy%param%ss_alb_oc1(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%asm_prm_oc1) )         &
-          allocate( noahmp%energy%param%asm_prm_oc1(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ext_cff_mss_oc1) )     &
-          allocate( noahmp%energy%param%ext_cff_mss_oc1(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ss_alb_oc2) )          &
-          allocate( noahmp%energy%param%ss_alb_oc2(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%asm_prm_oc2) )         &
-          allocate( noahmp%energy%param%asm_prm_oc2(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ext_cff_mss_oc2) )     &
-          allocate( noahmp%energy%param%ext_cff_mss_oc2(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ss_alb_dst1) )         &
-          allocate( noahmp%energy%param%ss_alb_dst1(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%asm_prm_dst1) )        &
-          allocate( noahmp%energy%param%asm_prm_dst1(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ext_cff_mss_dst1) )    &
-          allocate( noahmp%energy%param%ext_cff_mss_dst1(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ss_alb_dst2) )         &
-          allocate( noahmp%energy%param%ss_alb_dst2(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%asm_prm_dst2) )        &
-          allocate( noahmp%energy%param%asm_prm_dst2(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ext_cff_mss_dst2) )    &
-          allocate( noahmp%energy%param%ext_cff_mss_dst2(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ss_alb_dst3) )         &
-          allocate( noahmp%energy%param%ss_alb_dst3(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%asm_prm_dst3) )        &
-          allocate( noahmp%energy%param%asm_prm_dst3(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ext_cff_mss_dst3) )    &
-          allocate( noahmp%energy%param%ext_cff_mss_dst3(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ss_alb_dst4) )         &
-          allocate( noahmp%energy%param%ss_alb_dst4(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%asm_prm_dst4) )        &
-          allocate( noahmp%energy%param%asm_prm_dst4(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ext_cff_mss_dst4) )    &
-          allocate( noahmp%energy%param%ext_cff_mss_dst4(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ss_alb_dst5) )         &
-          allocate( noahmp%energy%param%ss_alb_dst5(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%asm_prm_dst5) )        &
-          allocate( noahmp%energy%param%asm_prm_dst5(1:NumSnicarRadBand) )
-       if ( .not. allocated(noahmp%energy%param%ext_cff_mss_dst5) )    &
-          allocate( noahmp%energy%param%ext_cff_mss_dst5(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%RadSwWgtDir) )         &
+          allocate( noahmp%energy%param%RadSwWgtDir(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%RadSwWgtDif) )         &
+          allocate( noahmp%energy%param%RadSwWgtDif(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbSnwRadDir) )      &
+          allocate( noahmp%energy%param%SsAlbSnwRadDir(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmSnwRadDir) )     &
+          allocate( noahmp%energy%param%AsyPrmSnwRadDir(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassSnwRadDir) ) &
+          allocate( noahmp%energy%param%ExtCffMassSnwRadDir(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbSnwRadDif) )      &
+          allocate( noahmp%energy%param%SsAlbSnwRadDif(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmSnwRadDif) )     &
+          allocate( noahmp%energy%param%AsyPrmSnwRadDif(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassSnwRadDif) ) &
+          allocate( noahmp%energy%param%ExtCffMassSnwRadDif(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbBCphi) )          &
+          allocate( noahmp%energy%param%SsAlbBCphi(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmBCphi) )         &
+          allocate( noahmp%energy%param%AsyPrmBCphi(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassBCphi) )     &
+          allocate( noahmp%energy%param%ExtCffMassBCphi(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbBCpho) )          &
+          allocate( noahmp%energy%param%SsAlbBCpho(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmBCpho) )         &
+          allocate( noahmp%energy%param%AsyPrmBCpho(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassBCpho) )     &
+          allocate( noahmp%energy%param%ExtCffMassBCpho(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbOCphi) )          &
+          allocate( noahmp%energy%param%SsAlbOCphi(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmOCphi) )         &
+          allocate( noahmp%energy%param%AsyPrmOCphi(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassOCphi) )     &
+          allocate( noahmp%energy%param%ExtCffMassOCphi(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbOCpho) )          &
+          allocate( noahmp%energy%param%SsAlbOCpho(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmOCpho) )         &
+          allocate( noahmp%energy%param%AsyPrmOCpho(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassOCpho) )     &
+          allocate( noahmp%energy%param%ExtCffMassOCpho(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbDustB1) )         &
+          allocate( noahmp%energy%param%SsAlbDustB1(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmDustB1) )        &
+          allocate( noahmp%energy%param%AsyPrmDustB1(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassDustB1) )    &
+          allocate( noahmp%energy%param%ExtCffMassDustB1(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbDustB2) )         &
+          allocate( noahmp%energy%param%SsAlbDustB2(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmDustB2) )        &
+          allocate( noahmp%energy%param%AsyPrmDustB2(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassDustB2) )    &
+          allocate( noahmp%energy%param%ExtCffMassDustB2(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbDustB3) )         &
+          allocate( noahmp%energy%param%SsAlbDustB3(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmDustB3) )        &
+          allocate( noahmp%energy%param%AsyPrmDustB3(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassDustB3) )    &
+          allocate( noahmp%energy%param%ExtCffMassDustB3(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbDustB4) )         &
+          allocate( noahmp%energy%param%SsAlbDustB4(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmDustB4) )        &
+          allocate( noahmp%energy%param%AsyPrmDustB4(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassDustB4) )    &
+          allocate( noahmp%energy%param%ExtCffMassDustB4(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbDustB5) )         &
+          allocate( noahmp%energy%param%SsAlbDustB5(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmDustB5) )        &
+          allocate( noahmp%energy%param%AsyPrmDustB5(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassDustB5) )    &
+          allocate( noahmp%energy%param%ExtCffMassDustB5(1:NumSnicarRadBand) )
 
-       noahmp%energy%param%flx_wgt_dir           (:)       = undefined_real
-       noahmp%energy%param%flx_wgt_dif           (:)       = undefined_real
-       noahmp%energy%param%ss_alb_snw_drc        (:,:)     = undefined_real
-       noahmp%energy%param%asm_prm_snw_drc       (:,:)     = undefined_real
-       noahmp%energy%param%ext_cff_mss_snw_drc   (:,:)     = undefined_real
-       noahmp%energy%param%ss_alb_snw_dfs        (:,:)     = undefined_real
-       noahmp%energy%param%asm_prm_snw_dfs       (:,:)     = undefined_real
-       noahmp%energy%param%ext_cff_mss_snw_dfs   (:,:)     = undefined_real
-       noahmp%energy%param%ss_alb_bc1            (:)       = undefined_real
-       noahmp%energy%param%asm_prm_bc1           (:)       = undefined_real
-       noahmp%energy%param%ext_cff_mss_bc1       (:)       = undefined_real
-       noahmp%energy%param%ss_alb_bc2            (:)       = undefined_real
-       noahmp%energy%param%asm_prm_bc2           (:)       = undefined_real
-       noahmp%energy%param%ext_cff_mss_bc2       (:)       = undefined_real
-       noahmp%energy%param%ss_alb_oc1            (:)       = undefined_real
-       noahmp%energy%param%asm_prm_oc1           (:)       = undefined_real
-       noahmp%energy%param%ext_cff_mss_oc1       (:)       = undefined_real
-       noahmp%energy%param%ss_alb_oc2            (:)       = undefined_real
-       noahmp%energy%param%asm_prm_oc2           (:)       = undefined_real
-       noahmp%energy%param%ext_cff_mss_oc2       (:)       = undefined_real
-       noahmp%energy%param%ss_alb_dst1           (:)       = undefined_real
-       noahmp%energy%param%asm_prm_dst1          (:)       = undefined_real
-       noahmp%energy%param%ext_cff_mss_dst1      (:)       = undefined_real
-       noahmp%energy%param%ss_alb_dst2           (:)       = undefined_real
-       noahmp%energy%param%asm_prm_dst2          (:)       = undefined_real
-       noahmp%energy%param%ext_cff_mss_dst2      (:)       = undefined_real
-       noahmp%energy%param%ss_alb_dst3           (:)       = undefined_real
-       noahmp%energy%param%asm_prm_dst3          (:)       = undefined_real
-       noahmp%energy%param%ext_cff_mss_dst3      (:)       = undefined_real
-       noahmp%energy%param%ss_alb_dst4           (:)       = undefined_real
-       noahmp%energy%param%asm_prm_dst4          (:)       = undefined_real
-       noahmp%energy%param%ext_cff_mss_dst4      (:)       = undefined_real
-       noahmp%energy%param%ss_alb_dst5           (:)       = undefined_real
-       noahmp%energy%param%asm_prm_dst5          (:)       = undefined_real
-       noahmp%energy%param%ext_cff_mss_dst5      (:)       = undefined_real
+       noahmp%energy%param%RadSwWgtDir           (:)       = undefined_real
+       noahmp%energy%param%RadSwWgtDif           (:)       = undefined_real
+       noahmp%energy%param%SsAlbSnwRadDir        (:,:)     = undefined_real
+       noahmp%energy%param%AsyPrmSnwRadDir       (:,:)     = undefined_real
+       noahmp%energy%param%ExtCffMassSnwRadDir   (:,:)     = undefined_real
+       noahmp%energy%param%SsAlbSnwRadDif        (:,:)     = undefined_real
+       noahmp%energy%param%AsyPrmSnwRadDif       (:,:)     = undefined_real
+       noahmp%energy%param%ExtCffMassSnwRadDif   (:,:)     = undefined_real
+       noahmp%energy%param%SsAlbBCphi            (:)       = undefined_real
+       noahmp%energy%param%AsyPrmBCphi           (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassBCphi       (:)       = undefined_real
+       noahmp%energy%param%SsAlbBCpho            (:)       = undefined_real
+       noahmp%energy%param%AsyPrmBCpho           (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassBCpho       (:)       = undefined_real
+       noahmp%energy%param%SsAlbOCphi            (:)       = undefined_real
+       noahmp%energy%param%AsyPrmOCphi           (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassOCphi       (:)       = undefined_real
+       noahmp%energy%param%SsAlbOCpho            (:)       = undefined_real
+       noahmp%energy%param%AsyPrmOCpho           (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassOCpho       (:)       = undefined_real
+       noahmp%energy%param%SsAlbDustB1           (:)       = undefined_real
+       noahmp%energy%param%AsyPrmDustB1          (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassDustB1      (:)       = undefined_real
+       noahmp%energy%param%SsAlbDustB2           (:)       = undefined_real
+       noahmp%energy%param%AsyPrmDustB2          (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassDustB2      (:)       = undefined_real
+       noahmp%energy%param%SsAlbDustB3           (:)       = undefined_real
+       noahmp%energy%param%AsyPrmDustB3          (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassDustB3      (:)       = undefined_real
+       noahmp%energy%param%SsAlbDustB4           (:)       = undefined_real
+       noahmp%energy%param%AsyPrmDustB4          (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassDustB4      (:)       = undefined_real
+       noahmp%energy%param%SsAlbDustB5           (:)       = undefined_real
+       noahmp%energy%param%AsyPrmDustB5          (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassDustB5      (:)       = undefined_real
     endif
 
     end associate

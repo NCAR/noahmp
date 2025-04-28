@@ -318,41 +318,41 @@ contains
               AlbedoSoilDif            => noahmp%energy%state%AlbedoSoilDif              ,& ! in,  soil albedo (diffuse)
               AlbedoSoilDir            => noahmp%energy%state%AlbedoSoilDir              ,& ! in,  soil albedo (direct)
               AlbedoLandIce            => noahmp%energy%param%AlbedoLandIce              ,& ! in,  albedo land ice: 1=vis, 2=nir
-              flx_wgt_dir              => noahmp%energy%param%flx_wgt_dir                ,& ! in,  downward solar radiation spectral weights (direct)
-              flx_wgt_dif              => noahmp%energy%param%flx_wgt_dif                ,& ! in,  downward solar radiation spectral weights (diffuse)
-              ss_alb_snw_drc           => noahmp%energy%param%ss_alb_snw_drc             ,& ! in,  Mie single scatter albedos for direct-beam ice
-              asm_prm_snw_drc          => noahmp%energy%param%asm_prm_snw_drc            ,& ! in,  asymmetry parameter of direct-beam ice  
-              ext_cff_mss_snw_drc      => noahmp%energy%param%ext_cff_mss_snw_drc        ,& ! in,  mass extinction coefficient for direct-beam ice [m2/kg]
-              ss_alb_snw_dfs           => noahmp%energy%param%ss_alb_snw_dfs             ,& ! in,  Mie single scatter albedos for diffuse ice
-              asm_prm_snw_dfs          => noahmp%energy%param%asm_prm_snw_dfs            ,& ! in,  asymmetry parameter of diffuse ice  
-              ext_cff_mss_snw_dfs      => noahmp%energy%param%ext_cff_mss_snw_dfs        ,& ! in,  mass extinction coefficient for diffuse ice [m2/kg]
-              ss_alb_bc1               => noahmp%energy%param%ss_alb_bc1                 ,& ! in,  Mie single scatter albedos for hydrophillic BC
-              asm_prm_bc1              => noahmp%energy%param%asm_prm_bc1                ,& ! in,  asymmetry parameter for hydrophillic BC
-              ext_cff_mss_bc1          => noahmp%energy%param%ext_cff_mss_bc1            ,& ! in,  mass extinction coefficient for hydrophillic BC [m2/kg]
-              ss_alb_bc2               => noahmp%energy%param%ss_alb_bc2                 ,& ! in,  Mie single scatter albedos for hydrophobic BC
-              asm_prm_bc2              => noahmp%energy%param%asm_prm_bc2                ,& ! in,  asymmetry parameter for hydrophobic BC
-              ext_cff_mss_bc2          => noahmp%energy%param%ext_cff_mss_bc2            ,& ! in,  mass extinction coefficient for hydrophobic BC [m2/kg]
-              ss_alb_oc1               => noahmp%energy%param%ss_alb_oc1                 ,& ! in,  Mie single scatter albedos for hydrophillic OC
-              asm_prm_oc1              => noahmp%energy%param%asm_prm_oc1                ,& ! in,  asymmetry parameter for hydrophillic OC
-              ext_cff_mss_oc1          => noahmp%energy%param%ext_cff_mss_oc1            ,& ! in,  mass extinction coefficient for hydrophillic OC [m2/kg]
-              ss_alb_oc2               => noahmp%energy%param%ss_alb_oc2                 ,& ! in,  Mie single scatter albedos for hydrophobic OC
-              asm_prm_oc2              => noahmp%energy%param%asm_prm_oc2                ,& ! in,  asymmetry parameter for hydrophobic OC
-              ext_cff_mss_oc2          => noahmp%energy%param%ext_cff_mss_oc2            ,& ! in,  mass extinction coefficient for hydrophobic OC [m2/kg]
-              ss_alb_dst1              => noahmp%energy%param%ss_alb_dst1                ,& ! in,  Mie single scatter albedos for dust species 1
-              asm_prm_dst1             => noahmp%energy%param%asm_prm_dst1               ,& ! in,  asymmetry parameter for dust species 1
-              ext_cff_mss_dst1         => noahmp%energy%param%ext_cff_mss_dst1           ,& ! in,  mass extinction coefficient for dust species 1 [m2/kg]
-              ss_alb_dst2              => noahmp%energy%param%ss_alb_dst2                ,& ! in,  Mie single scatter albedos for dust species 2
-              asm_prm_dst2             => noahmp%energy%param%asm_prm_dst2               ,& ! in,  asymmetry parameter for dust species 2
-              ext_cff_mss_dst2         => noahmp%energy%param%ext_cff_mss_dst2           ,& ! in,  mass extinction coefficient for dust species 2 [m2/kg]
-              ss_alb_dst3              => noahmp%energy%param%ss_alb_dst3                ,& ! in,  Mie single scatter albedos for dust species 3
-              asm_prm_dst3             => noahmp%energy%param%asm_prm_dst3               ,& ! in,  asymmetry parameter for dust species 3
-              ext_cff_mss_dst3         => noahmp%energy%param%ext_cff_mss_dst3           ,& ! in,  mass extinction coefficient for dust species 3 [m2/kg]
-              ss_alb_dst4              => noahmp%energy%param%ss_alb_dst4                ,& ! in,  Mie single scatter albedos for dust species 4
-              asm_prm_dst4             => noahmp%energy%param%asm_prm_dst4               ,& ! in,  asymmetry parameter for dust species 4
-              ext_cff_mss_dst4         => noahmp%energy%param%ext_cff_mss_dst4           ,& ! in,  mass extinction coefficient for dust species 4 [m2/kg]
-              ss_alb_dst5              => noahmp%energy%param%ss_alb_dst5                ,& ! in,  Mie single scatter albedos for dust species 5
-              asm_prm_dst5             => noahmp%energy%param%asm_prm_dst5               ,& ! in,  asymmetry parameter for dust species 5
-              ext_cff_mss_dst5         => noahmp%energy%param%ext_cff_mss_dst5           ,& ! in,  mass extinction coefficient for dust species 5 [m2/kg]
+              RadSwWgtDir              => noahmp%energy%param%RadSwWgtDir                ,& ! in,  downward solar radiation spectral weights (direct)
+              RadSwWgtDif              => noahmp%energy%param%RadSwWgtDif                ,& ! in,  downward solar radiation spectral weights (diffuse)
+              SsAlbSnwRadDir           => noahmp%energy%param%SsAlbSnwRadDir             ,& ! in,  Mie single scatter albedos for direct-beam ice
+              AsyPrmSnwRadDir          => noahmp%energy%param%AsyPrmSnwRadDir            ,& ! in,  asymmetry parameter of direct-beam ice  
+              ExtCffMassSnwRadDir      => noahmp%energy%param%ExtCffMassSnwRadDir        ,& ! in,  mass extinction coefficient for direct-beam ice [m2/kg]
+              SsAlbSnwRadDif           => noahmp%energy%param%SsAlbSnwRadDif             ,& ! in,  Mie single scatter albedos for diffuse ice
+              AsyPrmSnwRadDif          => noahmp%energy%param%AsyPrmSnwRadDif            ,& ! in,  asymmetry parameter of diffuse ice  
+              ExtCffMassSnwRadDif      => noahmp%energy%param%ExtCffMassSnwRadDif        ,& ! in,  mass extinction coefficient for diffuse ice [m2/kg]
+              SsAlbBCphi               => noahmp%energy%param%SsAlbBCphi                 ,& ! in,  Mie single scatter albedos for hydrophillic BC
+              AsyPrmBCphi              => noahmp%energy%param%AsyPrmBCphi                ,& ! in,  asymmetry parameter for hydrophillic BC
+              ExtCffMassBCphi          => noahmp%energy%param%ExtCffMassBCphi            ,& ! in,  mass extinction coefficient for hydrophillic BC [m2/kg]
+              SsAlbBCpho               => noahmp%energy%param%SsAlbBCpho                 ,& ! in,  Mie single scatter albedos for hydrophobic BC
+              AsyPrmBCpho              => noahmp%energy%param%AsyPrmBCpho                ,& ! in,  asymmetry parameter for hydrophobic BC
+              ExtCffMassBCpho          => noahmp%energy%param%ExtCffMassBCpho            ,& ! in,  mass extinction coefficient for hydrophobic BC [m2/kg]
+              SsAlbOCphi               => noahmp%energy%param%SsAlbOCphi                 ,& ! in,  Mie single scatter albedos for hydrophillic OC
+              AsyPrmOCphi              => noahmp%energy%param%AsyPrmOCphi                ,& ! in,  asymmetry parameter for hydrophillic OC
+              ExtCffMassOCphi          => noahmp%energy%param%ExtCffMassOCphi            ,& ! in,  mass extinction coefficient for hydrophillic OC [m2/kg]
+              SsAlbOCpho               => noahmp%energy%param%SsAlbOCpho                 ,& ! in,  Mie single scatter albedos for hydrophobic OC
+              AsyPrmOCpho              => noahmp%energy%param%AsyPrmOCpho                ,& ! in,  asymmetry parameter for hydrophobic OC
+              ExtCffMassOCpho          => noahmp%energy%param%ExtCffMassOCpho            ,& ! in,  mass extinction coefficient for hydrophobic OC [m2/kg]
+              SsAlbDustB1              => noahmp%energy%param%SsAlbDustB1                ,& ! in,  Mie single scatter albedos for dust species 1
+              AsyPrmDustB1             => noahmp%energy%param%AsyPrmDustB1               ,& ! in,  asymmetry parameter for dust species 1
+              ExtCffMassDustB1         => noahmp%energy%param%ExtCffMassDustB1           ,& ! in,  mass extinction coefficient for dust species 1 [m2/kg]
+              SsAlbDustB2              => noahmp%energy%param%SsAlbDustB2                ,& ! in,  Mie single scatter albedos for dust species 2
+              AsyPrmDustB2             => noahmp%energy%param%AsyPrmDustB2               ,& ! in,  asymmetry parameter for dust species 2
+              ExtCffMassDustB2         => noahmp%energy%param%ExtCffMassDustB2           ,& ! in,  mass extinction coefficient for dust species 2 [m2/kg]
+              SsAlbDustB3              => noahmp%energy%param%SsAlbDustB3                ,& ! in,  Mie single scatter albedos for dust species 3
+              AsyPrmDustB3             => noahmp%energy%param%AsyPrmDustB3               ,& ! in,  asymmetry parameter for dust species 3
+              ExtCffMassDustB3         => noahmp%energy%param%ExtCffMassDustB3           ,& ! in,  mass extinction coefficient for dust species 3 [m2/kg]
+              SsAlbDustB4              => noahmp%energy%param%SsAlbDustB4                ,& ! in,  Mie single scatter albedos for dust species 4
+              AsyPrmDustB4             => noahmp%energy%param%AsyPrmDustB4               ,& ! in,  asymmetry parameter for dust species 4
+              ExtCffMassDustB4         => noahmp%energy%param%ExtCffMassDustB4           ,& ! in,  mass extinction coefficient for dust species 4 [m2/kg]
+              SsAlbDustB5              => noahmp%energy%param%SsAlbDustB5                ,& ! in,  Mie single scatter albedos for dust species 5
+              AsyPrmDustB5             => noahmp%energy%param%AsyPrmDustB5               ,& ! in,  asymmetry parameter for dust species 5
+              ExtCffMassDustB5         => noahmp%energy%param%ExtCffMassDustB5           ,& ! in,  mass extinction coefficient for dust species 5 [m2/kg]
               MassConcBChydropho       => noahmp%water%state%MassConcBChydropho          ,& ! in,  mass concentration of hydrophobic Black Carbon in snow [kg/kg]
               MassConcBChydrophi       => noahmp%water%state%MassConcBChydrophi          ,& ! in,  mass concentration of hydrophillic Black Carbon in snow [kg/kg]
               MassConcOChydropho       => noahmp%water%state%MassConcOChydropho          ,& ! in,  mass concentration of hydrophobic Organic Carbon in snow [kg/kg]
@@ -642,10 +642,10 @@ contains
        else   ! works for both 5-band & 480-band, flux weights directly read from input data, cenlin
           ! Direct:
           if (FlagSwRadType == 1) then
-             flx_wgt(1:NumSnicarRadBand) = flx_wgt_dir(1:NumSnicarRadBand)  ! VIS or NIR band sum is already normalized to 1.0 in input data
+             flx_wgt(1:NumSnicarRadBand) = RadSwWgtDir(1:NumSnicarRadBand)  ! VIS or NIR band sum is already normalized to 1.0 in input data
           ! Diffuse:
           elseif (FlagSwRadType == 2) then
-             flx_wgt(1:NumSnicarRadBand) = flx_wgt_dif(1:NumSnicarRadBand)  ! VIS or NIR band sum is already normalized to 1.0 in input data
+             flx_wgt(1:NumSnicarRadBand) = RadSwWgtDif(1:NumSnicarRadBand)  ! VIS or NIR band sum is already normalized to 1.0 in input data
           endif
        endif
 
@@ -762,17 +762,17 @@ contains
                 do i=SnowLayerTop,SnowLayerBottom,1
                    rds_idx = snw_rds_lcl(i) - snw_rds_min_tbl + 1
                    ! snow optical properties (direct radiation)
-                   ss_alb_snw_lcl(i)      = ss_alb_snw_drc(rds_idx,LoopInd)
-                   ext_cff_mss_snw_lcl(i) = ext_cff_mss_snw_drc(rds_idx,LoopInd)
-                   if (sno_shp(i) == 1) asm_prm_snw_lcl(i) = asm_prm_snw_drc(rds_idx,LoopInd)
+                   ss_alb_snw_lcl(i)      = SsAlbSnwRadDir(rds_idx,LoopInd)
+                   ext_cff_mss_snw_lcl(i) = ExtCffMassSnwRadDir(rds_idx,LoopInd)
+                   if (sno_shp(i) == 1) asm_prm_snw_lcl(i) = AsyPrmSnwRadDir(rds_idx,LoopInd)
                 enddo
              elseif (FlagSwRadType == 2) then
                 do i=SnowLayerTop,SnowLayerBottom,1
                    rds_idx = snw_rds_lcl(i) - snw_rds_min_tbl + 1
                    ! snow optical properties (diffuse radiation)
-                   ss_alb_snw_lcl(i)      = ss_alb_snw_dfs(rds_idx,LoopInd)
-                   ext_cff_mss_snw_lcl(i) = ext_cff_mss_snw_dfs(rds_idx,LoopInd)
-                   if (sno_shp(i) == 1) asm_prm_snw_lcl(i) = asm_prm_snw_dfs(rds_idx,LoopInd)
+                   ss_alb_snw_lcl(i)      = SsAlbSnwRadDif(rds_idx,LoopInd)
+                   ext_cff_mss_snw_lcl(i) = ExtCffMassSnwRadDif(rds_idx,LoopInd)
+                   if (sno_shp(i) == 1) asm_prm_snw_lcl(i) = AsyPrmSnwRadDif(rds_idx,LoopInd)
                 enddo
              endif
 
@@ -861,19 +861,19 @@ contains
              enddo !snow layer
 
              ! aerosol species 2 optical properties, hydrophobic BC
-             ss_alb_aer_lcl(2)        = ss_alb_bc2(LoopInd)
-             asm_prm_aer_lcl(2)       = asm_prm_bc2(LoopInd)
-             ext_cff_mss_aer_lcl(2)   = ext_cff_mss_bc2(LoopInd)
+             ss_alb_aer_lcl(2)        = SsAlbBCpho(LoopInd)
+             asm_prm_aer_lcl(2)       = AsyPrmBCpho(LoopInd)
+             ext_cff_mss_aer_lcl(2)   = ExtCffMassBCpho(LoopInd)
 
              ! aerosol species 3 optical properties, hydrophilic OC
-             ss_alb_aer_lcl(3)        = ss_alb_oc1(LoopInd)
-             asm_prm_aer_lcl(3)       = asm_prm_oc1(LoopInd)
-             ext_cff_mss_aer_lcl(3)   = ext_cff_mss_oc1(LoopInd)
+             ss_alb_aer_lcl(3)        = SsAlbOCphi(LoopInd)
+             asm_prm_aer_lcl(3)       = AsyPrmOCphi(LoopInd)
+             ext_cff_mss_aer_lcl(3)   = ExtCffMassOCphi(LoopInd)
 
              ! aerosol species 4 optical properties, hydrophobic OC
-             ss_alb_aer_lcl(4)        = ss_alb_oc2(LoopInd)
-             asm_prm_aer_lcl(4)       = asm_prm_oc2(LoopInd)
-             ext_cff_mss_aer_lcl(4)   = ext_cff_mss_oc2(LoopInd)
+             ss_alb_aer_lcl(4)        = SsAlbOCpho(LoopInd)
+             asm_prm_aer_lcl(4)       = AsyPrmOCpho(LoopInd)
+             ext_cff_mss_aer_lcl(4)   = ExtCffMassOCpho(LoopInd)
 
              ! 1. snow and aerosol layer column mass (L_snw, L_aer [kg/m^2])
              ! 2. optical Depths (tau_snw, tau_aer)
@@ -884,29 +884,29 @@ contains
 
                 ! Optics for BC/dust-snow external mixing:
                 ! aerosol species 1 optical properties, hydrophilic BC
-                ss_alb_aer_lcl(1)        = ss_alb_bc1(LoopInd)
-                asm_prm_aer_lcl(1)       = asm_prm_bc1(LoopInd)
-                ext_cff_mss_aer_lcl(1)   = ext_cff_mss_bc1(LoopInd)
+                ss_alb_aer_lcl(1)        = SsAlbBCphi(LoopInd)
+                asm_prm_aer_lcl(1)       = AsyPrmBCphi(LoopInd)
+                ext_cff_mss_aer_lcl(1)   = ExtCffMassBCphi(LoopInd)
                 ! aerosol species 5 optical properties, dust size1
-                ss_alb_aer_lcl(5)      = ss_alb_dst1(LoopInd)
-                asm_prm_aer_lcl(5)     = asm_prm_dst1(LoopInd)
-                ext_cff_mss_aer_lcl(5) = ext_cff_mss_dst1(LoopInd)
+                ss_alb_aer_lcl(5)      = SsAlbDustB1(LoopInd)
+                asm_prm_aer_lcl(5)     = AsyPrmDustB1(LoopInd)
+                ext_cff_mss_aer_lcl(5) = ExtCffMassDustB1(LoopInd)
                 ! aerosol species 6 optical properties, dust size2
-                ss_alb_aer_lcl(6)      = ss_alb_dst2(LoopInd)
-                asm_prm_aer_lcl(6)     = asm_prm_dst2(LoopInd)
-                ext_cff_mss_aer_lcl(6) = ext_cff_mss_dst2(LoopInd)
+                ss_alb_aer_lcl(6)      = SsAlbDustB2(LoopInd)
+                asm_prm_aer_lcl(6)     = AsyPrmDustB2(LoopInd)
+                ext_cff_mss_aer_lcl(6) = ExtCffMassDustB2(LoopInd)
                 ! aerosol species 7 optical properties, dust size3
-                ss_alb_aer_lcl(7)      = ss_alb_dst3(LoopInd)
-                asm_prm_aer_lcl(7)     = asm_prm_dst3(LoopInd)
-                ext_cff_mss_aer_lcl(7) = ext_cff_mss_dst3(LoopInd)
+                ss_alb_aer_lcl(7)      = SsAlbDustB3(LoopInd)
+                asm_prm_aer_lcl(7)     = AsyPrmDustB3(LoopInd)
+                ext_cff_mss_aer_lcl(7) = ExtCffMassDustB3(LoopInd)
                 ! aerosol species 8 optical properties, dust size4
-                ss_alb_aer_lcl(8)      = ss_alb_dst4(LoopInd)
-                asm_prm_aer_lcl(8)     = asm_prm_dst4(LoopInd)
-                ext_cff_mss_aer_lcl(8) = ext_cff_mss_dst4(LoopInd)
+                ss_alb_aer_lcl(8)      = SsAlbDustB4(LoopInd)
+                asm_prm_aer_lcl(8)     = AsyPrmDustB4(LoopInd)
+                ext_cff_mss_aer_lcl(8) = ExtCffMassDustB4(LoopInd)
                 ! aerosol species 9 optical properties, dust size5
-                ss_alb_aer_lcl(9)      = ss_alb_dst5(LoopInd)
-                asm_prm_aer_lcl(9)     = asm_prm_dst5(LoopInd)
-                ext_cff_mss_aer_lcl(9) = ext_cff_mss_dst5(LoopInd)
+                ss_alb_aer_lcl(9)      = SsAlbDustB5(LoopInd)
+                asm_prm_aer_lcl(9)     = AsyPrmDustB5(LoopInd)
+                ext_cff_mss_aer_lcl(9) = ExtCffMassDustB5(LoopInd)
 
                 ! Start BC/dust-snow internal mixing for wavelength<=1.2um
                 if (NumSnicarRadBand == 5)   wvl_doint = wvl_ct5(LoopInd)
