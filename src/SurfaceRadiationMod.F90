@@ -90,8 +90,8 @@ contains
     if ( OptSnowAlbedo == 3 ) then
        if (.not. allocated(FracRadSwAbsSnowDirMean)) allocate(FracRadSwAbsSnowDirMean(-NumSnowLayerMax+1:1,1:NumSwRadBand))
        if (.not. allocated(FracRadSwAbsSnowDifMean)) allocate(FracRadSwAbsSnowDifMean(-NumSnowLayerMax+1:1,1:NumSwRadBand))
-       FracRadSwAbsSnowDirMean(:) = 0.0
-       FracRadSwAbsSnowDifMean(:) = 0.0
+       FracRadSwAbsSnowDirMean(:,:) = 0.0
+       FracRadSwAbsSnowDifMean(:,:) = 0.0
     endif
 
     MinThr               = 1.0e-6
