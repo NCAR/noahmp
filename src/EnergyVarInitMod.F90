@@ -215,8 +215,8 @@ contains
     noahmp%energy%state%ThermConductGlaIce  (:)     = undefined_real
     noahmp%energy%state%AlbedoSnowDir       (:)     = undefined_real
     noahmp%energy%state%AlbedoSnowDif       (:)     = undefined_real
-    noahmp%energy%state%AlbedoSoilDir       (:)     = undefined_real
-    noahmp%energy%state%AlbedoSoilDif       (:)     = undefined_real
+    noahmp%energy%state%AlbedoSoilDir       (:)     = 0.0
+    noahmp%energy%state%AlbedoSoilDif       (:)     = 0.0
     noahmp%energy%state%AlbedoGrdDir        (:)     = undefined_real
     noahmp%energy%state%AlbedoGrdDif        (:)     = undefined_real
     noahmp%energy%state%ReflectanceVeg      (:)     = undefined_real

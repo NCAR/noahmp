@@ -700,8 +700,8 @@ contains
     NoahmpIO%ALBSNOWDIFXY    = undefined_real
     NoahmpIO%ALBSFCDIRXY     = undefined_real
     NoahmpIO%ALBSFCDIFXY     = undefined_real
-    NoahmpIO%ALBSOILDIRXY    = undefined_real
-    NoahmpIO%ALBSOILDIFXY    = undefined_real
+    NoahmpIO%ALBSOILDIRXY    = 0.0
+    NoahmpIO%ALBSOILDIFXY    = 0.0
     NoahmpIO%RadSwVisFrac    = undefined_real
     NoahmpIO%RadSwDirFrac    = undefined_real
     NoahmpIO%rivsto          = undefined_real
