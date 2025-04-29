@@ -533,11 +533,11 @@ contains
        flx_abs_lcl(LoopInd,:)   = 0.0
     enddo
 
-    ! set threshold for precision
+    ! set SWE (mm) threshold for precision
     if (NumSnicarRadBand == 480) then 
        SnowWaterEquivMin = 1.0e-1
     elseif (NumSnicarRadBand == 5) then
-       SnowWaterEquivMin = 1.0e-3
+       SnowWaterEquivMin = 1.0e-2
     endif
 
     ! Qualifier for computing snow RT: 
@@ -604,7 +604,7 @@ contains
              write (*,*) "SNICAR ERROR: snow grain radius of ", snw_rds_lcl(i), " out of bounds."
              write (*,*)  "snl= ", snl_lcl
              write (*,*) "h2osno_total= ", SnowWaterEquiv
-             stop
+             stop "ERROR in SNICAR grain size"
           endif
        enddo
 
@@ -1528,12 +1528,14 @@ contains
                       write(*,*) "SNICAR_AD STATS: h2osno= ", SnowWaterEquiv, " snl= ", snl_lcl
                       write(*,*) "SNICAR_AD STATS: BCphi(0)= ", mss_cnc_aer_lcl(0,1)
                       write(*,*) "SNICAR_AD STATS: BCpho(0)= ", mss_cnc_aer_lcl(0,2)
+                      write(*,*) "SNICAR_AD STATS: OCphi(0)= ", mss_cnc_aer_lcl(0,3)
+                      write(*,*) "SNICAR_AD STATS: OCpho(0)= ", mss_cnc_aer_lcl(0,4)
                       write(*,*) "SNICAR_AD STATS: dust1(0)= ", mss_cnc_aer_lcl(0,5)
                       write(*,*) "SNICAR_AD STATS: dust2(0)= ", mss_cnc_aer_lcl(0,6)
                       write(*,*) "SNICAR_AD STATS: dust3(0)= ", mss_cnc_aer_lcl(0,7)
                       write(*,*) "SNICAR_AD STATS: dust4(0)= ", mss_cnc_aer_lcl(0,8)
                       write(*,*) "SNICAR_AD STATS: dust5(0)= ", mss_cnc_aer_lcl(0,9)
-                      stop
+                      stop "ERROR in SNICAR absorption"
                     endif
                 enddo
 
@@ -1593,7 +1595,7 @@ contains
               write(*,*) "albedo", albedo
               write(*,*) "direct soil albedo",AlbedoSoilDir(1),AlbedoSoilDir(2)
               write(*,*) "diffuse soil albedo",AlbedoSoilDif(1),AlbedoSoilDif(2)
-              stop
+              stop "ERROR in SNICAR energy conservation"
           endif
 
           albout_lcl(LoopInd) = albedo
@@ -1618,7 +1620,7 @@ contains
               write (*,*) "SNICAR STATS: snw_rds(-2)= ", SnowRadius(-2)
               write (*,*) "SNICAR STATS: snw_rds(-1)= ", SnowRadius(-1)
               write (*,*) "SNICAR STATS: snw_rds(0)= ", SnowRadius(0)
-              stop
+              stop "ERROR in SNICAR too large albedo"
 
           endif
 
@@ -1777,14 +1779,14 @@ contains
     if (FlagSwRadType == 1) then
        if (AlbedoSnowDir(1)<0.0 .or. AlbedoSnowDir(2)<0.0 .or. AlbedoSnowDir(1)>1.0 .or. AlbedoSnowDir(2)>1.0)then
           print *,'Error in SNICAR direct snow albedo: ',FlagSwRadType,AlbedoSnowDir(1),AlbedoSnowDir(2),CosSolarZenithAngle
-          stop
+          stop "Error in SNICAR direct snow albedo"
        endif
     endif
 
     if (FlagSwRadType == 2) then
        if (AlbedoSnowDif(1)<0.0 .or. AlbedoSnowDif(2)<0.0 .or. AlbedoSnowDif(1)>1.0 .or. AlbedoSnowDif(2)>1.0)then
           print *,'Error in SNICAR diffuse snow albedo',FlagSwRadType,AlbedoSnowDif(1),AlbedoSnowDif(2),CosSolarZenithAngle
-          stop
+          stop "Error in SNICAR diffuse snow albedo"
        endif
     endif
 
