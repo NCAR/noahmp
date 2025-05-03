@@ -62,7 +62,7 @@ contains
     MatLeft2(:) = 0.0
     MatLeft3(:) = 0.0
 
-    ! compute solar penetration through water, needs more work
+    ! compute solar penetration through snowpack and soil
     RadSwPenetrateGrd(-NumSnowLayerMax+1:NumSoilLayer) = 0.0
    
     if (OptSnowAlbedo == 3 .and. NumSnowLayerNeg < 0 .and. sum(RadSwAbsSnowSoilLayer) > 0.0) then

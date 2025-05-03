@@ -204,7 +204,7 @@ contains
               HeatPrecipAdvCanopy  => noahmp%energy%flux%HeatPrecipAdvCanopy  ,& ! in,  precipitation advected heat - vegetation net [W/m2]
               HeatLatentIrriEvap   => noahmp%energy%flux%HeatLatentIrriEvap   ,& ! in,  latent heating due to sprinkler evaporation [W/m2]
               HeatCanStorageChg    => noahmp%energy%flux%HeatCanStorageChg    ,& ! in,  canopy heat storage change [W/m2]
-              RadSwPenetrateGrd    => noahmp%energy%flux%RadSwPenetrateGrd    ,& ! out, light penetrating through soil/snow water [W/m2]
+              RadSwPenetrateGrd    => noahmp%energy%flux%RadSwPenetrateGrd    ,& ! in,  light penetrating through soil and snowpack [W/m2]
               EnergyBalanceError   => noahmp%energy%state%EnergyBalanceError  ,& ! out, error in surface energy balance [W/m2]
               RadSwBalanceError    => noahmp%energy%state%RadSwBalanceError    & ! out, error in shortwave radiation balance [W/m2]
              )

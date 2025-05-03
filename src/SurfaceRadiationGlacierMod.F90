@@ -44,7 +44,6 @@ contains
               AlbedoGrdDif          => noahmp%energy%state%AlbedoGrdDif        ,& ! in,  ground albedo (diffuse: vis, nir)
               AlbedoSnowDir         => noahmp%energy%state%AlbedoSnowDir       ,& ! in,  snow albedo for direct(1=vis, 2=nir)
               AlbedoSnowDif         => noahmp%energy%state%AlbedoSnowDif       ,& ! in,  snow albedo for diffuse(1=vis, 2=nir)
-              SnowWaterEquiv        => noahmp%water%state%SnowWaterEquiv       ,& ! in,  snow water equivalent [mm]
               SnowCoverFrac         => noahmp%water%state%SnowCoverFrac        ,& ! in,  snow cover fraction
               AlbedoLandIce         => noahmp%energy%param%AlbedoLandIce       ,& ! in,  albedo land ice: 1=vis, 2=nir
               RadSwAbsGrd           => noahmp%energy%flux%RadSwAbsGrd          ,& ! out, solar radiation absorbed by ground [W/m2]

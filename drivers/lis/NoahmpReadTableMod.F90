@@ -1250,9 +1250,9 @@ contains
     NoahmpIO%sr2006_smcmax_b_TABLE      = sr2006_smcmax_b
 
     !---------------- NoahmpTable.TBL SNICAR parameters
-    inquire( file='NoahmpTable.TBL', exist=file_named )
+    inquire( file=trim(MPTABLE_file), exist=file_named )
     if ( file_named ) then
-      open(15, file="NoahmpTable.TBL", status='old', form='formatted', action='read', iostat=ierr)
+      open(15, file=trim(MPTABLE_file), status='old', form='formatted', action='read', iostat=ierr)
     else
       open(15, status='old', form='formatted', action='read', iostat=ierr)
     end if

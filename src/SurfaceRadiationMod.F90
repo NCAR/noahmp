@@ -44,7 +44,6 @@ contains
               NumSnowLayerMax       => noahmp%config%domain%NumSnowLayerMax     ,& ! in,  maximum number of snow layers 
               NumSnowLayerNeg       => noahmp%config%domain%NumSnowLayerNeg     ,& ! in,  actual number of snow layers (negative)
               SnowCoverFrac         => noahmp%water%state%SnowCoverFrac         ,& ! in,  snow cover fraction
-              SnowWaterEquiv        => noahmp%water%state%SnowWaterEquiv        ,& ! in,  snow water equivalent [mm]
               LeafAreaIndEff        => noahmp%energy%state%LeafAreaIndEff       ,& ! in,  leaf area index, after burying by snow
               VegAreaIndEff         => noahmp%energy%state%VegAreaIndEff        ,& ! in,  one-sided leaf+stem area index [m2/m2]
               CanopySunlitFrac      => noahmp%energy%state%CanopySunlitFrac     ,& ! in,  sunlit fraction of canopy
