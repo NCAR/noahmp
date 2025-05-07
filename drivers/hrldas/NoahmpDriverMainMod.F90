@@ -70,6 +70,7 @@ contains
        NoahmpIO%ACC_ECANXY   = 0.0
        NoahmpIO%ACC_ETRANXY  = 0.0
        NoahmpIO%ACC_EDIRXY   = 0.0
+       NoahmpIO%ACC_GLAFLWXY = 0.0
     endif
 
     if ( NoahmpIO%SOIL_UPDATE_STEPS > 1 ) then
@@ -83,11 +84,14 @@ contains
           NoahmpIO%ACC_ECANXY   = 0.0
           NoahmpIO%ACC_ETRANXY  = 0.0
           NoahmpIO%ACC_EDIRXY   = 0.0
+          NoahmpIO%ACC_GLAFLWXY = 0.0
        end if
     endif
 
-    if ( mod(NoahmpIO%ITIMESTEP, NoahmpIO%SOIL_UPDATE_STEPS) == 0 ) NoahmpIO%CALCULATE_SOIL = .true.
- 
+    !if ( mod(NoahmpIO%ITIMESTEP, NoahmpIO%SOIL_UPDATE_STEPS) == 0 ) NoahmpIO%CALCULATE_SOIL = .true.
+    ! Prevent stale values of calculate_soil from leaking across cpu threads in if-statement above
+    NoahmpIO%CALCULATE_SOIL = mod(NoahmpIO%ITIMESTEP, NoahmpIO%SOIL_UPDATE_STEPS) == 0
+
     !---------------------------------------------------------------------
     !  Prepare Noah-MP driver
     !---------------------------------------------------------------------
@@ -194,8 +198,8 @@ contains
              else
                  noahmp%config%domain%IndicatorIceSfc = 0   ! land soil point.
                  call NoahmpMain(noahmp)
-             endif ! glacial split ends 
- 
+             endif ! glacial split ends
+
              !---------------------------------------------------------------------
              !  Transfer 1-D Noah-MP column variables to 2-D output variables
              !---------------------------------------------------------------------

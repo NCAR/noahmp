@@ -55,19 +55,23 @@ module EnergyVarType
     real(kind=kind_noahmp) :: RadLwNetVegGrd              ! vegetated ground net longwave radiation [W/m2] (+ to atm)
     real(kind=kind_noahmp) :: RadLwNetBareGrd             ! bare ground net longwave rad [W/m2] (+ to atm)
 
-    real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwAbsVegDir        ! solar flux absorbed by veg per unit direct flux
-    real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwAbsVegDif        ! solar flux absorbed by veg per unit diffuse flux
-    real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwDirTranGrdDir    ! transmitted direct flux below veg per unit direct flux
-    real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwDirTranGrdDif    ! transmitted direct flux below veg per unit diffuse flux
-    real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwDifTranGrdDir    ! transmitted diffuse flux below veg per unit direct flux
-    real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwDifTranGrdDif    ! transmitted diffuse flux below veg per unit diffuse flux
-    real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwReflVegDir       ! solar flux reflected by veg layer per unit direct flux
-    real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwReflVegDif       ! solar flux reflected by veg layer per unit diffuse flux
-    real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwReflGrdDir       ! solar flux reflected by ground per unit direct flux
-    real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwReflGrdDif       ! solar flux reflected by ground per unit diffuse flux
-    real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwDownDir          ! incoming direct solar radiation [W/m2]
-    real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwDownDif          ! incoming diffuse solar radiation [W/m2]
-    real(kind=kind_noahmp), allocatable, dimension(:) :: RadSwPenetrateGrd     ! light penetrating through soil/snow water [W/m2]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: RadSwAbsVegDir        ! solar flux absorbed by veg per unit direct flux
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: RadSwAbsVegDif        ! solar flux absorbed by veg per unit diffuse flux
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: RadSwDirTranGrdDir    ! transmitted direct flux below veg per unit direct flux
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: RadSwDirTranGrdDif    ! transmitted direct flux below veg per unit diffuse flux
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: RadSwDifTranGrdDir    ! transmitted diffuse flux below veg per unit direct flux
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: RadSwDifTranGrdDif    ! transmitted diffuse flux below veg per unit diffuse flux
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: RadSwReflVegDir       ! solar flux reflected by veg layer per unit direct flux
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: RadSwReflVegDif       ! solar flux reflected by veg layer per unit diffuse flux
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: RadSwReflGrdDir       ! solar flux reflected by ground per unit direct flux
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: RadSwReflGrdDif       ! solar flux reflected by ground per unit diffuse flux
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: RadSwDownDir          ! incoming direct solar radiation [W/m2]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: RadSwDownDif          ! incoming diffuse solar radiation [W/m2]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: RadSwPenetrateGrd     ! light penetrating through soil/snow water [W/m2]
+    real(kind=kind_noahmp), allocatable, dimension(:,:) :: FracRadSwAbsSnowDir   ! direct spectral solar flux absorbed by snow layer [frc]
+    real(kind=kind_noahmp), allocatable, dimension(:,:) :: FracRadSwAbsSnowDif   ! diffuse spectral solar flux absorbed by snow layer [frc]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: RadSwAbsSnowSoilLayer ! solar flux absorbed by snow/soil for each layer [W/m2]
+
 
   end type flux_type
 
@@ -280,19 +284,54 @@ module EnergyVarType
     real(kind=kind_noahmp) :: VegFracAnnMax               ! annual maximum vegetation fraction
     real(kind=kind_noahmp) :: HeatCapacCanFac             ! canopy biomass heat capacity parameter [m]
 
-    real(kind=kind_noahmp), allocatable, dimension(:) :: LeafAreaIndexMon      ! monthly leaf area index, one-sided
-    real(kind=kind_noahmp), allocatable, dimension(:) :: StemAreaIndexMon      ! monthly stem area index, one-sided
-    real(kind=kind_noahmp), allocatable, dimension(:) :: SoilQuartzFrac        ! soil quartz content
-    real(kind=kind_noahmp), allocatable, dimension(:) :: AlbedoSoilSat         ! saturated soil albedos: 1=vis, 2=nir
-    real(kind=kind_noahmp), allocatable, dimension(:) :: AlbedoSoilDry         ! dry soil albedos: 1=vis, 2=nir
-    real(kind=kind_noahmp), allocatable, dimension(:) :: AlbedoLakeFrz         ! albedo frozen lakes: 1=vis, 2=nir
-    real(kind=kind_noahmp), allocatable, dimension(:) :: ScatterCoeffSnow      ! Scattering coefficient for snow
-    real(kind=kind_noahmp), allocatable, dimension(:) :: ReflectanceLeaf       ! leaf reflectance: 1=vis, 2=nir
-    real(kind=kind_noahmp), allocatable, dimension(:) :: ReflectanceStem       ! stem reflectance: 1=vis, 2=nir
-    real(kind=kind_noahmp), allocatable, dimension(:) :: TransmittanceLeaf     ! leaf transmittance: 1=vis, 2=nir
-    real(kind=kind_noahmp), allocatable, dimension(:) :: TransmittanceStem     ! stem transmittance: 1=vis, 2=nir
-    real(kind=kind_noahmp), allocatable, dimension(:) :: EmissivitySoilLake    ! emissivity soil surface: 1=soil, 2=lake
-    real(kind=kind_noahmp), allocatable, dimension(:) :: AlbedoLandIce         ! land/glacier ice albedo: 1=vis, 2=nir
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: LeafAreaIndexMon      ! monthly leaf area index, one-sided
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: StemAreaIndexMon      ! monthly stem area index, one-sided
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: SoilQuartzFrac        ! soil quartz content
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: AlbedoSoilSat         ! saturated soil albedos: 1=vis, 2=nir
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: AlbedoSoilDry         ! dry soil albedos: 1=vis, 2=nir
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: AlbedoLakeFrz         ! albedo frozen lakes: 1=vis, 2=nir
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: ScatterCoeffSnow      ! Scattering coefficient for snow
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: ReflectanceLeaf       ! leaf reflectance: 1=vis, 2=nir
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: ReflectanceStem       ! stem reflectance: 1=vis, 2=nir
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: TransmittanceLeaf     ! leaf transmittance: 1=vis, 2=nir
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: TransmittanceStem     ! stem transmittance: 1=vis, 2=nir
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: EmissivitySoilLake    ! emissivity soil surface: 1=soil, 2=lake
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: AlbedoLandIce         ! land/glacier ice albedo: 1=vis, 2=nir
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: RadSwWgtDir           ! downward solar radiation spectral weights (direct)
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: RadSwWgtDif           ! downward solar radiation spectral weights (diffuse)
+    real(kind=kind_noahmp), allocatable, dimension(:,:) :: SsAlbSnwRadDir        ! Mie single scatter albedos for direct-beam ice
+    real(kind=kind_noahmp), allocatable, dimension(:,:) :: AsyPrmSnwRadDir       ! asymmetry parameter of direct-beam ice  
+    real(kind=kind_noahmp), allocatable, dimension(:,:) :: ExtCffMassSnwRadDir   ! mass extinction coefficient for direct-beam ice [m2/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:,:) :: SsAlbSnwRadDif        ! Mie single scatter albedos for diffuse ice
+    real(kind=kind_noahmp), allocatable, dimension(:,:) :: AsyPrmSnwRadDif       ! asymmetry parameter of diffuse ice 
+    real(kind=kind_noahmp), allocatable, dimension(:,:) :: ExtCffMassSnwRadDif   ! mass extinction coefficient for diffuse ice [m2/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: SsAlbBCphi            ! Mie single scatter albedos for hydrophillic BC
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: AsyPrmBCphi           ! asymmetry parameter for hydrophillic BC
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: ExtCffMassBCphi       ! mass extinction coefficient for hydrophillic BC [m2/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: SsAlbBCpho            ! Mie single scatter albedos for hydrophobic BC
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: AsyPrmBCpho           ! asymmetry parameter for hydrophobic BC
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: ExtCffMassBCpho       ! mass extinction coefficient for hydrophobic BC [m2/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: SsAlbOCphi            ! Mie single scatter albedos for hydrophillic OC
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: AsyPrmOCphi           ! asymmetry parameter for hydrophillic OC
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: ExtCffMassOCphi       ! mass extinction coefficient for hydrophillic OC [m2/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: SsAlbOCpho            ! Mie single scatter albedos for hydrophobic OC
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: AsyPrmOCpho           ! asymmetry parameter for hydrophobic OC
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: ExtCffMassOCpho       ! mass extinction coefficient for hydrophobic OC [m2/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: SsAlbDustB1           ! Mie single scatter albedos for dust species 1
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: AsyPrmDustB1           ! asymmetry parameter for dust species 1
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: ExtCffMassDustB1      ! mass extinction coefficient for dust species 1 [m2/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: SsAlbDustB2           ! Mie single scatter albedos for dust species 2
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: AsyPrmDustB2          ! asymmetry parameter for dust species 2
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: ExtCffMassDustB2      ! mass extinction coefficient for dust species 3 [m2/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: SsAlbDustB3           ! Mie single scatter albedos for dust species 3
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: AsyPrmDustB3          ! asymmetry parameter for dust species 3
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: ExtCffMassDustB3      ! mass extinction coefficient for dust species 3 [m2/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: SsAlbDustB4           ! Mie single scatter albedos for dust species 4
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: AsyPrmDustB4          ! asymmetry parameter for dust species 4
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: ExtCffMassDustB4      ! mass extinction coefficient for dust species 4 [m2/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: SsAlbDustB5           ! Mie single scatter albedos for dust species 5
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: AsyPrmDustB5          ! asymmetry parameter for dust species 5
+    real(kind=kind_noahmp), allocatable, dimension(:)   :: ExtCffMassDustB5      ! mass extinction coefficient for dust species 5 [m2/kg]
 
   end type parameter_type
 

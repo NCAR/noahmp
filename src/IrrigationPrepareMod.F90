@@ -27,8 +27,7 @@ contains
 
 ! ----------------------------------------------------------------------
     associate(                                                                       &
-              LandUseDataName         => noahmp%config%domain%LandUseDataName       ,& ! in,    landuse data name (USGS or MODIS_IGBP)
-              VegType                 => noahmp%config%domain%VegType               ,& ! in,    vegetation type
+              FlagCropland            => noahmp%config%domain%FlagCropland          ,& ! in,    flag to identify croplands
               FlagSoilProcess         => noahmp%config%domain%FlagSoilProcess       ,& ! in,    flag to calculate soil processes
               OptIrrigationMethod     => noahmp%config%nmlist%OptIrrigationMethod   ,& ! in,    irrigation method option
               IrriFracThreshold       => noahmp%water%param%IrriFracThreshold       ,& ! in,    irrigation fraction threshold
@@ -38,22 +37,11 @@ contains
               IrrigationAmtFlood      => noahmp%water%state%IrrigationAmtFlood      ,& ! inout, flood irrigation water amount [m]
               IrrigationAmtMicro      => noahmp%water%state%IrrigationAmtMicro      ,& ! inout, micro irrigation water amount [m]
               RainfallRefHeight       => noahmp%water%flux%RainfallRefHeight        ,& ! inout, rainfall [mm/s] at reference height
-              FlagCropland            => noahmp%config%domain%FlagCropland          ,& ! out,   flag to identify croplands
               IrrigationFracSprinkler => noahmp%water%state%IrrigationFracSprinkler ,& ! out,   sprinkler irrigation fraction (0 to 1)
               IrrigationFracMicro     => noahmp%water%state%IrrigationFracMicro     ,& ! out,   fraction of grid under micro irrigation (0 to 1)
               IrrigationFracFlood     => noahmp%water%state%IrrigationFracFlood      & ! out,   fraction of grid under flood irrigation (0 to 1)
              )
 ! ----------------------------------------------------------------------
-
-    ! initialize
-    FlagCropland = .false.
-
-    ! determine cropland
-    if ( trim(LandUseDataName) == "USGS" ) then
-       if ( (VegType >= 3) .and. (VegType <= 6) ) FlagCropland = .true.
-    elseif ( trim(LandUseDataName) == "MODIFIED_IGBP_MODIS_NOAH") then
-       if ( (VegType == 12) .or. (VegType == 14) ) FlagCropland = .true.
-    endif
 
     ! if OptIrrigationMethod = 0 and if methods are unknown for certain area, then use sprinkler irrigation method
     if ( (OptIrrigationMethod == 0) .and. (IrrigationFracSprinkler == 0.0) .and. (IrrigationFracMicro == 0.0) &

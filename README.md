@@ -8,14 +8,14 @@
 
 Noah-MP<sup>®</sup> is a widely-used state-of-the-art land surface model used in many research and operational weather/climate models (e.g., HRLDAS, WRF, MPAS, WRF-Hydro/NWM, NOAA/UFS, NASA/LIS, etc.).
 
-This is the official Noah-MP land surface model unified repository for code downloading and contribution. Noah-MP is a community open-source model developed with the contributions from the entire scientific community. For development, maintenance, and release of the community Noah-MP GitHub code, please contact: Cenlin He (cenlinhe@ucar.edu) and Fei Chen (feichen@ucar.edu).
+This is the official Noah-MP land surface model unified repository for code downloading and contribution. Noah-MP is a community open-source model developed with the contributions from the entire scientific community. For development, maintenance, and release of the community Noah-MP GitHub code, please contact: Cenlin He (cenlinhe@ucar.edu).
 
 Noah-MP model website: https://ral.ucar.edu/solutions/products/noah-multiparameterization-land-surface-model-noah-mp-lsm
 
 
-## New: Release of Noah-MP version 5.0 (Refactored/Modernized version)
+## Release of Noah-MP version 5.0 (Refactored/Modernized version)
 
-The latest Noah-MP model version (version 5.0) has been released in March 9, 2023, which is a modernized/refactored version by re-writing the entire model with modern Fortran code infrastructure and data structures. All future Noah-MP developments and updates will be made only to this modernized/refactored version. The version 5.0 has the same model physics as the version 4.5, but with a different code infrastructure. More details about the Noah-MP version 5.0 can be found in the model description paper (He et al., 2023b, in review) and the technical documentation (He et al. 2023a). Currently, the Noah-MP version 5.0 coupling with HRLDAS has been completed, but its coupling with other host models (e.g., WRF-Hydro, NASA/LIS, WRF, MPAS, UFS, etc.) is still on-going.
+The Noah-MP model version (version 5.0) has been released in March 9, 2023, which is a modernized/refactored version by re-writing the entire model with modern Fortran code infrastructure and data structures. All future Noah-MP developments and updates will be made only to this modernized/refactored version. The version 5.0 has the same model physics as the version 4.5, but with a different code infrastructure. More details about the Noah-MP version 5.0 can be found in the model description paper (He et al., 2023b, in review) and the technical documentation (He et al. 2023a). Currently, the Noah-MP version 5.0 coupling with HRLDAS has been completed, but its coupling with other host models (e.g., WRF-Hydro, NASA/LIS, WRF, MPAS, UFS, etc.) is still on-going.
 
 
 ## Noah-MP technical documentation and model description papers
@@ -29,6 +29,16 @@ Technical documentation freely available at http://dx.doi.org/10.5065/ew8g-yr95
 **Noah-MP version 5.0 model description paper**:  He, C., Valayamkunnath, P., Barlage, M., Chen, F., Gochis, D., Cabell, R., Schneider, T., Rasmussen, R., Niu, G.-Y., Yang, Z.-L., Niyogi, D., and Ek, M.: Modernizing the open-source community Noah with multi-parameterization options (Noah-MP) land surface model (version 5.0) with enhanced modularity, interoperability, and applicability, Geosci. Model Dev., 16, 5131–5151, https://doi.org/10.5194/gmd-16-5131-2023, 2023.
 
 **Noah-MP development future priority paper**: He, C., Chen, F., Barlage, M., Yang, Z.-L., Wegiel, J. W., Niu, G.-Y., Gochis, D., Mocko, D. M., Abolafia-Rosenzweig, R., Zhang, Z., Lin, T.-S., Valayamkunnath, P., Ek, M., and Niyogi, D. (2023): Enhancing the community Noah-MP land model capabilities for Earth sciences and applications, Bull. Amer. Meteor. Soc., E2023–E2029, https://doi.org/10.1175/BAMS-D-23-0249.1
+
+
+## Noah-MP Strategic Plan Committee
+
+Cenlin He, Prasanth Valayamkunnath, Michael Barlage, David Mocko, Guo-Yue Niu, Myung-Seo Koo, Fei Chen, Jerry Wiegel, Zong-Liang Yang, Dev Niyogi, Xuemei Wang, Gonzalo Miguez-Macho
+
+
+## Noah-MP Code Review Committee
+
+The current code review committee list is here: https://docs.google.com/spreadsheets/d/13kGfVbf5TmFJm-wjis1ZQjmt7eCXFLfbZaqXkvPSi14/edit?gid=0#gid=0
 
 
 ## Noah-MP GitHub structure

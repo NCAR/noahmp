@@ -36,6 +36,7 @@ contains
     real(kind=kind_noahmp)                :: SoilWatConductivity    ! soil water conductivity [m/s]
     real(kind=kind_noahmp)                :: SoilSorptivity         ! sorptivity [m s^-1/2]
     real(kind=kind_noahmp)                :: SoilWatConductTmp      ! intial hydraulic conductivity [m/s]
+    real(kind=kind_noahmp)                :: IniSoilIce             ! zero soil ice
 
 ! --------------------------------------------------------------------
     associate(                                                                     &
@@ -49,12 +50,13 @@ contains
               )
 ! ----------------------------------------------------------------------
 
+    IniSoilIce = 0.0
     IndSoil = 1
     if ( IndInfilMax == 1) then
 
        ! estimate initial soil hydraulic conductivty and diffusivity (Ki, D(theta) in the equation)
        call SoilDiffusivityConductivityOpt2(noahmp, SoilWatDiffusivity, SoilWatConductivity, &
-                                            SoilMoistureWilt(IndSoil), 0.0, IndSoil)
+                                            SoilMoistureWilt(IndSoil), IniSoilIce, IndSoil)
 
        ! Sorptivity based on Eq. 10b from Kutílek, Miroslav, and Jana Valentová (1986)
        ! Sorptivity approximations. Transport in Porous Media 1.1, 57-62.

@@ -70,6 +70,7 @@ module WaterVarType
     real(kind=kind_noahmp) :: EvapCanopyNetAcc           ! accumulated net evaporation of canopy intercepted water per soil timestep [mm]
     real(kind=kind_noahmp) :: TranspirationAcc           ! accumulated transpiration per soil timestep [mm]
     real(kind=kind_noahmp) :: EvapGroundNetAcc           ! accumulated net ground (soil/snow) evaporation per soil timestep [mm]
+    real(kind=kind_noahmp) :: GlacierExcessFlowAcc       ! accumulated glacier excessive flow [mm] per soil timestep
     real(kind=kind_noahmp) :: EvapSoilSfcLiqMean         ! mean soil surface water evaporation during soil timestep [m/s]
     real(kind=kind_noahmp) :: SoilSfcInflowMean          ! mean water input on soil surface during soil timestep [m/s]
 
@@ -80,6 +81,8 @@ module WaterVarType
     real(kind=kind_noahmp), allocatable, dimension(:) :: CompactionSnowBurden  ! rate of snow compaction due to overburden [1/s]
     real(kind=kind_noahmp), allocatable, dimension(:) :: CompactionSnowMelt    ! rate of snow compaction due to melt [1/s]
     real(kind=kind_noahmp), allocatable, dimension(:) :: CompactionSnowTot     ! rate of total snow compaction [fraction/timestep]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: OutflowSnowLayer      ! water flow out of each snow layer [mm/s]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: SnowFreezeRate        ! rate of snow freezing [mm/s]
 
   end type flux_type
 
@@ -123,6 +126,7 @@ module WaterVarType
     real(kind=kind_noahmp) :: WaterStorageAquifer        ! water storage in aquifer [mm]
     real(kind=kind_noahmp) :: WaterStorageSoilAqf        ! water storage in aquifer + saturated soil [mm]
     real(kind=kind_noahmp) :: WaterStorageLake           ! water storage in lake (can be negative) [mm] 
+    real(kind=kind_noahmp) :: WaterStorageWetland        ! water storage in wetland [mm]
     real(kind=kind_noahmp) :: WaterHeadSfc               ! surface water head [mm]
     real(kind=kind_noahmp) :: IrrigationFracGrid         ! total irrigation fraction from input for a grid
     real(kind=kind_noahmp) :: PrecipAreaFrac             ! fraction of the gridcell that receives precipitation
@@ -134,6 +138,7 @@ module WaterVarType
     real(kind=kind_noahmp) :: WaterStorageTotBeg         ! total water storage [mm] at the begining before NoahMP process
     real(kind=kind_noahmp) :: WaterBalanceError          ! water balance error [mm]
     real(kind=kind_noahmp) :: WaterStorageTotEnd         ! total water storage [mm] at the end of NoahMP process
+    real(kind=kind_noahmp) :: SnowRadiusFresh            ! fresh snow radius [microns]
 
     integer               , allocatable, dimension(:) :: IndexPhaseChange      ! phase change index (0-none;1-melt;2-refreeze)
     real(kind=kind_noahmp), allocatable, dimension(:) :: SnowIce               ! snow layer ice [mm]
@@ -155,6 +160,25 @@ module WaterVarType
     real(kind=kind_noahmp), allocatable, dimension(:) :: SnowLiqWaterVol       ! partial volume of snow liquid water [m3/m3]
     real(kind=kind_noahmp), allocatable, dimension(:) :: SoilSupercoolWater    ! supercooled water in soil [kg/m2]
     real(kind=kind_noahmp), allocatable, dimension(:) :: SoilMatPotential      ! soil matric potential [m]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: SnowRadius            ! snow effective grain radius [microns, m-6]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassBChydropho        ! mass of hydrophobic Black Carbon in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassBChydrophi        ! mass of hydrophillic Black Carbon in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassOChydropho        ! mass of hydrophobic Organic Carbon in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassOChydrophi        ! mass of hydrophillic Organic Carbon in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust1             ! mass of dust species 1 in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust2             ! mass of dust species 2 in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust3             ! mass of dust species 3 in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust4             ! mass of dust species 4 in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassDust5             ! mass of dust species 5 in snow [kg m-2]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcBChydropho    ! mass concentration of hydrophobic Black Carbon in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcBChydrophi    ! mass concentration of hydrophillic Black Carbon in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcOChydropho    ! mass concentration of hydrophobic Organic Carbon in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcOChydrophi    ! mass concentration of hydrophillic Organic Carbon in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcDust1         ! mass concentration of dust species 1 in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcDust2         ! mass concentration of dust species 2 in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcDust3         ! mass concentration of dust species 3 in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcDust4         ! mass concentration of dust species 4 in snow [kg/kg]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: MassConcDust5         ! mass concentration of dust species 5 in snow [kg/kg]
 
   end type state_type
 
@@ -173,6 +197,12 @@ module WaterVarType
     real(kind=kind_noahmp) :: SnowCompactAgingFac3       ! snow desctructive metamorphism compaction parameter3 
     real(kind=kind_noahmp) :: SnowCompactAgingMax        ! upper Limit on destructive metamorphism compaction [kg/m3]
     real(kind=kind_noahmp) :: SnowViscosityCoeff         ! snow viscosity coefficient [kg-s/m2], Anderson1979: 0.52e6~1.38e6
+    real(kind=kind_noahmp) :: SnowCompactmAR24           ! snow compaction m parameter for linear sfc temp fitting from AR24
+    real(kind=kind_noahmp) :: SnowCompactbAR24           ! snow compaction b parameter for linear sfc temp fitting from AR24
+    real(kind=kind_noahmp) :: SnowCompactP1AR24          ! lower constraint for SnowCompactBurdenFac for high pressure bin from AR24
+    real(kind=kind_noahmp) :: SnowCompactP2AR24          ! lower constraint for SnowCompactBurdenFac for mid pressure bin from AR24
+    real(kind=kind_noahmp) :: SnowCompactP3AR24          ! lower constraint for SnowCompactBurdenFac for low pressure bin from AR24
+    real(kind=kind_noahmp) :: BurdenFacUpAR24            ! upper constraint on SnowCompactBurdenFac from AR24
     real(kind=kind_noahmp) :: SnowLiqFracMax             ! maximum liquid water fraction in snow
     real(kind=kind_noahmp) :: SnowLiqHoldCap             ! liquid water holding capacity for snowpack [m3/m3]
     real(kind=kind_noahmp) :: SnowLiqReleaseFac          ! snowpack water release timescale factor [1/s]
@@ -191,7 +221,7 @@ module WaterVarType
     real(kind=kind_noahmp) :: TileDrainCoeffSp           ! drainage coefficient [mm d^-1] for simple scheme
     real(kind=kind_noahmp) :: DrainFacSoilWat            ! drainage factor for soil moisture
     real(kind=kind_noahmp) :: TileDrainCoeff             ! drainage coefficent [m d^-1] for Hooghoudt scheme
-    real(kind=kind_noahmp) :: DrainDepthToImperv         ! Actual depth of tile drainage to impermeable layer form surface
+    real(kind=kind_noahmp) :: DrainDepthToImperv         ! actual depth of tile drainage to impermeable layer form surface
     real(kind=kind_noahmp) :: LateralWatCondFac          ! multiplication factor to determine lateral hydraulic conductivity
     real(kind=kind_noahmp) :: TileDrainDepth             ! Depth of drain [m] for Hooghoudt scheme
     real(kind=kind_noahmp) :: DrainTubeDist              ! distance between two drain tubes or tiles [m]
@@ -205,9 +235,9 @@ module WaterVarType
     real(kind=kind_noahmp) :: MicroPoreContent           ! microprore content (0.0-1.0), 0.0: close to free drainage
     real(kind=kind_noahmp) :: WaterStorageLakeMax        ! maximum lake water storage [mm]
     real(kind=kind_noahmp) :: SnoWatEqvMaxGlacier        ! Maximum SWE allowed at glaciers [mm]
-    real(kind=kind_noahmp) :: SoilConductivityRef        ! Reference Soil Conductivity parameter (used in runoff formulation)
-    real(kind=kind_noahmp) :: SoilInfilFacRef            ! Reference Soil Infiltration Parameter (used in runoff formulation)
-    real(kind=kind_noahmp) :: GroundFrzCoeff             ! Frozen ground parameter to compute frozen soil impervious fraction
+    real(kind=kind_noahmp) :: SoilConductivityRef        ! reference Soil Conductivity parameter (used in runoff formulation)
+    real(kind=kind_noahmp) :: SoilInfilFacRef            ! reference Soil Infiltration Parameter (used in runoff formulation)
+    real(kind=kind_noahmp) :: GroundFrzCoeff             ! frozen ground parameter to compute frozen soil impervious fraction
     real(kind=kind_noahmp) :: IrriTriggerLaiMin          ! minimum lai to trigger irrigation
     real(kind=kind_noahmp) :: SoilWatDeficitAllow        ! management allowable deficit (0-1)
     real(kind=kind_noahmp) :: IrriFloodLossFrac          ! factor of flood irrigation loss
@@ -219,15 +249,36 @@ module WaterVarType
     real(kind=kind_noahmp) :: SoilMatPotentialWilt       ! soil metric potential for wilting point [m]
     real(kind=kind_noahmp) :: SnowMeltFac                ! snowmelt m parameter in snow cover fraction calculation
     real(kind=kind_noahmp) :: SnowCoverFac               ! snow cover factor [m] (originally hard-coded 2.5*z0 in SCF formulation)
+    real(kind=kind_noahmp) :: WetlandCapMax              ! maximum wetland capacity [m]
+    real(kind=kind_noahmp) :: SnowRadiusMin              ! minimum allowed snow effective radius for SNICAR (also cold "fresh snow" value) [microns]
+    real(kind=kind_noahmp) :: FreshSnowRadiusMax         ! maximum warm fresh snow effective radius [microns]
+    real(kind=kind_noahmp) :: SnowRadiusRefrz            ! Effective radius of re-frozen snow [microns]
+    real(kind=kind_noahmp) :: ScavEffMeltScale           ! Scaling factor modifying scavenging factors for aerosol in meltwater (-)
+    real(kind=kind_noahmp) :: ScavEffMeltBCphi           ! scavenging factor for hydrophillic BC inclusion in meltwater [frc]
+    real(kind=kind_noahmp) :: ScavEffMeltBCpho           ! scavenging factor for hydrophobic BC inclusion in meltwater  [frc]
+    real(kind=kind_noahmp) :: ScavEffMeltOCphi           ! scavenging factor for hydrophillic OC inclusion in meltwater [frc]
+    real(kind=kind_noahmp) :: ScavEffMeltOCpho           ! scavenging factor for hydrophobic OC inclusion in meltwater  [frc]
+    real(kind=kind_noahmp) :: ScavEffMeltDust1           ! scavenging factor for dust species 1 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp) :: ScavEffMeltDust2           ! scavenging factor for dust species 2 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp) :: ScavEffMeltDust3           ! scavenging factor for dust species 3 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp) :: ScavEffMeltDust4           ! scavenging factor for dust species 4 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp) :: ScavEffMeltDust5           ! scavenging factor for dust species 5 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp) :: SnowRadiusMax              ! maximum allowed snow effective radius [microns]
+    real(kind=kind_noahmp) :: SnowWetAgeC1Brun89         ! constant for liquid water grain growth [m3 s-1], from Brun89
+    real(kind=kind_noahmp) :: SnowWetAgeC2Brun89         ! constant for liquid water grain growth [m3 s-1], from Brun89: corrected for LWC
+    real(kind=kind_noahmp) :: SnowAgeScaleFac            ! arbitrary tuning/scaling factor applied to snow aging rate (-)
 
-    real(kind=kind_noahmp), allocatable, dimension(:) :: SoilMoistureSat        ! saturated value of soil moisture [m3/m3]
-    real(kind=kind_noahmp), allocatable, dimension(:) :: SoilMoistureWilt       ! wilting point soil moisture [m3/m3]
-    real(kind=kind_noahmp), allocatable, dimension(:) :: SoilMoistureFieldCap   ! reference soil moisture (field capacity) [m3/m3]
-    real(kind=kind_noahmp), allocatable, dimension(:) :: SoilMoistureDry        ! dry soil moisture threshold [m3/m3]
-    real(kind=kind_noahmp), allocatable, dimension(:) :: SoilWatDiffusivitySat  ! saturated soil hydraulic diffusivity [m2/s]
-    real(kind=kind_noahmp), allocatable, dimension(:) :: SoilWatConductivitySat ! saturated soil hydraulic conductivity [m/s]
-    real(kind=kind_noahmp), allocatable, dimension(:) :: SoilExpCoeffB          ! soil exponent B paramete
-    real(kind=kind_noahmp), allocatable, dimension(:) :: SoilMatPotentialSat    ! saturated soil matric potential [m]
+    real(kind=kind_noahmp), allocatable, dimension(:)     :: SoilMoistureSat        ! saturated value of soil moisture [m3/m3]
+    real(kind=kind_noahmp), allocatable, dimension(:)     :: SoilMoistureWilt       ! wilting point soil moisture [m3/m3]
+    real(kind=kind_noahmp), allocatable, dimension(:)     :: SoilMoistureFieldCap   ! reference soil moisture (field capacity) [m3/m3]
+    real(kind=kind_noahmp), allocatable, dimension(:)     :: SoilMoistureDry        ! dry soil moisture threshold [m3/m3]
+    real(kind=kind_noahmp), allocatable, dimension(:)     :: SoilWatDiffusivitySat  ! saturated soil hydraulic diffusivity [m2/s]
+    real(kind=kind_noahmp), allocatable, dimension(:)     :: SoilWatConductivitySat ! saturated soil hydraulic conductivity [m/s]
+    real(kind=kind_noahmp), allocatable, dimension(:)     :: SoilExpCoeffB          ! soil exponent B paramete
+    real(kind=kind_noahmp), allocatable, dimension(:)     :: SoilMatPotentialSat    ! saturated soil matric potential [m]
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:) :: snowage_tau            ! snowage tau from table [hours]
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:) :: snowage_kappa          ! snowage kappa from table [unitless]
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:) :: snowage_drdt0          ! snowage dr/dt_0 from table [m2/kg/hr]
 
   end type parameter_type
 
