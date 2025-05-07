@@ -59,7 +59,6 @@ contains
     real(kind=kind_noahmp)  :: urban_atmosphere_thickness = 2.0
     real(kind=kind_noahmp)  :: soil_timestep    = 0.0   ! soil timestep (default=0: same as main noahmp timestep)
 
-    ! derived urban dimensions
     character(len=256)      :: forcing_name_T  = "T2D"
     character(len=256)      :: forcing_name_Q  = "Q2D"
     character(len=256)      :: forcing_name_U  = "U2D"
@@ -69,6 +68,8 @@ contains
     character(len=256)      :: forcing_name_SW = "SWDOWN"
     character(len=256)      :: forcing_name_PR = "RAINRATE"
     character(len=256)      :: forcing_name_SN = ""
+    character(len=256)      :: forcing_name_DirFrac = ""
+    character(len=256)      :: forcing_name_VisFrac = ""
     integer                 :: dynamic_veg_option                 = 4
     integer                 :: canopy_stomatal_resistance_option  = 1
     integer                 :: btr_option                         = 1
@@ -80,6 +81,7 @@ contains
     integer                 :: radiative_transfer_option          = 3
     integer                 :: snow_albedo_option                 = 1
     integer                 :: snow_thermal_conductivity          = 1
+    integer                 :: snow_compaction_option             = 2 
     integer                 :: pcp_partition_option               = 1
     integer                 :: tbot_option                        = 2
     integer                 :: temp_time_scheme_option            = 1
@@ -92,6 +94,7 @@ contains
     integer                 :: irrigation_method                  = 0
     integer                 :: dvic_infiltration_option           = 1
     integer                 :: tile_drainage_option               = 0
+    integer                 :: wetland_option                     = 0 
     integer                 :: split_output_count                 = 1
     logical                 :: skip_first_output                  = .false.
     integer                 :: khour                              = -9999
@@ -103,15 +106,39 @@ contains
     character(len=256)      :: external_lai_filename_template     = " "
     character(len=256)      :: agdata_flnm                        = " "
     character(len=256)      :: tdinput_flnm                       = " "
+    character(len=256)      :: snicar_optic_flnm                  = "snicar_optics_5bnd_c013122.nc"
+    character(len=256)      :: snicar_age_flnm                    = "snicar_drdt_bst_fit_60_c070416.nc"
     integer                 :: xstart                             = 0
     integer                 :: ystart                             = 0
     integer                 :: xend                               = -1
     integer                 :: yend                               = -1
     integer, parameter      :: MAX_SOIL_LEVELS                    = 10     ! maximum soil levels in namelist
     real(kind=kind_noahmp), dimension(MAX_SOIL_LEVELS) :: soil_thick_input ! depth to soil interfaces from namelist [m]
-    integer                 :: NSNOW   
+    integer                 :: NSNOW
     character(len=256)      :: LLANDUSE = ""
- 
+
+    ! Snow, Ice, and Aerosol Radiative (SNICAR) model parameters
+    integer                 :: snicar_bandnumber_option           = 1
+    integer                 :: snicar_solarspec_option            = 1
+    integer                 :: snicar_snowoptics_option           = 3
+    integer                 :: snicar_dustoptics_option           = 1
+    integer                 :: snicar_rtsolver_option             = 2
+    integer                 :: snicar_snowshape_option            = 3
+    logical                 :: snicar_use_aerosol                 = .true.
+    logical                 :: snicar_snowbc_intmix               = .true.
+    logical                 :: snicar_snowdust_intmix             = .false.
+    logical                 :: snicar_use_oc                      = .false.
+    logical                 :: snicar_aerosol_readtable           = .false.
+    character(len=256)      :: forcing_name_BCPHI                 = "BCPHI"
+    character(len=256)      :: forcing_name_BCPHO                 = "BCPHO"
+    character(len=256)      :: forcing_name_OCPHI                 = "OCPHI"
+    character(len=256)      :: forcing_name_OCPHO                 = "OCPHO"
+    character(len=256)      :: forcing_name_DUST1                 = "DUST1"
+    character(len=256)      :: forcing_name_DUST2                 = "DUST2"
+    character(len=256)      :: forcing_name_DUST3                 = "DUST3"
+    character(len=256)      :: forcing_name_DUST4                 = "DUST4"
+    character(len=256)      :: forcing_name_DUST5                 = "DUST5"
+
     namelist / NOAHLSM_OFFLINE /    &
 #ifdef WRF_HYDRO
          finemesh,finemesh_factor,forc_typ, snow_assim , GEO_STATIC_FLNM, HRLDAS_ini_typ, &
@@ -123,12 +150,13 @@ contains
          spinup_loops,                                                                    &
          forcing_name_T,forcing_name_Q,forcing_name_U,forcing_name_V,forcing_name_P,      &
          forcing_name_LW,forcing_name_SW,forcing_name_PR,forcing_name_SN,                 &
+         forcing_name_DirFrac, forcing_name_VisFrac,                                      &
          dynamic_veg_option, canopy_stomatal_resistance_option,                           &
-         btr_option, surface_drag_option, supercooled_water_option,        &
+         btr_option, surface_drag_option, supercooled_water_option,                       &
          frozen_soil_option, radiative_transfer_option, snow_albedo_option,               &
          snow_thermal_conductivity, surface_runoff_option, subsurface_runoff_option,      &
-         pcp_partition_option, tbot_option, temp_time_scheme_option,                      &
-         glacier_option, surface_resistance_option,                                       &
+         pcp_partition_option, tbot_option, temp_time_scheme_option, wetland_option,      &
+         glacier_option, surface_resistance_option, snow_compaction_option,               &
          irrigation_option, irrigation_method, dvic_infiltration_option,                  &
          tile_drainage_option,soil_data_option, pedotransfer_option, crop_option,         &
          sf_urban_physics,use_wudapt_lcz,num_urban_hi,urban_atmosphere_thickness,         &
@@ -136,10 +164,15 @@ contains
          num_urban_nf ,num_urban_nz,num_urban_nbui,num_urban_ngr ,                        &
          split_output_count,                                                              & 
          khour, kday, zlvl, erf_setup_file,                                               &
-         spatial_filename, agdata_flnm, tdinput_flnm,                                     &
+         spatial_filename, agdata_flnm, tdinput_flnm, snicar_optic_flnm, snicar_age_flnm, &
          external_veg_filename_template, external_lai_filename_template,                  &
-         xstart, xend, ystart, yend, nsnow, llanduse
-
+         xstart, xend, ystart, yend, nsnow, llanduse,                                     &
+         snicar_bandnumber_option, snicar_solarspec_option, snicar_snowoptics_option,     &
+         snicar_dustoptics_option, snicar_rtsolver_option, snicar_snowshape_option,       &
+         snicar_use_aerosol, snicar_snowbc_intmix, snicar_snowdust_intmix,                &
+         snicar_use_oc, snicar_aerosol_readtable, forcing_name_BCPHI, forcing_name_BCPHO, &
+         forcing_name_OCPHI, forcing_name_OCPHO, forcing_name_DUST1, forcing_name_DUST2,  &
+         forcing_name_DUST3, forcing_name_DUST4, forcing_name_DUST5
 
     !---------------------------------------------------------------
     !  Initialize namelist variables to dummy values, so we can tell
@@ -348,6 +381,8 @@ contains
     NoahmpIO%IOPT_IRRM                         = irrigation_method
     NoahmpIO%IOPT_INFDV                        = dvic_infiltration_option
     NoahmpIO%IOPT_TDRN                         = tile_drainage_option
+    NoahmpIO%IOPT_COMPACT                      = snow_compaction_option
+    NoahmpIO%IOPT_WETLAND                      = wetland_option
     ! basic model setup variables
     NoahmpIO%indir                             = indir
     NoahmpIO%forcing_timestep                  = forcing_timestep
@@ -384,6 +419,8 @@ contains
     NoahmpIO%forcing_name_SW                   = forcing_name_SW
     NoahmpIO%forcing_name_PR                   = forcing_name_PR
     NoahmpIO%forcing_name_SN                   = forcing_name_SN
+    NoahmpIO%forcing_name_DirFrac              = forcing_name_DirFrac
+    NoahmpIO%forcing_name_VisFrac              = forcing_name_VisFrac
     NoahmpIO%split_output_count                = split_output_count
     NoahmpIO%skip_first_output                 = skip_first_output
     NoahmpIO%khour                             = khour
@@ -401,7 +438,30 @@ contains
     NoahmpIO%yend                              = yend
     NoahmpIO%MAX_SOIL_LEVELS                   = MAX_SOIL_LEVELS
     NoahmpIO%soil_thick_input                  = soil_thick_input 
- 
+    ! SNICAR
+    NoahmpIO%snicar_optic_flnm                 = snicar_optic_flnm
+    NoahmpIO%snicar_age_flnm                   = snicar_age_flnm
+    NoahmpIO%SNICAR_BANDNUMBER_OPT             = snicar_bandnumber_option
+    NoahmpIO%SNICAR_SOLARSPEC_OPT              = snicar_solarspec_option
+    NoahmpIO%SNICAR_SNOWOPTICS_OPT             = snicar_snowoptics_option
+    NoahmpIO%SNICAR_DUSTOPTICS_OPT             = snicar_dustoptics_option
+    NoahmpIO%SNICAR_RTSOLVER_OPT               = snicar_rtsolver_option
+    NoahmpIO%SNICAR_SNOWSHAPE_OPT              = snicar_snowshape_option
+    NoahmpIO%SNICAR_USE_AEROSOL                = snicar_use_aerosol
+    NoahmpIO%SNICAR_SNOWBC_INTMIX              = snicar_snowbc_intmix
+    NoahmpIO%SNICAR_SNOWDUST_INTMIX            = snicar_snowdust_intmix
+    NoahmpIO%SNICAR_USE_OC                     = snicar_use_oc
+    NoahmpIO%SNICAR_AEROSOL_READTABLE          = snicar_aerosol_readtable
+    NoahmpIO%forcing_name_BCPHI                = forcing_name_BCPHI
+    NoahmpIO%forcing_name_BCPHO                = forcing_name_BCPHO
+    NoahmpIO%forcing_name_OCPHI                = forcing_name_OCPHI
+    NoahmpIO%forcing_name_OCPHO                = forcing_name_OCPHO
+    NoahmpIO%forcing_name_DUST1                = forcing_name_DUST1
+    NoahmpIO%forcing_name_DUST2                = forcing_name_DUST2
+    NoahmpIO%forcing_name_DUST3                = forcing_name_DUST3
+    NoahmpIO%forcing_name_DUST4                = forcing_name_DUST4
+    NoahmpIO%forcing_name_DUST5                = forcing_name_DUST5
+
 !---------------------------------------------------------------------
 !  NAMELIST check end
 !---------------------------------------------------------------------
