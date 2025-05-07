@@ -652,7 +652,7 @@ module NoahmpIOVarType
 !------------------------------------------------------------------------
 
     CHARACTER(LEN=256)                                     ::  MMINSL  = 'STAS'    ! soil classification
-    CHARACTER(LEN=C_CHAR, LEN=:), pointer                  ::  LLANDUSE            ! (=USGS, using USGS landuse classification)
+    CHARACTER(kind=C_CHAR, LEN=:), pointer                 ::  LLANDUSE            ! (=USGS, using USGS landuse classification)
 
 !------------------------------------------------------------------------
 ! Timing:
@@ -675,7 +675,7 @@ module NoahmpIOVarType
     integer                                                ::  J
     integer                                                ::  SLOPETYP
     integer                                                ::  YEARLEN
-    integer(C_INT), pointer                                ::  NSNOW            ! number of snow layers fixed to 3
+    integer(C_INT), pointer                                ::  NSNOW               ! number of snow layers fixed to 3
     logical                                                ::  update_lai, update_veg
     integer                                                ::  spinup_loop
     logical                                                ::  reset_spinup_date
