@@ -56,7 +56,7 @@ contains
        noahmp%water%flux%TileDrain           = 0.0
        noahmp%water%flux%RunoffSurface       = noahmp%water%flux%RunoffSurface * noahmp%config%domain%MainTimeStep
        noahmp%water%flux%RunoffSubsurface    = noahmp%water%flux%RunoffSubsurface * noahmp%config%domain%MainTimeStep
-       NoahmpIO%QFX(I,J)                = noahmp%water%flux%EvapGroundNet
+       NoahmpIO%QFX(I,J)                     = noahmp%water%flux%EvapGroundNet
     endif
 
     if ( IndicatorIceSfc == 0 ) then ! land soil point
@@ -73,10 +73,8 @@ contains
     NoahmpIO%SNOW        (I,J) = noahmp%water%state%SnowWaterEquiv
     NoahmpIO%SNOWH       (I,J) = noahmp%water%state%SnowDepth
     NoahmpIO%CANWAT      (I,J) = noahmp%water%state%CanopyLiqWater + noahmp%water%state%CanopyIce
-    NoahmpIO%ACSNOW      (I,J) = NoahmpIO%ACSNOW(I,J) + (NoahmpIO%RAINBL (I,J) * noahmp%water%state%FrozenPrecipFrac)
-    NoahmpIO%ACSNOM      (I,J) = NoahmpIO%ACSNOM(I,J) + (noahmp%water%flux%MeltGroundSnow * NoahmpIO%DTBL) + &
-                                 noahmp%water%state%PondSfcThinSnwMelt + noahmp%water%state%PondSfcThinSnwComb + &
-                                 noahmp%water%state%PondSfcThinSnwTrans
+    NoahmpIO%ACSNOW      (I,J) = NoahmpIO%ACSNOW(I,J) + NoahmpIO%RAINBL (I,J) * noahmp%water%state%FrozenPrecipFrac
+    NoahmpIO%ACSNOM      (I,J) = NoahmpIO%ACSNOM(I,J) + noahmp%water%flux%MeltGroundSnow * NoahmpIO%DTBL
     NoahmpIO%CANLIQXY    (I,J) = noahmp%water%state%CanopyLiqWater
     NoahmpIO%CANICEXY    (I,J) = noahmp%water%state%CanopyIce
     NoahmpIO%FWETXY      (I,J) = noahmp%water%state%CanopyWetFrac
@@ -130,17 +128,41 @@ contains
     NoahmpIO%SNICEXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%SnowIce(-NumSnowLayerMax+1:0)
     NoahmpIO%SNLIQXY     (I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%SnowLiqWater(-NumSnowLayerMax+1:0)
 
+    !SNICAR
+    if ( noahmp%config%nmlist%OptSnowAlbedo == 3 ) then
+       NoahmpIO%SNRDSXY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%SnowRadius(-NumSnowLayerMax+1:0)
+       NoahmpIO%SNFRXY (I,-NumSnowLayerMax+1:0,J) = noahmp%water%flux%SnowFreezeRate(-NumSnowLayerMax+1:0)
+       NoahmpIO%BCPHIXY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassBChydrophi(-NumSnowLayerMax+1:0)
+       NoahmpIO%BCPHOXY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassBChydropho(-NumSnowLayerMax+1:0)
+       NoahmpIO%OCPHIXY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassOChydrophi(-NumSnowLayerMax+1:0)
+       NoahmpIO%OCPHOXY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassOChydropho(-NumSnowLayerMax+1:0)
+       NoahmpIO%DUST1XY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassDust1(-NumSnowLayerMax+1:0)
+       NoahmpIO%DUST2XY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassDust2(-NumSnowLayerMax+1:0)
+       NoahmpIO%DUST3XY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassDust3(-NumSnowLayerMax+1:0)
+       NoahmpIO%DUST4XY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassDust4(-NumSnowLayerMax+1:0)
+       NoahmpIO%DUST5XY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassDust5(-NumSnowLayerMax+1:0)
+       NoahmpIO%MassConcBCPHIXY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassConcBChydrophi(-NumSnowLayerMax+1:0)
+       NoahmpIO%MassConcBCPHOXY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassConcBChydropho(-NumSnowLayerMax+1:0)
+       NoahmpIO%MassConcOCPHIXY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassConcOChydrophi(-NumSnowLayerMax+1:0)
+       NoahmpIO%MassConcOCPHOXY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassConcOChydropho(-NumSnowLayerMax+1:0)
+       NoahmpIO%MassConcDUST1XY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassConcDust1(-NumSnowLayerMax+1:0)
+       NoahmpIO%MassConcDUST2XY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassConcDust2(-NumSnowLayerMax+1:0)
+       NoahmpIO%MassConcDUST3XY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassConcDust3(-NumSnowLayerMax+1:0)
+       NoahmpIO%MassConcDUST4XY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassConcDust4(-NumSnowLayerMax+1:0)
+       NoahmpIO%MassConcDUST5XY(I,-NumSnowLayerMax+1:0,J) = noahmp%water%state%MassConcDust5(-NumSnowLayerMax+1:0)
+    endif
+
     ! irrigation
-    NoahmpIO%IRNUMSI   (I,J) = noahmp%water%state%IrrigationCntSprinkler
-    NoahmpIO%IRNUMMI   (I,J) = noahmp%water%state%IrrigationCntMicro
-    NoahmpIO%IRNUMFI   (I,J) = noahmp%water%state%IrrigationCntFlood
-    NoahmpIO%IRWATSI   (I,J) = noahmp%water%state%IrrigationAmtSprinkler
-    NoahmpIO%IRWATMI   (I,J) = noahmp%water%state%IrrigationAmtMicro
-    NoahmpIO%IRWATFI   (I,J) = noahmp%water%state%IrrigationAmtFlood
-    NoahmpIO%IRSIVOL   (I,J) = NoahmpIO%IRSIVOL(I,J)+(noahmp%water%flux%IrrigationRateSprinkler*1000.0)
-    NoahmpIO%IRMIVOL   (I,J) = NoahmpIO%IRMIVOL(I,J)+(noahmp%water%flux%IrrigationRateMicro*1000.0)
-    NoahmpIO%IRFIVOL   (I,J) = NoahmpIO%IRFIVOL(I,J)+(noahmp%water%flux%IrrigationRateFlood*1000.0)
-    NoahmpIO%IRELOSS   (I,J) = NoahmpIO%IRELOSS(I,J)+(noahmp%water%flux%EvapIrriSprinkler*NoahmpIO%DTBL)
+    NoahmpIO%IRNUMSI(I,J) = noahmp%water%state%IrrigationCntSprinkler
+    NoahmpIO%IRNUMMI(I,J) = noahmp%water%state%IrrigationCntMicro
+    NoahmpIO%IRNUMFI(I,J) = noahmp%water%state%IrrigationCntFlood
+    NoahmpIO%IRWATSI(I,J) = noahmp%water%state%IrrigationAmtSprinkler
+    NoahmpIO%IRWATMI(I,J) = noahmp%water%state%IrrigationAmtMicro
+    NoahmpIO%IRWATFI(I,J) = noahmp%water%state%IrrigationAmtFlood
+    NoahmpIO%IRSIVOL(I,J) = NoahmpIO%IRSIVOL(I,J) + (noahmp%water%flux%IrrigationRateSprinkler*1000.0)
+    NoahmpIO%IRMIVOL(I,J) = NoahmpIO%IRMIVOL(I,J) + (noahmp%water%flux%IrrigationRateMicro*1000.0)
+    NoahmpIO%IRFIVOL(I,J) = NoahmpIO%IRFIVOL(I,J) + (noahmp%water%flux%IrrigationRateFlood*1000.0)
+    NoahmpIO%IRELOSS(I,J) = NoahmpIO%IRELOSS(I,J) + (noahmp%water%flux%EvapIrriSprinkler*NoahmpIO%DTBL)
 
     ! wetland (Zhang2022)
     if ( noahmp%config%nmlist%OptWetlandModel > 0 ) then

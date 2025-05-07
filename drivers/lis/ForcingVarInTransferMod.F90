@@ -12,6 +12,7 @@ module ForcingVarInTransferMod
   use Machine
   use NoahmpIOVarType
   use NoahmpVarType
+  use LisNoahmpParamType
 
   implicit none
 
@@ -19,16 +20,17 @@ contains
 
 !=== initialize with input data or table values
 
-  subroutine ForcingVarInTransfer(noahmp, NoahmpIO)
+  subroutine ForcingVarInTransfer(noahmp, NoahmpIO, LISparam)
 
     implicit none
 
-    type(NoahmpIO_type), intent(inout) :: NoahmpIO
-    type(noahmp_type),   intent(inout) :: noahmp
+    type(NoahmpIO_type), intent(inout)    :: NoahmpIO
+    type(noahmp_type),   intent(inout)    :: noahmp
+    type(LisNoahmpParam_type), intent(in) :: LISparam   ! lis/noahmp parameter
     
     ! local variables
-    real(kind=kind_noahmp)              :: PrecipOtherRefHeight  ! other precipitation, e.g. fog [mm/s] at reference height
-    real(kind=kind_noahmp)              :: PrecipTotalRefHeight  ! total precipitation [mm/s] at reference height
+    real(kind=kind_noahmp)                :: PrecipOtherRefHeight  ! other precipitation, e.g. fog [mm/s] at reference height
+    real(kind=kind_noahmp)                :: PrecipTotalRefHeight  ! total precipitation [mm/s] at reference height
 
 ! ---------------------------------------------------------------
     associate(                                           &
@@ -61,6 +63,35 @@ contains
     PrecipOtherRefHeight                   = max(0.0, PrecipOtherRefHeight)
     noahmp%forcing%PrecipNonConvRefHeight  = noahmp%forcing%PrecipNonConvRefHeight + PrecipOtherRefHeight
     noahmp%forcing%PrecipSnowRefHeight     = noahmp%forcing%PrecipSnowRefHeight + PrecipOtherRefHeight * NoahmpIO%SR(I,J)
+
+    ! downward solar radiation direct/diffuse and visible/NIR partition
+    noahmp%forcing%RadSwDirFrac            = NoahmpIO%RadSwDirFrac(I,J)
+    noahmp%forcing%RadSwVisFrac            = NoahmpIO%RadSwVisFrac(I,J)
+
+    ! SNICAR aerosol deposition flux forcing
+    if ( noahmp%config%nmlist%OptSnowAlbedo == 3 ) then
+       if ( noahmp%config%nmlist%FlagSnicarAerosolReadTable .eqv. .true. ) then 
+          noahmp%forcing%DepBChydropho     = LISparam%DepBChydropho
+          noahmp%forcing%DepBChydrophi     = LISparam%DepBChydrophi
+          noahmp%forcing%DepOChydropho     = LISparam%DepOChydropho
+          noahmp%forcing%DepOChydrophi     = LISparam%DepOChydrophi
+          noahmp%forcing%DepDust1          = LISparam%DepDust1
+          noahmp%forcing%DepDust2          = LISparam%DepDust2
+          noahmp%forcing%DepDust3          = LISparam%DepDust3
+          noahmp%forcing%DepDust4          = LISparam%DepDust4
+          noahmp%forcing%DepDust5          = LISparam%DepDust5
+       else
+          noahmp%forcing%DepBChydropho     = NoahmpIO%DepBChydrophoXY(I,J)
+          noahmp%forcing%DepBChydrophi     = NoahmpIO%DepBChydrophiXY(I,J)
+          noahmp%forcing%DepOChydropho     = NoahmpIO%DepOChydrophoXY(I,J)
+          noahmp%forcing%DepOChydrophi     = NoahmpIO%DepOChydrophiXY(I,J)
+          noahmp%forcing%DepDust1          = NoahmpIO%DepDust1XY(I,J)
+          noahmp%forcing%DepDust2          = NoahmpIO%DepDust2XY(I,J)
+          noahmp%forcing%DepDust3          = NoahmpIO%DepDust3XY(I,J)
+          noahmp%forcing%DepDust4          = NoahmpIO%DepDust4XY(I,J)
+          noahmp%forcing%DepDust5          = NoahmpIO%DepDust5XY(I,J)
+       endif
+    endif
 
     end associate
  

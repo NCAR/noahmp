@@ -249,6 +249,34 @@ module LisNoahmpParamType
     real(kind=kind_noahmp)      :: t_llimit            ! LIS specific: 
     real(kind=kind_noahmp)      :: snowf_scalef        ! LIS specific: snow cover scaling factor
 
+    ! SNICAR parameter
+    real(kind=kind_noahmp)      :: DepBChydropho       ! hydrophobic Black Carbon deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)      :: DepBChydrophi       ! hydrophillic Black Carbon deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)      :: DepOChydropho       ! hydrophobic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)      :: DepOChydrophi       ! hydrophillic Organic Carbon deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)      :: DepDust1            ! dust species 1 deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)      :: DepDust2            ! dust species 2 deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)      :: DepDust3            ! dust species 3 deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)      :: DepDust4            ! dust species 4 deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)      :: DepDust5            ! dust species 5 deposition [kg m-2 s-1], assume constant read from table
+    real(kind=kind_noahmp)      :: SnowRadiusMin       ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
+    real(kind=kind_noahmp)      :: FreshSnowRadiusMax  ! maximum warm fresh snow effective radius [microns]
+    real(kind=kind_noahmp)      :: SnowRadiusRefrz     ! effective radius of re-frozen snow [microns]
+    real(kind=kind_noahmp)      :: ScavEffMeltScale    ! Scaling factor modifying scavenging factors for aerosol in meltwater (-)
+    real(kind=kind_noahmp)      :: ScavEffMeltBCphi    ! scavenging factor for hydrophillic BC inclusion in meltwater [frc]
+    real(kind=kind_noahmp)      :: ScavEffMeltBCpho    ! scavenging factor for hydrophobic BC inclusion in meltwater  [frc]
+    real(kind=kind_noahmp)      :: ScavEffMeltOCphi    ! scavenging factor for hydrophillic OC inclusion in meltwater [frc]
+    real(kind=kind_noahmp)      :: ScavEffMeltOCpho    ! scavenging factor for hydrophobic OC inclusion in meltwater  [frc]
+    real(kind=kind_noahmp)      :: ScavEffMeltDust1    ! scavenging factor for dust species 1 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp)      :: ScavEffMeltDust2    ! scavenging factor for dust species 2 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp)      :: ScavEffMeltDust3    ! scavenging factor for dust species 3 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp)      :: ScavEffMeltDust4    ! scavenging factor for dust species 4 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp)      :: ScavEffMeltDust5    ! scavenging factor for dust species 5 inclusion in meltwater  [frc]
+    real(kind=kind_noahmp)      :: SnowRadiusMax       ! maximum allowed snow effective radius [microns]
+    real(kind=kind_noahmp)      :: SnowWetAgeC1Brun89  ! constant for liquid water grain growth [m3 s-1], from Brun89
+    real(kind=kind_noahmp)      :: SnowWetAgeC2Brun89  ! Constant for liquid water grain growth [m3 s-1], from Brun89: corrected for LWC 
+    real(kind=kind_noahmp)      :: SnowAgeScaleFac     ! Arbitrary scaling factor applied to snow aging rate (-)
+
   end type LisNoahmpParam_type
 
 end module LisNoahmpParamType

@@ -48,6 +48,17 @@ contains
     noahmp%config%nmlist%OptGlacierTreatment         = undefined_int
     noahmp%config%nmlist%OptSnowCompaction           = undefined_int 
     noahmp%config%nmlist%OptWetlandModel             = undefined_int
+    noahmp%config%nmlist%OptSnicarSnowShape          = undefined_int
+    noahmp%config%nmlist%OptSnicarRTSolver           = undefined_int
+    noahmp%config%nmlist%OptSnicarBandNum            = undefined_int
+    noahmp%config%nmlist%OptSnicarSolarSpec          = undefined_int
+    noahmp%config%nmlist%OptSnicarSnwOptic           = undefined_int
+    noahmp%config%nmlist%OptSnicarDustOptic          = undefined_int
+    noahmp%config%nmlist%FlagSnicarSnowBCIntmix      = .false.
+    noahmp%config%nmlist%FlagSnicarSnowDustIntmix    = .false.
+    noahmp%config%nmlist%FlagSnicarUseAerosol        = .false.
+    noahmp%config%nmlist%FlagSnicarUseOC             = .false.
+    noahmp%config%nmlist%FlagSnicarAerosolReadTable  = .false.
 
     ! config domain variable
     noahmp%config%domain%LandUseDataName             = "MODIFIED_IGBP_MODIS_NOAH"
@@ -86,6 +97,11 @@ contains
     noahmp%config%domain%ThicknessAtmosBotLayer      = undefined_real
     noahmp%config%domain%Latitude                    = undefined_real
     noahmp%config%domain%DepthSoilTempBottom         = undefined_real
+    noahmp%config%domain%NumTempSnwAgeSnicar         = undefined_int
+    noahmp%config%domain%NumTempGradSnwAgeSnicar     = undefined_int
+    noahmp%config%domain%NumDensitySnwAgeSnicar      = undefined_int
+    noahmp%config%domain%NumSnicarRadBand            = undefined_int
+    noahmp%config%domain%NumRadiusSnwMieSnicar       = undefined_int
 
   end subroutine ConfigVarInitDefault
 

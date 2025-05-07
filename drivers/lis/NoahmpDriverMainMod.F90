@@ -148,7 +148,7 @@ contains
              call ConfigVarInitDefault  (noahmp)
              call ConfigVarInTransfer   (noahmp, NoahmpIO)
              call ForcingVarInitDefault (noahmp)
-             call ForcingVarInTransfer  (noahmp, NoahmpIO)
+             call ForcingVarInTransfer  (noahmp, NoahmpIO, LISparam)
              call EnergyVarInitDefault  (noahmp)
              call EnergyVarInTransfer   (noahmp, NoahmpIO, LISparam)
              call WaterVarInitDefault   (noahmp)

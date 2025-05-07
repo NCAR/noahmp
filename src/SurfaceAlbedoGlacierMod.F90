@@ -9,6 +9,9 @@ module SurfaceAlbedoGlacierMod
   use SnowAlbedoBatsMod,      only : SnowAlbedoBats
   use SnowAlbedoClassMod,     only : SnowAlbedoClass
   use GroundAlbedoGlacierMod, only : GroundAlbedoGlacier
+  use SnowAlbedoSnicarMod,    only : SnowAlbedoSnicar
+  use SnowFreshRadiusMod,     only : SnowFreshRadius
+  use SnowAgingSnicarMod,     only : SnowAgingSnicar
 
   implicit none
 
@@ -39,7 +42,9 @@ contains
               AlbedoSnowDir       => noahmp%energy%state%AlbedoSnowDir        ,& ! out, snow albedo for direct(1=vis, 2=nir)
               AlbedoSnowDif       => noahmp%energy%state%AlbedoSnowDif        ,& ! out, snow albedo for diffuse(1=vis, 2=nir)
               AlbedoSfcDir        => noahmp%energy%state%AlbedoSfcDir         ,& ! out, surface albedo (direct)
-              AlbedoSfcDif        => noahmp%energy%state%AlbedoSfcDif          & ! out, surface albedo (diffuse)
+              AlbedoSfcDif        => noahmp%energy%state%AlbedoSfcDif         ,& ! out, surface albedo (diffuse)              
+              FracRadSwAbsSnowDir => noahmp%energy%flux%FracRadSwAbsSnowDir   ,& ! out, direct solar flux factor absorbed by snow [frc]
+              FracRadSwAbsSnowDif => noahmp%energy%flux%FracRadSwAbsSnowDif    & ! out, diffuse solar flux factor absorbed by snow [frc]
              )
 ! ----------------------------------------------------------------------
 
@@ -51,17 +56,26 @@ contains
        AlbedoGrdDif (IndBand) = 0.0
        AlbedoSnowDir(IndBand) = 0.0
        AlbedoSnowDif(IndBand) = 0.0
+       FracRadSwAbsSnowDir(:,IndBand) = 0.0
+       FracRadSwAbsSnowDif(:,IndBand) = 0.0
     enddo
 
     ! snow aging (allow nighttime BATS snow albedo aging)
-    call SnowAgingBats(noahmp)
+    if ( OptSnowAlbedo == 1 ) call SnowAgingBats(noahmp)
+
+    ! snow grain size and aging for SNICAR
+    if ( OptSnowAlbedo == 3 ) then
+       call SnowFreshRadius(noahmp)
+       call SnowAgingSnicar(noahmp)
+    endif
 
     ! solar radiation process is only done if there is light
     if ( CosSolarZenithAngle > 0 ) then
 
        ! snow albedo
-       if ( OptSnowAlbedo == 1 )  call SnowAlbedoBats(noahmp)
-       if ( OptSnowAlbedo == 2 )  call SnowAlbedoClass(noahmp)
+       if ( OptSnowAlbedo == 1 ) call SnowAlbedoBats(noahmp)
+       if ( OptSnowAlbedo == 2 ) call SnowAlbedoClass(noahmp)
+       if ( OptSnowAlbedo == 3 ) call SnowAlbedoSnicar(noahmp)
 
        ! ground albedo
        call GroundAlbedoGlacier(noahmp)

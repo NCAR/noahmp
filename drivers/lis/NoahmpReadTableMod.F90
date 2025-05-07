@@ -180,7 +180,7 @@ contains
     namelist / noahmp_tiledrain_parameters /          NSOILTYPE, DRAIN_LAYER_OPT, TDSMC_FAC, TD_DEPTH, TD_DC, TD_DCOEF, TD_D,&
                                                       TD_ADEPTH, TD_RADI, TD_SPAC, TD_DDRAIN, KLAT_FAC
 
-    ! optional parameters
+    ! pedotransfer soil function parameters
     real(kind=kind_noahmp)                         :: sr2006_theta_1500t_a, sr2006_theta_1500t_b, sr2006_theta_1500t_c,      &
                                                       sr2006_theta_1500t_d, sr2006_theta_1500t_e, sr2006_theta_1500t_f,      &
                                                       sr2006_theta_1500t_g, sr2006_theta_1500_a , sr2006_theta_1500_b,       &
@@ -207,6 +207,22 @@ contains
                                                       sr2006_psi_et_d, sr2006_psi_et_e, sr2006_psi_et_f, sr2006_psi_et_g,    &
                                                       sr2006_psi_e_a, sr2006_psi_e_b, sr2006_psi_e_c, sr2006_smcmax_a,       &
                                                       sr2006_smcmax_b
+
+    ! SNICAR parameters
+    real(kind=kind_noahmp)                   ::       DepBChydropho, DepBChydrophi, DepOChydropho, DepOChydrophi,            &
+                                                      DepDust1, DepDust2, DepDust3, DepDust4, DepDust5,                      &
+                                                      SnowRadiusMin, FreshSnowRadiusMax, SnowRadiusRefrz, ScavEffMeltScale,  &
+                                                      ScavEffMeltBCphi, ScavEffMeltBCpho, ScavEffMeltOCphi, ScavEffMeltOCpho,&
+                                                      ScavEffMeltDust1, ScavEffMeltDust2, ScavEffMeltDust3, ScavEffMeltDust4,&
+                                                      ScavEffMeltDust5, SnowRadiusMax, SnowWetAgeC1Brun89, SnowAgeScaleFac,  &
+                                                      SnowWetAgeC2Brun89
+    namelist / noahmp_snicar_parameters /             DepBChydropho, DepBChydrophi, DepOChydropho, DepOChydrophi,            &
+                                                      DepDust1, DepDust2, DepDust3, DepDust4, DepDust5,                      &
+                                                      SnowRadiusMin, FreshSnowRadiusMax, SnowRadiusRefrz, ScavEffMeltScale,  &
+                                                      ScavEffMeltBCphi, ScavEffMeltBCpho, ScavEffMeltOCphi, ScavEffMeltOCpho,&
+                                                      ScavEffMeltDust1, ScavEffMeltDust2, ScavEffMeltDust3, ScavEffMeltDust4,&
+                                                      ScavEffMeltDust5, SnowRadiusMax, SnowWetAgeC1Brun89, SnowAgeScaleFac,  &
+                                                      SnowWetAgeC2Brun89
 
     !--------------------------------------------------
     !=== allocate multi-dim input table variables
@@ -610,7 +626,7 @@ contains
     NoahmpIO%TD_DDRAIN_TABLE        = undefined_real
     NoahmpIO%KLAT_FAC_TABLE         = undefined_real
 
-    ! optional parameters
+    ! pedotransfer soil function parameters
     NoahmpIO%sr2006_theta_1500t_a_TABLE = undefined_real
     NoahmpIO%sr2006_theta_1500t_b_TABLE = undefined_real
     NoahmpIO%sr2006_theta_1500t_c_TABLE = undefined_real
@@ -651,6 +667,34 @@ contains
     NoahmpIO%sr2006_psi_e_c_TABLE       = undefined_real
     NoahmpIO%sr2006_smcmax_a_TABLE      = undefined_real
     NoahmpIO%sr2006_smcmax_b_TABLE      = undefined_real
+
+    !SNICAR
+    NoahmpIO%DepBChydropho_TABLE        = undefined_real
+    NoahmpIO%DepBChydrophi_TABLE        = undefined_real
+    NoahmpIO%DepOChydropho_TABLE        = undefined_real
+    NoahmpIO%DepOChydrophi_TABLE        = undefined_real
+    NoahmpIO%DepDust1_TABLE             = undefined_real
+    NoahmpIO%DepDust2_TABLE             = undefined_real
+    NoahmpIO%DepDust3_TABLE             = undefined_real
+    NoahmpIO%DepDust4_TABLE             = undefined_real
+    NoahmpIO%DepDust5_TABLE             = undefined_real
+    NoahmpIO%SnowRadiusMin_TABLE        = undefined_real
+    NoahmpIO%FreshSnowRadiusMax_TABLE   = undefined_real
+    NoahmpIO%SnowRadiusRefrz_TABLE      = undefined_real
+    NoahmpIO%ScavEffMeltScale_TABLE     = undefined_real
+    NoahmpIO%ScavEffMeltBCphi_TABLE     = undefined_real
+    NoahmpIO%ScavEffMeltBCpho_TABLE     = undefined_real
+    NoahmpIO%ScavEffMeltOCphi_TABLE     = undefined_real
+    NoahmpIO%ScavEffMeltOCpho_TABLE     = undefined_real
+    NoahmpIO%ScavEffMeltDust1_TABLE     = undefined_real
+    NoahmpIO%ScavEffMeltDust2_TABLE     = undefined_real
+    NoahmpIO%ScavEffMeltDust3_TABLE     = undefined_real
+    NoahmpIO%ScavEffMeltDust4_TABLE     = undefined_real
+    NoahmpIO%ScavEffMeltDust5_TABLE     = undefined_real
+    NoahmpIO%SnowRadiusMax_TABLE        = undefined_real
+    NoahmpIO%SnowWetAgeC1Brun89_TABLE   = undefined_real
+    NoahmpIO%SnowWetAgeC2Brun89_TABLE   = undefined_real
+    NoahmpIO%SnowAgeScaleFac_TABLE      = undefined_real
 
     !---------------------------------------------------------------
     ! transfer values from table to input variables
@@ -1149,7 +1193,7 @@ contains
     NoahmpIO%TD_DDRAIN_TABLE(1:NSOILTYPE) = TD_DDRAIN(1:NSOILTYPE)
     NoahmpIO%KLAT_FAC_TABLE (1:NSOILTYPE) = KLAT_FAC (1:NSOILTYPE)
 
-    !---------------- NoahmpTable.TBL optional parameters
+    !---------------- NoahmpTable.TBL pedotransfer soil function parameters
     inquire( file=trim(MPTABLE_file), exist=file_named )
     if ( file_named ) then
       open(15, file=trim(MPTABLE_file), status='old', form='formatted', action='read', iostat=ierr)
@@ -1204,6 +1248,47 @@ contains
     NoahmpIO%sr2006_psi_e_c_TABLE       = sr2006_psi_e_c
     NoahmpIO%sr2006_smcmax_a_TABLE      = sr2006_smcmax_a
     NoahmpIO%sr2006_smcmax_b_TABLE      = sr2006_smcmax_b
+
+    !---------------- NoahmpTable.TBL SNICAR parameters
+    inquire( file=trim(MPTABLE_file), exist=file_named )
+    if ( file_named ) then
+      open(15, file=trim(MPTABLE_file), status='old', form='formatted', action='read', iostat=ierr)
+    else
+      open(15, status='old', form='formatted', action='read', iostat=ierr)
+    end if
+    if (ierr /= 0) then
+       write(*,'("WARNING: Cannot find file NoahmpTable.TBL")')
+    endif
+    read(15,noahmp_snicar_parameters)
+    close(15)
+
+    ! assign values
+    NoahmpIO%DepBChydropho_TABLE      = DepBChydropho
+    NoahmpIO%DepBChydrophi_TABLE      = DepBChydrophi
+    NoahmpIO%DepOChydropho_TABLE      = DepOChydropho
+    NoahmpIO%DepOChydrophi_TABLE      = DepOChydrophi
+    NoahmpIO%DepDust1_TABLE           = DepDust1
+    NoahmpIO%DepDust2_TABLE           = DepDust2
+    NoahmpIO%DepDust3_TABLE           = DepDust3
+    NoahmpIO%DepDust4_TABLE           = DepDust4
+    NoahmpIO%DepDust5_TABLE           = DepDust5
+    NoahmpIO%SnowRadiusMin_TABLE      = SnowRadiusMin
+    NoahmpIO%FreshSnowRadiusMax_TABLE = FreshSnowRadiusMax
+    NoahmpIO%SnowRadiusRefrz_TABLE    = SnowRadiusRefrz
+    NoahmpIO%ScavEffMeltScale_TABLE   = ScavEffMeltScale
+    NoahmpIO%ScavEffMeltBCphi_TABLE   = ScavEffMeltBCphi
+    NoahmpIO%ScavEffMeltBCpho_TABLE   = ScavEffMeltBCpho
+    NoahmpIO%ScavEffMeltOCphi_TABLE   = ScavEffMeltOCphi
+    NoahmpIO%ScavEffMeltOCpho_TABLE   = ScavEffMeltOCpho
+    NoahmpIO%ScavEffMeltDust1_TABLE   = ScavEffMeltDust1
+    NoahmpIO%ScavEffMeltDust2_TABLE   = ScavEffMeltDust2
+    NoahmpIO%ScavEffMeltDust3_TABLE   = ScavEffMeltDust3
+    NoahmpIO%ScavEffMeltDust4_TABLE   = ScavEffMeltDust4
+    NoahmpIO%ScavEffMeltDust5_TABLE   = ScavEffMeltDust5
+    NoahmpIO%SnowRadiusMax_TABLE      = SnowRadiusMax
+    NoahmpIO%SnowWetAgeC1Brun89_TABLE = SnowWetAgeC1Brun89
+    NoahmpIO%SnowWetAgeC2Brun89_TABLE = SnowWetAgeC2Brun89
+    NoahmpIO%SnowAgeScaleFac_TABLE    = SnowAgeScaleFac
 
   end subroutine NoahmpReadTable
 
