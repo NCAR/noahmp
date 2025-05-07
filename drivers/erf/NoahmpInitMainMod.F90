@@ -98,7 +98,7 @@ contains
                 enddo
                 ! NoahmpIO%TMN(I,J) = min(NoahmpIO%TMN(I,J), 263.15)           ! set deep temp to at most -10C
                 NoahmpIO%SNOW(I,J)  = max(NoahmpIO%SNOW(I,J), 10.0)            ! set SWE to at least 10mm
-                NoahmpIO%SNOWH(I,J) = NoahmpIO%SNOW(I,J) * 0.01                ! SNOW in mm and SNOWH in m
+                NoahmpIO%SNOWH(I,J) = NoahmpIO%SNOW(I,J) * 0.005               ! SNOW in mm and SNOWH in m
              else
                 BEXP   = NoahmpIO%BEXP_TABLE  (NoahmpIO%ISLTYP(I,J))
                 SMCMAX = NoahmpIO%SMCMAX_TABLE(NoahmpIO%ISLTYP(I,J))
