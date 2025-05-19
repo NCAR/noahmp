@@ -565,10 +565,10 @@ contains
           SnowLayerTop = snl_lcl + 1
 
        ! Set local aerosol array
-       if (FlagSnicarUseAerosol == .true.) then
+       if (FlagSnicarUseAerosol .eqv. .true.) then
           mss_cnc_aer_lcl(:,1) = MassConcBChydrophi(:)
           mss_cnc_aer_lcl(:,2) = MassConcBChydropho(:)
-          if (FlagSnicarUseOC == .true.) then
+          if (FlagSnicarUseOC .eqv. .true.) then
              mss_cnc_aer_lcl(:,3) = MassConcOChydrophi(:)
              mss_cnc_aer_lcl(:,4) = MassConcOChydropho(:)
           else
@@ -1519,7 +1519,7 @@ contains
 
                    ! ERROR check: negative absorption
                    if (flx_abs_lcl(i,LoopInd) < -0.0001) then !original -0.00001, but not work for Koch snowflake
-                      write (*,"(a,e13.6,i,i,i,i)") "SNICAR ERROR: negative absoption : ", &
+                      write (*,"(a,e13.6,i0,i0,i0,i0)") "SNICAR ERROR: negative absoption : ", &
                             flx_abs_lcl(i,LoopInd),i,LoopInd,SnowLayerTop,SnowLayerBottom
                       write(*,*) "SNICAR_AD STATS: L_snw(0)= ", L_snw(0)
                       write(*,*) "SNICAR_AD STATS: snw_rds_lcl(0)= ", snw_rds_lcl(0)

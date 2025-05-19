@@ -30,17 +30,19 @@ contains
     integer                          :: SoilLayerIndex
 
 ! -------------------------------------------------------------------------
-    associate(                                                         &
-              I               => noahmp%config%domain%GridIndexI      ,&
-              J               => noahmp%config%domain%GridIndexJ      ,&
-              VegType         => noahmp%config%domain%VegType         ,&
-              SoilType        => noahmp%config%domain%SoilType        ,&
-              CropType        => noahmp%config%domain%CropType        ,&
-              SoilColor       => noahmp%config%domain%SoilColor       ,&
-              FlagUrban       => noahmp%config%domain%FlagUrban       ,&
-              NumSnowLayerMax => noahmp%config%domain%NumSnowLayerMax ,&
-              NumSoilLayer    => noahmp%config%domain%NumSoilLayer    ,&
-              NumSwRadBand    => noahmp%config%domain%NumSwRadBand     &
+    associate(                                                                    &
+              I                     => noahmp%config%domain%GridIndexI           ,&
+              J                     => noahmp%config%domain%GridIndexJ           ,&
+              VegType               => noahmp%config%domain%VegType              ,&
+              SoilType              => noahmp%config%domain%SoilType             ,&
+              CropType              => noahmp%config%domain%CropType             ,&
+              SoilColor             => noahmp%config%domain%SoilColor            ,&
+              FlagUrban             => noahmp%config%domain%FlagUrban            ,&
+              NumSnowLayerMax       => noahmp%config%domain%NumSnowLayerMax      ,&
+              NumSoilLayer          => noahmp%config%domain%NumSoilLayer         ,&
+              NumSwRadBand          => noahmp%config%domain%NumSwRadBand         ,&
+              NumSnicarRadBand      => noahmp%config%domain%NumSnicarRadBand     ,&
+              NumRadiusSnwMieSnicar => noahmp%config%domain%NumRadiusSnwMieSnicar &
              )
 ! -------------------------------------------------------------------------
 
@@ -60,6 +62,8 @@ contains
     noahmp%energy%state%TemperatureSoilSnow(1:NumSoilLayer)       = NoahmpIO%TSLB    (I,1:NumSoilLayer,J)
     noahmp%energy%state%PressureAtmosCO2                          = NoahmpIO%CO2_TABLE * noahmp%forcing%PressureAirRefHeight
     noahmp%energy%state%PressureAtmosO2                           = NoahmpIO%O2_TABLE  * noahmp%forcing%PressureAirRefHeight
+    noahmp%energy%state%AlbedoSoilDir(1:NumSwRadBand)             = NoahmpIO%ALBSOILDIRXY(I,1:NumSwRadBand,J)
+    noahmp%energy%state%AlbedoSoilDif(1:NumSwRadBand)             = NoahmpIO%ALBSOILDIFXY(I,1:NumSwRadBand,J)
     ! vegetation treatment for USGS land types (playa, lava, sand to bare)
     if ( (VegType == 25) .or. (VegType == 26) .or. (VegType == 27) ) then
        noahmp%energy%state%VegFrac       = 0.0
@@ -129,23 +133,67 @@ contains
     noahmp%energy%param%AlbedoLakeFrz    (1:NumSwRadBand)         = NoahmpIO%ALBLAK_TABLE(1:NumSwRadBand)
     noahmp%energy%param%ScatterCoeffSnow (1:NumSwRadBand)         = NoahmpIO%OMEGAS_TABLE(1:NumSwRadBand)
 
+    if ( noahmp%config%nmlist%OptSnowAlbedo == 3 ) then ! SNICAR variables
+       noahmp%energy%param%RadSwWgtDif        (1:NumSnicarRadBand) = NoahmpIO%flx_wgt_dif(1:NumSnicarRadBand)
+       noahmp%energy%param%RadSwWgtDir        (1:NumSnicarRadBand) = NoahmpIO%flx_wgt_dir(1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbBCphi         (1:NumSnicarRadBand) = NoahmpIO%ss_alb_bc1       (1:NumSnicarRadBand) 
+       noahmp%energy%param%AsyPrmBCphi        (1:NumSnicarRadBand) = NoahmpIO%asm_prm_bc1      (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassBCphi    (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_bc1  (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbBCpho         (1:NumSnicarRadBand) = NoahmpIO%ss_alb_bc2       (1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmBCpho        (1:NumSnicarRadBand) = NoahmpIO%asm_prm_bc2      (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassBCpho    (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_bc2  (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbOCphi         (1:NumSnicarRadBand) = NoahmpIO%ss_alb_oc1       (1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmOCphi        (1:NumSnicarRadBand) = NoahmpIO%asm_prm_oc1      (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassOCphi    (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_oc1  (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbOCpho         (1:NumSnicarRadBand) = NoahmpIO%ss_alb_oc2       (1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmOCpho        (1:NumSnicarRadBand) = NoahmpIO%asm_prm_oc2      (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassOCpho    (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_oc2  (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbDustB1        (1:NumSnicarRadBand) = NoahmpIO%ss_alb_dst1      (1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmDustB1       (1:NumSnicarRadBand) = NoahmpIO%asm_prm_dst1     (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassDustB1   (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_dst1 (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbDustB2        (1:NumSnicarRadBand) = NoahmpIO%ss_alb_dst2      (1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmDustB2       (1:NumSnicarRadBand) = NoahmpIO%asm_prm_dst2     (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassDustB2   (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_dst2 (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbDustB3        (1:NumSnicarRadBand) = NoahmpIO%ss_alb_dst3      (1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmDustB3       (1:NumSnicarRadBand) = NoahmpIO%asm_prm_dst3     (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassDustB3   (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_dst3 (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbDustB4        (1:NumSnicarRadBand) = NoahmpIO%ss_alb_dst4      (1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmDustB4       (1:NumSnicarRadBand) = NoahmpIO%asm_prm_dst4     (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassDustB4   (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_dst4 (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbDustB5        (1:NumSnicarRadBand) = NoahmpIO%ss_alb_dst5      (1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmDustB5       (1:NumSnicarRadBand) = NoahmpIO%asm_prm_dst5     (1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassDustB5   (1:NumSnicarRadBand) = NoahmpIO%ext_cff_mss_dst5 (1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbSnwRadDir     (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
+                  NoahmpIO%ss_alb_snw_drc     (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmSnwRadDir    (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
+                  NoahmpIO%asm_prm_snw_drc    (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassSnwRadDir(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
+                  NoahmpIO%ext_cff_mss_snw_drc(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand)
+       noahmp%energy%param%SsAlbSnwRadDif     (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
+                  NoahmpIO%ss_alb_snw_dfs     (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand)
+       noahmp%energy%param%AsyPrmSnwRadDif    (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
+                  NoahmpIO%asm_prm_snw_dfs    (1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand)
+       noahmp%energy%param%ExtCffMassSnwRadDif(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) = &
+                  NoahmpIO%ext_cff_mss_snw_dfs(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand)
+    endif
+
     do SoilLayerIndex = 1, size(SoilType)
-       noahmp%energy%param%SoilQuartzFrac(SoilLayerIndex)         = NoahmpIO%QUARTZ_TABLE(SoilType(SoilLayerIndex))
+       noahmp%energy%param%SoilQuartzFrac(SoilLayerIndex) = NoahmpIO%QUARTZ_TABLE(SoilType(SoilLayerIndex))
     enddo
 
     ! spatial varying soil input
     if ( noahmp%config%nmlist%OptSoilProperty == 4 ) then
-       noahmp%energy%param%SoilQuartzFrac(1:NumSoilLayer)         = NoahmpIO%QUARTZ_3D(I,1:NumSoilLayer,J)
+       noahmp%energy%param%SoilQuartzFrac(1:NumSoilLayer) = NoahmpIO%QUARTZ_3D(I,1:NumSoilLayer,J)
     endif
 
     if ( FlagUrban .eqv. .true. ) noahmp%energy%param%SoilHeatCapacity = 3.0e6
 
     if ( CropType > 0 ) then
-       noahmp%energy%param%ConductanceLeafMin                     = NoahmpIO%BPI_TABLE  (CropType)
-       noahmp%energy%param%Co2MmConst25C                          = NoahmpIO%KC25I_TABLE(CropType)
-       noahmp%energy%param%O2MmConst25C                           = NoahmpIO%KO25I_TABLE(CropType)
-       noahmp%energy%param%Co2MmConstQ10                          = NoahmpIO%AKCI_TABLE (CropType)
-       noahmp%energy%param%O2MmConstQ10                           = NoahmpIO%AKOI_TABLE (CropType)
+       noahmp%energy%param%ConductanceLeafMin             = NoahmpIO%BPI_TABLE  (CropType)
+       noahmp%energy%param%Co2MmConst25C                  = NoahmpIO%KC25I_TABLE(CropType)
+       noahmp%energy%param%O2MmConst25C                   = NoahmpIO%KO25I_TABLE(CropType)
+       noahmp%energy%param%Co2MmConstQ10                  = NoahmpIO%AKCI_TABLE (CropType)
+       noahmp%energy%param%O2MmConstQ10                   = NoahmpIO%AKOI_TABLE (CropType)
     endif
 
     end associate

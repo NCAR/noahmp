@@ -146,12 +146,14 @@ contains
     endif
 
     ! SNICAR
-    if ( OptSnowAlbedo == 3 .and. abs(RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer))>0.001) then ! original check is 0.0001, precision issue
-       write(*,*) "RadSwAbsGrd gridmean                            = ", RadSwAbsGrd
-       write(*,*) "sum(RadSwAbsSnowSoilLayer) gridmean             = ", sum(RadSwAbsSnowSoilLayer)
-       write(*,*) "RadSwAbsSnowSoilLayer gridmean                  = ", RadSwAbsSnowSoilLayer
-       write(*,*) "RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer) gridmean = ", RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer)
-       stop "Error: SNICAR snow albedo radiation budget problem in NoahMP LSM"
+    if ( OptSnowAlbedo == 3 ) then
+       if ( abs(RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer))>0.001 ) then ! original check is 0.0001, precision issue
+          write(*,*) "RadSwAbsGrd gridmean                            = ", RadSwAbsGrd
+          write(*,*) "sum(RadSwAbsSnowSoilLayer) gridmean             = ", sum(RadSwAbsSnowSoilLayer)
+          write(*,*) "RadSwAbsSnowSoilLayer gridmean                  = ", RadSwAbsSnowSoilLayer
+          write(*,*) "RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer) gridmean = ", RadSwAbsGrd-sum(RadSwAbsSnowSoilLayer)
+          stop "Error: SNICAR snow albedo radiation budget problem in NoahMP LSM"
+       endif
     endif
 
     ! error in surface energy balance should be <0.01 W/m2

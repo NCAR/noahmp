@@ -56,8 +56,6 @@ contains
        AlbedoGrdDif (IndBand) = 0.0
        AlbedoSnowDir(IndBand) = 0.0
        AlbedoSnowDif(IndBand) = 0.0
-       FracRadSwAbsSnowDir(:,IndBand) = 0.0
-       FracRadSwAbsSnowDif(:,IndBand) = 0.0
     enddo
 
     ! snow aging (allow nighttime BATS snow albedo aging)
@@ -65,6 +63,8 @@ contains
 
     ! snow grain size and aging for SNICAR
     if ( OptSnowAlbedo == 3 ) then
+       FracRadSwAbsSnowDir = 0.0
+       FracRadSwAbsSnowDif = 0.0
        call SnowFreshRadius(noahmp)
        call SnowAgingSnicar(noahmp)
     endif

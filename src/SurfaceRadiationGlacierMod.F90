@@ -57,12 +57,12 @@ contains
     RadSwAbsGrd  = 0.0
     RadSwAbsSfc  = 0.0
     RadSwReflSfc = 0.0
-    RadSwAbsSnowSoilLayer(:) = 0.0
     if ( OptSnowAlbedo == 3 ) then
        if (.not. allocated(FracRadSwAbsSnowDirMean)) allocate(FracRadSwAbsSnowDirMean(-NumSnowLayerMax+1:1,1:NumSwRadBand))
        if (.not. allocated(FracRadSwAbsSnowDifMean)) allocate(FracRadSwAbsSnowDifMean(-NumSnowLayerMax+1:1,1:NumSwRadBand))
        FracRadSwAbsSnowDirMean(:,:) = 0.0
        FracRadSwAbsSnowDifMean(:,:) = 0.0
+       RadSwAbsSnowSoilLayer(:)     = 0.0
     endif
 
     ! aggretate radiative flux

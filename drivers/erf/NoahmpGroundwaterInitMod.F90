@@ -18,24 +18,21 @@ contains
 ! ---------------------------------------------------------------------------
 
   use GroundWaterMmfMod, only : LATERALFLOW
- 
-#if (EM_CORE == 1)
-#ifdef DM_PARALLEL
-  use module_dm     ,    only : ntasks_x,ntasks_y,local_communicator,mytask,ntasks
-  use module_comm_dm,    only : halo_em_hydro_noahmp_sub
-#endif
-#endif
 
+#ifdef MPP_LAND
+  use module_mpp_land
+#endif
+  
     implicit none 
     
     type(NoahmpIO_type), intent(inout) :: NoahmpIO
-
+    
     ! local variables
     logical                                             :: urbanpt_flag ! added to identify urban pixels
     integer                                             :: I,J,K,ITER,itf,jtf,NITER,NCOUNT,NS
     real(kind=kind_noahmp)                              :: BEXP,SMCMAX,PSISAT,SMCWLT,DWSAT,DKSAT
     real(kind=kind_noahmp)                              :: FRLIQ,SMCEQDEEP
-    real(kind=kind_noahmp)                              :: DELTAT,RCOND,TOTWATER
+    real(kind=kind_noahmp)                              :: DELTAT,RCOND,TOTWATER,RCOUNT
     real(kind=kind_noahmp)                              :: AA,BBB,CC,DD,DX,FUNC,DFUNC,DDZ,EXPON,SMC,FLUX
     real(kind=kind_noahmp), dimension(1:NoahmpIO%NSOIL) :: SMCEQ,ZSOIL
     real(kind=kind_noahmp), dimension(NoahmpIO%ims:NoahmpIO%ime, NoahmpIO%jms:NoahmpIO%jme) :: QLAT, QRF
@@ -97,11 +94,7 @@ contains
     NCOUNT = 0
 
     do NITER = 1, 500
-#if (EM_CORE == 1)
-#ifdef DM_PARALLEL
-#     include "HALO_EM_HYDRO_NOAHMP.inc"
-#endif
-#endif
+
       ! Calculate lateral flow
       if ( (NCOUNT > 0) .or. (NITER == 1) ) then
          QLAT = 0.0
@@ -122,13 +115,15 @@ contains
          enddo
 
       endif
+
+#ifdef MPP_LAND
+      rcount=float(ncount)
+      call sum_real1(rcount)
+      ncount=nint(rcount)
+#endif
+
     enddo !NITER
 
-#if (EM_CORE == 1)
-#ifdef DM_PARALLEL
-#     include "HALO_EM_HYDRO_NOAHMP.inc"
-#endif
-#endif
 
     NoahmpIO%EQZWT=NoahmpIO%ZWTXY
 
