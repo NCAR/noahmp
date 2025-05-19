@@ -91,6 +91,7 @@ contains
        if (.not. allocated(FracRadSwAbsSnowDifMean)) allocate(FracRadSwAbsSnowDifMean(-NumSnowLayerMax+1:1,1:NumSwRadBand))
        FracRadSwAbsSnowDirMean(:,:) = 0.0
        FracRadSwAbsSnowDifMean(:,:) = 0.0
+       RadSwAbsSnowSoilLayer(:)     = 0.0
     endif
 
     MinThr               = 1.0e-6
@@ -104,7 +105,6 @@ contains
     RadSwReflGrd         = 0.0
     RadPhotoActAbsSunlit = 0.0
     RadPhotoActAbsShade  = 0.0
-    RadSwAbsSnowSoilLayer(:) = 0.0
 
     ! aggregate radiative flux
     do IndBand = 1, NumSwRadBand

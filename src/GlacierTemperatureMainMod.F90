@@ -64,14 +64,16 @@ contains
     ! compute solar penetration through snowpack and glacier ice
     RadSwPenetrateGrd(-NumSnowLayerMax+1:NumSoilLayer) = 0.0
 
-    if (OptSnowAlbedo == 3 .and. NumSnowLayerNeg < 0 .and. sum(RadSwAbsSnowSoilLayer) > 0.0) then
-       do IndLoop = NumSnowLayerNeg+1, 1, 1
-          if (IndLoop == NumSnowLayerNeg+1) then
-             RadSwPenetrateGrd(IndLoop) = RadSwAbsSnowSoilLayer(IndLoop) - RadSwAbsGrd
-          else
-             RadSwPenetrateGrd(IndLoop) = RadSwAbsSnowSoilLayer(IndLoop)
-          endif
-       enddo
+    if (OptSnowAlbedo == 3 .and. NumSnowLayerNeg < 0) then
+       if (sum(RadSwAbsSnowSoilLayer) > 0.0) then
+          do IndLoop = NumSnowLayerNeg+1, 1, 1
+             if (IndLoop == NumSnowLayerNeg+1) then
+                RadSwPenetrateGrd(IndLoop) = RadSwAbsSnowSoilLayer(IndLoop) - RadSwAbsGrd
+             else
+                RadSwPenetrateGrd(IndLoop) = RadSwAbsSnowSoilLayer(IndLoop)
+             endif
+          enddo
+       endif
     endif
 
     ! adjust DepthSoilTempBottom from glacier ice surface to DepthSoilTempBotToSno from snow surface
