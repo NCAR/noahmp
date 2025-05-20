@@ -314,6 +314,10 @@ contains
     noahmp%water%param%SnowCompactP1AR24           = undefined_real
     noahmp%water%param%SnowCompactP2AR24           = undefined_real
     noahmp%water%param%SnowCompactP3AR24           = undefined_real
+    noahmp%water%param%SnowCoverM1AR25             = undefined_real
+    noahmp%water%param%SnowCoverM2AR25             = undefined_real
+    noahmp%water%param%SnowCoverFac1AR25           = undefined_real
+    noahmp%water%param%SnowCoverFac2AR25           = undefined_real
     noahmp%water%param%BurdenFacUpAR24             = undefined_real
     noahmp%water%param%SnowLiqFracMax              = undefined_real
     noahmp%water%param%SnowLiqHoldCap              = undefined_real

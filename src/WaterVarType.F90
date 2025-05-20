@@ -203,6 +203,10 @@ module WaterVarType
     real(kind=kind_noahmp) :: SnowCompactP2AR24          ! lower constraint for SnowCompactBurdenFac for mid pressure bin from AR24
     real(kind=kind_noahmp) :: SnowCompactP3AR24          ! lower constraint for SnowCompactBurdenFac for low pressure bin from AR24
     real(kind=kind_noahmp) :: BurdenFacUpAR24            ! upper constraint on SnowCompactBurdenFac from AR24
+    real(kind=kind_noahmp) :: SnowCoverM1AR25            ! SCFm1 ground SCF parameter from AR2025
+    real(kind=kind_noahmp) :: SnowCoverM2AR25            ! SCFm2 ground SCF parameter from AR2025
+    real(kind=kind_noahmp) :: SnowCoverFac1AR25          ! SCfac1 ground SCF parameter from AR2025
+    real(kind=kind_noahmp) :: SnowCoverFac2AR25          ! SCfac2 ground SCF parameter from AR2025
     real(kind=kind_noahmp) :: SnowLiqFracMax             ! maximum liquid water fraction in snow
     real(kind=kind_noahmp) :: SnowLiqHoldCap             ! liquid water holding capacity for snowpack [m3/m3]
     real(kind=kind_noahmp) :: SnowLiqReleaseFac          ! snowpack water release timescale factor [1/s]

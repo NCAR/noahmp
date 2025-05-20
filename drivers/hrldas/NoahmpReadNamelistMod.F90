@@ -82,6 +82,7 @@ contains
     integer                 :: snow_albedo_option                 = 1
     integer                 :: snow_thermal_conductivity          = 1
     integer                 :: snow_compaction_option             = 2 
+    integer                 :: snow_cover_option                  = 2
     integer                 :: pcp_partition_option               = 1
     integer                 :: tbot_option                        = 2
     integer                 :: temp_time_scheme_option            = 1
@@ -150,7 +151,7 @@ contains
          forcing_name_LW,forcing_name_SW,forcing_name_PR,forcing_name_SN,                 &
          forcing_name_DirFrac, forcing_name_VisFrac,                                      &
          dynamic_veg_option, canopy_stomatal_resistance_option,                           &
-         btr_option, surface_drag_option, supercooled_water_option,                       &
+         btr_option, surface_drag_option, supercooled_water_option, snow_cover_option,    &
          frozen_soil_option, radiative_transfer_option, snow_albedo_option,               &
          snow_thermal_conductivity, surface_runoff_option, subsurface_runoff_option,      &
          pcp_partition_option, tbot_option, temp_time_scheme_option, wetland_option,      &
@@ -378,6 +379,7 @@ contains
     NoahmpIO%IOPT_TDRN                         = tile_drainage_option
     NoahmpIO%IOPT_COMPACT                      = snow_compaction_option
     NoahmpIO%IOPT_WETLAND                      = wetland_option
+    NoahmpIO%IOPT_SCF                          = snow_cover_option
     ! basic model setup variables
     NoahmpIO%indir                             = indir
     NoahmpIO%forcing_timestep                  = forcing_timestep

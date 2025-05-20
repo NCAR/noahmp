@@ -100,6 +100,7 @@ OBJS = ConstantDefineMod.o \
        SoilWaterSupercoolKoren99Mod.o \
        SoilWaterSupercoolNiu06Mod.o \
        SnowCoverGroundNiu07Mod.o \
+       SnowCoverGroundAR25Mod.o \
        GroundRoughnessPropertyMod.o \
        SurfaceEmissivityMod.o \
        PsychrometricVariableMod.o \
@@ -286,7 +287,7 @@ EnergyMainMod.o:                      ../utility/Machine.o NoahmpVarType.o Const
                                       SurfaceEnergyFluxBareGroundMod.o SoilSnowTemperatureMainMod.o \
                                       SoilSnowWaterPhaseChangeMod.o SnowCoverGroundNiu07Mod.o SurfaceEmissivityMod.o \
                                       GroundRoughnessPropertyMod.o PsychrometricVariableMod.o ResistanceGroundEvaporationMod.o \
-                                      SoilWaterTranspirationMod.o SurfaceAlbedoMod.o SurfaceRadiationMod.o
+                                      SoilWaterTranspirationMod.o SurfaceAlbedoMod.o SurfaceRadiationMod.o SnowCoverGroundAR25Mod.o
 NoahmpMainMod.o:                      ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       IrrigationPrepareMod.o IrrigationSprinklerMod.o CanopyWaterInterceptMod.o \
                                       PrecipitationHeatAdvectMod.o EnergyMainMod.o WaterMainMod.o AtmosForcingMod.o \

@@ -139,6 +139,10 @@ contains
     noahmp%water%param%SnowCompactP1AR24                  = NoahmpIO%SNOWCOMPACT_P1_AR24_TABLE
     noahmp%water%param%SnowCompactP2AR24                  = NoahmpIO%SNOWCOMPACT_P2_AR24_TABLE
     noahmp%water%param%SnowCompactP3AR24                  = NoahmpIO%SNOWCOMPACT_P3_AR24_TABLE
+    noahmp%water%param%SnowCoverM1AR25                    = NoahmpIO%SCFm1_AR25_TABLE
+    noahmp%water%param%SnowCoverM2AR25                    = NoahmpIO%SCFm2_AR25_TABLE
+    noahmp%water%param%SnowCoverFac1AR25                  = NoahmpIO%SCfac1_AR25_TABLE
+    noahmp%water%param%SnowCoverFac2AR25                  = NoahmpIO%SCfac2_AR25_TABLE
     noahmp%water%param%BurdenFacUpAR24                    = NoahmpIO%SNOWCOMPACT_Up_AR24_TABLE
     noahmp%water%param%SnowLiqFracMax                     = NoahmpIO%SNLIQMAXFRAC_TABLE
     noahmp%water%param%SnowLiqHoldCap                     = NoahmpIO%SSI_TABLE
