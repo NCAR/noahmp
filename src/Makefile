@@ -323,6 +323,7 @@ GroundRoughnessPropertyMod.o:            ../utility/Machine.o NoahmpVarType.o Co
 PsychrometricVariableMod.o:              ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 ResistanceGroundEvaporationMod.o:        ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SnowCoverGroundNiu07Mod.o:               ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
+SnowCoverGroundAR25Mod.o:                ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SoilWaterTranspirationMod.o:             ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 SurfaceEmissivityMod.o:                  ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 AtmosForcingMod.o:                       ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
