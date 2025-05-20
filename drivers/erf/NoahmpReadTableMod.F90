@@ -112,7 +112,8 @@ contains
                                                 RSURF_SNOW, RSURF_EXP, C2_SNOWCOMPACT, C3_SNOWCOMPACT, C4_SNOWCOMPACT,       &
                                                 C5_SNOWCOMPACT, DM_SNOWCOMPACT, ETA0_SNOWCOMPACT, SNLIQMAXFRAC, SWEMAXGLA,   &
                                                 SNOWCOMPACTm_AR24,SNOWCOMPACTb_AR24,SNOWCOMPACT_P1_AR24, SNOWCOMPACT_P2_AR24,&
-                                                SNOWCOMPACT_P3_AR24, SNOWCOMPACT_Up_AR24,                                    &
+                                                SNOWCOMPACT_P3_AR24, SNOWCOMPACT_Up_AR24, SCFm1_AR25, SCFm2_AR25,            &
+                                                SCfac1_AR25, SCfac2_AR25,                                                    &
                                                 WSLMAX, ROUS, CMIC, SNOWDEN_MAX, CLASS_ALB_REF, CLASS_SNO_AGE, CLASS_ALB_NEW,&
                                                 PSIWLT, Z0SOIL, Z0LAKE, WCAP
     namelist / noahmp_global_parameters /       CO2, O2, TIMEAN, FSATMX, Z0SNO, SSI, SNOW_RET_FAC ,SNOW_EMIS, SWEMX, TAU0,   &
@@ -121,7 +122,8 @@ contains
                                                 RSURF_SNOW, RSURF_EXP, C2_SNOWCOMPACT, C3_SNOWCOMPACT, C4_SNOWCOMPACT,       &
                                                 C5_SNOWCOMPACT, DM_SNOWCOMPACT, ETA0_SNOWCOMPACT, SNLIQMAXFRAC, SWEMAXGLA,   &
                                                 SNOWCOMPACTm_AR24,SNOWCOMPACTb_AR24,SNOWCOMPACT_P1_AR24, SNOWCOMPACT_P2_AR24,&
-                                                SNOWCOMPACT_P3_AR24, SNOWCOMPACT_Up_AR24,                                    &
+                                                SNOWCOMPACT_P3_AR24, SNOWCOMPACT_Up_AR24, SCFm1_AR25, SCFm2_AR25,            &
+                                                SCfac1_AR25, SCfac2_AR25,                                                    &
                                                 WSLMAX, ROUS, CMIC, SNOWDEN_MAX, CLASS_ALB_REF, CLASS_SNO_AGE, CLASS_ALB_NEW,&
                                                 PSIWLT, Z0SOIL, Z0LAKE, WCAP
 
@@ -535,6 +537,10 @@ contains
     NoahmpIO%SNOWCOMPACT_P2_AR24_TABLE = undefined_real
     NoahmpIO%SNOWCOMPACT_P3_AR24_TABLE = undefined_real
     NoahmpIO%SNOWCOMPACT_Up_AR24_TABLE = undefined_real
+    NoahmpIO%SCFm1_AR25_TABLE          = undefined_real
+    NoahmpIO%SCFm2_AR25_TABLE          = undefined_real
+    NoahmpIO%SCfac1_AR25_TABLE         = undefined_real
+    NoahmpIO%SCfac2_AR25_TABLE         = undefined_real
     NoahmpIO%SNLIQMAXFRAC_TABLE        = undefined_real
     NoahmpIO%SWEMAXGLA_TABLE           = undefined_real
     NoahmpIO%WSLMAX_TABLE              = undefined_real
@@ -967,6 +973,10 @@ contains
     NoahmpIO%SNOWCOMPACT_P3_AR24_TABLE = SNOWCOMPACT_P3_AR24
     NoahmpIO%SNOWCOMPACT_Up_AR24_TABLE = SNOWCOMPACT_Up_AR24
     NoahmpIO%SNLIQMAXFRAC_TABLE        = SNLIQMAXFRAC
+    NoahmpIO%SCFm1_AR25_TABLE          = SCFm1_AR25
+    NoahmpIO%SCFm2_AR25_TABLE          = SCFm2_AR25
+    NoahmpIO%SCfac1_AR25_TABLE         = SCfac1_AR25
+    NoahmpIO%SCfac2_AR25_TABLE         = SCfac2_AR25
     NoahmpIO%SWEMAXGLA_TABLE           = SWEMAXGLA
     NoahmpIO%WSLMAX_TABLE              = WSLMAX
     NoahmpIO%ROUS_TABLE                = ROUS
