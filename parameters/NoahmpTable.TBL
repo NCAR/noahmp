@@ -470,14 +470,19 @@
  SNOWCOMPACT_P2_AR24 = 0.018       ! lower constraint for SnowCompactBurdenFac for mid pressure bin from AR24
  SNOWCOMPACT_P3_AR24 = 0.019       ! lower constraint for SnowCompactBurdenFac for low pressure bin from AR24
  SNOWCOMPACT_Up_AR24 = 0.0315      ! upper constraint on SnowCompactBurdenFac from AR24
+ ! snow cover parameters for Abolafia-Rosenzweig et al. 2025 (AR25) scheme
+ SCFm1_AR25          = 0.9713      ! SCFm1 parameter for ground SCF scheme from AR2025
+ SCFm2_AR25          = 0.7436      ! SCFm2 parameter for ground SCF scheme from AR2025
+ SCfac1_AR25         = 0.0062      ! SCfac1 parameter for ground SCF scheme from AR2025
+ SCfac2_AR25         = 0.0555      ! SCfac2 parameter for ground SCF scheme from AR2025
  ! other soil and hydrological parameters
- RSURF_EXP        = 5.0         ! exponent in the shape parameter for soil resistance option 1
- WSLMAX           = 5000.0      ! maximum lake water storage (mm)
- PSIWLT           = -150.0      ! metric potential for wilting point (m)
- Z0SOIL           = 0.002       ! Bare-soil roughness length (m) (i.e., under the canopy)
- Z0LAKE           = 0.01        ! Lake surface roughness length (m)
+ RSURF_EXP           = 5.0         ! exponent in the shape parameter for soil resistance option 1
+ WSLMAX              = 5000.0      ! maximum lake water storage (mm)
+ PSIWLT              = -150.0      ! metric potential for wilting point (m)
+ Z0SOIL              = 0.002       ! Bare-soil roughness length (m) (i.e., under the canopy)
+ Z0LAKE              = 0.01        ! Lake surface roughness length (m)
  ! wetland parameter
- WCAP             = 0.10        ! maximum wetland water holding capacity [m] (tunable) from Zhang et al. 2022
+ WCAP                = 0.10        ! maximum wetland water holding capacity [m] (tunable) from Zhang et al. 2022
 /
 
 &noahmp_snicar_parameters

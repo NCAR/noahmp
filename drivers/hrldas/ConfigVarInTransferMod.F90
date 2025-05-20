@@ -61,6 +61,7 @@ contains
     noahmp%config%nmlist%OptGlacierTreatment         = NoahmpIO%IOPT_GLA
     noahmp%config%nmlist%OptSnowCompaction           = NoahmpIO%IOPT_COMPACT
     noahmp%config%nmlist%OptWetlandModel             = NoahmpIO%IOPT_WETLAND
+    noahmp%config%nmlist%OptSnowCoverGround          = NoahmpIO%IOPT_SCF
 
     if ( noahmp%config%nmlist%OptSnowAlbedo == 3 ) then ! SNICAR namelist
        noahmp%config%nmlist%OptSnicarSnowShape          = NoahmpIO%SNICAR_SNOWSHAPE_OPT
