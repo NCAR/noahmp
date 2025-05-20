@@ -132,6 +132,10 @@ module LisNoahmpParamType
     real(kind=kind_noahmp)      :: SNOWCOMPACT_P2_AR24 ! lower constraint for SnowCompactBurdenFac for mid pressure bin from AR24
     real(kind=kind_noahmp)      :: SNOWCOMPACT_P3_AR24 ! lower constraint for SnowCompactBurdenFac for low pressure bin from AR24
     real(kind=kind_noahmp)      :: SNOWCOMPACT_Up_AR24 ! upper constraint on SnowCompactBurdenFac from AR24
+    real(kind=kind_noahmp)      :: SCFm1_AR25          ! m1 parameter for ground SCF from AR2025
+    real(kind=kind_noahmp)      :: SCFm2_AR25          ! m2 parameter for ground SCF from AR2025
+    real(kind=kind_noahmp)      :: SCfac1_AR25         ! SCfac1 parameter for ground SCF from AR2025
+    real(kind=kind_noahmp)      :: SCfac2_AR25         ! SCfac2 parameter for ground SCF from AR2025
     real(kind=kind_noahmp)      :: SNLIQMAXFRAC        ! maximum liquid water fraction in snow
     real(kind=kind_noahmp)      :: SWEMAXGLA           ! Maximum SWE allowed at glaciers (mm)
     real(kind=kind_noahmp)      :: WSLMAX              ! maximum lake water storage (mm)
