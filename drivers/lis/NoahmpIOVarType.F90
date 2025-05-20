@@ -58,6 +58,7 @@ module NoahmpIOVarType
     integer                                                ::  IOPT_INFDV          ! infiltration options for dynamic VIC (1->Philip; 2-> Green-Ampt;3->Smith-Parlange)
     integer                                                ::  IOPT_TDRN           ! drainage option (0->off; 1->simple scheme; 2->Hooghoudt's scheme)
     integer                                                ::  IOPT_COMPACT        ! snowpack compaction (1->Anderson1976; 2->Abolafia-Rosenzweig2024)
+    integer                                                ::  IOPT_SCF            ! snow cover fraction (1->NiuYang07; 2->Abolafia-Rosenzweig2025)
     integer                                                ::  IOPT_WETLAND        ! wetland model option (0->off; 1->Zhang2022 scheme fixed parameter; 2->Zhang2022 read in 2D parameter)
     integer                                                ::  sf_urban_physics    ! urban physics option
     
@@ -894,6 +895,10 @@ module NoahmpIOVarType
     real(kind=kind_noahmp)                                 :: SNOWCOMPACT_P2_AR24_TABLE ! lower constraint for SnowCompactBurdenFac for mid pressure bin from AR24
     real(kind=kind_noahmp)                                 :: SNOWCOMPACT_P3_AR24_TABLE ! lower constraint for SnowCompactBurdenFac for low pressure bin from AR24
     real(kind=kind_noahmp)                                 :: SNOWCOMPACT_Up_AR24_TABLE ! upper constraint on SnowCompactBurdenFac from AR24
+    real(kind=kind_noahmp)                                 :: SCFm1_AR25_TABLE          ! m1 parameter for ground SCF from AR2025
+    real(kind=kind_noahmp)                                 :: SCFm2_AR25_TABLE          ! m2 parameter for ground SCF from AR2025
+    real(kind=kind_noahmp)                                 :: SCfac1_AR25_TABLE         ! SCfac1 parameter for ground SCF from AR2025
+    real(kind=kind_noahmp)                                 :: SCfac2_AR25_TABLE         ! SCfac2 parameter for ground SCF from AR2025
     real(kind=kind_noahmp)                                 :: SNLIQMAXFRAC_TABLE        ! maximum liquid water fraction in snow
     real(kind=kind_noahmp)                                 :: SWEMAXGLA_TABLE           ! Maximum SWE allowed at glaciers (mm)
     real(kind=kind_noahmp)                                 :: WSLMAX_TABLE              ! maximum lake water storage (mm)
