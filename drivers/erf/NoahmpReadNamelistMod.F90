@@ -82,7 +82,7 @@ contains
     integer                 :: snow_albedo_option                 = 1
     integer                 :: snow_thermal_conductivity          = 1
     integer                 :: snow_compaction_option             = 2 
-    integer                 :: snow_cover_option                  = 2
+    integer                 :: snow_cover_option                  = 1
     integer                 :: pcp_partition_option               = 1
     integer                 :: tbot_option                        = 2
     integer                 :: temp_time_scheme_option            = 1
