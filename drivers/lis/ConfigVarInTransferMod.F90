@@ -91,7 +91,7 @@ contains
     noahmp%config%domain%GridIndexJ                  = NoahmpIO%J
     noahmp%config%domain%MainTimeStep                = NoahmpIO%DTBL
     noahmp%config%domain%SoilTimeStep                = NoahmpIO%DTBL * NoahmpIO%soil_update_steps
-    noahmp%config%domain%GridSize                    = sqrt(NoahmpIO%DX * NoahmpIO%DY)
+    noahmp%config%domain%GridSize                    = sqrt(max(10.0,NoahmpIO%DX) * max(10.0,NoahmpIO%DY))
     noahmp%config%domain%LandUseDataName             = NoahmpIO%LLANDUSE
     noahmp%config%domain%VegType                     = NoahmpIO%IVGTYP(I,J)
     noahmp%config%domain%CropType                    = NoahmpIO%CROPCAT(I,J)
