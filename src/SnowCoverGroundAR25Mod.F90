@@ -41,11 +41,14 @@ contains
 
     SnowCoverFrac = 0.0
     if ( SnowDepth > 0.0 ) then
-         !calculate SCF parameters as a function of grid size:
-         SnowMeltFac  = SnowCoverM1AR25 + tanh(SnowCoverM2AR25 * min((GridSize/1000),36.0));
-         SnowCoverFac = SnowCoverFac1AR25 * sinh(SnowCoverFac2AR25*min((GridSize/1000),36.0)) + SnowCoverFac2AR25;
+         ! limit gridsize to 500.0 m due to parameterization limitation
+         GridSize = max(500.0, GridSize)
+
+         ! calculate SCF parameters as a function of grid size:
+         SnowMeltFac  = SnowCoverM1AR25 + tanh(SnowCoverM2AR25 * min((GridSize/1000),36.0))
+         SnowCoverFac = SnowCoverFac1AR25 * sinh(SnowCoverFac2AR25*min((GridSize/1000),36.0)) + SnowCoverFac2AR25
         
-         !using scale-dependent parameters, employ the Niu-Yang 07 SCF soluiton
+         ! using scale-dependent parameters, employ the Niu-Yang 07 SCF soluiton
          SnowDensBulk  = SnowWaterEquiv / SnowDepth
          MeltFac       = (SnowDensBulk / 100.0)**SnowMeltFac
          SnowCoverFrac = tanh( SnowDepth /(SnowCoverFac * MeltFac))

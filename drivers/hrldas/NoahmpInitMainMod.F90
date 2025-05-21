@@ -161,7 +161,8 @@ contains
              else
                 NoahmpIO%WAXY(I,J)   = 0.0
                 NoahmpIO%WTXY(I,J)   = 0.0
-                NoahmpIO%AREAXY(I,J) = (NoahmpIO%DX*NoahmpIO%DY) / (NoahmpIO%MSFTX(I,J)*NoahmpIO%MSFTY(I,J))
+                NoahmpIO%AREAXY(I,J) = (max(10.0,NoahmpIO%DX) * max(10.0,NoahmpIO%DY)) / &
+                                       (NoahmpIO%MSFTX(I,J) * NoahmpIO%MSFTY(I,J))
              endif
 
              urbanpt_flag = .false.
