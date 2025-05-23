@@ -15,7 +15,7 @@
 ### Driver capabilities/enhancements
 
 - coupling Noah-MP v5.0 with NASA Land Information System (LIS) through GitHub submodule with new LIS/NoahMP driver interface (https://github.com/NCAR/noahmp/pull/170)
-- coupling Noah-MP v5.1.0 with DOE's Environmental Research Forecast (ERF) model through GitHub submodule with new ERF/NoahMP driver interface (https://github.com/NCAR/noahmp/pull/178)
+- coupling Noah-MP v5.1.0 with DOE's Energy Research and Forecasting (ERF) model through GitHub submodule with new ERF/NoahMP driver interface (https://github.com/NCAR/noahmp/pull/178)
 
 
 ### LSM bug fixes
