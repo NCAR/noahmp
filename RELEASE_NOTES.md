@@ -9,7 +9,7 @@
 - add new wetland scheme (with namelist option control) developed by Zhang et al 2022 (WRR; https://doi.org/10.1029/2021WR030573) (https://github.com/NCAR/noahmp/pull/186)
 - couple SNICAR v3 snow albedo scheme into Noah-MP (with namelist option control) developed by Lin et al 2024 (JHM; https://doi.org/10.1175/JHM-D-24-0082.1) (https://github.com/NCAR/noahmp/pull/187)
 - parallelization capability for MMF groundwater scheme (https://github.com/NCAR/noahmp/pull/139)
-- add new snow cover scheme (with namelist option control) developed by Abolafia-Rosenzweig et al 2025 (JAMES; ) (https://github.com/NCAR/noahmp/pull/191)
+- add new snow cover scheme (with namelist option control) developed by Abolafia-Rosenzweig et al 2025 (JAMES; doi:10.1029/2024MS004704) (https://github.com/NCAR/noahmp/pull/191)
 
 
 ### Driver capabilities/enhancements
