@@ -13,7 +13,7 @@ This is the official Noah-MP land surface model unified repository for code down
 Noah-MP model website: https://ral.ucar.edu/solutions/products/noah-multiparameterization-land-surface-model-noah-mp-lsm
 
 
-## Release of Noah-MP refactored/mordernized version (since v5.0)
+## Release of Noah-MP refactored/modernized version (since v5.0)
 
 The Noah-MP refactored/modernized model version (since v5.0) has been firstly released in March 9, 2023, which is a refactored version by rewriting the entire model with modern Fortran code infrastructure and data structures. All future Noah-MP developments and updates will be made only to this modernized/refactored version. The version 5.0 has the same model physics as the version 4.5, but with a different code infrastructure. More details about the Noah-MP refactored version can be found in the model description paper (He et al., 2023a, https://doi.org/10.5194/gmd-16-5131-2023) and the technical documentation (He et al. 2023b, doi:10.5065/ew8g-yr95). Currently, the Noah-MP refactored version has been coupled with HRLDAS, NASA/LIS, MPAS, and DOE/ERF, while its coupling with other host models (e.g., WRF-Hydro, WRF, UFS, etc.) is still on-going or under planning.
 
