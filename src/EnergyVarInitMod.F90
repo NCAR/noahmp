@@ -22,10 +22,12 @@ contains
 
     type(noahmp_type), intent(inout) :: noahmp
 
-    associate(                                                         &
-              NumSnowLayerMax => noahmp%config%domain%NumSnowLayerMax ,&
-              NumSoilLayer    => noahmp%config%domain%NumSoilLayer    ,&
-              NumSwRadBand    => noahmp%config%domain%NumSwRadBand     &
+    associate(                                                                    &
+              NumSnowLayerMax       => noahmp%config%domain%NumSnowLayerMax      ,&
+              NumSoilLayer          => noahmp%config%domain%NumSoilLayer         ,&
+              NumSwRadBand          => noahmp%config%domain%NumSwRadBand         ,&
+              NumSnicarRadBand      => noahmp%config%domain%NumSnicarRadBand     ,&
+              NumRadiusSnwMieSnicar => noahmp%config%domain%NumRadiusSnwMieSnicar &
              )
     
     ! energy state variables
@@ -213,8 +215,8 @@ contains
     noahmp%energy%state%ThermConductGlaIce  (:)     = undefined_real
     noahmp%energy%state%AlbedoSnowDir       (:)     = undefined_real
     noahmp%energy%state%AlbedoSnowDif       (:)     = undefined_real
-    noahmp%energy%state%AlbedoSoilDir       (:)     = undefined_real
-    noahmp%energy%state%AlbedoSoilDif       (:)     = undefined_real
+    noahmp%energy%state%AlbedoSoilDir       (:)     = 0.0
+    noahmp%energy%state%AlbedoSoilDif       (:)     = 0.0
     noahmp%energy%state%AlbedoGrdDir        (:)     = undefined_real
     noahmp%energy%state%AlbedoGrdDif        (:)     = undefined_real
     noahmp%energy%state%ReflectanceVeg      (:)     = undefined_real
@@ -222,6 +224,7 @@ contains
     noahmp%energy%state%AlbedoSfcDir        (:)     = undefined_real
     noahmp%energy%state%AlbedoSfcDif        (:)     = undefined_real
     
+
     ! energy flux variables
     noahmp%energy%flux%HeatLatentCanopy             = undefined_real
     noahmp%energy%flux%HeatLatentTransp             = undefined_real
@@ -287,7 +290,7 @@ contains
        allocate( noahmp%energy%flux%RadSwDownDif(1:NumSwRadBand) )
     if ( .not. allocated(noahmp%energy%flux%RadSwPenetrateGrd) )   &
        allocate( noahmp%energy%flux%RadSwPenetrateGrd(-NumSnowLayerMax+1:NumSoilLayer) )
-    
+
     noahmp%energy%flux%RadSwAbsVegDir    (:)        = undefined_real
     noahmp%energy%flux%RadSwAbsVegDif    (:)        = undefined_real
     noahmp%energy%flux%RadSwDirTranGrdDir(:)        = undefined_real
@@ -301,7 +304,22 @@ contains
     noahmp%energy%flux%RadSwDownDir      (:)        = undefined_real
     noahmp%energy%flux%RadSwDownDif      (:)        = undefined_real
     noahmp%energy%flux%RadSwPenetrateGrd (:)        = undefined_real
-    
+
+    ! SNICAR
+    if ( noahmp%config%nmlist%OptSnowAlbedo == 3 ) then
+       if ( .not. allocated(noahmp%energy%flux%FracRadSwAbsSnowDir) )   &
+          allocate( noahmp%energy%flux%FracRadSwAbsSnowDir(-NumSnowLayerMax+1:1,1:NumSwRadBand) )
+       if ( .not. allocated(noahmp%energy%flux%FracRadSwAbsSnowDif) )   &
+          allocate( noahmp%energy%flux%FracRadSwAbsSnowDif(-NumSnowLayerMax+1:1,1:NumSwRadBand) )
+       if ( .not. allocated(noahmp%energy%flux%RadSwAbsSnowSoilLayer) ) &
+          allocate( noahmp%energy%flux%RadSwAbsSnowSoilLayer(-NumSnowLayerMax+1:1) )
+
+       noahmp%energy%flux%FracRadSwAbsSnowDir (:,:) = undefined_real
+       noahmp%energy%flux%FracRadSwAbsSnowDif (:,:) = undefined_real
+       noahmp%energy%flux%RadSwAbsSnowSoilLayer (:) = undefined_real
+    endif
+
+
     ! energy parameter variables
     noahmp%energy%param%TreeCrownRadius             = undefined_real
     noahmp%energy%param%HeightCanopyTop             = undefined_real
@@ -375,8 +393,8 @@ contains
     if ( .not. allocated(noahmp%energy%param%EmissivitySoilLake) ) &
        allocate( noahmp%energy%param%EmissivitySoilLake(1:2) )
     if ( .not. allocated(noahmp%energy%param%AlbedoLandIce) )      &
-       allocate( noahmp%energy%param%AlbedoLandIce(1:NumSwRadBand) )
-    
+       allocate( noahmp%energy%param%AlbedoLandIce(1:NumSwRadBand) ) 
+ 
     noahmp%energy%param%LeafAreaIndexMon  (:)       = undefined_real
     noahmp%energy%param%StemAreaIndexMon  (:)       = undefined_real
     noahmp%energy%param%SoilQuartzFrac    (:)       = undefined_real
@@ -390,7 +408,117 @@ contains
     noahmp%energy%param%TransmittanceStem (:)       = undefined_real
     noahmp%energy%param%EmissivitySoilLake(:)       = undefined_real
     noahmp%energy%param%AlbedoLandIce     (:)       = undefined_real
-    
+
+    ! SNICAR
+    if ( noahmp%config%nmlist%OptSnowAlbedo == 3 ) then
+       if ( .not. allocated(noahmp%energy%param%RadSwWgtDir) )         &
+          allocate( noahmp%energy%param%RadSwWgtDir(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%RadSwWgtDif) )         &
+          allocate( noahmp%energy%param%RadSwWgtDif(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbSnwRadDir) )      &
+          allocate( noahmp%energy%param%SsAlbSnwRadDir(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmSnwRadDir) )     &
+          allocate( noahmp%energy%param%AsyPrmSnwRadDir(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassSnwRadDir) ) &
+          allocate( noahmp%energy%param%ExtCffMassSnwRadDir(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbSnwRadDif) )      &
+          allocate( noahmp%energy%param%SsAlbSnwRadDif(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmSnwRadDif) )     &
+          allocate( noahmp%energy%param%AsyPrmSnwRadDif(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassSnwRadDif) ) &
+          allocate( noahmp%energy%param%ExtCffMassSnwRadDif(1:NumRadiusSnwMieSnicar,1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbBCphi) )          &
+          allocate( noahmp%energy%param%SsAlbBCphi(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmBCphi) )         &
+          allocate( noahmp%energy%param%AsyPrmBCphi(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassBCphi) )     &
+          allocate( noahmp%energy%param%ExtCffMassBCphi(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbBCpho) )          &
+          allocate( noahmp%energy%param%SsAlbBCpho(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmBCpho) )         &
+          allocate( noahmp%energy%param%AsyPrmBCpho(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassBCpho) )     &
+          allocate( noahmp%energy%param%ExtCffMassBCpho(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbOCphi) )          &
+          allocate( noahmp%energy%param%SsAlbOCphi(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmOCphi) )         &
+          allocate( noahmp%energy%param%AsyPrmOCphi(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassOCphi) )     &
+          allocate( noahmp%energy%param%ExtCffMassOCphi(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbOCpho) )          &
+          allocate( noahmp%energy%param%SsAlbOCpho(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmOCpho) )         &
+          allocate( noahmp%energy%param%AsyPrmOCpho(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassOCpho) )     &
+          allocate( noahmp%energy%param%ExtCffMassOCpho(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbDustB1) )         &
+          allocate( noahmp%energy%param%SsAlbDustB1(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmDustB1) )        &
+          allocate( noahmp%energy%param%AsyPrmDustB1(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassDustB1) )    &
+          allocate( noahmp%energy%param%ExtCffMassDustB1(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbDustB2) )         &
+          allocate( noahmp%energy%param%SsAlbDustB2(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmDustB2) )        &
+          allocate( noahmp%energy%param%AsyPrmDustB2(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassDustB2) )    &
+          allocate( noahmp%energy%param%ExtCffMassDustB2(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbDustB3) )         &
+          allocate( noahmp%energy%param%SsAlbDustB3(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmDustB3) )        &
+          allocate( noahmp%energy%param%AsyPrmDustB3(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassDustB3) )    &
+          allocate( noahmp%energy%param%ExtCffMassDustB3(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbDustB4) )         &
+          allocate( noahmp%energy%param%SsAlbDustB4(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmDustB4) )        &
+          allocate( noahmp%energy%param%AsyPrmDustB4(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassDustB4) )    &
+          allocate( noahmp%energy%param%ExtCffMassDustB4(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%SsAlbDustB5) )         &
+          allocate( noahmp%energy%param%SsAlbDustB5(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%AsyPrmDustB5) )        &
+          allocate( noahmp%energy%param%AsyPrmDustB5(1:NumSnicarRadBand) )
+       if ( .not. allocated(noahmp%energy%param%ExtCffMassDustB5) )    &
+          allocate( noahmp%energy%param%ExtCffMassDustB5(1:NumSnicarRadBand) )
+
+       noahmp%energy%param%RadSwWgtDir           (:)       = undefined_real
+       noahmp%energy%param%RadSwWgtDif           (:)       = undefined_real
+       noahmp%energy%param%SsAlbSnwRadDir        (:,:)     = undefined_real
+       noahmp%energy%param%AsyPrmSnwRadDir       (:,:)     = undefined_real
+       noahmp%energy%param%ExtCffMassSnwRadDir   (:,:)     = undefined_real
+       noahmp%energy%param%SsAlbSnwRadDif        (:,:)     = undefined_real
+       noahmp%energy%param%AsyPrmSnwRadDif       (:,:)     = undefined_real
+       noahmp%energy%param%ExtCffMassSnwRadDif   (:,:)     = undefined_real
+       noahmp%energy%param%SsAlbBCphi            (:)       = undefined_real
+       noahmp%energy%param%AsyPrmBCphi           (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassBCphi       (:)       = undefined_real
+       noahmp%energy%param%SsAlbBCpho            (:)       = undefined_real
+       noahmp%energy%param%AsyPrmBCpho           (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassBCpho       (:)       = undefined_real
+       noahmp%energy%param%SsAlbOCphi            (:)       = undefined_real
+       noahmp%energy%param%AsyPrmOCphi           (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassOCphi       (:)       = undefined_real
+       noahmp%energy%param%SsAlbOCpho            (:)       = undefined_real
+       noahmp%energy%param%AsyPrmOCpho           (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassOCpho       (:)       = undefined_real
+       noahmp%energy%param%SsAlbDustB1           (:)       = undefined_real
+       noahmp%energy%param%AsyPrmDustB1          (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassDustB1      (:)       = undefined_real
+       noahmp%energy%param%SsAlbDustB2           (:)       = undefined_real
+       noahmp%energy%param%AsyPrmDustB2          (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassDustB2      (:)       = undefined_real
+       noahmp%energy%param%SsAlbDustB3           (:)       = undefined_real
+       noahmp%energy%param%AsyPrmDustB3          (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassDustB3      (:)       = undefined_real
+       noahmp%energy%param%SsAlbDustB4           (:)       = undefined_real
+       noahmp%energy%param%AsyPrmDustB4          (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassDustB4      (:)       = undefined_real
+       noahmp%energy%param%SsAlbDustB5           (:)       = undefined_real
+       noahmp%energy%param%AsyPrmDustB5          (:)       = undefined_real
+       noahmp%energy%param%ExtCffMassDustB5      (:)       = undefined_real
+    endif
+
     end associate
 
   end subroutine EnergyVarInitDefault

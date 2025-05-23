@@ -70,6 +70,7 @@ contains
        NoahmpIO%ACC_ECANXY   = 0.0
        NoahmpIO%ACC_ETRANXY  = 0.0
        NoahmpIO%ACC_EDIRXY   = 0.0
+       NoahmpIO%ACC_GLAFLWXY = 0.0
     endif
 
     if ( NoahmpIO%SOIL_UPDATE_STEPS > 1 ) then
@@ -83,6 +84,7 @@ contains
           NoahmpIO%ACC_ECANXY   = 0.0
           NoahmpIO%ACC_ETRANXY  = 0.0
           NoahmpIO%ACC_EDIRXY   = 0.0
+          NoahmpIO%ACC_GLAFLWXY = 0.0
        end if
     endif
 
@@ -196,8 +198,8 @@ contains
              else
                  noahmp%config%domain%IndicatorIceSfc = 0   ! land soil point.
                  call NoahmpMain(noahmp)
-             endif ! glacial split ends 
- 
+             endif ! glacial split ends
+
              !---------------------------------------------------------------------
              !  Transfer 1-D Noah-MP column variables to 2-D output variables
              !---------------------------------------------------------------------

@@ -68,6 +68,7 @@ contains
        NoahmpIO%ACC_ECANXY   = 0.0
        NoahmpIO%ACC_ETRANXY  = 0.0
        NoahmpIO%ACC_EDIRXY   = 0.0
+       NoahmpIO%ACC_GLAFLWXY = 0.0
     endif
 
     if ( NoahmpIO%SOIL_UPDATE_STEPS > 1 ) then
@@ -81,6 +82,7 @@ contains
           NoahmpIO%ACC_ECANXY   = 0.0
           NoahmpIO%ACC_ETRANXY  = 0.0
           NoahmpIO%ACC_EDIRXY   = 0.0
+          NoahmpIO%ACC_GLAFLWXY = 0.0
        end if
     endif
 
@@ -146,7 +148,7 @@ contains
              call ConfigVarInitDefault  (noahmp)
              call ConfigVarInTransfer   (noahmp, NoahmpIO)
              call ForcingVarInitDefault (noahmp)
-             call ForcingVarInTransfer  (noahmp, NoahmpIO)
+             call ForcingVarInTransfer  (noahmp, NoahmpIO, LISparam)
              call EnergyVarInitDefault  (noahmp)
              call EnergyVarInTransfer   (noahmp, NoahmpIO, LISparam)
              call WaterVarInitDefault   (noahmp)

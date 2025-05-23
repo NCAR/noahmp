@@ -79,10 +79,36 @@ contains
     noahmp%water%state%SoilMoistureEqui  (1:NumSoilLayer) = NoahmpIO%SMOISEQ    (I,1:NumSoilLayer,J)
     noahmp%water%state%RechargeGwDeepWT                   = 0.0
     noahmp%water%state%RechargeGwShallowWT                = 0.0
+    if ( noahmp%config%nmlist%OptWetlandModel > 0 ) then
+       noahmp%water%state%SoilSaturateFrac                = NoahmpIO%FSATXY     (I,J)
+       noahmp%water%state%WaterStorageWetland             = NoahmpIO%WSURFXY    (I,J)
+    endif
 #ifdef WRF_HYDRO
     noahmp%water%state%WaterTableHydro                    = NoahmpIO%ZWATBLE2D  (I,J)
     noahmp%water%state%WaterHeadSfc                       = NoahmpIO%sfcheadrt  (I,J)
 #endif
+    ! SNICAR
+    if ( noahmp%config%nmlist%OptSnowAlbedo == 3 ) then
+       noahmp%water%state%SnowRadius  (-NumSnowLayerMax+1:0)       = NoahmpIO%SNRDSXY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassBChydrophi(-NumSnowLayerMax+1:0)     = NoahmpIO%BCPHIXY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassBChydropho(-NumSnowLayerMax+1:0)     = NoahmpIO%BCPHOXY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassOChydrophi(-NumSnowLayerMax+1:0)     = NoahmpIO%OCPHIXY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassOChydropho(-NumSnowLayerMax+1:0)     = NoahmpIO%OCPHOXY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassDust1(-NumSnowLayerMax+1:0)          = NoahmpIO%DUST1XY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassDust2(-NumSnowLayerMax+1:0)          = NoahmpIO%DUST2XY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassDust3(-NumSnowLayerMax+1:0)          = NoahmpIO%DUST3XY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassDust4(-NumSnowLayerMax+1:0)          = NoahmpIO%DUST4XY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassDust5(-NumSnowLayerMax+1:0)          = NoahmpIO%DUST5XY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassConcBChydrophi(-NumSnowLayerMax+1:0) = NoahmpIO%MassConcBCPHIXY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassConcBChydropho(-NumSnowLayerMax+1:0) = NoahmpIO%MassConcBCPHOXY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassConcOChydrophi(-NumSnowLayerMax+1:0) = NoahmpIO%MassConcOCPHIXY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassConcOChydropho(-NumSnowLayerMax+1:0) = NoahmpIO%MassConcOCPHOXY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassConcDust1(-NumSnowLayerMax+1:0)      = NoahmpIO%MassConcDUST1XY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassConcDust2(-NumSnowLayerMax+1:0)      = NoahmpIO%MassConcDUST2XY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassConcDust3(-NumSnowLayerMax+1:0)      = NoahmpIO%MassConcDUST3XY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassConcDust4(-NumSnowLayerMax+1:0)      = NoahmpIO%MassConcDUST4XY (I,-NumSnowLayerMax+1:0,J)
+       noahmp%water%state%MassConcDust5(-NumSnowLayerMax+1:0)      = NoahmpIO%MassConcDUST5XY (I,-NumSnowLayerMax+1:0,J)
+    endif
 
     ! water flux variables
     noahmp%water%flux%EvapSoilSfcLiqAcc                   = NoahmpIO%ACC_QSEVAXY (I,J)
@@ -93,6 +119,11 @@ contains
     noahmp%water%flux%TranspirationAcc                    = NoahmpIO%ACC_ETRANXY (I,J)
     noahmp%water%flux%EvapGroundNetAcc                    = NoahmpIO%ACC_EDIRXY  (I,J)
     noahmp%water%flux%TranspWatLossSoilAcc(1:NumSoilLayer)= NoahmpIO%ACC_ETRANIXY(I,1:NumSoilLayer,J)
+    noahmp%water%flux%GlacierExcessFlowAcc                = NoahmpIO%ACC_GLAFLWXY(I,J)
+    ! SNICAR
+    if ( noahmp%config%nmlist%OptSnowAlbedo == 3 ) then
+       noahmp%water%flux%SnowFreezeRate(-NumSnowLayerMax+1:0) = NoahmpIO%SNFRXY(I,-NumSnowLayerMax+1:0,J)
+    endif
 
     ! water parameter variables
     noahmp%water%param%DrainSoilLayerInd                  = LISparam%DRAIN_LAYER_OPT
@@ -109,6 +140,10 @@ contains
     noahmp%water%param%SnowCompactP2AR24                  = LISparam%SNOWCOMPACT_P2_AR24
     noahmp%water%param%SnowCompactP3AR24                  = LISparam%SNOWCOMPACT_P3_AR24
     noahmp%water%param%BurdenFacUpAR24                    = LISparam%SNOWCOMPACT_Up_AR24
+    noahmp%water%param%SnowCoverM1AR25                    = LISparam%SCFm1_AR25
+    noahmp%water%param%SnowCoverM2AR25                    = LISparam%SCFm2_AR25
+    noahmp%water%param%SnowCoverFac1AR25                  = LISparam%SCfac1_AR25
+    noahmp%water%param%SnowCoverFac2AR25                  = LISparam%SCfac2_AR25
     noahmp%water%param%SnowLiqFracMax                     = LISparam%SNLIQMAXFRAC
     noahmp%water%param%SnowLiqHoldCap                     = LISparam%SSI
     noahmp%water%param%SnowLiqReleaseFac                  = LISparam%SNOW_RET_FAC
@@ -154,7 +189,33 @@ contains
     noahmp%water%param%DrainWatDepToImperv                = LISparam%TD_D
     noahmp%water%param%NumSoilLayerRoot                   = LISparam%NROOT
     noahmp%water%param%SoilDrainSlope                     = LISparam%SLOPE
+    noahmp%water%param%WetlandCapMax                      = LISparam%WCAP
 
+    ! SNICAR
+    if ( noahmp%config%nmlist%OptSnowAlbedo == 3 )then
+       noahmp%water%param%snowage_tau                     = NoahmpIO%snowage_tau
+       noahmp%water%param%snowage_kappa                   = NoahmpIO%snowage_kappa
+       noahmp%water%param%snowage_drdt0                   = NoahmpIO%snowage_drdt0
+       noahmp%water%param%SnowRadiusMin                   = LISparam%SnowRadiusMin
+       noahmp%water%param%FreshSnowRadiusMax              = LISparam%FreshSnowRadiusMax
+       noahmp%water%param%SnowRadiusRefrz                 = LISparam%SnowRadiusRefrz
+       noahmp%water%param%ScavEffMeltScale                = LISparam%ScavEffMeltScale
+       noahmp%water%param%ScavEffMeltBCphi                = LISparam%ScavEffMeltBCphi
+       noahmp%water%param%ScavEffMeltBCpho                = LISparam%ScavEffMeltBCpho
+       noahmp%water%param%ScavEffMeltOCphi                = LISparam%ScavEffMeltOCphi
+       noahmp%water%param%ScavEffMeltOCpho                = LISparam%ScavEffMeltOCpho
+       noahmp%water%param%ScavEffMeltDust1                = LISparam%ScavEffMeltDust1
+       noahmp%water%param%ScavEffMeltDust2                = LISparam%ScavEffMeltDust2
+       noahmp%water%param%ScavEffMeltDust3                = LISparam%ScavEffMeltDust3
+       noahmp%water%param%ScavEffMeltDust4                = LISparam%ScavEffMeltDust4
+       noahmp%water%param%ScavEffMeltDust5                = LISparam%ScavEffMeltDust5
+       noahmp%water%param%SnowRadiusMax                   = LISparam%SnowRadiusMax
+       noahmp%water%param%SnowWetAgeC1Brun89              = LISparam%SnowWetAgeC1Brun89
+       noahmp%water%param%SnowWetAgeC2Brun89              = LISparam%SnowWetAgeC2Brun89
+       noahmp%water%param%SnowAgeScaleFac                 = LISparam%SnowAgeScaleFac
+    endif
+
+    ! soil properties
     do IndexSoilLayer = 1, size(SoilType)
        noahmp%water%param%SoilMoistureSat       (IndexSoilLayer) = LISparam%SMCMAX(IndexSoilLayer)
        noahmp%water%param%SoilMoistureWilt      (IndexSoilLayer) = LISparam%SMCWLT(IndexSoilLayer)
@@ -205,6 +266,12 @@ contains
        noahmp%water%param%TileDrainDepth         = NoahmpIO%TD_DDRAIN(I,J)                ! depth of drain
        noahmp%water%param%DrainTubeRadius        = NoahmpIO%TD_RADI  (I,J)                ! tile tube radius
        noahmp%water%param%DrainTubeDist          = NoahmpIO%TD_SPAC  (I,J)                ! tile spacing
+    endif
+
+    ! spatial varying wetland parameters from input
+    if ( noahmp%config%nmlist%OptWetlandModel == 2 ) then
+       noahmp%water%param%SoilSfcSatFracMax      = NoahmpIO%FSATMX(I,J)
+       noahmp%water%param%WetlandCapMax          = NoahmpIO%WCAP(I,J)
     endif
 
     ! derived water parameters

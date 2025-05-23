@@ -60,10 +60,26 @@ contains
     noahmp%config%nmlist%OptRunoffSubsurface         = NoahmpIO%IOPT_RUNSUB
     noahmp%config%nmlist%OptGlacierTreatment         = NoahmpIO%IOPT_GLA
     noahmp%config%nmlist%OptSnowCompaction           = NoahmpIO%IOPT_COMPACT
+    noahmp%config%nmlist%OptWetlandModel             = NoahmpIO%IOPT_WETLAND
+    noahmp%config%nmlist%OptSnowCoverGround          = NoahmpIO%IOPT_SCF
+
+    if ( noahmp%config%nmlist%OptSnowAlbedo == 3 ) then ! SNICAR namelist
+       noahmp%config%nmlist%OptSnicarSnowShape          = NoahmpIO%SNICAR_SNOWSHAPE_OPT
+       noahmp%config%nmlist%OptSnicarRTSolver           = NoahmpIO%SNICAR_RTSOLVER_OPT
+       noahmp%config%nmlist%OptSnicarBandNum            = NoahmpIO%SNICAR_BANDNUMBER_OPT 
+       noahmp%config%nmlist%OptSnicarSolarSpec          = NoahmpIO%SNICAR_SOLARSPEC_OPT
+       noahmp%config%nmlist%OptSnicarSnwOptic           = NoahmpIO%SNICAR_SNOWOPTICS_OPT
+       noahmp%config%nmlist%OptSnicarDustOptic          = NoahmpIO%SNICAR_DUSTOPTICS_OPT
+       noahmp%config%nmlist%FlagSnicarSnowBCIntmix      = NoahmpIO%SNICAR_SNOWBC_INTMIX
+       noahmp%config%nmlist%FlagSnicarSnowDustIntmix    = NoahmpIO%SNICAR_SNOWDUST_INTMIX
+       noahmp%config%nmlist%FlagSnicarUseAerosol        = NoahmpIO%SNICAR_USE_AEROSOL
+       noahmp%config%nmlist%FlagSnicarUseOC             = NoahmpIO%SNICAR_USE_OC
+       noahmp%config%nmlist%FlagSnicarAerosolReadTable  = NoahmpIO%SNICAR_AEROSOL_READTABLE
+    endif
 
     ! config domain variable
     noahmp%config%domain%SurfaceType                 = 1
-    noahmp%config%domain%NumSwRadBand                = 2
+    noahmp%config%domain%NumSwRadBand                = NoahmpIO%NUMRAD
     noahmp%config%domain%SoilColor                   = 4
     noahmp%config%domain%NumCropGrowStage            = 8
     noahmp%config%domain%FlagSoilProcess             = NoahmpIO%calculate_soil
@@ -75,7 +91,7 @@ contains
     noahmp%config%domain%GridIndexJ                  = NoahmpIO%J
     noahmp%config%domain%MainTimeStep                = NoahmpIO%DTBL
     noahmp%config%domain%SoilTimeStep                = NoahmpIO%DTBL * NoahmpIO%soil_update_steps
-    noahmp%config%domain%GridSize                    = sqrt(NoahmpIO%DX * NoahmpIO%DY)
+    noahmp%config%domain%GridSize                    = sqrt(max(10.0,NoahmpIO%DX) * max(10.0,NoahmpIO%DY))
     noahmp%config%domain%LandUseDataName             = NoahmpIO%LLANDUSE
     noahmp%config%domain%VegType                     = NoahmpIO%IVGTYP(I,J)
     noahmp%config%domain%CropType                    = NoahmpIO%CROPCAT(I,J)
@@ -93,6 +109,14 @@ contains
     noahmp%config%domain%IndexEBLForest              = NoahmpIO%EBLFOREST_TABLE
     noahmp%config%domain%RunoffSlopeType             = NoahmpIO%SLOPETYP
     noahmp%config%domain%DepthSoilTempBottom         = NoahmpIO%ZBOT_TABLE
+
+    if ( noahmp%config%nmlist%OptSnowAlbedo == 3 ) then ! SNICAR variables
+       noahmp%config%domain%NumTempSnwAgeSnicar      = NoahmpIO%idx_T_max
+       noahmp%config%domain%NumTempGradSnwAgeSnicar  = NoahmpIO%idx_Tgrd_max
+       noahmp%config%domain%NumDensitySnwAgeSnicar   = NoahmpIO%idx_rhos_max
+       noahmp%config%domain%NumSnicarRadBand         = NoahmpIO%snicar_numrad_snw
+       noahmp%config%domain%NumRadiusSnwMieSnicar    = NoahmpIO%idx_Mie_snw_mx
+    endif
 
     ! the following initialization cannot be done in ConfigVarInitMod
     ! because the NumSoilLayer and NumSnowLayerMax are initialized with input values in this module

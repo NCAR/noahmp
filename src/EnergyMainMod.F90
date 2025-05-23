@@ -40,6 +40,7 @@ module EnergyMainMod
   use NoahmpVarType
   use ConstantDefineMod
   use SnowCoverGroundNiu07Mod,        only : SnowCoverGroundNiu07
+  use SnowCoverGroundAR25Mod,         only : SnowCoverGroundAR25
   use GroundRoughnessPropertyMod,     only : GroundRoughnessProperty
   use GroundThermalPropertyMod,       only : GroundThermalProperty
   use SurfaceAlbedoMod,               only : SurfaceAlbedo
@@ -78,6 +79,7 @@ contains
               RadLwDownRefHeight      => noahmp%forcing%RadLwDownRefHeight           ,& ! in,    downward longwave radiation [W/m2] at reference height
               RadSwDownRefHeight      => noahmp%forcing%RadSwDownRefHeight           ,& ! in,    downward shortwave radiation [W/m2] at reference height
               OptSnowSoilTempTime     => noahmp%config%nmlist%OptSnowSoilTempTime    ,& ! in,    options for snow/soil temperature time scheme
+              OptSnowCoverGround      => noahmp%config%nmlist%OptSnowCoverGround     ,& ! in,    options for ground snow cover
               FlagCropland            => noahmp%config%domain%FlagCropland           ,& ! in,    flag to identify croplands
               FlagSoilProcess         => noahmp%config%domain%FlagSoilProcess        ,& ! in,    flag to determine if calculating soil processes
               NumSoilTimeStep         => noahmp%config%domain%NumSoilTimeStep        ,& ! in,    number of time step for calculating soil processes
@@ -193,8 +195,9 @@ contains
     FlagVegSfc    = .false.
     if ( VegAreaIndEff > 0.0 ) FlagVegSfc = .true.
 
-    ! ground snow cover fraction [Niu and Yang, 2007, JGR]
-    call SnowCoverGroundNiu07(noahmp)
+    ! ground snow cover fraction
+    if ( OptSnowCoverGround == 1 ) call SnowCoverGroundNiu07(noahmp)
+    if ( OptSnowCoverGround == 2 ) call SnowCoverGroundAR25(noahmp)
 
     ! ground and surface roughness length and reference height
     call GroundRoughnessProperty(noahmp, FlagVegSfc)

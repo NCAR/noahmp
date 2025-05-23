@@ -24,7 +24,7 @@ contains
 
     ! local variables
     integer                                     :: ide,jde,its,jts,itf,jtf
-    integer                                     :: I,J,errflag,NS
+    integer                                     :: I,J,errflag,NS,IZ
     logical                                     :: urbanpt_flag
     real(kind=kind_noahmp)                      :: BEXP, SMCMAX, PSISAT, FK
     real(kind=kind_noahmp), parameter           :: BLIM  = 5.5
@@ -38,12 +38,11 @@ contains
     jde = NoahmpIO%jde+1 
     its = NoahmpIO%its
     jts = NoahmpIO%jts
+    itf = min0(NoahmpIO%ite, ide-1)
+    jtf = min0(NoahmpIO%jte, jde-1)
 
     ! only initialize for non-restart case
     if ( .not. NoahmpIO%restart_flag ) then
-
-       itf = min0(NoahmpIO%ite, ide-1)
-       jtf = min0(NoahmpIO%jte, jde-1)
 
        ! initialize physical snow height SNOWH
        if ( .not. NoahmpIO%FNDSNOWH ) then
@@ -97,7 +96,7 @@ contains
                 enddo
                 ! NoahmpIO%TMN(I,J) = min(NoahmpIO%TMN(I,J), 263.15)           ! set deep temp to at most -10C
                 NoahmpIO%SNOW(I,J)  = max(NoahmpIO%SNOW(I,J), 10.0)            ! set SWE to at least 10mm
-                NoahmpIO%SNOWH(I,J) = NoahmpIO%SNOW(I,J) * 0.01                ! SNOW in mm and SNOWH in m
+                NoahmpIO%SNOWH(I,J) = NoahmpIO%SNOW(I,J) * 0.005               ! SNOW in mm and SNOWH in m
              else
                 BEXP   = NoahmpIO%BEXP_TABLE  (NoahmpIO%ISLTYP(I,J))
                 SMCMAX = NoahmpIO%SMCMAX_TABLE(NoahmpIO%ISLTYP(I,J))
@@ -151,6 +150,10 @@ contains
              NoahmpIO%QSNOWXY(I,J)  = 0.0
              NoahmpIO%QRAINXY(I,J)  = 0.0
              NoahmpIO%WSLAKEXY(I,J) = 0.0
+             if ( NoahmpIO%IOPT_WETLAND > 0 ) then
+                NoahmpIO%FSATXY(I,J)   = 0.0
+                NoahmpIO%WSURFXY(I,J)  = 0.0
+             endif
              if ( NoahmpIO%IOPT_RUNSUB /= 5 ) then 
                 NoahmpIO%WAXY(I,J)   = 4900.0 
                 NoahmpIO%WTXY(I,J)   = NoahmpIO%WAXY(i,j) 
@@ -158,7 +161,8 @@ contains
              else
                 NoahmpIO%WAXY(I,J)   = 0.0
                 NoahmpIO%WTXY(I,J)   = 0.0
-                NoahmpIO%AREAXY(I,J) = (NoahmpIO%DX*NoahmpIO%DY) / (NoahmpIO%MSFTX(I,J)*NoahmpIO%MSFTY(I,J))
+                NoahmpIO%AREAXY(I,J) = (max(10.0,NoahmpIO%DX) * max(10.0,NoahmpIO%DY)) / &
+                                       (NoahmpIO%MSFTX(I,J) * NoahmpIO%MSFTY(I,J))
              endif
 
              urbanpt_flag = .false.
@@ -266,7 +270,37 @@ contains
        endif
 
     endif ! NoahmpIO%restart_flag
- 
+
+    if ( NoahmpIO%IOPT_ALB == 3 ) then ! initialize SNICAR aerosol content in snow
+       do J = jts, jtf
+          do I = its, itf
+             do IZ = -NoahmpIO%NSNOW+1, 0
+                if ( (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J)) > 0.0 ) then
+                   NoahmpIO%MassConcBCPHIXY(I,IZ,J) = NoahmpIO%BCPHIXY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                   NoahmpIO%MassConcBCPHOXY(I,IZ,J) = NoahmpIO%BCPHOXY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                   NoahmpIO%MassConcOCPHIXY(I,IZ,J) = NoahmpIO%OCPHIXY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                   NoahmpIO%MassConcOCPHOXY(I,IZ,J) = NoahmpIO%OCPHOXY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                   NoahmpIO%MassConcDUST1XY(I,IZ,J) = NoahmpIO%DUST1XY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                   NoahmpIO%MassConcDUST2XY(I,IZ,J) = NoahmpIO%DUST2XY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                   NoahmpIO%MassConcDUST3XY(I,IZ,J) = NoahmpIO%DUST3XY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                   NoahmpIO%MassConcDUST4XY(I,IZ,J) = NoahmpIO%DUST4XY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                   NoahmpIO%MassConcDUST5XY(I,IZ,J) = NoahmpIO%DUST5XY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
+                else
+                   NoahmpIO%MassConcBCPHIXY(I,IZ,J) = 0.0
+                   NoahmpIO%MassConcBCPHOXY(I,IZ,J) = 0.0
+                   NoahmpIO%MassConcOCPHIXY(I,IZ,J) = 0.0
+                   NoahmpIO%MassConcOCPHOXY(I,IZ,J) = 0.0
+                   NoahmpIO%MassConcDUST1XY(I,IZ,J) = 0.0
+                   NoahmpIO%MassConcDUST2XY(I,IZ,J) = 0.0
+                   NoahmpIO%MassConcDUST3XY(I,IZ,J) = 0.0
+                   NoahmpIO%MassConcDUST4XY(I,IZ,J) = 0.0
+                   NoahmpIO%MassConcDUST5XY(I,IZ,J) = 0.0
+                endif
+             enddo
+          enddo
+       enddo            
+    endif
+
   end subroutine NoahmpInitMain    
 
 end module NoahmpInitMainMod
