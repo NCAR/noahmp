@@ -101,7 +101,9 @@ contains
     integer                 :: khour                              = -9999
     integer                 :: kday                               = -9999
     real(kind=kind_noahmp)  :: zlvl                               = 10.
-    character(len=256)      :: erf_setup_file                     = " "
+    character(len=256)      :: erf_setup_file_01                  = " "
+    character(len=256)      :: erf_setup_file_02                  = " "
+    character(len=256)      :: erf_setup_file_03                  = " "
     character(len=256)      :: spatial_filename                   = " "
     character(len=256)      :: external_veg_filename_template     = " "
     character(len=256)      :: external_lai_filename_template     = " "
@@ -164,7 +166,7 @@ contains
          num_urban_ndm,num_urban_ng,num_urban_nwr ,num_urban_ngb ,                        &
          num_urban_nf ,num_urban_nz,num_urban_nbui,num_urban_ngr ,                        &
          split_output_count,                                                              & 
-         khour, kday, zlvl, erf_setup_file,                                               &
+         khour, kday, zlvl, erf_setup_file_01, erf_setup_file_02, erf_setup_file_03,      &
          spatial_filename, agdata_flnm, tdinput_flnm, snicar_optic_flnm, snicar_age_flnm, &
          external_veg_filename_template, external_lai_filename_template,                  &
          xstart, xend, ystart, yend, nsnow, llanduse,                                     &
@@ -428,7 +430,15 @@ contains
     NoahmpIO%khour                             = khour
     NoahmpIO%kday                              = kday
     NoahmpIO%zlvl                              = zlvl
-    NoahmpIO%erf_setup_file                    = erf_setup_file
+
+    if (NoahmpIO%level == 0) then
+       NoahmpIO%erf_setup_file                 = erf_setup_file_01
+    else if (NoahmpIO%level == 1) then
+       NoahmpIO%erf_setup_file                 = erf_setup_file_02
+    else if (NoahmpIO%level == 2) then
+       NoahmpIO%erf_setup_file                 = erf_setup_file_03
+    end if
+
     NoahmpIO%spatial_filename                  = spatial_filename
     NoahmpIO%external_veg_filename_template    = external_veg_filename_template
     NoahmpIO%external_lai_filename_template    = external_lai_filename_template

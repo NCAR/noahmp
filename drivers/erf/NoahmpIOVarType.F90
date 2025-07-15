@@ -38,6 +38,7 @@ module NoahmpIOVarType
     integer(C_INT), pointer                                ::  ITIMESTEP           ! timestep number
     integer                                                ::  YR                  ! 4-digit year
     integer(C_INT), pointer                                ::  NSOIL               ! number of soil layers
+    integer(C_INT), pointer                                ::  BLKID, LEVEL        ! Block ID and AMR level
     integer                                                ::  ICE                 ! Sea-ice point
     integer                                                ::  ISICE               ! land cover category for ice
     integer                                                ::  ISURBAN             ! land cover category for urban

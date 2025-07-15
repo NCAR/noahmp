@@ -14,7 +14,7 @@ extern "C" {
         int *nsoil, *nsnow;
         int *itimestep, *ntime;
         char *llanduse;
-        int *rank, *blkid;
+        int *rank, *blkid, *level;
 
         double* XLAT = nullptr;       // latitude [rad]
         double* WSLAKEXY = nullptr;   // lake water storage [mm]
@@ -30,13 +30,14 @@ extern "C" {
           int* ims, int* ime, int* jms, int* jme, int* kms, int* kme,
           int* its, int* ite, int* jts, int* jte, int* kts, int* kte,
           int* xstart, int* xend, int* ystart, int* yend, int* itimestep,
-          int* ntime, int *nsoil, int* nsnow, char* llanduse, int* rank, int* blkid
+          int* ntime, int* nsoil, int* nsnow, char* llanduse, int* rank,
+          int* blkid, int* level
         ):
           ids(ids), ide(ide), jds(jds), jde(jde), kds(kds), kde(kde),
           ims(ims), ime(ime), jms(jms), jme(jme), kms(kms), kme(kme),
           its(its), ite(ite), jts(jts), jte(jte), kts(kts), kte(kte),
           xstart(xstart), xend(xend), ystart(ystart), yend(yend), itimestep(itimestep),
-          ntime(ntime), nsoil(nsoil), nsnow(nsnow), llanduse(llanduse), rank(rank), blkid(blkid) {}
+          ntime(ntime), nsoil(nsoil), nsnow(nsnow), llanduse(llanduse), rank(rank), blkid(blkid), level(level) {}
     };
 }
 
@@ -50,7 +51,7 @@ class NoahmpIO_type {
         int nsoil, nsnow;
         int itimestep, ntime;
         char llanduse[257] = "";
-        int rank, blkid;
+        int rank, blkid, level;
 
         NoahArray2D<double> XLAT;
         NoahArray2D<double> WSLAKEXY;
@@ -66,7 +67,7 @@ class NoahmpIO_type {
                &ims, &ime, &jms, &jme, &kms, &kme,
                &its, &ite, &jts, &jte, &kts, &kte,
                &xstart, &xend, &ystart, &yend, &itimestep,
-               &ntime, &nsoil, &nsnow, &llanduse[0], &rank, &blkid) {}
+               &ntime, &nsoil, &nsnow, &llanduse[0], &rank, &blkid, &level) {}
 
         void ScalarInitDefault();
         void VarInitDefault();
@@ -83,7 +84,7 @@ class NoahmpIO_type {
 
 class NoahmpIO_vector : public std::vector<NoahmpIO_type> {
 public:
-    void resize(size_t size);
+    void resize(size_t size, size_t level);
 
 };
 

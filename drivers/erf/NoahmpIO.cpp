@@ -10,7 +10,7 @@ extern "C" {
     void NoahmpReadLandHeader_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpReadLandMain_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpDriverMain_fi(NoahmpIO_type_fi* noahmpio);
-    void NoahmpIOTypeVectInit_fi(int* NBlocks);
+    void NoahmpIOTypeVectInit_fi(int* level, int* NBlocks);
 }
 
 void NoahmpIO_type::ScalarInitDefault() {
@@ -60,8 +60,10 @@ void NoahmpIO_type::VarInitDefault() {
 
 };
 
-void NoahmpIO_vector::resize(size_t size) {
+
+void NoahmpIO_vector::resize(size_t size, size_t level) {
      std::vector<NoahmpIO_type>::resize(size);
      int _size = size;
-     NoahmpIOTypeVectInit_fi(&_size);
+     int _level = level;
+     NoahmpIOTypeVectInit_fi(&_level, &_size);
 };
