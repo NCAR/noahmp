@@ -118,7 +118,7 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     character(len=256) :: units
     integer :: ierr
     integer :: ncid
-    real, dimension(NoahmpIO%xstart:NoahmpIO%xend,NoahmpIO%ystart:NoahmpIO%yend) :: xdum
+    real, dimension(0:NoahmpIO%xend-NoahmpIO%xstart, 0:NoahmpIO%yend-NoahmpIO%ystart) :: xdum
     integer :: rank
 
     character(len=256) :: titlestr
@@ -131,52 +131,59 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     real, dimension(100) :: layer_top
     real, dimension(NoahmpIO%nsoil)   :: dzs
 
-    real, dimension(NoahmpIO%xstart:NoahmpIO%xend, NoahmpIO%ystart:NoahmpIO%yend, NoahmpIO%nsoil) :: insoil
-    real, dimension(NoahmpIO%xstart:NoahmpIO%xend, NoahmpIO%nsoil, NoahmpIO%ystart:NoahmpIO%yend) :: soildummy
+    real, dimension(0:NoahmpIO%xend-NoahmpIO%xstart, 0:NoahmpIO%yend-NoahmpIO%ystart, NoahmpIO%nsoil) :: insoil
+    real, dimension(0:NoahmpIO%xend-NoahmpIO%xstart, NoahmpIO%nsoil, 0:NoahmpIO%yend-NoahmpIO%ystart) :: soildummy
 
     integer :: ierr_vegfra
     integer :: ierr_lai
 
     integer :: i, j
     integer :: iret
+    integer :: xstart, ystart, xend, yend
 
     if (NoahmpIO%rank == 0) write(*,'("Noah-MP reading ''", A, "'' variables")') trim(NoahmpIO%erf_setup_file)
 
     ierr = nf90_open(NoahmpIO%erf_setup_file, NF90_NOWRITE, ncid)
     call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file))
 
+    xstart = 0
+    ystart = 0
+
+    xend = NoahmpIO%xend-NoahmpIO%xstart
+    yend = NoahmpIO%yend-NoahmpIO%ystart
+
     ! Get Latitude (lat)
-    call get_2d_netcdf("XLAT", ncid, NoahmpIO%xlat,  units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_2d_netcdf("XLAT", ncid, NoahmpIO%xlat,  units, xstart, xend, ystart, yend, FATAL, ierr)
 
     ! Get Longitude (lon)
-    call get_2d_netcdf("XLONG", ncid, NoahmpIO%xlong, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_2d_netcdf("XLONG", ncid, NoahmpIO%xlong, units, xstart, xend, ystart, yend, FATAL, ierr)
 
     ! Get land mask (xland)
-    call get_2d_netcdf("XLAND", ncid, NoahmpIO%xland, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NOT_FATAL, ierr)
+    call get_2d_netcdf("XLAND", ncid, NoahmpIO%xland, units, xstart, xend, ystart, yend, NOT_FATAL, ierr)
 
     ! Get seaice (seaice)
-    call get_2d_netcdf("SEAICE", ncid, NoahmpIO%seaice, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NOT_FATAL, ierr)
+    call get_2d_netcdf("SEAICE", ncid, NoahmpIO%seaice, units, xstart, xend, ystart, yend, NOT_FATAL, ierr)
 
     ! Get Terrain (avg)
-    call get_2d_netcdf("HGT", ncid, NoahmpIO%terrain, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_2d_netcdf("HGT", ncid, NoahmpIO%terrain, units, xstart, xend, ystart, yend, FATAL, ierr)
 
     ! Get Deep layer temperature (TMN)
-    call get_2d_netcdf("TMN", ncid, NoahmpIO%TMN, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_2d_netcdf("TMN", ncid, NoahmpIO%TMN, units, xstart, xend, ystart, yend, FATAL, ierr)
 
     ! Get Map Factors (MAPFAC_MX)
-    call get_2d_netcdf("MAPFAC_MX", ncid, NoahmpIO%msftx, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NOT_FATAL, ierr)
+    call get_2d_netcdf("MAPFAC_MX", ncid, NoahmpIO%msftx, units, xstart, xend, ystart, yend, NOT_FATAL, ierr)
     if (ierr /= 0) print*, 'Did not find MAPFAC_MX, only needed for iopt_run=5'
 
     ! Get Map Factors (MAPFAC_MY)
-    call get_2d_netcdf("MAPFAC_MY", ncid, NoahmpIO%msfty, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NOT_FATAL, ierr)
+    call get_2d_netcdf("MAPFAC_MY", ncid, NoahmpIO%msfty, units, xstart, xend, ystart, yend, NOT_FATAL, ierr)
     if (ierr /= 0) print*, 'Did not find MAPFAC_MY, only needed for iopt_run=5'
 
     ! Get Dominant Land Use categories (use)
-    call get_landuse_netcdf(ncid, xdum , units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend)
+    call get_landuse_netcdf(ncid, xdum , units, xstart, xend, ystart, yend)
     NoahmpIO%ivgtyp = nint(xdum)
 
     ! Get Dominant Soil Type categories in the top layer (stl)
-    call get_soilcat_netcdf(ncid, xdum , units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend)
+    call get_soilcat_netcdf(ncid, xdum , units, xstart, xend, ystart, yend)
     NoahmpIO%isltyp = nint(xdum)
 
     where (NoahmpIO%SEAICE > 0.0) NoahmpIO%XICE = 1.0
@@ -202,13 +209,13 @@ subroutine NoahmpReadLandMain(NoahmpIO)
        if (NoahmpIO%rank == 0) write(*,'("MMNINLU attribute: ", A)') llanduse
     endif
 
-    call get_2d_netcdf("CANWAT", ncid, NoahmpIO%canwat, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
-    call get_2d_netcdf("TSK",    ncid, NoahmpIO%tsk, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
-    call get_2d_netcdf("SNOW",   ncid, NoahmpIO%snow, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
-    call get_2d_netcdf("SNOWC",  ncid, NoahmpIO%snowc, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_2d_netcdf("CANWAT", ncid, NoahmpIO%canwat, units, xstart, xend, ystart, yend, FATAL, ierr)
+    call get_2d_netcdf("TSK",    ncid, NoahmpIO%tsk, units, xstart, xend, ystart, yend, FATAL, ierr)
+    call get_2d_netcdf("SNOW",   ncid, NoahmpIO%snow, units, xstart, xend, ystart, yend, FATAL, ierr)
+    call get_2d_netcdf("SNOWC",  ncid, NoahmpIO%snowc, units, xstart, xend, ystart, yend, FATAL, ierr)
 
     NoahmpIO%snowh = 0.0
-    call get_2d_netcdf("SNOWH", ncid, NoahmpIO%snowh, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NOT_FATAL, ierr_snodep)
+    call get_2d_netcdf("SNOWH", ncid, NoahmpIO%snowh, units, xstart, xend, ystart, yend, NOT_FATAL, ierr_snodep)
     NoahmpIO%fndsnowh = .true.
     if (ierr_snodep /= 0) NoahmpIO%fndsnowh = .false.
    
@@ -222,7 +229,7 @@ subroutine NoahmpReadLandMain(NoahmpIO)
       layer_bottom(isoil) = layer_top(isoil) + dzs(isoil)
     end do
 
-    call get_netcdf_soillevel("TSLB", ncid, NoahmpIO%nsoil, soildummy, units,  NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_netcdf_soillevel("TSLB", ncid, NoahmpIO%nsoil, soildummy, units,  xstart, xend, ystart, yend, FATAL, ierr)
     
     if (NoahmpIO%rank == 0) write(*, '("layer_bottom(1:nsoil) = ", 4F9.4)') layer_bottom(1:NoahmpIO%nsoil)
     if (NoahmpIO%rank == 0) write(*, '("layer_top(1:nsoil)    = ", 4F9.4)') layer_top(1:NoahmpIO%nsoil)
@@ -231,21 +238,21 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     call init_interp(NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NoahmpIO%nsoil, &
                      NoahmpIO%dzs, NoahmpIO%tslb, NoahmpIO%nsoil, soildummy, layer_bottom(1:NoahmpIO%nsoil), layer_top(1:NoahmpIO%nsoil), NoahmpIO%rank)
 
-    call get_netcdf_soillevel("SMOIS", ncid, NoahmpIO%nsoil, soildummy, units,  NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_netcdf_soillevel("SMOIS", ncid, NoahmpIO%nsoil, soildummy, units,  xstart, xend, ystart, yend, FATAL, ierr)
 
     call init_interp(NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NoahmpIO%nsoil, \
     NoahmpIO%dzs, NoahmpIO%smois, NoahmpIO%nsoil, soildummy, layer_bottom(1:NoahmpIO%nsoil), layer_top(1:NoahmpIO%nsoil), NoahmpIO%rank)
 
     NoahmpIO%VEGFRA =  0.0
 
-    call get_2d_netcdf("VEGFRA", ncid, NoahmpIO%vegfra, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NOT_FATAL, ierr_vegfra)
-    call get_2d_netcdf("LAI", ncid, NoahmpIO%lai, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NOT_FATAL, ierr_lai)
+    call get_2d_netcdf("VEGFRA", ncid, NoahmpIO%vegfra, units, xstart, xend, ystart, yend, NOT_FATAL, ierr_vegfra)
+    call get_2d_netcdf("LAI", ncid, NoahmpIO%lai, units, xstart, xend, ystart, yend, NOT_FATAL, ierr_lai)
 
     ! Get Minimum Green Vegetation Fraction SHDMIN
-    call get_2d_netcdf("SHDMIN", ncid, NoahmpIO%gvfmin, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_2d_netcdf("SHDMIN", ncid, NoahmpIO%gvfmin, units, xstart, xend, ystart, yend, FATAL, ierr)
 
     ! Get Minimum Green Vegetation Fraction SHDMAX
-    call get_2d_netcdf("SHDMAX", ncid, NoahmpIO%gvfmax, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_2d_netcdf("SHDMAX", ncid, NoahmpIO%gvfmax, units, xstart, xend, ystart, yend, FATAL, ierr)
 
     ! Close the NetCDF file
     ierr = nf90_close(ncid)
