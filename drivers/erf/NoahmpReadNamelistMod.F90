@@ -430,14 +430,21 @@ contains
     NoahmpIO%khour                             = khour
     NoahmpIO%kday                              = kday
     NoahmpIO%zlvl                              = zlvl
+    NoahmpIO%erf_setup_file_01                 = erf_setup_file_01
+    NoahmpIO%erf_setup_file_02                 = erf_setup_file_02
+    NoahmpIO%erf_setup_file_03                 = erf_setup_file_03
 
-    if (NoahmpIO%level == 0) then
-       NoahmpIO%erf_setup_file                 = erf_setup_file_01
-    else if (NoahmpIO%level == 1) then
-       NoahmpIO%erf_setup_file                 = erf_setup_file_02
-    else if (NoahmpIO%level == 2) then
-       NoahmpIO%erf_setup_file                 = erf_setup_file_03
-    end if
+    select case(NoahmpIO%level)
+    case(0)
+      NoahmpIO%erf_setup_file_lev = erf_setup_file_01
+    case(1)
+      NoahmpIO%erf_setup_file_lev = erf_setup_file_02
+    case(2)
+      NoahmpIO%erf_setup_file_lev = erf_setup_file_03
+    case default
+      print *, "Error: unsupported level: ", NoahmpIO%level
+      stop
+    end select
 
     NoahmpIO%spatial_filename                  = spatial_filename
     NoahmpIO%external_veg_filename_template    = external_veg_filename_template

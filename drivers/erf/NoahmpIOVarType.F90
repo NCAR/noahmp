@@ -785,7 +785,8 @@ module NoahmpIOVarType
     integer                                                ::  khour
     integer                                                ::  kday
     real(kind=kind_noahmp)                                 ::  zlvl 
-    character(len=256)                                     ::  erf_setup_file
+    character(len=256)                                     ::  erf_setup_file_lev
+    character(len=256)                                     ::  erf_setup_file_01, erf_setup_file_02, erf_setup_file_03
     character(len=256)                                     ::  spatial_filename
     character(len=256)                                     ::  external_veg_filename_template
     character(len=256)                                     ::  external_lai_filename_template
@@ -794,6 +795,7 @@ module NoahmpIOVarType
     character(len=256)                                     ::  snicar_optic_flnm  ! SNICAR filename for optics parameters
     character(len=256)                                     ::  snicar_age_flnm    ! SNICAR filename for snow aging parameters
     integer(C_INT), pointer                                ::  xstart, xend, ystart, yend
+    integer(C_INT)                                         ::  xoffset, yoffset
     integer                                                ::  MAX_SOIL_LEVELS
     real(kind=kind_noahmp),  allocatable, dimension(:)     ::  soil_thick_input
 

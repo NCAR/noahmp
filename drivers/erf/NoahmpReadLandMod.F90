@@ -33,11 +33,12 @@ subroutine NoahmpReadLandHeader(NoahmpIO)
     character(len=256) :: units
     integer :: i
     integer :: rank
+    integer :: ilev, is, js, ratio, xoffset, yoffset
 
-    if (NoahmpIO%rank == 0) write(*,'("Noah-MP reading ''", A, "'' headers")') trim(NoahmpIO%erf_setup_file)
+    if (NoahmpIO%rank == 0) write(*,'("Noah-MP reading ''", A, "'' headers")') trim(NoahmpIO%erf_setup_file_lev)
 
-    ierr = nf90_open(NoahmpIO%erf_setup_file, NF90_NOWRITE, ncid)
-    call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file))
+    ierr = nf90_open(NoahmpIO%erf_setup_file_lev, NF90_NOWRITE, ncid)
+    call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file_lev))
 
     ierr = nf90_inq_dimid(ncid, "west_east", dimid)
     call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding dimension 'west_east'")
@@ -109,6 +110,45 @@ subroutine NoahmpReadLandHeader(NoahmpIO)
     ierr = nf90_close(ncid)
     call error_handler(ierr, "READ_ERF_HDRINFO:  Problems closing NetCDF file.")
 
+    NoahmpIO%xoffset = 0
+    NoahmpIO%yoffset = 0
+
+    do ilev=0,NoahmpIO%level
+
+      select case(ilev)
+      case(0)
+        ierr = nf90_open(NoahmpIO%erf_setup_file_01, NF90_NOWRITE, ncid)
+        call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file_01))
+      case(1)
+        ierr = nf90_open(NoahmpIO%erf_setup_file_02, NF90_NOWRITE, ncid)
+        call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file_02))
+      case(2)
+        ierr = nf90_open(NoahmpIO%erf_setup_file_03, NF90_NOWRITE, ncid)
+        call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file_03)) 
+      case default
+        print *, "Error: unsupported level: ", ilev
+        stop
+      end select
+
+      ierr = nf90_get_att(ncid, NF90_GLOBAL, "I_PARENT_START", is)
+      call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding global attribute 'I_PARENT_START'")
+
+      ierr = nf90_get_att(ncid, NF90_GLOBAL, "J_PARENT_START", js)
+      call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding global attribute 'J_PARENT_START'")
+
+      ierr = nf90_get_att(ncid, NF90_GLOBAL, "PARENT_GRID_RATIO", ratio)
+      call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding global attribute 'PARENT_GRID_RATIO'")
+
+      ierr = nf90_close(ncid)
+      call error_handler(ierr, "READ_ERF_HDRINFO:  Problems closing NetCDF file.")        
+
+      NoahmpIO%xoffset = ratio*(NoahmpIO%xoffset+is-1)
+      NoahmpIO%yoffset = ratio*(NoahmpIO%yoffset+js-1)
+
+      print*, is,js,ratio,NoahmpIO%xoffset
+
+    end do
+
 end subroutine NoahmpReadLandHeader
 
 subroutine NoahmpReadLandMain(NoahmpIO)
@@ -118,7 +158,8 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     character(len=256) :: units
     integer :: ierr
     integer :: ncid
-    real, dimension(0:NoahmpIO%xend-NoahmpIO%xstart, 0:NoahmpIO%yend-NoahmpIO%ystart) :: xdum
+    real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, \
+                    NoahmpIO%ystart-NoahmpIO%yoffset:NoahmpIO%yend-NoahmpIO%yoffset) :: xdum
     integer :: rank
 
     character(len=256) :: titlestr
@@ -131,8 +172,12 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     real, dimension(100) :: layer_top
     real, dimension(NoahmpIO%nsoil)   :: dzs
 
-    real, dimension(0:NoahmpIO%xend-NoahmpIO%xstart, 0:NoahmpIO%yend-NoahmpIO%ystart, NoahmpIO%nsoil) :: insoil
-    real, dimension(0:NoahmpIO%xend-NoahmpIO%xstart, NoahmpIO%nsoil, 0:NoahmpIO%yend-NoahmpIO%ystart) :: soildummy
+    real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, \
+                    NoahmpIO%ystart-NoahmpIO%yoffset:NoahmpIO%yend-NoahmpIO%yoffset, NoahmpIO%nsoil) :: insoil
+
+    real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, \
+                    NoahmpIO%nsoil, \
+                    NoahmpIO%ystart-NoahmpIO%yoffset:NoahmpIO%yend-NoahmpIO%yoffset) :: soildummy
 
     integer :: ierr_vegfra
     integer :: ierr_lai
@@ -141,16 +186,18 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     integer :: iret
     integer :: xstart, ystart, xend, yend
 
-    if (NoahmpIO%rank == 0) write(*,'("Noah-MP reading ''", A, "'' variables")') trim(NoahmpIO%erf_setup_file)
+    if (NoahmpIO%rank == 0) write(*,'("Noah-MP reading ''", A, "'' variables")') trim(NoahmpIO%erf_setup_file_lev)
 
-    ierr = nf90_open(NoahmpIO%erf_setup_file, NF90_NOWRITE, ncid)
-    call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file))
+    ierr = nf90_open(NoahmpIO%erf_setup_file_lev, NF90_NOWRITE, ncid)
+    call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file_lev))
 
-    xstart = 0
-    ystart = 0
+    xstart = NoahmpIO%xstart-NoahmpIO%xoffset
+    ystart = NoahmpIO%ystart-NoahmpIO%yoffset
 
-    xend = NoahmpIO%xend-NoahmpIO%xstart
-    yend = NoahmpIO%yend-NoahmpIO%ystart
+    xend = NoahmpIO%xend-NoahmpIO%xoffset
+    yend = NoahmpIO%yend-NoahmpIO%yoffset
+
+    print *, xstart, xend, ystart, yend
 
     ! Get Latitude (lat)
     call get_2d_netcdf("XLAT", ncid, NoahmpIO%xlat,  units, xstart, xend, ystart, yend, FATAL, ierr)
