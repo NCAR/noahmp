@@ -145,8 +145,6 @@ subroutine NoahmpReadLandHeader(NoahmpIO)
       NoahmpIO%xoffset = ratio*(NoahmpIO%xoffset+is-1)
       NoahmpIO%yoffset = ratio*(NoahmpIO%yoffset+js-1)
 
-      print*, is,js,ratio,NoahmpIO%xoffset
-
     end do
 
 end subroutine NoahmpReadLandHeader
@@ -196,8 +194,6 @@ subroutine NoahmpReadLandMain(NoahmpIO)
 
     xend = NoahmpIO%xend-NoahmpIO%xoffset
     yend = NoahmpIO%yend-NoahmpIO%yoffset
-
-    print *, xstart, xend, ystart, yend
 
     ! Get Latitude (lat)
     call get_2d_netcdf("XLAT", ncid, NoahmpIO%xlat,  units, xstart, xend, ystart, yend, FATAL, ierr)
