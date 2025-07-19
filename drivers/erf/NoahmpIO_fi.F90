@@ -195,7 +195,7 @@ contains
     integer(C_INT), pointer :: level, bid
     call C_F_POINTER(NoahmpIO_cptr%BLKID, bid)
     call C_F_POINTER(NoahmpIO_cptr%LEVEL, level)
-    call NoahmpWriteLand(NoahmpIO_vect(level)%NoahmpIO(bid), filenum)
+    call NoahmpWriteLand(NoahmpIO_vect(level)%NoahmpIO(bid), filenum, SIZE(NoahmpIO_vect(level)%NoahmpIO))
   end subroutine NoahmpWriteLand_fi
 
   subroutine NoahmpIOTypeVectInit_fi(level, NBlocks) bind(C, name="NoahmpIOTypeVectInit_fi")
