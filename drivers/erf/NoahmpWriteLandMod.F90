@@ -19,6 +19,7 @@ contains
 
       ! local variables
       integer :: ierr, ncid, nx, ny, terrain, snowh, start(2), count(2)
+      integer :: shbxy, evbxy
       character(len=5) :: ts_str
       character(len=1) :: lev_str
       character(len=100) :: dir, filename
@@ -51,6 +52,8 @@ contains
       ierr = nf90_def_dim(ncid, "NY", NoahmpIO%ysglobal, ny)
       ierr = nf90_def_var(ncid, "TERRAIN", NF90_FLOAT, (/nx, ny/), terrain)
       ierr = nf90_def_var(ncid, "SNOWH", NF90_FLOAT, (/nx, ny/), snowh)
+      ierr = nf90_def_var(ncid, "SHBXY", NF90_FLOAT, (/nx, ny/), shbxy)
+      ierr = nf90_def_var(ncid, "EVBXY", NF90_FLOAT, (/nx, ny/), evbxy)
 
       ! End definition mode
       ierr = nf90_enddef(ncid)
@@ -62,6 +65,8 @@ contains
       ! Write data
       ierr = nf90_put_var(ncid, terrain, NoahmpIO%TERRAIN, start=start, count=count)
       ierr = nf90_put_var(ncid, snowh, NoahmpIO%SNOWH, start=start, count=count)
+      ierr = nf90_put_var(ncid, shbxy, NoahmpIO%SHBXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, evbxy, NoahmpIO%EVBXY, start=start, count=count)
 
       ! Close file
       ierr = nf90_close(ncid)
