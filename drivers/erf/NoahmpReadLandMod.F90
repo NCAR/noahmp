@@ -270,9 +270,9 @@ subroutine NoahmpReadLandMain(NoahmpIO)
 
     call get_netcdf_soillevel("TSLB", ncid, NoahmpIO%nsoil, soildummy, units,  xstart, xend, ystart, yend, FATAL, ierr)
     
-    if (NoahmpIO%rank == 0) write(*, '("layer_bottom(1:nsoil) = ", 4F9.4)') layer_bottom(1:NoahmpIO%nsoil)
-    if (NoahmpIO%rank == 0) write(*, '("layer_top(1:nsoil)    = ", 4F9.4)') layer_top(1:NoahmpIO%nsoil)
-    if (NoahmpIO%rank == 0) write(*, '("Soil depth = ", 10F12.6)') NoahmpIO%dzs
+    !if (NoahmpIO%rank == 0) write(*, '("layer_bottom(1:nsoil) = ", 4F9.4)') layer_bottom(1:NoahmpIO%nsoil)
+    !if (NoahmpIO%rank == 0) write(*, '("layer_top(1:nsoil)    = ", 4F9.4)') layer_top(1:NoahmpIO%nsoil)
+    !if (NoahmpIO%rank == 0) write(*, '("Soil depth = ", 10F12.6)') NoahmpIO%dzs
     
     call init_interp(NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NoahmpIO%nsoil, &
                      NoahmpIO%dzs, NoahmpIO%tslb, NoahmpIO%nsoil, soildummy, layer_bottom(1:NoahmpIO%nsoil), layer_top(1:NoahmpIO%nsoil), NoahmpIO%rank)
@@ -533,13 +533,13 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
        else
           dst_centerpoint(k) = sldpth(k)/2. + sum(sldpth(1:k-1))
        endif
-       if (rank == 0) print*, 'k, dst_centerpoint(k) = ', k, dst_centerpoint(k)
+       !if (rank == 0) print*, 'k, dst_centerpoint(k) = ', k, dst_centerpoint(k)
     enddo
     print*
 
     do k = 1, nvar
        src_centerpoint(k) = 0.5*(layer_bottom(k)+layer_top(k))
-       if (rank == 0) print*, 'k, src_centerpoint(k) = ', k, src_centerpoint(k)
+       !if (rank == 0) print*, 'k, src_centerpoint(k) = ', k, src_centerpoint(k)
     enddo
 
     KLOOP : do k = 1, nsoil
@@ -548,10 +548,10 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
           ! If the center of the destination layer is closer to the surface than
           ! the center of the topmost source layer, then simply set the 
           ! value of the destination layer equal to the topmost source layer:
-          if (rank == 0) then
-             print'("Shallow destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
-                  dst_centerpoint(k), src_centerpoint(1)
-          endif
+          !if (rank == 0) then
+          !   print'("Shallow destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
+          !        dst_centerpoint(k), src_centerpoint(1)
+          !endif
           var(:,k,:) = src(:,1,:)
           cycle KLOOP
        endif
@@ -560,10 +560,10 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
           ! If the center of the destination layer is deeper than
           ! the center of the deepest source layer, then simply set the 
           ! value of the destination layer equal to the deepest source layer:
-          if (rank == 0) then
-             print'("Deep destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
-                  dst_centerpoint(k), src_centerpoint(nvar)
-          endif
+          !if (rank == 0) then
+          !   print'("Deep destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
+          !        dst_centerpoint(k), src_centerpoint(nvar)
+          !endif
           var(:,k,:) = src(:,nvar,:)
           cycle KLOOP
        endif
@@ -573,10 +573,10 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
        ! equal to the value of that close soil layer:
        do kk = 1, nvar
           if (abs(dst_centerpoint(k)-src_centerpoint(kk)) < 0.01) then
-             if (rank == 0) then
-                print'("(Near) match for destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
-                     dst_centerpoint(k), src_centerpoint(kk)
-             endif
+             !if (rank == 0) then
+             !   print'("(Near) match for destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
+             !        dst_centerpoint(k), src_centerpoint(kk)
+             !endif
              var(:,k,:) = src(:,kk,:)
              cycle KLOOP
           endif
@@ -614,9 +614,9 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
 
        ! print '(I2, 1x, 3F7.3, F8.5)', k, src_centerpoint(ktop), dst_centerpoint(k), src_centerpoint(kbottom), fraction
 
-       if (rank == 0) then
-          print '("dst(",I1,") = src(",I1,")*",F8.5," + src(",I1,")*",F8.5)', k, ktop, fraction, kbottom, (1.0-fraction)
-       endif
+       !if (rank == 0) then
+       !   print '("dst(",I1,") = src(",I1,")*",F8.5," + src(",I1,")*",F8.5)', k, ktop, fraction, kbottom, (1.0-fraction)
+       !endif
 
        var(:,k,:) = (src(:,ktop,:)*fraction) + (src(:,kbottom,:)*(1.0-fraction))
 
