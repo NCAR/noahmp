@@ -700,7 +700,7 @@ module NoahmpIOVarType
     integer                                                ::  jxpar
     integer                                                ::  xstartpar
     integer                                                ::  ystartpar
-    integer(C_INT), pointer                                ::  rank
+    integer(C_INT), pointer                                ::  rank, comm
     character(len=256)                                     ::  inflnm,  &
                                                                outflnm, &
                                                                inflnm_template
@@ -795,7 +795,7 @@ module NoahmpIOVarType
     character(len=256)                                     ::  snicar_optic_flnm  ! SNICAR filename for optics parameters
     character(len=256)                                     ::  snicar_age_flnm    ! SNICAR filename for snow aging parameters
     integer(C_INT), pointer                                ::  xstart, xend, ystart, yend
-    integer(C_INT)                                         ::  xoffset, yoffset
+    integer(C_INT)                                         ::  xoffset, yoffset, xsglobal, ysglobal
     integer                                                ::  MAX_SOIL_LEVELS
     real(kind=kind_noahmp),  allocatable, dimension(:)     ::  soil_thick_input
 

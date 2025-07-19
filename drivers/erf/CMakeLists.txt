@@ -12,6 +12,8 @@ set(CMAKE_PREFIX_PATH ${NETCDF_DIR} ${CMAKE_PREFIX_PATH})
 set(NETCDF_F90 "YES")
 find_package(NetCDF REQUIRED)
 
+find_package(MPI COMPONENTS Fortran REQUIRED)
+
 file(GLOB NoahMP_Sources
     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/*.F90
     ${CMAKE_CURRENT_SOURCE_DIR}/../../utility/*.F90
@@ -28,7 +30,7 @@ endif()
 target_include_directories(noahmp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 target_include_directories(noahmp PRIVATE $<BUILD_INTERFACE:${NETCDF_INCLUDES}>)
 target_link_libraries(noahmp PRIVATE ${NETCDF_LIBRARIES_F90})
-target_link_libraries(noahmp PUBLIC gfortran)
+target_link_libraries(noahmp PUBLIC MPI::MPI_Fortran)
 target_include_directories(noahmp INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # Install the library and export the target

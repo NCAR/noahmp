@@ -40,17 +40,13 @@ subroutine NoahmpReadLandHeader(NoahmpIO)
     ierr = nf90_open(NoahmpIO%erf_setup_file_lev, NF90_NOWRITE, ncid)
     call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file_lev))
 
-    ierr = nf90_inq_dimid(ncid, "west_east", dimid)
-    call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding dimension 'west_east'")
+    ierr = nf90_get_att(ncid, NF90_GLOBAL, "WEST-EAST_GRID_DIMENSION", NoahmpIO%xsglobal)
+    call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding global attribute 'WEST-EAST_GRID_DIMENSION'")
+    NoahmpIO%xsglobal = NoahmpIO%xsglobal-1
 
-    ierr = nf90_inquire_dimension(ncid, dimid, len=NoahmpIO%xend)
-    call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding dimension length for 'west_east'")
-
-    ierr = nf90_inq_dimid(ncid, "south_north", dimid)
-    call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding dimension 'south_north'")
-
-    ierr = nf90_inquire_dimension(ncid, dimid, len=NoahmpIO%yend)
-    call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding dimension length for 'south_north'")
+    ierr = nf90_get_att(ncid, NF90_GLOBAL, "SOUTH-NORTH_GRID_DIMENSION", NoahmpIO%ysglobal)
+    call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding global attribute 'SOUTH-NORTH_GRID_DIMENSION'")
+    NoahmpIO%ysglobal = NoahmpIO%ysglobal-1
 
     ierr = nf90_get_att(ncid, NF90_GLOBAL, "DX", NoahmpIO%dx)
     call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding global attribute 'DX'")

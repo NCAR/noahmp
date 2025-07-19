@@ -15,6 +15,7 @@ extern "C" {
         int *itimestep, *ntime;
         char *llanduse;
         int *rank, *blkid, *level;
+        int *comm;
 
         double* XLAT = nullptr;       // latitude [rad]
         double* WSLAKEXY = nullptr;   // lake water storage [mm]
@@ -31,13 +32,14 @@ extern "C" {
           int* its, int* ite, int* jts, int* jte, int* kts, int* kte,
           int* xstart, int* xend, int* ystart, int* yend, int* itimestep,
           int* ntime, int* nsoil, int* nsnow, char* llanduse, int* rank,
-          int* blkid, int* level
+          int* blkid, int* level, int *comm
         ):
           ids(ids), ide(ide), jds(jds), jde(jde), kds(kds), kde(kde),
           ims(ims), ime(ime), jms(jms), jme(jme), kms(kms), kme(kme),
           its(its), ite(ite), jts(jts), jte(jte), kts(kts), kte(kte),
           xstart(xstart), xend(xend), ystart(ystart), yend(yend), itimestep(itimestep),
-          ntime(ntime), nsoil(nsoil), nsnow(nsnow), llanduse(llanduse), rank(rank), blkid(blkid), level(level) {}
+          ntime(ntime), nsoil(nsoil), nsnow(nsnow), llanduse(llanduse), rank(rank), blkid(blkid), 
+          level(level), comm(comm) {}
     };
 }
 
@@ -52,6 +54,7 @@ class NoahmpIO_type {
         int itimestep, ntime;
         char llanduse[257] = "";
         int rank, blkid, level;
+        int comm;
 
         NoahArray2D<double> XLAT;
         NoahArray2D<double> WSLAKEXY;
@@ -67,7 +70,7 @@ class NoahmpIO_type {
                &ims, &ime, &jms, &jme, &kms, &kme,
                &its, &ite, &jts, &jte, &kts, &kte,
                &xstart, &xend, &ystart, &yend, &itimestep,
-               &ntime, &nsoil, &nsnow, &llanduse[0], &rank, &blkid, &level) {}
+               &ntime, &nsoil, &nsnow, &llanduse[0], &rank, &blkid, &level, &comm) {}
 
         void ScalarInitDefault();
         void VarInitDefault();
@@ -77,6 +80,7 @@ class NoahmpIO_type {
         void ReadLandHeader();
         void ReadLandMain();
         void DriverMain();
+        void WriteLand(int filenum);
 
     private:
         NoahmpIO_type_fi fptr;

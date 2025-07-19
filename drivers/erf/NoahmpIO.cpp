@@ -10,6 +10,7 @@ extern "C" {
     void NoahmpReadLandHeader_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpReadLandMain_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpDriverMain_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpWriteLand_fi(NoahmpIO_type_fi* noahmpio, int* filenum);
     void NoahmpIOTypeVectInit_fi(int* level, int* NBlocks);
 }
 
@@ -40,6 +41,10 @@ void NoahmpIO_type::ReadLandMain() {
 
 void NoahmpIO_type::DriverMain() {
      NoahmpDriverMain_fi(&fptr);
+};
+
+void NoahmpIO_type::WriteLand(int filenum) {
+     NoahmpWriteLand_fi(&fptr, &filenum);
 };
 
 

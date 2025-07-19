@@ -7,6 +7,7 @@ module NoahmpIO_fi
   use NoahmpReadTableMod, ONLY: NoahmpReadTable
   use NoahmpReadLandMod, ONLY: NoahmpReadLandHeader, NoahmpReadLandMain
   use NoahmpDriverMainMod, ONLY: NoahmpDriverMain
+  use NoahmpWriteLandMod, ONLY: NoahmpWriteLand
 
   use  iso_c_binding
 
@@ -45,6 +46,7 @@ module NoahmpIO_fi
     type(C_PTR) :: nsoil, nsnow
     type(C_PTR) :: itimestep, ntime
     type(C_PTR) :: llanduse, rank, blkid, level
+    type(C_PTR) :: comm
     type(C_PTR) :: XLAT, WSLAKEXY
     type(C_PTR) :: U_PHY, T_PHY, V_PHY, QV_CURR
     type(C_PTR) :: SHBXY, EVBXY
@@ -100,6 +102,8 @@ contains
     NoahmpIO_vect(level)%NoahmpIO(bid)%LLANDUSE => NoahmpIO_vect(level)%NoahmpIO(bid)%LLANDUSE(1:256)
 
     call C_F_POINTER(NoahmpIO_cptr%RANK, NoahmpIO_vect(level)%NoahmpIO(bid)%RANK)
+    call C_F_POINTER(NoahmpIO_cptr%COMM, NoahmpIO_vect(level)%NoahmpIO(bid)%COMM)
+
   end subroutine NoahmpIOScalarInitDefault_fi
 
   subroutine NoahmpIOVarInitDefault_fi(NoahmpIO_cptr) bind(C, name="NoahmpIOVarInitDefault_fi")
@@ -182,6 +186,17 @@ contains
     call C_F_POINTER(NoahmpIO_cptr%LEVEL, level)
     call NoahmpDriverMain(NoahmpIO_vect(level)%NoahmpIO(bid))
   end subroutine NoahmpDriverMain_fi
+
+  subroutine NoahmpWriteLand_fi(NoahmpIO_cptr, filenum) bind(C, name="NoahmpWriteLand_fi")
+    use iso_c_binding, only : C_INT 
+    implicit none 
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    integer(C_INT), intent(in) :: filenum
+    integer(C_INT), pointer :: level, bid
+    call C_F_POINTER(NoahmpIO_cptr%BLKID, bid)
+    call C_F_POINTER(NoahmpIO_cptr%LEVEL, level)
+    call NoahmpWriteLand(NoahmpIO_vect(level)%NoahmpIO(bid), filenum)
+  end subroutine NoahmpWriteLand_fi
 
   subroutine NoahmpIOTypeVectInit_fi(level, NBlocks) bind(C, name="NoahmpIOTypeVectInit_fi")
     use iso_c_binding, only : C_INT
