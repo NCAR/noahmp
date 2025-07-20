@@ -250,7 +250,7 @@ contains
         if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
         stop
     else if (( khour < 0 ) .and. (kday > 0)) then
-        khour = kday * 24
+        NoahmpIO%khour = kday * 24
     else if ((khour > 0) .and. (kday > 0)) then
         if (NoahmpIO%rank == 0) write(*, '("Namelist warning:  KHOUR and KDAY both defined.")')
     else
@@ -427,7 +427,6 @@ contains
     NoahmpIO%forcing_name_VisFrac              = forcing_name_VisFrac
     NoahmpIO%split_output_count                = split_output_count
     NoahmpIO%skip_first_output                 = skip_first_output
-    NoahmpIO%khour                             = khour
     NoahmpIO%kday                              = kday
     NoahmpIO%zlvl                              = zlvl
     NoahmpIO%erf_setup_file_01                 = erf_setup_file_01
