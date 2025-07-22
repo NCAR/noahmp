@@ -6,7 +6,8 @@ module NoahmpWriteLandMod
 
    implicit none
 
-   integer, save, private :: ncid, terrain, snowh, shbxy, evbxy
+   integer, save, private :: ncid, terrain, snowh, shbxy, evbxy, &
+                             vegfra, gvfmin, gvfmax
 
 contains
 
@@ -54,6 +55,9 @@ contains
          ierr = nf90_def_var(ncid, "SNOWH", NF90_FLOAT, (/nx, ny/), snowh)
          ierr = nf90_def_var(ncid, "SHBXY", NF90_FLOAT, (/nx, ny/), shbxy)
          ierr = nf90_def_var(ncid, "EVBXY", NF90_FLOAT, (/nx, ny/), evbxy)
+         ierr = nf90_def_var(ncid, "VEGFRA", NF90_FLOAT, (/nx, ny/), vegfra)
+         ierr = nf90_def_var(ncid, "GVFMIN", NF90_FLOAT, (/nx, ny/), gvfmin)
+         ierr = nf90_def_var(ncid, "GVFMAX", NF90_FLOAT, (/nx, ny/), gvfmax)
 
          ! End definition mode
          ierr = nf90_enddef(ncid)
@@ -68,6 +72,9 @@ contains
       ierr = nf90_put_var(ncid, snowh, NoahmpIO%SNOWH, start=start, count=count)
       ierr = nf90_put_var(ncid, shbxy, NoahmpIO%SHBXY, start=start, count=count)
       ierr = nf90_put_var(ncid, evbxy, NoahmpIO%EVBXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, vegfra, NoahmpIO%VEGFRA, start=start, count=count)
+      ierr = nf90_put_var(ncid, gvfmin, NoahmpIO%GVFMIN, start=start, count=count)
+      ierr = nf90_put_var(ncid, gvfmax, NoahmpIO%GVFMAX, start=start, count=count)
 
       if (NoahmpIO%blkid == (maxblocks-1)) then
          ! Close file
