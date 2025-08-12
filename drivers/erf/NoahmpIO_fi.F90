@@ -50,6 +50,8 @@ module NoahmpIO_fi
     type(C_PTR) :: XLAT, WSLAKEXY
     type(C_PTR) :: U_PHY, T_PHY, V_PHY, QV_CURR
     type(C_PTR) :: SHBXY, EVBXY
+    type(C_PTR) :: SWDOWN, GLW, TSK, EMISS
+    type(C_PTR) :: ALBSFCDIRXY, ALBSFCDIFXY
   end type NoahmpIO_type_fi
 
 contains
@@ -125,6 +127,12 @@ contains
     NoahmpIO_cptr%QV_CURR = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%QV_CURR)
     NoahmpIO_cptr%SHBXY = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%SHBXY)
     NoahmpIO_cptr%EVBXY = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%EVBXY)
+    NoahmpIO_cptr%SWDOWN = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%SWDOWN)
+    NoahmpIO_cptr%GLW = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%GLW)
+    NoahmpIO_cptr%TSK = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%TSK)
+    NoahmpIO_cptr%EMISS = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%EMISS)
+    NoahmpIO_cptr%ALBSFCDIRXY = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%ALBSFCDIRXY)
+    NoahmpIO_cptr%ALBSFCDIFXY = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%ALBSFCDIFXY)
   end subroutine NoahmpIOVarInitDefault_fi
 
   subroutine NoahmpInitMain_fi(NoahmpIO_cptr) bind(C, name="NoahmpInitMain_fi")

@@ -98,8 +98,8 @@ module NoahmpIOVarType
     real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  QV_CURR             ! 3D water vapor mixing ratio [kg/kg_dry]
     real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  U_PHY               ! 3D U wind component [m/s]
     real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  V_PHY               ! 3D V wind component [m/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SWDOWN              ! solar down at surface [W m-2]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  GLW                 ! longwave down at surface [W m-2]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  SWDOWN              ! solar down at surface [W m-2]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  GLW                 ! longwave down at surface [W m-2]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  P8W                 ! 3D pressure, valid at interface [Pa]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RAINBL              ! precipitation entering land model [mm] per time step
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SNOWBL              ! snow entering land model [mm] per time step
@@ -167,7 +167,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_SPAC             ! tile spacing
 
     ! INOUT (with generic LSM equivalent) (as defined in WRF)
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TSK                 ! surface radiative temperature [K]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  TSK                 ! surface radiative temperature [K]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  HFX                 ! sensible heat flux [W m-2]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QFX                 ! latent heat flux [kg s-1 m-2]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  LH                  ! latent heat flux [W m-2]
@@ -187,7 +187,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  CANWAT              ! total canopy water + ice [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACSNOM              ! accumulated snow melt leaving pack
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACSNOW              ! accumulated snow on grid
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  EMISS               ! surface bulk emissivity
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  EMISS               ! surface bulk emissivity
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QSFC                ! bulk surface specific humidity
 
     ! INOUT (with no Noah LSM equivalent) (as defined in WRF)
@@ -478,8 +478,8 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSOILDIFXY                  ! soil albedo (diffuse)
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSNOWDIRXY                  ! snow albedo (direct)
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSNOWDIFXY                  ! snow albedo (diffuse)
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIRXY                   ! surface albedo (direct)
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIFXY                   ! surface albedo (diffuse)
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  ALBSFCDIRXY                   ! surface albedo (direct)
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  ALBSFCDIFXY                   ! surface albedo (diffuse)
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RadSwVisFrac                  ! fraction of downward solar visible band
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RadSwDirFrac                  ! fraction of downward solar direct band
 

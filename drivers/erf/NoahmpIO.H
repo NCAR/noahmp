@@ -25,6 +25,12 @@ extern "C" {
         double* QV_CURR = nullptr;
         double* SHBXY = nullptr;
         double* EVBXY = nullptr;
+        double* SWDOWN = nullptr;
+        double* GLW = nullptr;
+        double* TSK = nullptr;
+        double* EMISS = nullptr;
+        double* ALBSFCDIRXY = nullptr;
+        double* ALBSFCDIFXY = nullptr;
 
         NoahmpIO_type_fi(        
           int* ids, int* ide, int* jds, int* jde, int* kds, int* kde,
@@ -64,6 +70,12 @@ class NoahmpIO_type {
         NoahArray3D<double> QV_CURR;
         NoahArray2D<double> SHBXY;
         NoahArray2D<double> EVBXY;
+        NoahArray2D<double> SWDOWN;
+        NoahArray2D<double> GLW;
+        NoahArray2D<double> TSK;
+        NoahArray2D<double> EMISS;
+        NoahArray3D<double> ALBSFCDIRXY;
+        NoahArray3D<double> ALBSFCDIFXY;
 
         NoahmpIO_type():
           fptr(&ids, &ide, &jds, &jde, &kds, &kde,

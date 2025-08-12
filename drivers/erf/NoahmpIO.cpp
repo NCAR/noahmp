@@ -63,6 +63,13 @@ void NoahmpIO_type::VarInitDefault() {
       SHBXY = NoahArray2D<double>(fptr.SHBXY, {xstart,ystart}, {xend,yend});
       EVBXY = NoahArray2D<double>(fptr.EVBXY, {xstart,ystart}, {xend,yend});
 
+      SWDOWN = NoahArray2D<double>(fptr.SWDOWN, {xstart,ystart}, {xend,yend});
+      GLW = NoahArray2D<double>(fptr.GLW, {xstart,ystart}, {xend,yend});
+      TSK = NoahArray2D<double>(fptr.TSK, {xstart,ystart}, {xend,yend});
+      EMISS = NoahArray2D<double>(fptr.EMISS, {xstart,ystart}, {xend,yend});
+
+      ALBSFCDIRXY = NoahArray3D<double>(fptr.ALBSFCDIRXY, {xstart,1,ystart}, {xend,2,yend});
+      ALBSFCDIFXY = NoahArray3D<double>(fptr.ALBSFCDIFXY, {xstart,1,ystart}, {xend,2,yend});
 };
 
 
