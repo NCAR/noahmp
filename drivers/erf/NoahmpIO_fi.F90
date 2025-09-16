@@ -52,6 +52,7 @@ module NoahmpIO_fi
     type(C_PTR) :: SHBXY, EVBXY
     type(C_PTR) :: SWDOWN, GLW, TSK, EMISS
     type(C_PTR) :: ALBSFCDIRXY, ALBSFCDIFXY
+    type(C_PTR) :: COSZEN
   end type NoahmpIO_type_fi
 
 contains
@@ -133,6 +134,7 @@ contains
     NoahmpIO_cptr%EMISS = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%EMISS)
     NoahmpIO_cptr%ALBSFCDIRXY = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%ALBSFCDIRXY)
     NoahmpIO_cptr%ALBSFCDIFXY = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%ALBSFCDIFXY)
+    NoahmpIO_cptr%COSZEN = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%COSZEN)
   end subroutine NoahmpIOVarInitDefault_fi
 
   subroutine NoahmpInitMain_fi(NoahmpIO_cptr) bind(C, name="NoahmpInitMain_fi")
