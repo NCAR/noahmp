@@ -24,7 +24,7 @@ contains
 
     ! local variables
     integer                                     :: ide,jde,its,jts,itf,jtf
-    integer                                     :: I,J,errflag,NS,IZ
+    integer                                     :: I,J,errflag,NS,IZ,N,NTiles
     logical                                     :: urbanpt_flag
     real(kind=kind_noahmp)                      :: BEXP, SMCMAX, PSISAT, FK
     real(kind=kind_noahmp), parameter           :: BLIM  = 5.5
@@ -41,6 +41,14 @@ contains
     itf = min0(NoahmpIO%ite, ide-1)
     jtf = min0(NoahmpIO%jte, jde-1)
 
+    ! initialize land mask
+    where ( (NoahmpIO%IVGTYP /= NoahmpIO%ISWATER_TABLE) .and. (NoahmpIO%IVGTYP /= NoahmpIO%ISICE_TABLE) .and. &
+            (NoahmpIO%XLAND-1.5 .LT. 0.) .and. (NoahmpIO%XICE .LT. NoahmpIO%XICE_THRESHOLD) )
+         NoahmpIO%LANDMASK = 1
+    elsewhere
+         NoahmpIO%LANDMASK = -1
+    endwhere
+
     ! only initialize for non-restart case
     if ( .not. NoahmpIO%restart_flag ) then
 
@@ -50,7 +58,9 @@ contains
           print*, 'SNOW HEIGHT NOT FOUND - VALUE DEFINED IN LSMINIT'
           do J = jts, jtf
              do I = its, itf
-                NoahmpIO%SNOWH(I,J) = NoahmpIO%SNOW(I,J) * 0.005  ! SNOW in mm and SNOWH in m
+                do N=1, NoahmpIO%NumberOfTiles(I,J)  
+                   NoahmpIO%SNOWH(I,J,N) = NoahmpIO%SNOW(I,J,N) * 0.005  ! SNOW in mm and SNOWH in m
+                enddo
              enddo
           enddo
        endif
@@ -59,16 +69,18 @@ contains
        ! the Noah-MP code does it internally but if we don't do it here, problems ensue
        do J = jts, jtf
           do I = its, itf
-             if ( NoahmpIO%SNOW(I,J)  < 0.0 ) NoahmpIO%SNOW(I,J)  = 0.0 
-             if ( NoahmpIO%SNOWH(I,J) < 0.0 ) NoahmpIO%SNOWH(I,J) = 0.0
-             if ( (NoahmpIO%SNOW(I,J) > 0.0) .and. (NoahmpIO%SNOWH(I,J) == 0.0) ) &
-                NoahmpIO%SNOWH(I,J) = NoahmpIO%SNOW(I,J) * 0.005
-             if ( (NoahmpIO%SNOWH(I,J) > 0.0) .and. (NoahmpIO%SNOW(I,J) == 0.0) ) &
-                NoahmpIO%SNOW(I,J)  = NoahmpIO%SNOWH(I,J) / 0.005
-             if ( NoahmpIO%SNOW(I,J) > 2000.0 ) then
-                NoahmpIO%SNOWH(I,J) = NoahmpIO%SNOWH(I,J) * 2000.0 / NoahmpIO%SNOW(I,J)      ! SNOW in mm and SNOWH in m
-                NoahmpIO%SNOW (I,J) = 2000.0                                                 ! cap SNOW at 2000, maintain density
-             endif
+             do N=1, NoahmpIO%NumberOfTiles(I,J)  
+               if ( NoahmpIO%SNOW(I,J,N)  < 0.0 ) NoahmpIO%SNOW(I,J,N)  = 0.0 
+               if ( NoahmpIO%SNOWH(I,J,N) < 0.0 ) NoahmpIO%SNOWH(I,J,N) = 0.0
+               if ( (NoahmpIO%SNOW(I,J,N) > 0.0) .and. (NoahmpIO%SNOWH(I,J,N) == 0.0) ) &
+                  NoahmpIO%SNOWH(I,J,N) = NoahmpIO%SNOW(I,J,N) * 0.005
+               if ( (NoahmpIO%SNOWH(I,J,N) > 0.0) .and. (NoahmpIO%SNOW(I,J,N) == 0.0) ) &
+                  NoahmpIO%SNOW(I,J,N)  = NoahmpIO%SNOWH(I,J,N) / 0.005
+               if ( NoahmpIO%SNOW(I,J,N) > 2000.0 ) then
+                  NoahmpIO%SNOWH(I,J,N) = NoahmpIO%SNOWH(I,J,N) * 2000.0 / NoahmpIO%SNOW(I,J,N)      ! SNOW in mm and SNOWH in m
+                  NoahmpIO%SNOW (I,J,N) = 2000.0                                                     ! cap SNOW at 2000, maintain density
+               endif
+             enddo
           enddo
        enddo
 
@@ -87,171 +99,199 @@ contains
        ! initialize soil liquid water content SH2O
        do J = jts , jtf
           do I = its , itf
-             if ( (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISICE_TABLE) .and. &
-                  (NoahmpIO%XICE(I,J) <= 0.0) ) then
-                do NS = 1, NoahmpIO%NSOIL
-                   NoahmpIO%SMOIS(I,NS,J) = 1.0  ! glacier starts all frozen
-                   NoahmpIO%SH2O(I,NS,J)  = 0.0
-                   NoahmpIO%TSLB(I,NS,J)  = min(NoahmpIO%TSLB(I,NS,J), 263.15) ! set glacier temp to at most -10C
-                enddo
-                ! NoahmpIO%TMN(I,J) = min(NoahmpIO%TMN(I,J), 263.15)           ! set deep temp to at most -10C
-                NoahmpIO%SNOW(I,J)  = max(NoahmpIO%SNOW(I,J), 10.0)            ! set SWE to at least 10mm
-                NoahmpIO%SNOWH(I,J) = NoahmpIO%SNOW(I,J) * 0.005               ! SNOW in mm and SNOWH in m
-             else
-                BEXP   = NoahmpIO%BEXP_TABLE  (NoahmpIO%ISLTYP(I,J))
-                SMCMAX = NoahmpIO%SMCMAX_TABLE(NoahmpIO%ISLTYP(I,J))
-                PSISAT = NoahmpIO%PSISAT_TABLE(NoahmpIO%ISLTYP(I,J))
-                do NS = 1, NoahmpIO%NSOIL
-                  if ( NoahmpIO%SMOIS(I,NS,J) > SMCMAX ) NoahmpIO%SMOIS(I,NS,J) = SMCMAX
-                enddo
-                if ( (BEXP > 0.0) .and. (SMCMAX > 0.0) .and. (PSISAT > 0.0) ) then
-                   do NS = 1, NoahmpIO%NSOIL
-                      if ( NoahmpIO%TSLB(I,NS,J) < 273.149 ) then
-                         FK = (((HLICE / (GRAV0*(-PSISAT))) * &
-                                ((NoahmpIO%TSLB(I,NS,J)-T0) / NoahmpIO%TSLB(I,NS,J)))**(-1/BEXP))*SMCMAX
-                         FK = max(FK, 0.02)
-                         NoahmpIO%SH2O(I,NS,J) = min(FK, NoahmpIO%SMOIS(I,NS,J))
-                      else
-                         NoahmpIO%SH2O(I,NS,J) = NoahmpIO%SMOIS(I,NS,J)
-                      endif
-                   enddo
-                else
-                   do NS = 1, NoahmpIO%NSOIL
-                      NoahmpIO%SH2O(I,NS,J) = NoahmpIO%SMOIS(I,NS,J)
-                   enddo
+             do N = 1, NoahmpIO%NumberOfTiles(I,J) 
+                if(NoahmpIO%IOPT_MOSAIC == 1) then                                           ! if mosaic is based ob lulc
+                   NoahmpIO%IVGTYP(I,J) = NoahmpIO%SubGrdIndexSorted(I,J,N)
                 endif
-             endif
+                if ( (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISICE_TABLE) .and. &
+                     (NoahmpIO%XICE(I,J) <= 0.0) ) then
+                   do NS = 1, NoahmpIO%NSOIL
+                      NoahmpIO%SMOIS(I,NS,J,N) = 1.0  ! glacier starts all frozen
+                      NoahmpIO%SH2O(I,NS,J,N)  = 0.0
+                      NoahmpIO%TSLB(I,NS,J,N)  = min(NoahmpIO%TSLB(I,NS,J,N), 263.15) ! set glacier temp to at most -10C
+                   enddo
+                   ! NoahmpIO%TMN(I,J) = min(NoahmpIO%TMN(I,J), 263.15)               ! set deep temp to at most -10C
+                   NoahmpIO%SNOW(I,J,N)  = max(NoahmpIO%SNOW(I,J,N), 10.0)            ! set SWE to at least 10mm
+                   NoahmpIO%SNOWH(I,J,N) = NoahmpIO%SNOW(I,J,N) * 0.005               ! SNOW in mm and SNOWH in m
+                else
+                   BEXP   = NoahmpIO%BEXP_TABLE  (NoahmpIO%ISLTYP(I,J))
+                   SMCMAX = NoahmpIO%SMCMAX_TABLE(NoahmpIO%ISLTYP(I,J))
+                   PSISAT = NoahmpIO%PSISAT_TABLE(NoahmpIO%ISLTYP(I,J))
+                   do NS = 1, NoahmpIO%NSOIL
+                     if ( NoahmpIO%SMOIS(I,NS,J,N) > SMCMAX ) NoahmpIO%SMOIS(I,NS,J,N) = SMCMAX
+                   enddo
+                   if ( (BEXP > 0.0) .and. (SMCMAX > 0.0) .and. (PSISAT > 0.0) ) then
+                      do NS = 1, NoahmpIO%NSOIL
+                         if ( NoahmpIO%TSLB(I,NS,J,N) < 273.149 ) then
+                            FK = (((HLICE / (GRAV0*(-PSISAT))) * &
+                                   ((NoahmpIO%TSLB(I,NS,J,N)-T0) / NoahmpIO%TSLB(I,NS,J,N)))**(-1/BEXP))*SMCMAX
+                            FK = max(FK, 0.02)
+                            NoahmpIO%SH2O(I,NS,J,N) = min(FK, NoahmpIO%SMOIS(I,NS,J,N))
+                         else
+                            NoahmpIO%SH2O(I,NS,J,N) = NoahmpIO%SMOIS(I,NS,J,N)
+                         endif
+                      enddo
+                   else
+                      do NS = 1, NoahmpIO%NSOIL
+                         NoahmpIO%SH2O(I,NS,J,N) = NoahmpIO%SMOIS(I,NS,J,N)
+                      enddo
+                   endif
+                endif
+             enddo
           enddo ! I
        enddo    ! J
 
        ! initilize other quantities
        do J = jts, jtf
           do I = its, itf
-             NoahmpIO%QTDRAIN(I,J)  = 0.0
-             NoahmpIO%TVXY(I,J)     = NoahmpIO%TSK(I,J)
-             NoahmpIO%TGXY(I,J)     = NoahmpIO%TSK(I,J)
-             if ( (NoahmpIO%SNOW(I,J) > 0.0) .and. (NoahmpIO%TSK(i,j) > 273.15) ) NoahmpIO%TVXY(I,J) = 273.15
-             if ( (NoahmpIO%SNOW(I,J) > 0.0) .and. (NoahmpIO%TSK(I,J) > 273.15) ) NoahmpIO%TGXY(I,J) = 273.15
-             NoahmpIO%CANWAT(I,J)   = 0.0
-             NoahmpIO%CANLIQXY(I,J) = NoahmpIO%CANWAT(I,J)
-             NoahmpIO%CANICEXY(I,J) = 0.0
-             NoahmpIO%EAHXY(I,J)    = 2000.0
-             NoahmpIO%TAHXY(I,J)    = NoahmpIO%TSK(I,J)
-             NoahmpIO%T2MVXY(I,J)   = NoahmpIO%TSK(I,J)
-             NoahmpIO%T2MBXY(I,J)   = NoahmpIO%TSK(I,J)
-             if ( (NoahmpIO%SNOW(I,J) > 0.0) .and. (NoahmpIO%TSK(I,J) > 273.15) ) NoahmpIO%TAHXY(I,J)  = 273.15
-             if ( (NoahmpIO%SNOW(I,J) > 0.0) .and. (NoahmpIO%TSK(I,J) > 273.15) ) NoahmpIO%T2MVXY(I,J) = 273.15
-             if ( (NoahmpIO%SNOW(I,J) > 0.0) .and. (NoahmpIO%TSK(I,J) > 273.15) ) NoahmpIO%T2MBXY(I,J) = 273.15
-             NoahmpIO%CMXY(I,J)     = 0.0
-             NoahmpIO%CHXY(I,J)     = 0.0
-             NoahmpIO%FWETXY(I,J)   = 0.0
-             NoahmpIO%SNEQVOXY(I,J) = 0.0
-             NoahmpIO%ALBOLDXY(I,J) = 0.65
-             NoahmpIO%QSNOWXY(I,J)  = 0.0
-             NoahmpIO%QRAINXY(I,J)  = 0.0
-             NoahmpIO%WSLAKEXY(I,J) = 0.0
-             if ( NoahmpIO%IOPT_WETLAND > 0 ) then
-                NoahmpIO%FSATXY(I,J)   = 0.0
-                NoahmpIO%WSURFXY(I,J)  = 0.0
-             endif
-             if ( NoahmpIO%IOPT_RUNSUB /= 5 ) then 
-                NoahmpIO%WAXY(I,J)   = 4900.0 
-                NoahmpIO%WTXY(I,J)   = NoahmpIO%WAXY(i,j) 
-                NoahmpIO%ZWTXY(I,J)  = (25.0 + 2.0) - NoahmpIO%WAXY(i,j)/1000/0.2
-             else
-                NoahmpIO%WAXY(I,J)   = 0.0
-                NoahmpIO%WTXY(I,J)   = 0.0
-                NoahmpIO%AREAXY(I,J) = (max(10.0,NoahmpIO%DX) * max(10.0,NoahmpIO%DY)) / &
-                                       (NoahmpIO%MSFTX(I,J) * NoahmpIO%MSFTY(I,J))
-             endif
-
-             urbanpt_flag = .false.
-             if ( (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISURBAN_TABLE) .or. &
-                  (NoahmpIO%IVGTYP(I,J) > NoahmpIO%URBTYPE_beg) ) then
-                urbanpt_flag = .true.
-             endif
-
-             if ( (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISBARREN_TABLE) .or. &
-                  (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISICE_TABLE) .or. &
-                  ((NoahmpIO%SF_URBAN_PHYSICS == 0) .and. (urbanpt_flag .eqv. .true.)) .or. &
-                  (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISWATER_TABLE) ) then
-                NoahmpIO%LAI(I,J)      = 0.0
-                NoahmpIO%XSAIXY(I,J)   = 0.0
-                NoahmpIO%LFMASSXY(I,J) = 0.0
-                NoahmpIO%STMASSXY(I,J) = 0.0
-                NoahmpIO%RTMASSXY(I,J) = 0.0
-                NoahmpIO%WOODXY(I,J)   = 0.0
-                NoahmpIO%STBLCPXY(I,J) = 0.0
-                NoahmpIO%FASTCPXY(I,J) = 0.0
-                NoahmpIO%GRAINXY(I,J)  = 1.0e-10
-                NoahmpIO%GDDXY(I,J)    = 0
-                NoahmpIO%CROPCAT(I,J)  = 0
-             else
-                if ( (NoahmpIO%LAI(I,J) > 100) .or. (NoahmpIO%LAI(I,J) < 0) ) &
-                NoahmpIO%LAI(I,J)      = 0.0
-                NoahmpIO%LAI(I,J)      = max(NoahmpIO%LAI(I,J), 0.05)                       ! at least start with 0.05 for arbitrary initialization (v3.7)
-                NoahmpIO%XSAIXY(I,J)   = max(0.1*NoahmpIO%LAI(I,J), 0.05)                   ! MB: arbitrarily initialize SAI using input LAI (v3.7)
-                if ( urbanpt_flag .eqv. .true. ) then
-                   NoahmpIO%LFMASSXY(I,J) = NoahmpIO%LAI(I,J) * 1000.0 / &
-                                            max(NoahmpIO%SLA_TABLE(NoahmpIO%NATURAL_TABLE),1.0)! use LAI to initialize (v3.7)
+             do N = 1, NoahmpIO%NumberOfTiles(I,J) 
+                if(NoahmpIO%IOPT_MOSAIC == 1) then                                           ! if mosaic is based ob lulc
+                   NoahmpIO%IVGTYP(I,J) = NoahmpIO%SubGrdIndexSorted(I,J,N)
+                endif
+                NoahmpIO%QTDRAIN(I,J,N)  = 0.0
+                NoahmpIO%TVXY(I,J,N)     = NoahmpIO%TSK(I,J,N)
+                NoahmpIO%TGXY(I,J,N)     = NoahmpIO%TSK(I,J,N)
+                if ( (NoahmpIO%SNOW(I,J,N) > 0.0) .and. (NoahmpIO%TSK(I,J,N) > 273.15) ) NoahmpIO%TVXY(I,J,N) = 273.15
+                if ( (NoahmpIO%SNOW(I,J,N) > 0.0) .and. (NoahmpIO%TSK(I,J,N) > 273.15) ) NoahmpIO%TGXY(I,J,N) = 273.15
+                NoahmpIO%CANWAT(I,J,N)   = 0.0
+                NoahmpIO%CANLIQXY(I,J,N) = NoahmpIO%CANWAT(I,J,N)
+                NoahmpIO%CANICEXY(I,J,N) = 0.0
+                NoahmpIO%EAHXY(I,J,N)    = 2000.0
+                NoahmpIO%TAHXY(I,J,N)    = NoahmpIO%TSK(I,J,N)
+                NoahmpIO%T2MVXY(I,J,N)   = NoahmpIO%TSK(I,J,N)
+                NoahmpIO%T2MBXY(I,J,N)   = NoahmpIO%TSK(I,J,N)
+                if ( (NoahmpIO%SNOW(I,J,N) > 0.0) .and. (NoahmpIO%TSK(I,J,N) > 273.15) ) NoahmpIO%TAHXY(I,J,N)  = 273.15
+                if ( (NoahmpIO%SNOW(I,J,N) > 0.0) .and. (NoahmpIO%TSK(I,J,N) > 273.15) ) NoahmpIO%T2MVXY(I,J,N) = 273.15
+                if ( (NoahmpIO%SNOW(I,J,N) > 0.0) .and. (NoahmpIO%TSK(I,J,N) > 273.15) ) NoahmpIO%T2MBXY(I,J,N) = 273.15
+                NoahmpIO%CMXY(I,J,N)     = 0.0
+                NoahmpIO%CHXY(I,J,N)     = 0.0
+                NoahmpIO%FWETXY(I,J,N)   = 0.0
+                NoahmpIO%SNEQVOXY(I,J,N) = 0.0
+                NoahmpIO%ALBOLDXY(I,J,N) = 0.65
+                NoahmpIO%QSNOWXY(I,J,N)  = 0.0
+                NoahmpIO%QRAINXY(I,J,N)  = 0.0
+                NoahmpIO%WSLAKEXY(I,J,N) = 0.0
+                if ( NoahmpIO%IOPT_WETLAND > 0 ) then
+                   NoahmpIO%FSATXY(I,J,N)   = 0.0
+                   NoahmpIO%WSURFXY(I,J,N)  = 0.0
+                endif
+                if ( NoahmpIO%IOPT_RUNSUB /= 5 ) then 
+                   NoahmpIO%WAXY(I,J,N)   = 4900.0 
+                   NoahmpIO%WTXY(I,J,N)   = NoahmpIO%WAXY(I,J,N) 
+                   NoahmpIO%ZWTXY(I,J,N)  = (25.0 + 2.0) - NoahmpIO%WAXY(I,J,N)/1000/0.2
                 else
-                   NoahmpIO%LFMASSXY(I,J) = NoahmpIO%LAI(I,J) * 1000.0 / &
-                                            max(NoahmpIO%SLA_TABLE(NoahmpIO%IVGTYP(I,J)),1.0)  ! use LAI to initialize (v3.7)
+                   NoahmpIO%WAXY(I,J,N)   = 0.0
+                   NoahmpIO%WTXY(I,J,N)   = 0.0
+                   NoahmpIO%AREAXY(I,J) = (max(10.0,NoahmpIO%DX) * max(10.0,NoahmpIO%DY)) / &
+                                          (NoahmpIO%MSFTX(I,J) * NoahmpIO%MSFTY(I,J))
                 endif
-                NoahmpIO%STMASSXY(I,J) = NoahmpIO%XSAIXY(I,J) * 1000.0 / 3.0                ! use SAI to initialize (v3.7)
-                NoahmpIO%RTMASSXY(I,J) = 500.0                                              ! these are all arbitrary and probably should be
-                NoahmpIO%WOODXY(I,J)   = 500.0                                              ! in the table or read from initialization
-                NoahmpIO%STBLCPXY(I,J) = 1000.0
-                NoahmpIO%FASTCPXY(I,J) = 1000.0
-                NoahmpIO%GRAINXY(I,J)  = 1.0e-10
-                NoahmpIO%GDDXY(I,J)    = 0    
 
-                ! Initialize crop for crop model
-                if ( NoahmpIO%IOPT_CROP == 1 ) then
-                   NoahmpIO%CROPCAT(I,J) = NoahmpIO%default_crop_table
-                   if ( NoahmpIO%CROPTYPE(I,5,J) >= 0.5 ) then
-                      NoahmpIO%RTMASSXY(I,J) = 0.0
-                      NoahmpIO%WOODXY  (I,J) = 0.0
-                      if ( (NoahmpIO%CROPTYPE(I,1,J) > NoahmpIO%CROPTYPE(I,2,J)) .and. &
-                           (NoahmpIO%CROPTYPE(I,1,J) > NoahmpIO%CROPTYPE(I,3,J)) .and. &
-                           (NoahmpIO%CROPTYPE(I,1,J) > NoahmpIO%CROPTYPE(I,4,J)) ) then      ! choose corn
-                         NoahmpIO%CROPCAT(I,J)  = 1
-                         NoahmpIO%LFMASSXY(I,J) = NoahmpIO%LAI(I,J) / 0.015                  ! Initialize lfmass Zhe Zhang 2020-07-13
-                         NoahmpIO%STMASSXY(I,J) = NoahmpIO%XSAIXY(I,J) / 0.003
-                      elseif ( (NoahmpIO%CROPTYPE(I,2,J) > NoahmpIO%CROPTYPE(I,1,J)) .and. &
-                               (NoahmpIO%CROPTYPE(I,2,J) > NoahmpIO%CROPTYPE(I,3,J)) .and. &
-                               (NoahmpIO%CROPTYPE(I,2,J) > NoahmpIO%CROPTYPE(I,4,J)) ) then  ! choose soybean
-                         NoahmpIO%CROPCAT(I,J)  = 2
-                         NoahmpIO%LFMASSXY(I,J) = NoahmpIO%LAI(I,J) / 0.030                  ! Initialize lfmass Zhe Zhang 2020-07-13
-                         NoahmpIO%STMASSXY(I,J) = NoahmpIO%XSAIXY(I,J) / 0.003
+                urbanpt_flag = .false.
+                if ( (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISURBAN_TABLE) .or. &
+                     (NoahmpIO%IVGTYP(I,J) > NoahmpIO%URBTYPE_beg) ) then
+                   urbanpt_flag = .true.
+                endif
+
+                if ( (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISBARREN_TABLE) .or. &
+                     (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISICE_TABLE) .or. &
+                     ((NoahmpIO%SF_URBAN_PHYSICS == 0) .and. (urbanpt_flag .eqv. .true.)) .or. &
+                     (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISWATER_TABLE) ) then
+                   NoahmpIO%LAI(I,J,N)      = 0.0
+                   NoahmpIO%XSAIXY(I,J,N)   = 0.0
+                   NoahmpIO%LFMASSXY(I,J,N) = 0.0
+                   NoahmpIO%STMASSXY(I,J,N) = 0.0
+                   NoahmpIO%RTMASSXY(I,J,N) = 0.0
+                   NoahmpIO%WOODXY(I,J,N)   = 0.0
+                   NoahmpIO%STBLCPXY(I,J,N) = 0.0
+                   NoahmpIO%FASTCPXY(I,J,N) = 0.0
+                   NoahmpIO%GRAINXY(I,J,N)  = 1.0e-10
+                   NoahmpIO%GDDXY(I,J,N)    = 0
+                   NoahmpIO%CROPCAT(I,J)    = 0
+                else
+                  if ( (NoahmpIO%LAI(I,J,N) > 100) .or. (NoahmpIO%LAI(I,J,N) < 0) ) &
+                     NoahmpIO%LAI(I,J,N)      = 0.0
+                     NoahmpIO%LAI(I,J,N)      = max(NoahmpIO%LAI(I,J,N), 0.05)                       ! at least start with 0.05 for arbitrary initialization (v3.7)
+                     NoahmpIO%XSAIXY(I,J,N)   = max(0.1*NoahmpIO%LAI(I,J,N), 0.05)                   ! MB: arbitrarily initialize SAI using input LAI (v3.7)
+                     if ( urbanpt_flag .eqv. .true. ) then
+                        NoahmpIO%LFMASSXY(I,J,N) = NoahmpIO%LAI(I,J,N) * 1000.0 / &
+                                                 max(NoahmpIO%SLA_TABLE(NoahmpIO%NATURAL_TABLE),1.0)! use LAI to initialize (v3.7)
+                     else
+                        NoahmpIO%LFMASSXY(I,J,N) = NoahmpIO%LAI(I,J,N) * 1000.0 / &
+                                                 max(NoahmpIO%SLA_TABLE(NoahmpIO%IVGTYP(I,J)),1.0)  ! use LAI to initialize (v3.7)
+                     endif
+                     NoahmpIO%STMASSXY(I,J,N) = NoahmpIO%XSAIXY(I,J) * 1000.0 / 3.0                ! use SAI to initialize (v3.7)
+                     NoahmpIO%RTMASSXY(I,J,N) = 500.0                                              ! these are all arbitrary and probably should be
+                     NoahmpIO%WOODXY(I,J,N)   = 500.0                                              ! in the table or read from initialization
+                     NoahmpIO%STBLCPXY(I,J,N) = 1000.0
+                     NoahmpIO%FASTCPXY(I,J,N) = 1000.0
+                     NoahmpIO%GRAINXY(I,J,N)  = 1.0e-10
+                     NoahmpIO%GDDXY(I,J,N)    = 0    
+
+                  ! Initialize crop for crop model
+                  if ( (NoahmpIO%IOPT_CROP == 1) .and. (NoahmpIO%IVGTYP(I,J) = NoahmpIO%ISCROP_TABLE) ) then
+                     NoahmpIO%CROPCAT(I,J) = NoahmpIO%default_crop_table
+                     if ( NoahmpIO%CROPTYPE(I,5,J) >= 0.5 ) then
+                        NoahmpIO%RTMASSXY(I,J,N) = 0.0
+                        NoahmpIO%WOODXY  (I,J,N) = 0.0
+                        if ( (NoahmpIO%CROPTYPE(I,1,J) > NoahmpIO%CROPTYPE(I,2,J)) .and. &
+                             (NoahmpIO%CROPTYPE(I,1,J) > NoahmpIO%CROPTYPE(I,3,J)) .and. &
+                             (NoahmpIO%CROPTYPE(I,1,J) > NoahmpIO%CROPTYPE(I,4,J)) ) then      ! choose corn
+                           NoahmpIO%CROPCAT(I,J)  = 1
+                           NoahmpIO%LFMASSXY(I,J,N) = NoahmpIO%LAI(I,J,N) / 0.015                  ! Initialize lfmass Zhe Zhang 2020-07-13
+                           NoahmpIO%STMASSXY(I,J,N) = NoahmpIO%XSAIXY(I,J,N) / 0.003
+                        elseif ( (NoahmpIO%CROPTYPE(I,2,J) > NoahmpIO%CROPTYPE(I,1,J)) .and. &
+                                 (NoahmpIO%CROPTYPE(I,2,J) > NoahmpIO%CROPTYPE(I,3,J)) .and. &
+                                 (NoahmpIO%CROPTYPE(I,2,J) > NoahmpIO%CROPTYPE(I,4,J)) ) then  ! choose soybean
+                           NoahmpIO%CROPCAT(I,J)  = 2
+                           NoahmpIO%LFMASSXY(I,J,N) = NoahmpIO%LAI(I,J,N) / 0.030                  ! Initialize lfmass Zhe Zhang 2020-07-13
+                           NoahmpIO%STMASSXY(I,J,N) = NoahmpIO%XSAIXY(I,J,N) / 0.003
+                        else
+                           NoahmpIO%CROPCAT(I,J)    = NoahmpIO%default_crop_table
+                           NoahmpIO%LFMASSXY(I,J,N) = NoahmpIO%LAI(I,J,N) / 0.035
+                           NoahmpIO%STMASSXY(I,J,N) = NoahmpIO%XSAIXY(I,J,N) / 0.003
+                        endif
+                     endif
+                  endif
+
+                  ! Noah-MP irrigation scheme 
+                  if ( (NoahmpIO%IOPT_IRR >= 1) .and. (NoahmpIO%IOPT_IRR <= 3) .and. &
+                       (NoahmpIO%IVGTYP(I,J) = NoahmpIO%ISCROP_TABLE) ) then
+                     if ( (NoahmpIO%IOPT_IRRM == 0) .or. (NoahmpIO%IOPT_IRRM ==1) ) then       ! sprinkler
+                        NoahmpIO%IRNUMSI(I,J,N) = 0
+                        NoahmpIO%IRWATSI(I,J,N) = 0.0
+                        NoahmpIO%IRELOSS(I,J,N) = 0.0
+                        NoahmpIO%IRRSPLH(I,J,N) = 0.0    
+                     elseif ( (NoahmpIO%IOPT_IRRM == 0) .or. (NoahmpIO%IOPT_IRRM == 2) ) then  ! micro or drip
+                        NoahmpIO%IRNUMMI(I,J,N) = 0
+                        NoahmpIO%IRWATMI(I,J,N) = 0.0
+                        NoahmpIO%IRMIVOL(I,J,N) = 0.0
+                     elseif ( (NoahmpIO%IOPT_IRRM == 0) .or. (NoahmpIO%IOPT_IRRM == 3) ) then  ! flood 
+                        NoahmpIO%IRNUMFI(I,J,N) = 0
+                        NoahmpIO%IRWATFI(I,J,N) = 0.0
+                        NoahmpIO%IRFIVOL(I,J,N) = 0.0
+                     endif
+                  endif
+
+                  ! scale irrigation and tile drainage area fractions to subgrid crop fraction
+                  if ( NoahmpIO%IVGTYP(I,J) = NoahmpIO%ISCROP_TABLE ) then
+                      if( NoahmpIO%SubGrdFracRescaled(I,J,N) > 0.0 ) then
+                          NoahmpIO%IRFRACT(I,J) = NoahmpIO%IRFRACT(I,J)/NoahmpIO%SubGrdFracRescaled(I,J,N)
+                          NoahmpIO%SIFRACT(I,J) = NoahmpIO%SIFRACT(I,J)/NoahmpIO%SubGrdFracRescaled(I,J,N)
+                          NoahmpIO%MIFRACT(I,J) = NoahmpIO%MIFRACT(I,J)/NoahmpIO%SubGrdFracRescaled(I,J,N)
+                          NoahmpIO%FIFRACT(I,J) = NoahmpIO%FIFRACT(I,J)/NoahmpIO%SubGrdFracRescaled(I,J,N)
+                          NoahmpIO%TD_FRACTION(I,J) = NoahmpIO%TD_FRACTION(I,J)/NoahmpIO%SubGrdFracRescaled(I,J,N)
                       else
-                         NoahmpIO%CROPCAT(I,J)  = NoahmpIO%default_crop_table
-                         NoahmpIO%LFMASSXY(I,J) = NoahmpIO%LAI(I,J) / 0.035
-                         NoahmpIO%STMASSXY(I,J) = NoahmpIO%XSAIXY(I,J) / 0.003
-                      endif
-                   endif
+                          NoahmpIO%IRFRACT(I,J) = 0.0
+                          NoahmpIO%SIFRACT(I,J) = 0.0
+                          NoahmpIO%MIFRACT(I,J) = 0.0
+                          NoahmpIO%FIFRACT(I,J) = 0.0
+                          NoahmpIO%TD_FRACTION(I,J) = 0.0
+                      endif   
+                  endif
                 endif
-
-                ! Noah-MP irrigation scheme
-                if ( (NoahmpIO%IOPT_IRR >= 1) .and. (NoahmpIO%IOPT_IRR <= 3) ) then
-                   if ( (NoahmpIO%IOPT_IRRM == 0) .or. (NoahmpIO%IOPT_IRRM ==1) ) then       ! sprinkler
-                      NoahmpIO%IRNUMSI(I,J) = 0
-                      NoahmpIO%IRWATSI(I,J) = 0.0
-                      NoahmpIO%IRELOSS(I,J) = 0.0
-                      NoahmpIO%IRRSPLH(I,J) = 0.0    
-                   elseif ( (NoahmpIO%IOPT_IRRM == 0) .or. (NoahmpIO%IOPT_IRRM == 2) ) then  ! micro or drip
-                      NoahmpIO%IRNUMMI(I,J) = 0
-                      NoahmpIO%IRWATMI(I,J) = 0.0
-                      NoahmpIO%IRMIVOL(I,J) = 0.0
-                   elseif ( (NoahmpIO%IOPT_IRRM == 0) .or. (NoahmpIO%IOPT_IRRM == 3) ) then  ! flood 
-                      NoahmpIO%IRNUMFI(I,J) = 0
-                      NoahmpIO%IRWATFI(I,J) = 0.0
-                      NoahmpIO%IRFIVOL(I,J) = 0.0
-                   endif
-                endif
-             endif
-          enddo ! I
-       enddo    ! J
+             enddo  ! N
+          enddo     ! I
+       enddo        ! J
        
        ! Given the soil layer thicknesses (in DZS), initialize the soil layer
        ! depths from the surface.
@@ -275,27 +315,29 @@ contains
        do J = jts, jtf
           do I = its, itf
              do IZ = -NoahmpIO%NSNOW+1, 0
-                if ( (NoahmpIO%SNLIQXY(I,IZ,J)+NoahmpIO%SNICEXY(I,IZ,J)) > 0.0 ) then
-                   NoahmpIO%MassConcBCPHIXY(I,IZ,J) = NoahmpIO%BCPHIXY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
-                   NoahmpIO%MassConcBCPHOXY(I,IZ,J) = NoahmpIO%BCPHOXY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
-                   NoahmpIO%MassConcOCPHIXY(I,IZ,J) = NoahmpIO%OCPHIXY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
-                   NoahmpIO%MassConcOCPHOXY(I,IZ,J) = NoahmpIO%OCPHOXY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
-                   NoahmpIO%MassConcDUST1XY(I,IZ,J) = NoahmpIO%DUST1XY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
-                   NoahmpIO%MassConcDUST2XY(I,IZ,J) = NoahmpIO%DUST2XY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
-                   NoahmpIO%MassConcDUST3XY(I,IZ,J) = NoahmpIO%DUST3XY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
-                   NoahmpIO%MassConcDUST4XY(I,IZ,J) = NoahmpIO%DUST4XY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
-                   NoahmpIO%MassConcDUST5XY(I,IZ,J) = NoahmpIO%DUST5XY(I,IZ,J) / (NoahmpIO%SNLIQXY(I,IZ,J) + NoahmpIO%SNICEXY(I,IZ,J))
-                else
-                   NoahmpIO%MassConcBCPHIXY(I,IZ,J) = 0.0
-                   NoahmpIO%MassConcBCPHOXY(I,IZ,J) = 0.0
-                   NoahmpIO%MassConcOCPHIXY(I,IZ,J) = 0.0
-                   NoahmpIO%MassConcOCPHOXY(I,IZ,J) = 0.0
-                   NoahmpIO%MassConcDUST1XY(I,IZ,J) = 0.0
-                   NoahmpIO%MassConcDUST2XY(I,IZ,J) = 0.0
-                   NoahmpIO%MassConcDUST3XY(I,IZ,J) = 0.0
-                   NoahmpIO%MassConcDUST4XY(I,IZ,J) = 0.0
-                   NoahmpIO%MassConcDUST5XY(I,IZ,J) = 0.0
-                endif
+                do N = 1, NoahmpIO%NumberOfTiles(I,J) 
+                   if ( (NoahmpIO%SNLIQXY(I,IZ,J,N)+NoahmpIO%SNICEXY(I,IZ,J,N)) > 0.0 ) then
+                      NoahmpIO%MassConcBCPHIXY(I,IZ,J,N) = NoahmpIO%BCPHIXY(I,IZ,J,N) / (NoahmpIO%SNLIQXY(I,IZ,J,N) + NoahmpIO%SNICEXY(I,IZ,J,N))
+                      NoahmpIO%MassConcBCPHOXY(I,IZ,J,N) = NoahmpIO%BCPHOXY(I,IZ,J,N) / (NoahmpIO%SNLIQXY(I,IZ,J,N) + NoahmpIO%SNICEXY(I,IZ,J,N))
+                      NoahmpIO%MassConcOCPHIXY(I,IZ,J,N) = NoahmpIO%OCPHIXY(I,IZ,J,N) / (NoahmpIO%SNLIQXY(I,IZ,J,N) + NoahmpIO%SNICEXY(I,IZ,J,N))
+                      NoahmpIO%MassConcOCPHOXY(I,IZ,J,N) = NoahmpIO%OCPHOXY(I,IZ,J,N) / (NoahmpIO%SNLIQXY(I,IZ,J,N) + NoahmpIO%SNICEXY(I,IZ,J,N))
+                      NoahmpIO%MassConcDUST1XY(I,IZ,J,N) = NoahmpIO%DUST1XY(I,IZ,J,N) / (NoahmpIO%SNLIQXY(I,IZ,J,N) + NoahmpIO%SNICEXY(I,IZ,J,N))
+                      NoahmpIO%MassConcDUST2XY(I,IZ,J,N) = NoahmpIO%DUST2XY(I,IZ,J,N) / (NoahmpIO%SNLIQXY(I,IZ,J,N) + NoahmpIO%SNICEXY(I,IZ,J,N))
+                      NoahmpIO%MassConcDUST3XY(I,IZ,J,N) = NoahmpIO%DUST3XY(I,IZ,J,N) / (NoahmpIO%SNLIQXY(I,IZ,J,N) + NoahmpIO%SNICEXY(I,IZ,J,N))
+                      NoahmpIO%MassConcDUST4XY(I,IZ,J,N) = NoahmpIO%DUST4XY(I,IZ,J,N) / (NoahmpIO%SNLIQXY(I,IZ,J,N) + NoahmpIO%SNICEXY(I,IZ,J,N))
+                      NoahmpIO%MassConcDUST5XY(I,IZ,J,N) = NoahmpIO%DUST5XY(I,IZ,J,N) / (NoahmpIO%SNLIQXY(I,IZ,J,N) + NoahmpIO%SNICEXY(I,IZ,J,N))
+                   else
+                      NoahmpIO%MassConcBCPHIXY(I,IZ,J,N) = 0.0
+                      NoahmpIO%MassConcBCPHOXY(I,IZ,J,N) = 0.0
+                      NoahmpIO%MassConcOCPHIXY(I,IZ,J,N) = 0.0
+                      NoahmpIO%MassConcOCPHOXY(I,IZ,J,N) = 0.0
+                      NoahmpIO%MassConcDUST1XY(I,IZ,J,N) = 0.0
+                      NoahmpIO%MassConcDUST2XY(I,IZ,J,N) = 0.0
+                      NoahmpIO%MassConcDUST3XY(I,IZ,J,N) = 0.0
+                      NoahmpIO%MassConcDUST4XY(I,IZ,J,N) = 0.0
+                      NoahmpIO%MassConcDUST5XY(I,IZ,J,N) = 0.0
+                   endif
+                enddo
              enddo
           enddo
        enddo            

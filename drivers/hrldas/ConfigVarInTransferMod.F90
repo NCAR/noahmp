@@ -30,6 +30,7 @@ contains
     associate(                                      &
               I               => NoahmpIO%I        ,&
               J               => NoahmpIO%J        ,&
+              N               => NoahmpIO%N        ,&
               NumSnowLayerMax => NoahmpIO%NSNOW    ,&
               NumSoilLayer    => NoahmpIO%NSOIL     &
              )
@@ -85,7 +86,7 @@ contains
     noahmp%config%domain%FlagSoilProcess             = NoahmpIO%calculate_soil
     noahmp%config%domain%NumSoilTimeStep             = NoahmpIO%soil_update_steps
     noahmp%config%domain%NumSnowLayerMax             = NoahmpIO%NSNOW
-    noahmp%config%domain%NumSnowLayerNeg             = NoahmpIO%ISNOWXY(I,J)
+    noahmp%config%domain%NumSnowLayerNeg             = NoahmpIO%ISNOWXY(I,J,N)
     noahmp%config%domain%NumSoilLayer                = NoahmpIO%NSOIL
     noahmp%config%domain%GridIndexI                  = NoahmpIO%I
     noahmp%config%domain%GridIndexJ                  = NoahmpIO%J

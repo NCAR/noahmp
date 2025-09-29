@@ -21,87 +21,81 @@ module GroundWaterMmfMod
 
 contains
 
-  subroutine WTABLE_mmf_noahmp (NoahmpIO  ,NSOIL    ,XLAND   ,XICE    ,XICE_THRESHOLD,&
-                                ISICE     ,ISLTYP   ,SMOISEQ ,DZS     ,WTDDT         ,& !in
-                                FDEPTH    ,AREA     ,TOPO    ,ISURBAN ,IVGTYP        ,& !in
-                                RIVERCOND ,RIVERBED ,EQWTD   ,PEXP                   ,& !in
-                                SMOIS     ,SH2OXY   ,SMCWTD  ,WTD  , QLAT, QRF       ,& !inout
-                                DEEPRECH  ,QSPRING  ,QSLAT   ,QRFS ,QSPRINGS  ,RECH  ,& !inout
-                                ids,ide, jds,jde, kds,kde,                    &
-                                ims,ime, jms,jme, kms,kme,                    &
-                                its,ite, jts,jte, kts,kte                     )
-
+  subroutine WTABLE_mmf_noahmp (NoahmpIO)
+)
 ! ----------------------------------------------------------------------
-!  USE NOAHMP_TABLES, ONLY: BEXP_TABLE, DKSAT_TABLE, SMCMAX_TABLE,PSISAT_TABLE, SMCWLT_TABLE
-! ----------------------------------------------------------------------
-  IMPLICIT NONE
+  implicit none
 ! ----------------------------------------------------------------------
 ! IN only
 
   type(NoahmpIO_type), intent(in) :: NoahmpIO
 
-  INTEGER,  INTENT(IN   )     ::     ids,ide, jds,jde, kds,kde,  &
-       &                             ims,ime, jms,jme, kms,kme,  &
-       &                             its,ite, jts,jte, kts,kte
-    REAL(kind=kind_noahmp),   INTENT(IN)        ::     WTDDT
-    REAL(kind=kind_noahmp),   INTENT(IN)        ::     XICE_THRESHOLD
-    INTEGER,  INTENT(IN   )   ::     ISICE
-    REAL(kind=kind_noahmp),    DIMENSION( ims:ime, jms:jme )                     , &
-         &   INTENT(IN   )    ::                          XLAND, &
-                                                           XICE
-    INTEGER, DIMENSION( ims:ime, jms:jme )                     , &
-             INTENT(IN   )    ::                         ISLTYP, &
-                                                         IVGTYP
-    INTEGER, INTENT(IN)       ::     nsoil
-    INTEGER, INTENT(IN)       ::     ISURBAN
-    REAL(kind=kind_noahmp),     DIMENSION( ims:ime , 1:nsoil, jms:jme ), &
-         &    INTENT(IN)      ::                        SMOISEQ
-    REAL(kind=kind_noahmp),     DIMENSION(1:nsoil), INTENT(IN)     ::         DZS
-    REAL(kind=kind_noahmp),    DIMENSION( ims:ime, jms:jme )                     , &
-         &   INTENT(IN)       ::                         FDEPTH, &
-                                                           AREA, &
-                                                           TOPO, &
-                                                          EQWTD, &
-                                                           PEXP, &
-                                                       RIVERBED, &
-                                                      RIVERCOND
-
-! IN and OUT 
-
-    REAL(kind=kind_noahmp),     DIMENSION( ims:ime , 1:nsoil, jms:jme ), &
-         &    INTENT(INOUT)   ::                          SMOIS, &
-         &                                                SH2OXY 
-
-
-    REAL(kind=kind_noahmp),    DIMENSION( ims:ime, jms:jme )                     , &
-         &   INTENT(INOUT)    ::                            WTD, &
-                                                         SMCWTD, &
-                                                       DEEPRECH, &
-                                                          QSLAT, &
-                                                           QRFS, &
-                                                       QSPRINGS, &
-                                                           RECH
-
-!OUT
-
-    REAL(kind=kind_noahmp),    DIMENSION( ims:ime, jms:jme )                     , &
-         &   INTENT(OUT)      ::                            QRF, &  !groundwater - river water flux
-                                                        QSPRING     !water springing at the surface from groundwater convergence in the column
-
 !LOCAL  
   
-  INTEGER                          :: I,J,K  
-  REAL(kind=kind_noahmp), DIMENSION(       0:NSOIL)  :: ZSOIL !depth of soil layer-bottom [m]
-  REAL(kind=kind_noahmp),  DIMENSION(      1:NSOIL)  :: SMCEQ  !equilibrium soil water  content [m3/m3]
-  REAL(kind=kind_noahmp),  DIMENSION(      1:NSOIL)  :: SMC,SH2O
-  REAL(kind=kind_noahmp)                                        :: DELTAT,RCOND,TOTWATER,PSI &
-                                                ,WFLUXDEEP,WCNDDEEP,DDZ,SMCWTDMID &
-                                                ,WPLUS,WMINUS
-  REAL(kind=kind_noahmp),      DIMENSION( ims:ime, jms:jme ), INTENT(OUT)   :: QLAT
-  INTEGER,   DIMENSION( ims:ime, jms:jme )    :: LANDMASK !-1 for water (ice or no ice) and glacial areas, 1 for land where the LSM does its soil moisture calculations.
+  integer                                              :: I,J,K,N  
+  real(kind=kind_noahmp),  dimension(0:NSOIL)          :: ZSOIL                               !depth of soil layer-bottom [m]
+  real(kind=kind_noahmp),  dimension(1:NSOIL)          :: SMCEQ                               !equilibrium soil water  content [m3/m3]
+  real(kind=kind_noahmp),  dimension(1:NSOIL)          :: SMC,SH2O
+  real(kind=kind_noahmp)                               :: DELTAT,RCOND,TOTWATER,PSI,        &
+                                                          WFLUXDEEP,WCNDDEEP,DDZ,SMCWTDMID, &
+                                                          WPLUS,WMINUS
   
-  REAL(kind=kind_noahmp) :: BEXP,DKSAT,PSISAT,SMCMAX,SMCWLT
+  real(kind=kind_noahmp)                               :: BEXP,DKSAT,PSISAT,SMCMAX,SMCWLT
+  real(kind=kind_noahmp),  dimension(ims:ime, jms:jme) :: WaterTableAvg                       ! grid average WTPD for laterflow subroutine
+! --------------------------------------------------------------------------------    
+  associate(                                              &
+            ids              => NoahmpIO%ids             ,&
+            ide              => NoahmpIO%ide             ,&
+            jds              => NoahmpIO%jds             ,&
+            jde              => NoahmpIO%jde             ,&  
+            kds              => NoahmpIO%kds             ,&
+            kde              => NoahmpIO%kde             ,&
+            ims              => NoahmpIO%ims             ,&
+            ime              => NoahmpIO%ime             ,&  
+            jms              => NoahmpIO%jms             ,&
+            jme              => NoahmpIO%jme             ,&  
+            kms              => NoahmpIO%kms             ,&
+            kme              => NoahmpIO%kme             ,&
+            its              => NoahmpIO%its             ,&
+            ite              => NoahmpIO%ite             ,&  
+            jts              => NoahmpIO%jts             ,&
+            jte              => NoahmpIO%jte             ,&  
+            kts              => NoahmpIO%kts             ,&
+            kte              => NoahmpIO%kte             ,& 
+            NSOIL            => NoahmpIO%NSOIL           ,&                  
+            ISLTYP           => NoahmpIO%ISLTYP          ,&    
+            SMOISEQ          => NoahmpIO%SMOISEQ         ,&  ! mosaic 
+            DZS              => NoahmpIO%DZS             ,&       
+            WTDDT            => NoahmpIO%WTDDT           ,&  
+            FDEPTH           => NoahmpIO%FDEPTHXY        ,&     
+            AREA             => NoahmpIO%AREAXY          ,&      
+            TOPO             => NoahmpIO%TERRAIN         ,&      
+            ISURBAN          => NoahmpIO%ISURBAN         ,&   
+            IVGTYP           => NoahmpIO%IVGTYP          ,&   
+            RIVERCOND        => NoahmpIO%RIVERCONDXY     ,&   
+            RIVERBED         => NoahmpIO%RIVERBEDXY      ,&  
+            EQWTD            => NoahmpIO%EQZWT           ,&    
+            PEXP             => NoahmpIO%PEXPXY          ,&  
+            SMOIS            => NoahmpIO%SMOIS           ,&  ! mosaic    
+            SH2OXY           => NoahmpIO%SH2O            ,&  ! mosaic  
+            SMCWTD           => NoahmpIO%SMCWTDXY        ,&  ! mosaic 
+            WTD              => NoahmpIO%ZWTXY           ,&  ! mosaic 
+            QLAT             => NoahmpIO%QLATXY          ,&  
+            QRF              => NoahmpIO%QRFXY           ,&  
+            DEEPRECH         => NoahmpIO%DEEPRECHXY      ,&   
+            QSPRING          => NoahmpIO%QSPRINGXY       ,&    
+            QSLAT            => NoahmpIO%QSLATXY         ,&    
+            QRFS             => NoahmpIO%QRFSXY          ,&  
+            QSPRINGS         => NoahmpIO%QSPRINGSXY      ,&   
+            RECH             => NoahmpIO%RECHXY          ,&   
+            LANDMASK         => NoahmpIO%LANDMASK        ,&
+            NumberOfTiles    => NoahmpIO%NumberOfTiles   ,&
+            landusefRescaled => NoahmpIO%landusefRescaled &
+           )
+! -------------------------------------------------------------------------------- 
 
+
+    WaterTableAvg = 0.0
     DELTAT = WTDDT * 60. !timestep in seconds for this calculation
 
     ZSOIL(0) = 0.
@@ -110,19 +104,30 @@ contains
        ZSOIL(K)         = -DZS(K) + ZSOIL(K-1)
     END DO
 
-    WHERE(XLAND-1.5.LT.0..AND.XICE.LT. XICE_THRESHOLD.AND.IVGTYP.NE.ISICE)
-         LANDMASK=1
-    ELSEWHERE
-         LANDMASK=-1
-    ENDWHERE
-
+! calculate grid average WTD from subgrid WTD
+    IF (NoahmpIO%IOPT_MOSAIC .NE. 0) THEN
+      DO J=jts,jte
+         DO I=its,ite
+            IF(LANDMASK(I,J).GT.0)THEN 
+              DO N = 1, NumberOfTiles(I,J)
+                 WaterTableAvg (I,J) =  WaterTableAvg (I,J) + &
+                                        WTD (I,J,N) * landusefRescaled (I,J,N)
+              ENDDO 
+            ENDIF
+         ENDDO 
+      ENDDO   
+    ELSE
+      WaterTableAvg = WTD
+    ENDIF
 !Calculate lateral flow
 
+
   QLAT = 0.
-  CALL LATERALFLOW(NoahmpIO, ISLTYP,WTD,QLAT,FDEPTH,TOPO,LANDMASK,DELTAT,AREA   &
-                        ,ids,ide,jds,jde,kds,kde                                &
-                        ,ims,ime,jms,jme,kms,kme                                &
-                        ,its,ite,jts,jte,kts,kte                                )
+  CALL LATERALFLOW (NoahmpIO, ISLTYP,WaterTableAvg         ,&
+                   QLAT,FDEPTH,TOPO,LANDMASK,DELTAT,AREA   ,&
+                         ids,ide,jds,jde,kds,kde           ,&
+                         ims,ime,jms,jme,kms,kme           ,&
+                         its,ite,jts,jte,kts,kte            )
 
 
 !compute flux from grounwater to rivers in the cell
@@ -130,12 +135,12 @@ contains
     DO J=jts,jte
        DO I=its,ite
           IF(LANDMASK(I,J).GT.0)THEN
-             IF(WTD(I,J) .GT. RIVERBED(I,J) .AND.  EQWTD(I,J) .GT. RIVERBED(I,J)) THEN
-               RCOND = RIVERCOND(I,J) * EXP(PEXP(I,J)*(WTD(I,J)-EQWTD(I,J)))
+             IF(WaterTableAvg(I,J) .GT. RIVERBED(I,J) .AND.  EQWTD(I,J) .GT. RIVERBED(I,J)) THEN
+               RCOND = RIVERCOND(I,J) * EXP(PEXP(I,J)*(WaterTableAvg(I,J)-EQWTD(I,J)))
              ELSE    
                RCOND = RIVERCOND(I,J)       
              ENDIF
-             QRF(I,J) = RCOND * (WTD(I,J)-RIVERBED(I,J)) * DELTAT/AREA(I,J)
+             QRF(I,J) = RCOND * (WaterTableAvg(I,J)-RIVERBED(I,J)) * DELTAT/AREA(I,J)
 !for now, dont allow it to go from river to groundwater
              QRF(I,J) = MAX(QRF(I,J),0.)
           ELSE
@@ -146,56 +151,60 @@ contains
 
     DO J=jts,jte
        DO I=its,ite
-          IF(LANDMASK(I,J).GT.0)THEN
+          IF(LANDMASK(I,J).GT.0)THEN 
+             BEXP   = NoahmpIO%BEXP_TABLE   (ISLTYP(I,J))  ! mosaic added for soil vars
+             DKSAT  = NoahmpIO%DKSAT_TABLE  (ISLTYP(I,J))
+             PSISAT = -1.0*NoahmpIO%PSISAT_TABLE (ISLTYP(I,J))
+             SMCMAX = NoahmpIO%SMCMAX_TABLE (ISLTYP(I,J))
+             SMCWLT = NoahmpIO%SMCWLT_TABLE (ISLTYP(I,J))
 
-            BEXP   = NoahmpIO%BEXP_TABLE   (ISLTYP(I,J))
-            DKSAT  = NoahmpIO%DKSAT_TABLE  (ISLTYP(I,J))
-            PSISAT = -1.0*NoahmpIO%PSISAT_TABLE (ISLTYP(I,J))
-            SMCMAX = NoahmpIO%SMCMAX_TABLE (ISLTYP(I,J))
-            SMCWLT = NoahmpIO%SMCWLT_TABLE (ISLTYP(I,J))
+            IF(IVGTYP(I,J)==NoahmpIO%ISURBAN)THEN
+               SMCMAX = 0.45
+               SMCWLT = 0.40
+            ENDIF
 
-             IF(IVGTYP(I,J)==NoahmpIO%ISURBAN)THEN
-                 SMCMAX = 0.45
-                 SMCWLT = 0.40
-             ENDIF
-
+            DO N = 1, NumberOfTiles(I,J)
 !for deep water table calculate recharge
-             IF(WTD(I,J) < ZSOIL(NSOIL)-DZS(NSOIL))THEN
+               IF(WTD(I,J,N) < ZSOIL(NSOIL)-DZS(NSOIL))THEN
 !assume all liquid if the wtd is deep
-                DDZ = ZSOIL(NSOIL)-WTD(I,J)
-                SMCWTDMID = 0.5 * (SMCWTD(I,J) + SMCMAX )
-                PSI = PSISAT * ( SMCMAX / SMCWTD(I,J) ) ** BEXP
-                WCNDDEEP = DKSAT * ( SMCWTDMID / SMCMAX ) ** (2.0*BEXP + 3.0)
-                WFLUXDEEP =  - DELTAT * WCNDDEEP * ( (PSISAT-PSI) / DDZ - 1.)
+                  DDZ             = ZSOIL(NSOIL)-WTD(I,J,N)
+                  SMCWTDMID       = 0.5 * (SMCWTD(I,J,N) + SMCMAX )
+                  PSI             = PSISAT * ( SMCMAX / SMCWTD(I,J,N) ) ** BEXP
+                  WCNDDEEP        = DKSAT * ( SMCWTDMID / SMCMAX ) ** (2.0*BEXP + 3.0)
+                  WFLUXDEEP       =  - DELTAT * WCNDDEEP * ( (PSISAT-PSI) / DDZ - 1.)
 !update deep soil moisture
-                SMCWTD(I,J) = SMCWTD(I,J)  + (DEEPRECH(I,J) -  WFLUXDEEP)  / DDZ
-                WPLUS       = MAX((SMCWTD(I,J)-SMCMAX), 0.0) * DDZ
-                WMINUS       = MAX((1.E-4-SMCWTD(I,J)), 0.0) * DDZ
-                SMCWTD(I,J) = MAX( MIN(SMCWTD(I,J),SMCMAX) , 1.E-4)
-                WFLUXDEEP = WFLUXDEEP + WPLUS - WMINUS
-                DEEPRECH(I,J) = WFLUXDEEP
-              ENDIF
+                  SMCWTD(I,J,N)   = SMCWTD(I,J,N)  + (DEEPRECH(I,J,N) -  WFLUXDEEP)  / DDZ
+                  WPLUS           = MAX((SMCWTD(I,J,N)-SMCMAX), 0.0) * DDZ
+                  WMINUS          = MAX((1.E-4-SMCWTD(I,J,N)), 0.0) * DDZ
+                  SMCWTD(I,J,N)   = MAX( MIN(SMCWTD(I,J,N),SMCMAX) , 1.E-4)
+                  WFLUXDEEP       = WFLUXDEEP + WPLUS - WMINUS
+                  DEEPRECH(I,J,N) = WFLUXDEEP
+               ENDIF
 
 
 !Total water flux to or from groundwater in the cell
-             TOTWATER = QLAT(I,J) - QRF(I,J) + DEEPRECH(I,J)
+               IF (NoahmpIO%IOPT_MOSAIC .NE. 0) THEN
+                  TOTWATER = landusefRescaled (I,J,N) * (QLAT(I,J) - QRF(I,J)) + DEEPRECH(I,J,N) 
+               ELSE 
+                  TOTWATER = QLAT(I,J) - QRF(I,J) + DEEPRECH(I,J,N)                             !If mosaic not ON, N=1
+               ENDIF
 
-             SMC(1:NSOIL) = SMOIS(I,1:NSOIL,J)
-             SH2O(1:NSOIL) = SH2OXY(I,1:NSOIL,J)
-             SMCEQ(1:NSOIL) = SMOISEQ(I,1:NSOIL,J)
+               SMC(1:NSOIL)   = SMOIS(I,1:NSOIL,J,N)
+               SH2O(1:NSOIL)  = SH2OXY(I,1:NSOIL,J,N)
+               SMCEQ(1:NSOIL) = SMOISEQ(I,1:NSOIL,J,N)
 
 !Update the water table depth and soil moisture
-             CALL UPDATEWTD ( NSOIL, DZS , ZSOIL, SMCEQ, SMCMAX, SMCWLT, PSISAT, BEXP ,I , J , &!in
-                              TOTWATER, WTD(I,J), SMC, SH2O, SMCWTD(I,J)      , &!inout
-                              QSPRING(I,J) ) !out
+               CALL UPDATEWTD ( NSOIL, DZS , ZSOIL, SMCEQ, SMCMAX, SMCWLT, PSISAT, BEXP, I, J, &!in
+                                TOTWATER, WTD(I,J,N), SMC, SH2O, SMCWTD(I,J,N),                &!inout
+                                QSPRING(I,J,N) ) !out
 
 !now update soil moisture
-             SMOIS(I,1:NSOIL,J) = SMC(1:NSOIL)
-             SH2OXY(I,1:NSOIL,J) = SH2O(1:NSOIL)
-
-           ENDIF
-       ENDDO
-    ENDDO
+               SMOIS(I,1:NSOIL,J,N)  = SMC(1:NSOIL)
+               SH2OXY(I,1:NSOIL,J,N) = SH2O(1:NSOIL)
+            ENDDO ! N
+          ENDIF
+       ENDDO       ! I
+    ENDDO          ! J
 
 !accumulate fluxes for output
 
@@ -203,15 +212,18 @@ contains
        DO I=its,ite
          IF(LANDMASK(I,J).GT.0)THEN
            QSLAT(I,J) = QSLAT(I,J) + QLAT(I,J)*1.E3
-           QRFS(I,J) = QRFS(I,J) + QRF(I,J)*1.E3
-           QSPRINGS(I,J) = QSPRINGS(I,J) + QSPRING(I,J)*1.E3
-           RECH(I,J) = RECH(I,J) + DEEPRECH(I,J)*1.E3
-!zero out DEEPRECH
-           DEEPRECH(I,J) =0.
+           QRFS(I,J)  = QRFS(I,J) + QRF(I,J)*1.E3
+           DO N = 1, NumberOfTiles(I,J)
+              QSPRINGS(I,J) = QSPRINGS(I,J) + QSPRING(I,J,N)*1.E3
+              RECH(I,J,N)   = RECH(I,J,N)   + DEEPRECH(I,J,N)*1.E3
+              !zero out DEEPRECH
+              DEEPRECH(I,J,N) =0.
+           ENDDO
          ENDIF
        ENDDO
     ENDDO
 
+    end associate
   end subroutine WTABLE_mmf_noahmp
 
 

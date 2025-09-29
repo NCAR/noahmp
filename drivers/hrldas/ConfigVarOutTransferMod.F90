@@ -28,16 +28,17 @@ contains
     associate(                                                         &
               I               => noahmp%config%domain%GridIndexI      ,&
               J               => noahmp%config%domain%GridIndexJ      ,&
+              N               => NoahmpIO%N                           ,&
               NumSnowLayerMax => noahmp%config%domain%NumSnowLayerMax ,&
               NumSoilLayer    => noahmp%config%domain%NumSoilLayer     &
              )
 ! ----------------------------------------------------------------------
 
     ! config domain variables
-    NoahmpIO%ISNOWXY(I,J)  = noahmp%config%domain%NumSnowLayerNeg
-    NoahmpIO%ZSNSOXY(I,-NumSnowLayerMax+1:NumSoilLayer,J) = &
+    NoahmpIO%ISNOWXY(I,J,N)  = noahmp%config%domain%NumSnowLayerNeg
+    NoahmpIO%ZSNSOXY(I,-NumSnowLayerMax+1:NumSoilLayer,J,N) = &
                             noahmp%config%domain%DepthSnowSoilLayer(-NumSnowLayerMax+1:NumSoilLayer)
-    NoahmpIO%FORCZLSM(I,J) = noahmp%config%domain%RefHeightAboveSfc
+    NoahmpIO%FORCZLSM(I,J,N) = noahmp%config%domain%RefHeightAboveSfc
 
     end associate
 

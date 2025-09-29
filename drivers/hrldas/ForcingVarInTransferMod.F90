@@ -33,7 +33,8 @@ contains
 ! ---------------------------------------------------------------
     associate(                                           &
               I      => noahmp%config%domain%GridIndexI ,&
-              J      => noahmp%config%domain%GridIndexJ  &
+              J      => noahmp%config%domain%GridIndexJ ,&
+              N      => NoahmpIO%N                       &
              )
 ! ---------------------------------------------------------------
 
@@ -63,8 +64,8 @@ contains
     noahmp%forcing%PrecipSnowRefHeight     = noahmp%forcing%PrecipSnowRefHeight + PrecipOtherRefHeight * NoahmpIO%SR(I,J)
 
     ! downward solar radiation direct/diffuse and visible/NIR partition
-    noahmp%forcing%RadSwDirFrac            = NoahmpIO%RadSwDirFrac(I,J)
-    noahmp%forcing%RadSwVisFrac            = NoahmpIO%RadSwVisFrac(I,J)
+    noahmp%forcing%RadSwDirFrac            = NoahmpIO%RadSwDirFrac(I,J,N)
+    noahmp%forcing%RadSwVisFrac            = NoahmpIO%RadSwVisFrac(I,J,N)
 
     ! SNICAR aerosol deposition flux forcing
     if ( noahmp%config%nmlist%OptSnowAlbedo == 3 ) then
@@ -79,15 +80,15 @@ contains
           noahmp%forcing%DepDust4          = NoahmpIO%DepDust4_TABLE
           noahmp%forcing%DepDust5          = NoahmpIO%DepDust5_TABLE
        else
-          noahmp%forcing%DepBChydropho     = NoahmpIO%DepBChydrophoXY(I,J)
-          noahmp%forcing%DepBChydrophi     = NoahmpIO%DepBChydrophiXY(I,J)
-          noahmp%forcing%DepOChydropho     = NoahmpIO%DepOChydrophoXY(I,J)
-          noahmp%forcing%DepOChydrophi     = NoahmpIO%DepOChydrophiXY(I,J)
-          noahmp%forcing%DepDust1          = NoahmpIO%DepDust1XY(I,J)
-          noahmp%forcing%DepDust2          = NoahmpIO%DepDust2XY(I,J)
-          noahmp%forcing%DepDust3          = NoahmpIO%DepDust3XY(I,J)
-          noahmp%forcing%DepDust4          = NoahmpIO%DepDust4XY(I,J)
-          noahmp%forcing%DepDust5          = NoahmpIO%DepDust5XY(I,J)
+          noahmp%forcing%DepBChydropho     = NoahmpIO%DepBChydrophoXY(I,J,N)
+          noahmp%forcing%DepBChydrophi     = NoahmpIO%DepBChydrophiXY(I,J,N)
+          noahmp%forcing%DepOChydropho     = NoahmpIO%DepOChydrophoXY(I,J,N)
+          noahmp%forcing%DepOChydrophi     = NoahmpIO%DepOChydrophiXY(I,J,N)
+          noahmp%forcing%DepDust1          = NoahmpIO%DepDust1XY(I,J,N)
+          noahmp%forcing%DepDust2          = NoahmpIO%DepDust2XY(I,J,N)
+          noahmp%forcing%DepDust3          = NoahmpIO%DepDust3XY(I,J,N)
+          noahmp%forcing%DepDust4          = NoahmpIO%DepDust4XY(I,J,N)
+          noahmp%forcing%DepDust5          = NoahmpIO%DepDust5XY(I,J,N)
        endif
     endif
 
