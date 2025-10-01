@@ -8,7 +8,9 @@ module NoahmpWriteLandMod
 
    integer, save, private :: ncid, terrain, snowh, shbxy, evbxy, &
                              vegfra, gvfmin, gvfmax, tsk, emiss, &
-                             albsfcdirxy_vis, albsfcdifxy_vis
+                             albsfcdirxy_vis, albsfcdifxy_vis, &
+                             savxy, sagxy, pahxy, firaxy, hfx, &
+                             lh, grdflx, ghbxy, canhsxy
 
 contains
 
@@ -63,7 +65,15 @@ contains
          ierr = nf90_def_var(ncid, "EMISS", NF90_FLOAT, (/nx, ny/), emiss)
          ierr = nf90_def_var(ncid, "ALBSFCDIRXY_VIS", NF90_FLOAT, (/nx, ny/), albsfcdirxy_vis)
          ierr = nf90_def_var(ncid, "ALBSFCDIFXY_VIS", NF90_FLOAT, (/nx, ny/), albsfcdifxy_vis)
- 
+         ierr = nf90_def_var(ncid, "SAVXY", NF90_FLOAT, (/nx, ny/), savxy)
+         ierr = nf90_def_var(ncid, "SAGXY", NF90_FLOAT, (/nx, ny/), sagxy)
+         ierr = nf90_def_var(ncid, "PAHXY", NF90_FLOAT, (/nx, ny/), pahxy)
+         ierr = nf90_def_var(ncid, "FIRAXY", NF90_FLOAT, (/nx, ny/), firaxy)
+         ierr = nf90_def_var(ncid, "HFX", NF90_FLOAT, (/nx, ny/), hfx)
+         ierr = nf90_def_var(ncid, "LH", NF90_FLOAT, (/nx, ny/), lh)
+         ierr = nf90_def_var(ncid, "GRDFLX", NF90_FLOAT, (/nx, ny/), grdflx)
+         ierr = nf90_def_var(ncid, "GHBXY", NF90_FLOAT, (/nx, ny/), ghbxy)
+         ierr = nf90_def_var(ncid, "CANHSXY", NF90_FLOAT, (/nx, ny/), canhsxy)
          ! End definition mode
          ierr = nf90_enddef(ncid)
       end if
@@ -84,6 +94,16 @@ contains
       ierr = nf90_put_var(ncid, emiss, NoahmpIO%EMISS, start=start, count=count)
       ierr = nf90_put_var(ncid, albsfcdirxy_vis, NoahmpIO%ALBSFCDIRXY(:,1,:), start=start, count=count)
       ierr = nf90_put_var(ncid, albsfcdifxy_vis, NoahmpIO%ALBSFCDIFXY(:,1,:), start=start, count=count)
+      ierr = nf90_put_var(ncid, savxy, NoahmpIO%SAVXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, sagxy, NoahmpIO%SAGXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, pahxy, NoahmpIO%PAHXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, firaxy, NoahmpIO%FIRAXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, hfx, NoahmpIO%HFX, start=start, count=count)
+      ierr = nf90_put_var(ncid, lh, NoahmpIO%LH, start=start, count=count)
+      ierr = nf90_put_var(ncid, grdflx, NoahmpIO%GRDFLX, start=start, count=count)
+      ierr = nf90_put_var(ncid, ghbxy, NoahmpIO%GHBXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, canhsxy, NoahmpIO%CANHSXY, start=start, count=count)
+
 
       if (NoahmpIO%blkid == (maxblocks-1)) then
          ! Close file
