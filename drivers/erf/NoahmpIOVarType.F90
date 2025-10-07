@@ -170,7 +170,7 @@ module NoahmpIOVarType
     real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  TSK                 ! surface radiative temperature [K]
     real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  HFX                 ! sensible heat flux [W m-2]
     real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  QFX                 ! latent heat flux [kg s-1 m-2]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  LH                  ! latent heat flux [W m-2]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  LH                  ! latent heat flux [W m-2]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  GRDFLX              ! ground/snow heat flux [W m-2]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SMSTAV              ! soil moisture avail. [not used]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SMSTOT              ! total soil water [mm][not used]

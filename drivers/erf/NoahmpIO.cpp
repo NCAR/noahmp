@@ -61,7 +61,7 @@ void NoahmpIO_type::VarInitDefault() {
       QV_CURR = NoahArray3D<double>(fptr.QV_CURR, {xstart,kds,ystart}, {xend,kde,yend});
 
       HFX = NoahArray2D<double>(fptr.HFX, {xstart,ystart}, {xend,yend});
-      QFX = NoahArray2D<double>(fptr.QFX, {xstart,ystart}, {xend,yend});
+      LH = NoahArray2D<double>(fptr.LH, {xstart,ystart}, {xend,yend});
 
       SWDOWN = NoahArray2D<double>(fptr.SWDOWN, {xstart,ystart}, {xend,yend});
       GLW = NoahArray2D<double>(fptr.GLW, {xstart,ystart}, {xend,yend});

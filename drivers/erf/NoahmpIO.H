@@ -24,7 +24,7 @@ extern "C" {
         double* V_PHY = nullptr;
         double* QV_CURR = nullptr;
         double* HFX = nullptr;
-        double* QFX = nullptr;
+        double* LH = nullptr;
         double* SWDOWN = nullptr;
         double* GLW = nullptr;
         double* TSK = nullptr;
@@ -70,7 +70,7 @@ class NoahmpIO_type {
         NoahArray3D<double> V_PHY;
         NoahArray3D<double> QV_CURR;
         NoahArray2D<double> HFX;
-        NoahArray2D<double> QFX;
+        NoahArray2D<double> LH;
         NoahArray2D<double> SWDOWN;
         NoahArray2D<double> GLW;
         NoahArray2D<double> TSK;

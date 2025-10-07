@@ -49,7 +49,7 @@ module NoahmpIO_fi
     type(C_PTR) :: comm
     type(C_PTR) :: XLAT, WSLAKEXY
     type(C_PTR) :: U_PHY, T_PHY, V_PHY, QV_CURR
-    type(C_PTR) :: HFX, QFX
+    type(C_PTR) :: HFX, LH
     type(C_PTR) :: SWDOWN, GLW, TSK, EMISS
     type(C_PTR) :: ALBSFCDIRXY, ALBSFCDIFXY
     type(C_PTR) :: COSZEN
@@ -127,7 +127,7 @@ contains
     NoahmpIO_cptr%V_PHY = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%V_PHY)
     NoahmpIO_cptr%QV_CURR = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%QV_CURR)
     NoahmpIO_cptr%HFX = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%HFX)
-    NoahmpIO_cptr%QFX = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%QFX)
+    NoahmpIO_cptr%LH = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%LH)
     NoahmpIO_cptr%SWDOWN = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%SWDOWN)
     NoahmpIO_cptr%GLW = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%GLW)
     NoahmpIO_cptr%TSK = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%TSK)
