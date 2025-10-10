@@ -72,6 +72,7 @@ void NoahmpIO_type::VarInitDefault() {
       ALBSFCDIFXY = NoahArray3D<double>(fptr.ALBSFCDIFXY, {xstart,1,ystart}, {xend,2,yend});
 
       COSZEN = NoahArray2D<double>(fptr.COSZEN, {xstart,ystart}, {xend,yend});
+      P8W = NoahArray3D<double>(fptr.P8W, {xstart,kds,ystart}, {xend,kde,yend});
 };
 
 
