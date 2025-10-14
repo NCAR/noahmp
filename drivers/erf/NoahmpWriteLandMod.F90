@@ -10,7 +10,8 @@ module NoahmpWriteLandMod
                              vegfra, gvfmin, gvfmax, tsk, emiss, &
                              albsfcdirxy, albsfcdifxy, &
                              savxy, sagxy, pahxy, firaxy, hfx, &
-                             lh, grdflx, ghbxy, canhsxy, tslb, smois
+                             lh, grdflx, ghbxy, canhsxy, tslb, smois, &
+                             tau_ew, tau_ns
 
 contains
 
@@ -78,6 +79,8 @@ contains
          ierr = nf90_def_var(ncid, "CANHSXY", NF90_FLOAT, (/nx, ny/), canhsxy)
          ierr = nf90_def_var(ncid, "TSLB", NF90_FLOAT, (/nx, nsoil, ny/), tslb)
          ierr = nf90_def_var(ncid, "SMOIS", NF90_FLOAT, (/nx, nsoil, ny/), smois)
+         ierr = nf90_def_var(ncid, "TAU_EW", NF90_FLOAT, (/nx, ny/), tau_ew)
+         ierr = nf90_def_var(ncid, "TAU_NS", NF90_FLOAT, (/nx, ny/), tau_ns)
          ! End definition mode
          ierr = nf90_enddef(ncid)
       end if
@@ -113,6 +116,8 @@ contains
                                                      count=(/count(1), NoahmpIO%NSOIL, count(2)/))
       ierr = nf90_put_var(ncid, smois, NoahmpIO%SMOIS, start=(/start(1), 1, start(2)/), &
                                                        count=(/count(1), NoahmpIO%NSOIL, count(2)/))
+      ierr = nf90_put_var(ncid, tau_ew, NoahmpIO%TAU_EW, start=start, count=count)
+      ierr = nf90_put_var(ncid, tau_ns, NoahmpIO%TAU_NS, start=start, count=count)
 
       if (NoahmpIO%blkid == (maxblocks-1)) then
          ! Close file

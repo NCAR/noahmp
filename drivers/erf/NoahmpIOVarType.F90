@@ -167,6 +167,8 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_SPAC             ! tile spacing
 
     ! INOUT (with generic LSM equivalent) (as defined in WRF)
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  TAU_EW              ! wind stress in east-west direction [N/m2]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  TAU_NS              ! wind stress in north-south direction [N/m2]
     real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  TSK                 ! surface radiative temperature [K]
     real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  HFX                 ! sensible heat flux [W m-2]
     real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  QFX                 ! latent heat flux [kg s-1 m-2]

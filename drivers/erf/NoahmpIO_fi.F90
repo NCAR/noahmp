@@ -53,6 +53,7 @@ module NoahmpIO_fi
     type(C_PTR) :: SWDOWN, GLW, TSK, EMISS
     type(C_PTR) :: ALBSFCDIRXY, ALBSFCDIFXY
     type(C_PTR) :: COSZEN, P8W
+    type(C_PTR) :: TAU_EW, TAU_NS
   end type NoahmpIO_type_fi
 
 contains
@@ -136,6 +137,8 @@ contains
     NoahmpIO_cptr%ALBSFCDIFXY = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%ALBSFCDIFXY)
     NoahmpIO_cptr%COSZEN = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%COSZEN)
     NoahmpIO_cptr%P8W = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%P8W)
+    NoahmpIO_cptr%TAU_EW = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%TAU_EW)
+    NoahmpIO_cptr%TAU_NS = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%TAU_NS)
   end subroutine NoahmpIOVarInitDefault_fi
 
   subroutine NoahmpInitMain_fi(NoahmpIO_cptr) bind(C, name="NoahmpInitMain_fi")
