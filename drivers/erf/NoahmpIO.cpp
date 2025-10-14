@@ -73,6 +73,9 @@ void NoahmpIO_type::VarInitDefault() {
 
       COSZEN = NoahArray2D<double>(fptr.COSZEN, {xstart,ystart}, {xend,yend});
       P8W = NoahArray3D<double>(fptr.P8W, {xstart,kds,ystart}, {xend,kde,yend});
+
+      TAU_EW = NoahArray2D<double>(fptr.TAU_EW, {xstart,ystart}, {xend,yend});
+      TAU_NS = NoahArray2D<double>(fptr.TAU_NS, {xstart,ystart}, {xend,yend});
 };
 
 
