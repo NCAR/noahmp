@@ -16,8 +16,8 @@ CXX      ?= mpicxx
 AR       ?= ar
 
 # --- Flags ---
-FFLAGS   ?= -O3 -cpp -fPIC -ffree-line-length-none -J$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_INC_DIR))
-CXXFLAGS ?= -O3 -fPIC -I$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_HOME)/drivers/erf)
+FFLAGS_NOAHMP   += -cpp -fPIC -ffree-line-length-none -J$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_INC_DIR))
+CXXFLAGS_NOAHMP += -fPIC -I$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_HOME)/drivers/erf)
 
 # --- NetCDF detection ---
 ifneq (, $(shell which nf-config 2>/dev/null))
@@ -28,7 +28,7 @@ else
     NETCDF_LIBS     ?= $(shell pkg-config --libs netcdf-fortran 2>/dev/null)
 endif
 
-FFLAGS += $(NETCDF_INCFLAGS)
+FFLAGS_NOAHMP += $(NETCDF_INCFLAGS)
 
 # --- Ensure directories exist ---
 $(shell mkdir -p $(NOAHMP_OBJ_DIR) $(NOAHMP_LIB_DIR) $(NOAHMP_INC_DIR))
@@ -54,13 +54,13 @@ DEPS := $(OBJS:.o=.d)
 # ======================================================================
 # Primary targets
 # ======================================================================
-.PHONY: all_noahmp clean_noahmp install_includes
+.PHONY: all_noahmp clean_noahmp noahmp_includes
 
-all_noahmp: $(NOAHMP_LIB) install_includes
+all_noahmp: $(NOAHMP_LIB) noahmp_includes
 
 $(NOAHMP_LIB): $(OBJS)
 	@mkdir -p $(NOAHMP_LIB_DIR)
-	@echo "📦 Archiving Noah-MP library → $@"
+	@echo "Archiving Noah-MP library: $@"
 	$(AR) rcs $@ $^
 
 # ======================================================================
@@ -68,25 +68,11 @@ $(NOAHMP_LIB): $(OBJS)
 # ======================================================================
 # Each .d file will contain lines like:
 #   obj/foo.o: obj/bar.o obj/baz.o
-
-#define make-dep
-#@echo "🔍 Generating dependencies for $<"
-#@mods=$$( $(MPIFF) -cpp -E $< 2>/dev/null | \
-#grep -i '^[[:space:]]*use[[:space:]]' | \
-#grep -viE 'intrinsic|netcdf|mpi|iso_fortran_env|omp_lib|iso_c_binding' | \
-#sed -E "s|^[[:space:]]*use[[:space:]]+(only:)?[[:space:]]*([a-zA-Z0-9_]+).*|\2|Ig" ); \
-#outfile=$(NOAHMP_OBJ_DIR)/$*.d; \
-#printf "$(NOAHMP_OBJ_DIR)/$*.o:" > $$outfile; \
-#for m in $$mods; do printf " $(NOAHMP_OBJ_DIR)/$${m}.o"; done >> $$outfile; \
-#echo "" >> $$outfile; \
-#test -s $$outfile || echo "$(NOAHMP_OBJ_DIR)/$*.o:" > $$outfile
-#endef
-
 define make-dep
-@echo "🔍 Generating dependencies for $<"
+@echo "Generating dependencies for $<"
 @outfile=$(NOAHMP_OBJ_DIR)/$*.d; \
 mkdir -p $(dir $$outfile); \
-mods=$$( $(MPIFF) $(FFLAGS) -cpp -E $< 2>/dev/null | \
+mods=$$( $(MPIFF) $(FFLAGS) $(FFLAGS_NOAHMP) -cpp -E $< 2>/dev/null | \
 sed 's/!.*//' | \
 grep -E '(^|[^A-Za-z0-9_])use[[:space:]]+[A-Za-z0-9_]+' | \
 grep -vE 'netcdf|mpi|iso_fortran_env|omp_lib|iso_c_binding|intrinsic' | \
@@ -104,7 +90,9 @@ $(NOAHMP_OBJ_DIR)/%.d: $(NOAHMP_HOME)/utility/%.F90 ; $(make-dep)
 $(NOAHMP_OBJ_DIR)/%.d: $(NOAHMP_HOME)/drivers/erf/%.F90 ; $(make-dep)
 
 # Include generated dependency files
--include $(DEPS)
+ifeq ($(MAKECMDGOALS),all_noahmp)
+  -include $(DEPS)
+endif
 
 # ======================================================================
 # Compilation rules
@@ -112,34 +100,34 @@ $(NOAHMP_OBJ_DIR)/%.d: $(NOAHMP_HOME)/drivers/erf/%.F90 ; $(make-dep)
 
 # --- Fortran src modules ---
 $(NOAHMP_OBJ_DIR)/%.o: $(NOAHMP_HOME)/src/%.F90 $(NOAHMP_OBJ_DIR)/%.d
-	@echo "⚙️  Compiling src: $<"
-	$(MPIFF) $(FFLAGS) -c $< -o $@
+	@echo "Compiling $(NOAHMP_HOME)/src: $<"
+	$(MPIFF) $(FFLAGS) $(FFLAGS_NOAHMP) -c $< -o $@
 
 # --- Fortran utility modules ---
 $(NOAHMP_OBJ_DIR)/%.o: $(NOAHMP_HOME)/utility/%.F90 $(NOAHMP_OBJ_DIR)/%.d
-	@echo "⚙️  Compiling util: $<"
-	$(MPIFF) $(FFLAGS) -c $< -o $@
+	@echo "Compiling $(NOAHMP_HOME)/util: $<"
+	$(MPIFF) $(FFLAGS) $(FFLAGS_NOAHMP) -c $< -o $@
 
 # --- Fortran driver modules ---
 $(NOAHMP_OBJ_DIR)/%.o: $(NOAHMP_HOME)/drivers/erf/%.F90 $(NOAHMP_OBJ_DIR)/%.d
-	@echo "⚙️  Compiling driver: $<"
-	$(MPIFF) $(FFLAGS) -c $< -o $@
+	@echo "Compiling $(NOAHMP_HOME)/driver: $<"
+	$(MPIFF) $(FFLAGS) $(FFLAGS_NOAHMP) -c $< -o $@
 
 # --- C++ sources ---
 $(NOAHMP_OBJ_DIR)/%.o: $(NOAHMP_HOME)/drivers/erf/%.cpp
-	@echo "⚙️  Compiling C++: $<"
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	@echo "Compiling Noah-MP C++: $<"
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_NOAHMP) -c $< -o $@
 
 $(NOAHMP_OBJ_DIR)/%.o: $(NOAHMP_HOME)/src/%.cpp
-	@echo "⚙️  Compiling C++: $<"
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	@echo "Compiling Noah-MP C++: $<"
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_NOAHMP) -c $< -o $@
 
 # ======================================================================
 # Install headers and modules
 # ======================================================================
-install_includes:
+noahmp_includes:
 	@mkdir -p $(NOAHMP_INC_DIR)
-	@echo "📤 Installing module (.mod) and header (.H) files → $(NOAHMP_INC_DIR)"
+	@echo "Installing module (.mod) and header (.H) files: $(NOAHMP_INC_DIR)"
 	@find $(NOAHMP_OBJ_DIR) -maxdepth 1 -type f -name "*.mod" -exec cp -u {} $(NOAHMP_INC_DIR)/ \;
 	@find $(NOAHMP_HOME)/drivers/erf -maxdepth 1 -type f -name "*.H" -exec cp -u {} $(NOAHMP_INC_DIR)/ \;
 
@@ -147,5 +135,5 @@ install_includes:
 # Cleaning
 # ======================================================================
 clean_noahmp:
-	@echo "🧹 Cleaning Noah-MP build artifacts..."
+	@echo "Cleaning Noah-MP build artifacts..."
 	rm -rf $(NOAHMP_OBJ_DIR) $(NOAHMP_LIB_DIR) $(NOAHMP_INC_DIR)
