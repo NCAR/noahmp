@@ -16,8 +16,8 @@ CXX      ?= mpicxx
 AR       ?= ar
 
 # --- Flags ---
-FFLAGS_NOAHMP   += -cpp -fPIC -ffree-line-length-none -J$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_INC_DIR))
-CXXFLAGS_NOAHMP += -fPIC -I$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_HOME)/drivers/erf)
+FFLAGS_NOAHMP   += -O3 -cpp -fPIC -ffree-line-length-none -J$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_INC_DIR))
+CXXFLAGS_NOAHMP += -O3 -fPIC -I$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_HOME)/drivers/erf)
 
 # --- NetCDF detection ---
 ifneq (, $(shell which nf-config 2>/dev/null))
