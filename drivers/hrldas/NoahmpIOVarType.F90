@@ -84,7 +84,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  DZ8W                ! thickness of atmo layers [m]
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  DZS                 ! thickness of soil layers [m]
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  ZSOIL               ! depth to soil interfaces [m]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  VEGFRA              ! vegetation fraction []
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  VEGFRA              ! vegetation fraction []
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TMN                 ! deep soil temperature [K]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  XLAND               ! =2 ocean; =1 land/seaice
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  XICE                ! fraction of grid that is seaice
