@@ -132,9 +132,9 @@ contains
           end if
 
           do k = 1, n_dominant
-             SubGrdFracRescaled(i,j,k)  =  rescaled_values
-             SubGrdIndexSorted(i,j,k)   =  sorted_indices
-             NumberOfTiles(i,j)         =  n_dominant
+             SubGrdFracRescaled(i,j,k)  =  rescaled_values(k)
+             SubGrdIndexSorted(i,j,k)   =  sorted_indices(k)
+             NumberOfTiles(i,j)         =  n_dominant ! it is <= NTiles_user
              NTilesMax                  =  min(max(NTilesMax,n_dominant), NTiles_user) ! maximum value across domain
           enddo
        end do

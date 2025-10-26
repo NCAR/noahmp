@@ -231,42 +231,42 @@ contains
     ! spatial varying soil texture and properties directly from input
     if ( noahmp%config%nmlist%OptSoilProperty == 4 ) then
        ! 3D soil properties
-       noahmp%water%param%SoilExpCoeffB          = NoahmpIO%BEXP_3D  (I,1:NumSoilLayer,J,N) ! C-H B exponent
-       noahmp%water%param%SoilMoistureDry        = NoahmpIO%SMCDRY_3D(I,1:NumSoilLayer,J,N) ! Soil Moisture Limit: Dry
-       noahmp%water%param%SoilMoistureWilt       = NoahmpIO%SMCWLT_3D(I,1:NumSoilLayer,J,N) ! Soil Moisture Limit: Wilt
-       noahmp%water%param%SoilMoistureFieldCap   = NoahmpIO%SMCREF_3D(I,1:NumSoilLayer,J,N) ! Soil Moisture Limit: Reference
-       noahmp%water%param%SoilMoistureSat        = NoahmpIO%SMCMAX_3D(I,1:NumSoilLayer,J,N) ! Soil Moisture Limit: Max
-       noahmp%water%param%SoilWatConductivitySat = NoahmpIO%DKSAT_3D (I,1:NumSoilLayer,J,N) ! Saturated Soil Conductivity
-       noahmp%water%param%SoilWatDiffusivitySat  = NoahmpIO%DWSAT_3D (I,1:NumSoilLayer,J,N) ! Saturated Soil Diffusivity
-       noahmp%water%param%SoilMatPotentialSat    = NoahmpIO%PSISAT_3D(I,1:NumSoilLayer,J,N) ! Saturated Matric Potential
-       noahmp%water%param%SoilConductivityRef    = NoahmpIO%REFDK_2D (I,J,N)                ! Reference Soil Conductivity
-       noahmp%water%param%SoilInfilFacRef        = NoahmpIO%REFKDT_2D(I,J,N)                ! Soil Infiltration Parameter
+       noahmp%water%param%SoilExpCoeffB          = NoahmpIO%BEXP_3D  (I,1:NumSoilLayer,J) ! C-H B exponent
+       noahmp%water%param%SoilMoistureDry        = NoahmpIO%SMCDRY_3D(I,1:NumSoilLayer,J) ! Soil Moisture Limit: Dry
+       noahmp%water%param%SoilMoistureWilt       = NoahmpIO%SMCWLT_3D(I,1:NumSoilLayer,J) ! Soil Moisture Limit: Wilt
+       noahmp%water%param%SoilMoistureFieldCap   = NoahmpIO%SMCREF_3D(I,1:NumSoilLayer,J) ! Soil Moisture Limit: Reference
+       noahmp%water%param%SoilMoistureSat        = NoahmpIO%SMCMAX_3D(I,1:NumSoilLayer,J) ! Soil Moisture Limit: Max
+       noahmp%water%param%SoilWatConductivitySat = NoahmpIO%DKSAT_3D (I,1:NumSoilLayer,J) ! Saturated Soil Conductivity
+       noahmp%water%param%SoilWatDiffusivitySat  = NoahmpIO%DWSAT_3D (I,1:NumSoilLayer,J) ! Saturated Soil Diffusivity
+       noahmp%water%param%SoilMatPotentialSat    = NoahmpIO%PSISAT_3D(I,1:NumSoilLayer,J) ! Saturated Matric Potential
+       noahmp%water%param%SoilConductivityRef    = NoahmpIO%REFDK_2D (I,J)                ! Reference Soil Conductivity
+       noahmp%water%param%SoilInfilFacRef        = NoahmpIO%REFKDT_2D(I,J)                ! Soil Infiltration Parameter
        ! 2D additional runoff6~8 parameters
-       noahmp%water%param%InfilFacVic            = NoahmpIO%BVIC_2D (I,J,N)                 ! VIC model infiltration parameter
-       noahmp%water%param%TensionWatDistrInfl    = NoahmpIO%AXAJ_2D (I,J,N)                 ! Xinanjiang: Tension water distribution inflection parameter
-       noahmp%water%param%TensionWatDistrShp     = NoahmpIO%BXAJ_2D (I,J,N)                 ! Xinanjiang: Tension water distribution shape parameter
-       noahmp%water%param%FreeWatDistrShp        = NoahmpIO%XXAJ_2D (I,J,N)                 ! Xinanjiang: Free water distribution shape parameter
-       noahmp%water%param%InfilFacDynVic         = NoahmpIO%BDVIC_2D(I,J,N)                 ! VIC model infiltration parameter
-       noahmp%water%param%InfilCapillaryDynVic   = NoahmpIO%GDVIC_2D(I,J,N)                 ! Mean Capillary Drive for infiltration models
-       noahmp%water%param%InfilHeteroDynVic      = NoahmpIO%BBVIC_2D(I,J,N)                 ! DVIC heterogeniety parameter for infiltraton
+       noahmp%water%param%InfilFacVic            = NoahmpIO%BVIC_2D (I,J)                 ! VIC model infiltration parameter
+       noahmp%water%param%TensionWatDistrInfl    = NoahmpIO%AXAJ_2D (I,J)                 ! Xinanjiang: Tension water distribution inflection parameter
+       noahmp%water%param%TensionWatDistrShp     = NoahmpIO%BXAJ_2D (I,J)                 ! Xinanjiang: Tension water distribution shape parameter
+       noahmp%water%param%FreeWatDistrShp        = NoahmpIO%XXAJ_2D (I,J)                 ! Xinanjiang: Free water distribution shape parameter
+       noahmp%water%param%InfilFacDynVic         = NoahmpIO%BDVIC_2D(I,J)                 ! VIC model infiltration parameter
+       noahmp%water%param%InfilCapillaryDynVic   = NoahmpIO%GDVIC_2D(I,J)                 ! Mean Capillary Drive for infiltration models
+       noahmp%water%param%InfilHeteroDynVic      = NoahmpIO%BBVIC_2D(I,J)                 ! DVIC heterogeniety parameter for infiltraton
        ! 2D irrigation params
-       noahmp%water%param%IrriFracThreshold      = NoahmpIO%IRR_FRAC_2D  (I,J,N)            ! irrigation Fraction
-       noahmp%water%param%IrriStopDayBfHarvest   = NoahmpIO%IRR_HAR_2D   (I,J,N)            ! number of days before harvest date to stop irrigation 
-       noahmp%water%param%IrriTriggerLaiMin      = NoahmpIO%IRR_LAI_2D   (I,J,N)            ! Minimum lai to trigger irrigation
-       noahmp%water%param%SoilWatDeficitAllow    = NoahmpIO%IRR_MAD_2D   (I,J,N)            ! management allowable deficit (0-1)
-       noahmp%water%param%IrriFloodLossFrac      = NoahmpIO%FILOSS_2D    (I,J,N)            ! fraction of flood irrigation loss (0-1) 
-       noahmp%water%param%IrriSprinklerRate      = NoahmpIO%SPRIR_RATE_2D(I,J,N)            ! mm/h, sprinkler irrigation rate
-       noahmp%water%param%IrriMicroRate          = NoahmpIO%MICIR_RATE_2D(I,J,N)            ! mm/h, micro irrigation rate
-       noahmp%water%param%IrriFloodRateFac       = NoahmpIO%FIRTFAC_2D   (I,J,N)            ! flood application rate factor
-       noahmp%water%param%IrriStopPrecipThr      = NoahmpIO%IR_RAIN_2D   (I,J,N)            ! maximum precipitation to stop irrigation trigger
+       noahmp%water%param%IrriFracThreshold      = NoahmpIO%IRR_FRAC_2D  (I,J)            ! irrigation Fraction
+       noahmp%water%param%IrriStopDayBfHarvest   = NoahmpIO%IRR_HAR_2D   (I,J)            ! number of days before harvest date to stop irrigation 
+       noahmp%water%param%IrriTriggerLaiMin      = NoahmpIO%IRR_LAI_2D   (I,J)            ! Minimum lai to trigger irrigation
+       noahmp%water%param%SoilWatDeficitAllow    = NoahmpIO%IRR_MAD_2D   (I,J)            ! management allowable deficit (0-1)
+       noahmp%water%param%IrriFloodLossFrac      = NoahmpIO%FILOSS_2D    (I,J)            ! fraction of flood irrigation loss (0-1) 
+       noahmp%water%param%IrriSprinklerRate      = NoahmpIO%SPRIR_RATE_2D(I,J)            ! mm/h, sprinkler irrigation rate
+       noahmp%water%param%IrriMicroRate          = NoahmpIO%MICIR_RATE_2D(I,J)            ! mm/h, micro irrigation rate
+       noahmp%water%param%IrriFloodRateFac       = NoahmpIO%FIRTFAC_2D   (I,J)            ! flood application rate factor
+       noahmp%water%param%IrriStopPrecipThr      = NoahmpIO%IR_RAIN_2D   (I,J)            ! maximum precipitation to stop irrigation trigger
        ! 2D tile drainage parameters
-       noahmp%water%param%LateralWatCondFac      = NoahmpIO%KLAT_FAC (I,J,N)                ! factor multiplier to hydraulic conductivity
-       noahmp%water%param%DrainFacSoilWat        = NoahmpIO%TDSMC_FAC(I,J,N)                ! factor multiplier to field capacity
-       noahmp%water%param%TileDrainCoeffSp       = NoahmpIO%TD_DC    (I,J,N)                ! drainage coefficient for simple
-       noahmp%water%param%TileDrainCoeff         = NoahmpIO%TD_DCOEF (I,J,N)                ! drainge coefficient for Hooghoudt 
-       noahmp%water%param%TileDrainDepth         = NoahmpIO%TD_DDRAIN(I,J,N)                ! depth of drain
-       noahmp%water%param%DrainTubeRadius        = NoahmpIO%TD_RADI  (I,J,N)                ! tile tube radius
-       noahmp%water%param%DrainTubeDist          = NoahmpIO%TD_SPAC  (I,J,N)                ! tile spacing
+       noahmp%water%param%LateralWatCondFac      = NoahmpIO%KLAT_FAC (I,J)                ! factor multiplier to hydraulic conductivity
+       noahmp%water%param%DrainFacSoilWat        = NoahmpIO%TDSMC_FAC(I,J)                ! factor multiplier to field capacity
+       noahmp%water%param%TileDrainCoeffSp       = NoahmpIO%TD_DC    (I,J)                ! drainage coefficient for simple
+       noahmp%water%param%TileDrainCoeff         = NoahmpIO%TD_DCOEF (I,J)                ! drainge coefficient for Hooghoudt 
+       noahmp%water%param%TileDrainDepth         = NoahmpIO%TD_DDRAIN(I,J)                ! depth of drain
+       noahmp%water%param%DrainTubeRadius        = NoahmpIO%TD_RADI  (I,J)                ! tile tube radius
+       noahmp%water%param%DrainTubeDist          = NoahmpIO%TD_SPAC  (I,J)                ! tile spacing
     endif
 
     ! spatial varying wetland parameters from input

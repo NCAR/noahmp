@@ -145,7 +145,7 @@ contains
        do J = jts, jtf
           do I = its, itf
              do N = 1, NoahmpIO%NumberOfTiles(I,J) 
-                if(NoahmpIO%IOPT_MOSAIC == 1) then                                           ! if mosaic is based ob lulc
+                if(NoahmpIO%IOPT_MOSAIC == 1) then                                           ! if mosaic is based ons lulc
                    NoahmpIO%IVGTYP(I,J) = NoahmpIO%SubGrdIndexSorted(I,J,N)
                 endif
                 NoahmpIO%QTDRAIN(I,J,N)  = 0.0
@@ -219,7 +219,7 @@ contains
                         NoahmpIO%LFMASSXY(I,J,N) = NoahmpIO%LAI(I,J,N) * 1000.0 / &
                                                  max(NoahmpIO%SLA_TABLE(NoahmpIO%IVGTYP(I,J)),1.0)  ! use LAI to initialize (v3.7)
                      endif
-                     NoahmpIO%STMASSXY(I,J,N) = NoahmpIO%XSAIXY(I,J) * 1000.0 / 3.0                ! use SAI to initialize (v3.7)
+                     NoahmpIO%STMASSXY(I,J,N) = NoahmpIO%XSAIXY(I,J,N) * 1000.0 / 3.0                ! use SAI to initialize (v3.7)
                      NoahmpIO%RTMASSXY(I,J,N) = 500.0                                              ! these are all arbitrary and probably should be
                      NoahmpIO%WOODXY(I,J,N)   = 500.0                                              ! in the table or read from initialization
                      NoahmpIO%STBLCPXY(I,J,N) = 1000.0
@@ -228,7 +228,7 @@ contains
                      NoahmpIO%GDDXY(I,J,N)    = 0    
 
                   ! Initialize crop for crop model
-                  if ( (NoahmpIO%IOPT_CROP == 1) .and. (NoahmpIO%IVGTYP(I,J) = NoahmpIO%ISCROP_TABLE) ) then
+                  if ( (NoahmpIO%IOPT_CROP == 1) .and. (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISCROP_TABLE) ) then
                      NoahmpIO%CROPCAT(I,J) = NoahmpIO%default_crop_table
                      if ( NoahmpIO%CROPTYPE(I,5,J) >= 0.5 ) then
                         NoahmpIO%RTMASSXY(I,J,N) = 0.0
@@ -255,7 +255,7 @@ contains
 
                   ! Noah-MP irrigation scheme 
                   if ( (NoahmpIO%IOPT_IRR >= 1) .and. (NoahmpIO%IOPT_IRR <= 3) .and. &
-                       (NoahmpIO%IVGTYP(I,J) = NoahmpIO%ISCROP_TABLE) ) then
+                       (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISCROP_TABLE) ) then
                      if ( (NoahmpIO%IOPT_IRRM == 0) .or. (NoahmpIO%IOPT_IRRM ==1) ) then       ! sprinkler
                         NoahmpIO%IRNUMSI(I,J,N) = 0
                         NoahmpIO%IRWATSI(I,J,N) = 0.0
@@ -273,7 +273,7 @@ contains
                   endif
 
                   ! scale irrigation and tile drainage area fractions to subgrid crop fraction
-                  if ( NoahmpIO%IVGTYP(I,J) = NoahmpIO%ISCROP_TABLE ) then
+                  if ( NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISCROP_TABLE ) then
                       if( NoahmpIO%SubGrdFracRescaled(I,J,N) > 0.0 ) then
                           NoahmpIO%IRFRACT(I,J) = NoahmpIO%IRFRACT(I,J)/NoahmpIO%SubGrdFracRescaled(I,J,N)
                           NoahmpIO%SIFRACT(I,J) = NoahmpIO%SIFRACT(I,J)/NoahmpIO%SubGrdFracRescaled(I,J,N)

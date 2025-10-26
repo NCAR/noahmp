@@ -99,7 +99,7 @@ contains
          NCOUNT = 0
          do J = jts, jtf
            do I = its, itf
-             if ( NoahmpIO%LANDMASK(I,J,1) > 0 ) then
+             if ( NoahmpIO%LANDMASK(I,J) > 0 ) then
                if ( QLAT(i,j) > 1.0e-2 ) then
                   NCOUNT = NCOUNT + 1
                   ZWTXY(I,J) = min(ZWTXY(I,J)+0.25, 0.0)

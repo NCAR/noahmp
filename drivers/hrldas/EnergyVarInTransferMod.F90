@@ -102,7 +102,7 @@ contains
     noahmp%energy%param%EmissivityIceSfc                          = NoahmpIO%EICE_TABLE
     noahmp%energy%param%ResistanceSoilExp                         = NoahmpIO%RSURF_EXP_TABLE
     noahmp%energy%param%ResistanceSnowSfc                         = NoahmpIO%RSURF_SNOW_TABLE
-    noahmp%energy%param%VegFracAnnMax                             = NoahmpIO%GVFMAX(I,J) / 100.0
+    noahmp%energy%param%VegFracAnnMax                             = NoahmpIO%GVFMAX(I,J,N) / 100.0
     noahmp%energy%param%VegFracGreen                              = NoahmpIO%VEGFRA(I,J,N) / 100.0
     noahmp%energy%param%TreeCrownRadius                           = NoahmpIO%RC_TABLE    (VegType)
     noahmp%energy%param%HeightCanopyTop                           = NoahmpIO%HVT_TABLE   (VegType)
