@@ -13,7 +13,6 @@ extern "C" {
         int *xstart, *xend, *ystart, *yend;
         int *nsoil, *nsnow;
         int *itimestep, *ntime;
-        char *llanduse;
         int *rank, *blkid, *level;
         int *comm;
 
@@ -41,14 +40,14 @@ extern "C" {
           int* ims, int* ime, int* jms, int* jme, int* kms, int* kme,
           int* its, int* ite, int* jts, int* jte, int* kts, int* kte,
           int* xstart, int* xend, int* ystart, int* yend, int* itimestep,
-          int* ntime, int* nsoil, int* nsnow, char* llanduse, int* rank,
+          int* ntime, int* nsoil, int* nsnow, int* rank,
           int* blkid, int* level, int *comm
         ):
           ids(ids), ide(ide), jds(jds), jde(jde), kds(kds), kde(kde),
           ims(ims), ime(ime), jms(jms), jme(jme), kms(kms), kme(kme),
           its(its), ite(ite), jts(jts), jte(jte), kts(kts), kte(kte),
           xstart(xstart), xend(xend), ystart(ystart), yend(yend), itimestep(itimestep),
-          ntime(ntime), nsoil(nsoil), nsnow(nsnow), llanduse(llanduse), rank(rank), blkid(blkid), 
+          ntime(ntime), nsoil(nsoil), nsnow(nsnow), rank(rank), blkid(blkid), 
           level(level), comm(comm) {}
     };
 }
@@ -62,7 +61,6 @@ class NoahmpIO_type {
         int xstart, xend, ystart, yend;
         int nsoil, nsnow;
         int itimestep, ntime;
-        char llanduse[257] = "";
         int rank, blkid, level;
         int comm;
 
@@ -89,7 +87,7 @@ class NoahmpIO_type {
                &ims, &ime, &jms, &jme, &kms, &kme,
                &its, &ite, &jts, &jte, &kts, &kte,
                &xstart, &xend, &ystart, &yend, &itimestep,
-               &ntime, &nsoil, &nsnow, &llanduse[0], &rank, &blkid, &level, &comm) {}
+               &ntime, &nsoil, &nsnow, &rank, &blkid, &level, &comm) {}
 
         void ScalarInitDefault();
         void VarInitDefault();

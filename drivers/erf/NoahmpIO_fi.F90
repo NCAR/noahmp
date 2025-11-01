@@ -45,7 +45,7 @@ module NoahmpIO_fi
     type(C_PTR) :: xstart, xend, ystart, yend
     type(C_PTR) :: nsoil, nsnow
     type(C_PTR) :: itimestep, ntime
-    type(C_PTR) :: llanduse, rank, blkid, level
+    type(C_PTR) :: rank, blkid, level
     type(C_PTR) :: comm
     type(C_PTR) :: XLAT, WSLAKEXY
     type(C_PTR) :: U_PHY, T_PHY, V_PHY, QV_CURR
@@ -101,9 +101,6 @@ contains
 
     call C_F_POINTER(NoahmpIO_cptr%ITIMESTEP, NoahmpIO_vect(level)%NoahmpIO(bid)%ITIMESTEP)
     call C_F_POINTER(NoahmpIO_cptr%NTIME, NoahmpIO_vect(level)%NoahmpIO(bid)%NTIME)
-
-    call C_F_POINTER(NoahmpIO_cptr%LLANDUSE, NoahmpIO_vect(level)%NoahmpIO(bid)%LLANDUSE)
-    NoahmpIO_vect(level)%NoahmpIO(bid)%LLANDUSE => NoahmpIO_vect(level)%NoahmpIO(bid)%LLANDUSE(1:256)
 
     call C_F_POINTER(NoahmpIO_cptr%RANK, NoahmpIO_vect(level)%NoahmpIO(bid)%RANK)
     call C_F_POINTER(NoahmpIO_cptr%COMM, NoahmpIO_vect(level)%NoahmpIO(bid)%COMM)
