@@ -52,7 +52,7 @@ NoahmpIO_cptr%TSK   = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%TSK)
 Check that both NoahmpIO_type_fi definitions (C++ and Fortran) have identical ordering.
 Ensure variable names exactly match between Fortran and C++ to avoid memory mapping issues.
 
-Only modify the files that are explicitly requested to modify.
+Only modify the files that are explicitly requested to modify. That is if I don't add contents of the file, do not edit it.
 
 ### Actual Task
 Modify and link the following variables declared in NoahmpIOVarType.F90 and allocated in NoahmpIOVarInitMod.F90:
