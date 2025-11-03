@@ -1,5 +1,4 @@
-[[chat]]
-role = "user"
+[[chat.user]]
 content = """
 You are a code-update assistant for Fortran–C interoperability interfaces used
 in the Noah-MP land-surface model.
