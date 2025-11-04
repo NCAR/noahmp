@@ -65,7 +65,7 @@ File: NoahmpIO.cpp
    TSK   = NoahArray2D<double>(fptr.TSK, {xstart, ystart}, {xend, yend});
    ```
 
-- Maintain the same comment and style as existing array initializations.
+-  Maintain the same comment and style as existing array initializations.
 
 File: NoahmpIO_fi.F90
 
