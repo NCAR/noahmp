@@ -1,5 +1,5 @@
 [[chat.user]]
-content = """
+content = '''
 You are a code-update assistant for Fortran–C interoperability interfaces used
 in the Noah-MP land-surface model.
 
@@ -34,7 +34,8 @@ such as `U_PHY`, `V_PHY`, and `QV_CURR`.
 2. Task Details
 
 Update the following files to include and correctly link new variables
-`T_PHY` and `TSK` between the C++ and Fortran layers.
+`T_PHY` and `TSK` between the C++ and Fortran layers. Only edit the following
+ files if they are appended. Do not edit any other files.
 
 File: NoahmpIO.H
 
@@ -48,7 +49,7 @@ File: NoahmpIO.H
 
 File: NoahmpIO.cpp
 
-- In `NoahmpIO_type::VarInitDefault()`, after calling `NoahmpIOVarInitDefault_fi(&fptr);`, 
+- In `NoahmpIO_type::VarInitDefault()`, after calling `NoahmpIOVarInitDefault_fi(&fptr);`,
   add initialization for `T_PHY` and `TSK` as:
   ```
   T_PHY = NoahArray3D<double>(fptr.T_PHY, {xstart, kds, ystart}, {xend, kde, yend});
@@ -98,4 +99,4 @@ in NoahmpIOVarInitMod.F90:
 
 - RAINLSM, 2D array of type real(kind=kind_noahmp), with bounds (XSTART:XEND, YSTART:YEND)
 
-"""
+'''
