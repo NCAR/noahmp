@@ -1,5 +1,7 @@
 # Usage: code-scribe update NoahmpIO.H NoahmpIO.cpp NoahpmIO_fi.F90 \
-#                           -p prompts/noahmpio_update.toml -m <openai|argo|..>
+#                           -r prompts/noahmpio_update.toml \
+#                           -p "Write a natural language prompt with variable name dimension etc." \
+#                           -m <openai|argo|..>
 #
 # Documentation: https://erf.readthedocs.io/en/latest/CouplingToNoahMP.html
 
@@ -107,8 +109,6 @@ contents of the file, do not edit it.
 
 4. Actual Task
 
-Create bindings for the following variables:
-
--  RAINLSM, 2D array of type real(kind=kind_noahmp), with bounds (XSTART:XEND, YSTART:YEND)
+Create bindings for the requsted variables
 
 '''
