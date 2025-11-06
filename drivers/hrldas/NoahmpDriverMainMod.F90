@@ -46,6 +46,7 @@ contains
     integer                             :: I
     integer                             :: J
     integer                             :: K
+    integer                             :: N    
     integer                             :: JMONTH, JDAY
     real(kind=kind_noahmp)              :: SOLAR_TIME 
     real(kind=kind_noahmp), dimension( 1:NoahmpIO%nsoil ) :: SAND
@@ -119,95 +120,109 @@ contains
        NoahmpIO%J = J
        if ( NoahmpIO%ITIMESTEP == 1 ) then
           do I = NoahmpIO%ITS, NoahmpIO%ITE
-             if ( (NoahmpIO%XLAND(I,J)-1.5) >= 0.0 ) then  ! Open water point
-                if ( NoahmpIO%XICE(I,J) == 1.0 ) print*,' sea-ice at water point, I=',I,'J=',J
-                NoahmpIO%SMSTAV(I,J) = 1.0
-                NoahmpIO%SMSTOT(I,J) = 1.0
-                do K = 1, NoahmpIO%NSOIL
-                   NoahmpIO%SMOIS(I,K,J) = 1.0
-                   NoahmpIO%TSLB(I,K,J)  = 273.16
-                enddo
-             else
-                if ( NoahmpIO%XICE(I,J) == 1.0 ) then      ! Sea-ice case
-                   NoahmpIO%SMSTAV(I,J) = 1.0
-                   NoahmpIO%SMSTOT(I,J) = 1.0
+             do N = 1,NoahmpIO%NumberOfTiles(I,J)             ! NoahMP mosaic/subgrid case
+                if ( (NoahmpIO%XLAND(I,J)-1.5) >= 0.0 ) then  ! Open water point
+                   if ( NoahmpIO%XICE(I,J) == 1.0 ) print*,' sea-ice at water point, I=',I,'J=',J
+                   NoahmpIO%SMSTAV(I,J,N) = 1.0
+                   NoahmpIO%SMSTOT(I,J,N) = 1.0
                    do K = 1, NoahmpIO%NSOIL
-                      NoahmpIO%SMOIS(I,K,J) = 1.0
+                      NoahmpIO%SMOIS(I,K,J,N) = 1.0
+                      NoahmpIO%TSLB(I,K,J,N)  = 273.16
                    enddo
+                else
+                   if ( NoahmpIO%XICE(I,J) == 1.0 ) then      ! Sea-ice case
+                     NoahmpIO%SMSTAV(I,J,N) = 1.0
+                     NoahmpIO%SMSTOT(I,J,N) = 1.0
+                     do K = 1, NoahmpIO%NSOIL
+                        NoahmpIO%SMOIS(I,K,J,N) = 1.0
+                     enddo
+                   endif
                 endif
-             endif
+             enddo
           enddo
        endif  ! end of initialization over ocean
 
        ILOOP : do I = NoahmpIO%ITS, NoahmpIO%ITE
 
           NoahmpIO%I = I
-          if ( NoahmpIO%XICE(I,J) >= NoahmpIO%XICE_THRESHOLD ) then  ! Sea-ice point
-             NoahmpIO%ICE                         = 1
-             NoahmpIO%SH2O(I,1:NoahmpIO%NSOIL,J) = 1.0
-             NoahmpIO%LAI (I,J)                  = 0.01
-             cycle ILOOP                                             ! Skip any sea-ice points
+          if ( NoahmpIO%XICE(I,J) >= NoahmpIO%XICE_THRESHOLD ) then                           ! Sea-ice point
+             NoahmpIO%ICE                                                         = 1
+             NoahmpIO%SH2O(I,1:NoahmpIO%NSOIL,J, 1:NoahmpIO%NumberOfTiles(I,J))   = 1.0
+             NoahmpIO%LAI (I,J,1:NoahmpIO%NumberOfTiles(I,J))                     = 0.01
+             cycle ILOOP                                                                      ! Skip any sea-ice points
           else
-             if ( (NoahmpIO%XLAND(I,J)-1.5) >= 0.0 ) cycle ILOOP     ! Skip any open water points
+             if ( (NoahmpIO%XLAND(I,J)-1.5) >= 0.0 ) cycle ILOOP                              ! Skip any open water points
 
-             !------------------------------------------------------------------------------------
-             !  initialize Data Types and transfer all the inputs from 2-D to 1-D column variables
-             !------------------------------------------------------------------------------------
-             call ConfigVarInitDefault  (noahmp)
-             call ConfigVarInTransfer   (noahmp, NoahmpIO)
-             call ForcingVarInitDefault (noahmp)
-             call ForcingVarInTransfer  (noahmp, NoahmpIO)
-             call EnergyVarInitDefault  (noahmp)
-             call EnergyVarInTransfer   (noahmp, NoahmpIO)
-             call WaterVarInitDefault   (noahmp)
-             call WaterVarInTransfer    (noahmp, NoahmpIO)
-             call BiochemVarInitDefault (noahmp)
-             call BiochemVarInTransfer  (noahmp, NoahmpIO)
+             MOSAIC_LOOP : do N = 1, NoahmpIO%NumberOfTiles(I,J)                              ! NoahMP mosaic/subgrid case 
 
-             !---------------------------------------------------------------------
-             !  hydrological processes for vegetation in urban model
-             !  irrigate vegetaion only in urban area, MAY-SEP, 9-11pm
-             ! need to be separated from Noah-MP into outside urban specific module 
-             !---------------------------------------------------------------------
-             if ( (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISURBAN_TABLE) .or. &
-                  (NoahmpIO%IVGTYP(I,J) > NoahmpIO%URBTYPE_beg) ) then
-                if ( (NoahmpIO%SF_URBAN_PHYSICS > 0) .and. (NoahmpIO%IRI_URBAN == 1) ) then
-                   SOLAR_TIME = (NoahmpIO%JULIAN - int(NoahmpIO%JULIAN))*24 + NoahmpIO%XLONG(I,J)/15.0
-                   if ( SOLAR_TIME < 0.0 ) SOLAR_TIME = SOLAR_TIME + 24.0
-                   call CAL_MON_DAY(int(NoahmpIO%JULIAN), NoahmpIO%YR, JMONTH, JDAY)
-                   if ( (SOLAR_TIME >= 21.0) .and. (SOLAR_TIME <= 23.0) .and. &
-                        (JMONTH >= 5) .and. (JMONTH <= 9) ) then
-                       noahmp%water%state%SoilMoisture(1) = &
-                              max(noahmp%water%state%SoilMoisture(1),noahmp%water%param%SoilMoistureFieldCap(1))
-                       noahmp%water%state%SoilMoisture(2) = &
-                              max(noahmp%water%state%SoilMoisture(2),noahmp%water%param%SoilMoistureFieldCap(2))
+                !------------------------------------------------------------------------------------
+                !  initialize 2D subgrid index based on lulc/soiltype/hydrotype to 3D subgrid fraction
+                !------------------------------------------------------------------------------------
+                NoahmpIO%N           = N
+                if(NoahmpIO%IOPT_MOSAIC == 1) then                                           ! if mosaic is based ob lulc
+                   NoahmpIO%IVGTYP(I,J) = NoahmpIO%SubGrdIndexSorted(I,J,N)
+                endif
+
+                !------------------------------------------------------------------------------------
+                !  initialize Data Types and transfer all the inputs from 2-D to 1-D column variables
+                !------------------------------------------------------------------------------------
+                call ConfigVarInitDefault  (noahmp)
+                call ConfigVarInTransfer   (noahmp, NoahmpIO)
+                call ForcingVarInitDefault (noahmp)
+                call ForcingVarInTransfer  (noahmp, NoahmpIO)
+                call EnergyVarInitDefault  (noahmp)
+                call EnergyVarInTransfer   (noahmp, NoahmpIO)
+                call WaterVarInitDefault   (noahmp)
+                call WaterVarInTransfer    (noahmp, NoahmpIO)
+                call BiochemVarInitDefault (noahmp)
+                call BiochemVarInTransfer  (noahmp, NoahmpIO)
+
+               !---------------------------------------------------------------------
+               !  hydrological processes for vegetation in urban model
+               !  irrigate vegetaion only in urban area, MAY-SEP, 9-11pm
+               ! need to be separated from Noah-MP into outside urban specific module 
+               !---------------------------------------------------------------------
+                if ( (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISURBAN_TABLE) .or. &
+                     (NoahmpIO%IVGTYP(I,J) > NoahmpIO%URBTYPE_beg) ) then
+                   if ( (NoahmpIO%SF_URBAN_PHYSICS > 0) .and. (NoahmpIO%IRI_URBAN == 1) ) then
+                      SOLAR_TIME = (NoahmpIO%JULIAN - int(NoahmpIO%JULIAN))*24 + NoahmpIO%XLONG(I,J)/15.0
+                      if ( SOLAR_TIME < 0.0 ) SOLAR_TIME = SOLAR_TIME + 24.0
+                      call CAL_MON_DAY(int(NoahmpIO%JULIAN), NoahmpIO%YR, JMONTH, JDAY)
+                      if ( (SOLAR_TIME >= 21.0) .and. (SOLAR_TIME <= 23.0) .and. &
+                           (JMONTH >= 5) .and. (JMONTH <= 9) ) then
+                          noahmp%water%state%SoilMoisture(1) = &
+                                 max(noahmp%water%state%SoilMoisture(1),noahmp%water%param%SoilMoistureFieldCap(1))
+                          noahmp%water%state%SoilMoisture(2) = &
+                                 max(noahmp%water%state%SoilMoisture(2),noahmp%water%param%SoilMoistureFieldCap(2))
+                      endif
                    endif
                 endif
-             endif
 
-             !------------------------------------------------------------------------
-             !  Call 1D Noah-MP LSM  
-             !------------------------------------------------------------------------
+               !------------------------------------------------------------------------
+               !  Call 1D Noah-MP LSM  
+               !------------------------------------------------------------------------
          
-             ! glacier ice
-             if (noahmp%config%domain%VegType == noahmp%config%domain%IndexIcePoint ) then
-                 noahmp%config%domain%IndicatorIceSfc = -1  ! Land-ice point      
-                 noahmp%forcing%TemperatureSoilBottom = min(noahmp%forcing%TemperatureSoilBottom,263.15) ! set deep glaicer temp to >= -10C
-                 call NoahmpMainGlacier(noahmp)
-             ! non-glacier land
-             else
-                 noahmp%config%domain%IndicatorIceSfc = 0   ! land soil point.
-                 call NoahmpMain(noahmp)
-             endif ! glacial split ends
+               ! glacier ice
+                if (noahmp%config%domain%VegType == noahmp%config%domain%IndexIcePoint ) then
+                    noahmp%config%domain%IndicatorIceSfc = -1  ! Land-ice point      
+                    noahmp%forcing%TemperatureSoilBottom = min(noahmp%forcing%TemperatureSoilBottom,263.15) ! set deep glaicer temp to >= -10C
+                    call NoahmpMainGlacier(noahmp)
+               ! non-glacier land
+                else
+                    noahmp%config%domain%IndicatorIceSfc = 0   ! land soil point.
+                    call NoahmpMain(noahmp)
+                endif ! glacial split ends
 
-             !---------------------------------------------------------------------
-             !  Transfer 1-D Noah-MP column variables to 2-D output variables
-             !---------------------------------------------------------------------
-             call ConfigVarOutTransfer (noahmp, NoahmpIO)
-             call ForcingVarOutTransfer(noahmp, NoahmpIO)
-             call EnergyVarOutTransfer (noahmp, NoahmpIO)
-             call WaterVarOutTransfer  (noahmp, NoahmpIO)
-             call BiochemVarOutTransfer(noahmp, NoahmpIO) 
+                !---------------------------------------------------------------------
+                !  Transfer 1-D Noah-MP column variables to 2-D output variables
+                !---------------------------------------------------------------------
+                call ConfigVarOutTransfer (noahmp, NoahmpIO)
+                call ForcingVarOutTransfer(noahmp, NoahmpIO)
+                call EnergyVarOutTransfer (noahmp, NoahmpIO)
+                call WaterVarOutTransfer  (noahmp, NoahmpIO)
+                call BiochemVarOutTransfer(noahmp, NoahmpIO) 
+
+             enddo MOSAIC_LOOP
 
           endif     ! land-sea split ends
 

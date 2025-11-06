@@ -30,6 +30,7 @@ contains
     associate(                                                   &
               I            => noahmp%config%domain%GridIndexI   ,&
               J            => noahmp%config%domain%GridIndexJ   ,&
+              N            => NoahmpIO%N                        ,&
               VegType      => noahmp%config%domain%VegType      ,&
               CropType     => noahmp%config%domain%CropType     ,&
               OptCropModel => noahmp%config%nmlist%OptCropModel  &
@@ -37,15 +38,15 @@ contains
 ! -------------------------------------------------------------------------
 
     ! biochem state variables
-    noahmp%biochem%state%PlantGrowStage             = NoahmpIO%PGSXY   (I,J)   
-    noahmp%biochem%state%LeafMass                   = NoahmpIO%LFMASSXY(I,J)
-    noahmp%biochem%state%RootMass                   = NoahmpIO%RTMASSXY(I,J)
-    noahmp%biochem%state%StemMass                   = NoahmpIO%STMASSXY(I,J) 
-    noahmp%biochem%state%WoodMass                   = NoahmpIO%WOODXY  (I,J) 
-    noahmp%biochem%state%CarbonMassDeepSoil         = NoahmpIO%STBLCPXY(I,J) 
-    noahmp%biochem%state%CarbonMassShallowSoil      = NoahmpIO%FASTCPXY(I,J)
-    noahmp%biochem%state%GrainMass                  = NoahmpIO%GRAINXY (I,J)  
-    noahmp%biochem%state%GrowDegreeDay              = NoahmpIO%GDDXY   (I,J)  
+    noahmp%biochem%state%PlantGrowStage             = NoahmpIO%PGSXY   (I,J,N)   
+    noahmp%biochem%state%LeafMass                   = NoahmpIO%LFMASSXY(I,J,N)
+    noahmp%biochem%state%RootMass                   = NoahmpIO%RTMASSXY(I,J,N)
+    noahmp%biochem%state%StemMass                   = NoahmpIO%STMASSXY(I,J,N) 
+    noahmp%biochem%state%WoodMass                   = NoahmpIO%WOODXY  (I,J,N) 
+    noahmp%biochem%state%CarbonMassDeepSoil         = NoahmpIO%STBLCPXY(I,J,N) 
+    noahmp%biochem%state%CarbonMassShallowSoil      = NoahmpIO%FASTCPXY(I,J,N)
+    noahmp%biochem%state%GrainMass                  = NoahmpIO%GRAINXY (I,J,N)  
+    noahmp%biochem%state%GrowDegreeDay              = NoahmpIO%GDDXY   (I,J,N)  
     noahmp%biochem%state%NitrogenConcFoliage        = 1.0  ! for now, set to nitrogen saturation
 
     ! biochem parameter variables

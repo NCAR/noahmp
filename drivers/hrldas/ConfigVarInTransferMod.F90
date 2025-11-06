@@ -30,6 +30,7 @@ contains
     associate(                                      &
               I               => NoahmpIO%I        ,&
               J               => NoahmpIO%J        ,&
+              N               => NoahmpIO%N        ,&
               NumSnowLayerMax => NoahmpIO%NSNOW    ,&
               NumSoilLayer    => NoahmpIO%NSOIL     &
              )
@@ -85,7 +86,7 @@ contains
     noahmp%config%domain%FlagSoilProcess             = NoahmpIO%calculate_soil
     noahmp%config%domain%NumSoilTimeStep             = NoahmpIO%soil_update_steps
     noahmp%config%domain%NumSnowLayerMax             = NoahmpIO%NSNOW
-    noahmp%config%domain%NumSnowLayerNeg             = NoahmpIO%ISNOWXY(I,J)
+    noahmp%config%domain%NumSnowLayerNeg             = NoahmpIO%ISNOWXY(I,J,N)
     noahmp%config%domain%NumSoilLayer                = NoahmpIO%NSOIL
     noahmp%config%domain%GridIndexI                  = NoahmpIO%I
     noahmp%config%domain%GridIndexJ                  = NoahmpIO%J
@@ -150,7 +151,7 @@ contains
        
     noahmp%config%domain%DepthSoilLayer(1:NumSoilLayer) = NoahmpIO%ZSOIL(1:NumSoilLayer)
     noahmp%config%domain%DepthSnowSoilLayer(-NumSnowLayerMax+1:NumSoilLayer) = &
-                         NoahmpIO%ZSNSOXY(I,-NumSnowLayerMax+1:NumSoilLayer,J)
+                         NoahmpIO%ZSNSOXY(I,-NumSnowLayerMax+1:NumSoilLayer,J,N)
 
     ! treatment for urban point
     if ( (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISURBAN_TABLE) .or. (NoahmpIO%IVGTYP(I,J) > NoahmpIO%URBTYPE_beg) ) then
@@ -160,7 +161,7 @@ contains
        else
            noahmp%config%domain%VegType = NoahmpIO%NATURAL_TABLE  ! set rural vegetation type based on table natural
                                                                   ! urban is handled by explicit urban scheme outside Noah-MP
-           NoahmpIO%GVFMAX(I,J)         = 0.96 * 100.0            ! unit: %
+           NoahmpIO%GVFMAX(I,J,N)       = 0.96 * 100.0            ! unit: %
        endif
     endif
 
@@ -172,8 +173,8 @@ contains
     if ( (NoahmpIO%IOPT_CROP > 0) .and. (NoahmpIO%CROPCAT(I,J) > 0) ) then
        noahmp%config%domain%CropType = NoahmpIO%CROPCAT(I,J)
        noahmp%config%domain%VegType  = NoahmpIO%ISCROP_TABLE
-       NoahmpIO%VEGFRA(I,J)          = 0.95 * 100.0              ! unit: %
-       NoahmpIO%GVFMAX(I,J)          = 0.95 * 100.0              ! unit: %
+       NoahmpIO%VEGFRA(I,J,N)        = 0.95 * 100.0              ! unit: %
+       NoahmpIO%GVFMAX(I,J,N)          = 0.95 * 100.0              ! unit: %
     endif
 
     ! correct inconsistent soil type

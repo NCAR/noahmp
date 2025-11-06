@@ -95,7 +95,10 @@ contains
     integer                 :: irrigation_method                  = 0
     integer                 :: dvic_infiltration_option           = 1
     integer                 :: tile_drainage_option               = 0
-    integer                 :: wetland_option                     = 0 
+    integer                 :: wetland_option                     = 0
+    integer                 :: mosaic_scheme_option               = 0 
+    integer                 :: mosaic_number_of_tiles             = 1
+    integer                 :: mosaic_write_output                = 0    
     integer                 :: split_output_count                 = 1
     logical                 :: skip_first_output                  = .false.
     integer                 :: khour                              = -9999
@@ -171,7 +174,8 @@ contains
          snicar_use_aerosol, snicar_snowbc_intmix, snicar_snowdust_intmix,                &
          snicar_use_oc, snicar_aerosol_readtable, forcing_name_BCPHI, forcing_name_BCPHO, &
          forcing_name_OCPHI, forcing_name_OCPHO, forcing_name_DUST1, forcing_name_DUST2,  &
-         forcing_name_DUST3, forcing_name_DUST4, forcing_name_DUST5
+         forcing_name_DUST3, forcing_name_DUST4, forcing_name_DUST5, mosaic_scheme_option,&
+         mosaic_number_of_tiles, mosaic_write_output
 
     !---------------------------------------------------------------
     !  Initialize namelist variables to dummy values, so we can tell
@@ -380,6 +384,9 @@ contains
     NoahmpIO%IOPT_COMPACT                      = snow_compaction_option
     NoahmpIO%IOPT_WETLAND                      = wetland_option
     NoahmpIO%IOPT_SCF                          = snow_cover_option
+    NoahmpIO%IOPT_MOSAIC                       = mosaic_scheme_option
+    NoahmpIO%IOPT_MOSAIC_NTILES                = mosaic_number_of_tiles
+    NoahmpIO%IOPT_MOSAIC_OUTPUT                = mosaic_write_output
     ! basic model setup variables
     NoahmpIO%indir                             = indir
     NoahmpIO%forcing_timestep                  = forcing_timestep

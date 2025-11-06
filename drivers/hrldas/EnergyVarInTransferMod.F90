@@ -33,6 +33,7 @@ contains
     associate(                                                                    &
               I                     => noahmp%config%domain%GridIndexI           ,&
               J                     => noahmp%config%domain%GridIndexJ           ,&
+              N                     => NoahmpIO%N                                ,&
               VegType               => noahmp%config%domain%VegType              ,&
               SoilType              => noahmp%config%domain%SoilType             ,&
               CropType              => noahmp%config%domain%CropType             ,&
@@ -47,23 +48,23 @@ contains
 ! -------------------------------------------------------------------------
 
     ! energy state variables
-    noahmp%energy%state%LeafAreaIndex                             = NoahmpIO%LAI     (I,J)
-    noahmp%energy%state%StemAreaIndex                             = NoahmpIO%XSAIXY  (I,J)
-    noahmp%energy%state%SpecHumiditySfcMean                       = NoahmpIO%QSFC    (I,J)
-    noahmp%energy%state%TemperatureGrd                            = NoahmpIO%TGXY    (I,J)
-    noahmp%energy%state%TemperatureCanopy                         = NoahmpIO%TVXY    (I,J)
-    noahmp%energy%state%SnowAgeNondim                             = NoahmpIO%TAUSSXY (I,J)
-    noahmp%energy%state%AlbedoSnowPrev                            = NoahmpIO%ALBOLDXY(I,J)
-    noahmp%energy%state%PressureVaporCanAir                       = NoahmpIO%EAHXY   (I,J)
-    noahmp%energy%state%TemperatureCanopyAir                      = NoahmpIO%TAHXY   (I,J)
-    noahmp%energy%state%ExchCoeffShSfc                            = NoahmpIO%CHXY    (I,J) 
-    noahmp%energy%state%ExchCoeffMomSfc                           = NoahmpIO%CMXY    (I,J)
-    noahmp%energy%state%TemperatureSoilSnow(-NumSnowLayerMax+1:0) = NoahmpIO%TSNOXY  (I,-NumSnowLayerMax+1:0,J)
-    noahmp%energy%state%TemperatureSoilSnow(1:NumSoilLayer)       = NoahmpIO%TSLB    (I,1:NumSoilLayer,J)
+    noahmp%energy%state%LeafAreaIndex                             = NoahmpIO%LAI     (I,J,N)
+    noahmp%energy%state%StemAreaIndex                             = NoahmpIO%XSAIXY  (I,J,N)
+    noahmp%energy%state%SpecHumiditySfcMean                       = NoahmpIO%QSFC    (I,J,N)
+    noahmp%energy%state%TemperatureGrd                            = NoahmpIO%TGXY    (I,J,N)
+    noahmp%energy%state%TemperatureCanopy                         = NoahmpIO%TVXY    (I,J,N)
+    noahmp%energy%state%SnowAgeNondim                             = NoahmpIO%TAUSSXY (I,J,N)
+    noahmp%energy%state%AlbedoSnowPrev                            = NoahmpIO%ALBOLDXY(I,J,N)
+    noahmp%energy%state%PressureVaporCanAir                       = NoahmpIO%EAHXY   (I,J,N)
+    noahmp%energy%state%TemperatureCanopyAir                      = NoahmpIO%TAHXY   (I,J,N)
+    noahmp%energy%state%ExchCoeffShSfc                            = NoahmpIO%CHXY    (I,J,N) 
+    noahmp%energy%state%ExchCoeffMomSfc                           = NoahmpIO%CMXY    (I,J,N)
+    noahmp%energy%state%TemperatureSoilSnow(-NumSnowLayerMax+1:0) = NoahmpIO%TSNOXY  (I,-NumSnowLayerMax+1:0,J,N)
+    noahmp%energy%state%TemperatureSoilSnow(1:NumSoilLayer)       = NoahmpIO%TSLB    (I,1:NumSoilLayer,J,N)
     noahmp%energy%state%PressureAtmosCO2                          = NoahmpIO%CO2_TABLE * noahmp%forcing%PressureAirRefHeight
     noahmp%energy%state%PressureAtmosO2                           = NoahmpIO%O2_TABLE  * noahmp%forcing%PressureAirRefHeight
-    noahmp%energy%state%AlbedoSoilDir(1:NumSwRadBand)             = NoahmpIO%ALBSOILDIRXY(I,1:NumSwRadBand,J)
-    noahmp%energy%state%AlbedoSoilDif(1:NumSwRadBand)             = NoahmpIO%ALBSOILDIFXY(I,1:NumSwRadBand,J)
+    noahmp%energy%state%AlbedoSoilDir(1:NumSwRadBand)             = NoahmpIO%ALBSOILDIRXY(I,1:NumSwRadBand,J,N)
+    noahmp%energy%state%AlbedoSoilDif(1:NumSwRadBand)             = NoahmpIO%ALBSOILDIFXY(I,1:NumSwRadBand,J,N)
     ! vegetation treatment for USGS land types (playa, lava, sand to bare)
     if ( (VegType == 25) .or. (VegType == 26) .or. (VegType == 27) ) then
        noahmp%energy%state%VegFrac       = 0.0
@@ -71,7 +72,7 @@ contains
     endif
 
     ! energy flux variables
-    noahmp%energy%flux%HeatGroundTotAcc                           = NoahmpIO%ACC_SSOILXY(I,J)
+    noahmp%energy%flux%HeatGroundTotAcc                           = NoahmpIO%ACC_SSOILXY(I,J,N)
 
     ! energy parameter variables
     noahmp%energy%param%SoilHeatCapacity                          = NoahmpIO%CSOIL_TABLE
@@ -101,8 +102,8 @@ contains
     noahmp%energy%param%EmissivityIceSfc                          = NoahmpIO%EICE_TABLE
     noahmp%energy%param%ResistanceSoilExp                         = NoahmpIO%RSURF_EXP_TABLE
     noahmp%energy%param%ResistanceSnowSfc                         = NoahmpIO%RSURF_SNOW_TABLE
-    noahmp%energy%param%VegFracAnnMax                             = NoahmpIO%GVFMAX(I,J) / 100.0
-    noahmp%energy%param%VegFracGreen                              = NoahmpIO%VEGFRA(I,J) / 100.0
+    noahmp%energy%param%VegFracAnnMax                             = NoahmpIO%GVFMAX(I,J,N) / 100.0
+    noahmp%energy%param%VegFracGreen                              = NoahmpIO%VEGFRA(I,J,N) / 100.0
     noahmp%energy%param%TreeCrownRadius                           = NoahmpIO%RC_TABLE    (VegType)
     noahmp%energy%param%HeightCanopyTop                           = NoahmpIO%HVT_TABLE   (VegType)
     noahmp%energy%param%HeightCanopyBot                           = NoahmpIO%HVB_TABLE   (VegType)
