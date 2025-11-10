@@ -1,7 +1,7 @@
 
 # Usage: code-scribe update NoahmpWriteLandMod.F90 \
-#                           -r prompts/noahmpwriteland_update.toml \
-#                           -p "Write a natural language prompt with variable name dimension etc." \
+#                           -p prompts/noahmpwriteland_update.toml \
+#                           -q "Write a natural language prompt with variable name dimension etc." \
 #                           -m <openai|argo|..>
 #
 # Documentation: https://erf.readthedocs.io/en/latest/CouplingToNoahMP.html

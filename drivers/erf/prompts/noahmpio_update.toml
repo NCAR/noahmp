@@ -1,6 +1,6 @@
 # Usage: code-scribe update NoahmpIO.H NoahmpIO.cpp NoahpmIO_fi.F90 \
-#                           -r prompts/noahmpio_update.toml \
-#                           -p "Write a natural language prompt with variable name dimension etc." \
+#                           -p prompts/noahmpio_update.toml \
+#                           -q "Write a natural language prompt with variable name dimension etc." \
 #                           -m <openai|argo|..>
 #
 # Documentation: https://erf.readthedocs.io/en/latest/CouplingToNoahMP.html
