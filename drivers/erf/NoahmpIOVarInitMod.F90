@@ -122,6 +122,8 @@ contains
     endif
 
     ! INOUT (with generic LSM equivalent) (as defined in WRF)
+    if ( .not. allocated (NoahmpIO%TAU_EW)   ) allocate ( NoahmpIO%TAU_EW    (XSTART:XEND,        YSTART:YEND) ) ! wind stress in east-west direction [N/m2]
+    if ( .not. allocated (NoahmpIO%TAU_NS)   ) allocate ( NoahmpIO%TAU_NS    (XSTART:XEND,        YSTART:YEND) ) ! wind stress in north-south direction [N/m2]
     if ( .not. allocated (NoahmpIO%TSK)      ) allocate ( NoahmpIO%TSK       (XSTART:XEND,        YSTART:YEND) ) ! surface radiative temperature [K]
     if ( .not. allocated (NoahmpIO%HFX)      ) allocate ( NoahmpIO%HFX       (XSTART:XEND,        YSTART:YEND) ) ! sensible heat flux [W m-2]
     if ( .not. allocated (NoahmpIO%QFX)      ) allocate ( NoahmpIO%QFX       (XSTART:XEND,        YSTART:YEND) ) ! latent heat flux [kg s-1 m-2]

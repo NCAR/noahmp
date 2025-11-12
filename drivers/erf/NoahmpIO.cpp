@@ -10,7 +10,8 @@ extern "C" {
     void NoahmpReadLandHeader_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpReadLandMain_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpDriverMain_fi(NoahmpIO_type_fi* noahmpio);
-    void NoahmpIOTypeVectInit_fi(int* NBlocks);
+    void NoahmpWriteLand_fi(NoahmpIO_type_fi* noahmpio, int* filenum);
+    void NoahmpIOTypeVectInit_fi(int* level, int* NBlocks);
 }
 
 void NoahmpIO_type::ScalarInitDefault() {
@@ -42,6 +43,10 @@ void NoahmpIO_type::DriverMain() {
      NoahmpDriverMain_fi(&fptr);
 };
 
+void NoahmpIO_type::WriteLand(int filenum) {
+     NoahmpWriteLand_fi(&fptr, &filenum);
+};
+
 
 void NoahmpIO_type::VarInitDefault() {
 
@@ -55,13 +60,28 @@ void NoahmpIO_type::VarInitDefault() {
       V_PHY   = NoahArray3D<double>(fptr.V_PHY,   {xstart,kds,ystart}, {xend,kde,yend});
       QV_CURR = NoahArray3D<double>(fptr.QV_CURR, {xstart,kds,ystart}, {xend,kde,yend});
 
-      SHBXY = NoahArray2D<double>(fptr.SHBXY, {xstart,ystart}, {xend,yend});
-      EVBXY = NoahArray2D<double>(fptr.EVBXY, {xstart,ystart}, {xend,yend});
+      HFX = NoahArray2D<double>(fptr.HFX, {xstart,ystart}, {xend,yend});
+      LH = NoahArray2D<double>(fptr.LH, {xstart,ystart}, {xend,yend});
 
+      SWDOWN = NoahArray2D<double>(fptr.SWDOWN, {xstart,ystart}, {xend,yend});
+      GLW = NoahArray2D<double>(fptr.GLW, {xstart,ystart}, {xend,yend});
+      TSK = NoahArray2D<double>(fptr.TSK, {xstart,ystart}, {xend,yend});
+      EMISS = NoahArray2D<double>(fptr.EMISS, {xstart,ystart}, {xend,yend});
+
+      ALBSFCDIRXY = NoahArray3D<double>(fptr.ALBSFCDIRXY, {xstart,1,ystart}, {xend,2,yend});
+      ALBSFCDIFXY = NoahArray3D<double>(fptr.ALBSFCDIFXY, {xstart,1,ystart}, {xend,2,yend});
+
+      COSZEN = NoahArray2D<double>(fptr.COSZEN, {xstart,ystart}, {xend,yend});
+      P8W = NoahArray3D<double>(fptr.P8W, {xstart,kds,ystart}, {xend,kde,yend});
+
+      TAU_EW = NoahArray2D<double>(fptr.TAU_EW, {xstart,ystart}, {xend,yend});
+      TAU_NS = NoahArray2D<double>(fptr.TAU_NS, {xstart,ystart}, {xend,yend});
 };
 
-void NoahmpIO_vector::resize(size_t size) {
+
+void NoahmpIO_vector::resize(size_t size, size_t level) {
      std::vector<NoahmpIO_type>::resize(size);
      int _size = size;
-     NoahmpIOTypeVectInit_fi(&_size);
+     int _level = level;
+     NoahmpIOTypeVectInit_fi(&_level, &_size);
 };

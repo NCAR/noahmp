@@ -284,7 +284,10 @@ contains
     NoahmpIO%SHBXY          = 0.0
     NoahmpIO%EVBXY          = 0.0
 
-    if (NoahmpIO%rank == 0) print*, "NTIME = ", NoahmpIO%NTIME , "KHOUR=",NoahmpIO%KHOUR,"dtbl = ", NoahmpIO%dtbl
+    if (NoahmpIO%rank == 0) then
+      write(*,'(A8, I6, A8, I6, A8, F10.4)') "NTIME = ", NoahmpIO%NTIME, "KHOUR=", NoahmpIO%KHOUR, "dtbl = ", NoahmpIO%dtbl
+    end if
+
     call system_clock(count=NoahmpIO%clock_count_1)   ! Start a timer
 
     if ( NoahmpIO%IOPT_ALB == 3 ) then ! initialize SNICAR aerosol content in snow

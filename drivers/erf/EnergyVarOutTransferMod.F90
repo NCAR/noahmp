@@ -104,6 +104,8 @@ contains
     NoahmpIO%EFLXBXY    (I,J) = noahmp%energy%flux%HeatFromSoilBot
 
     ! energy state variables
+    NoahmpIO%TAU_EW  (I,J) = noahmp%energy%state%WindStressEwSfc
+    NoahmpIO%TAU_NS  (I,J) = noahmp%energy%state%WindStressNsSfc
     NoahmpIO%TSK     (I,J) = noahmp%energy%state%TemperatureRadSfc
     NoahmpIO%EMISS   (I,J) = noahmp%energy%state%EmissivitySfc
     NoahmpIO%QSFC    (I,J) = noahmp%energy%state%SpecHumiditySfcMean
