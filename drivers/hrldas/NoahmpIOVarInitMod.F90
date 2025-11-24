@@ -165,7 +165,7 @@ contains
     if ( .not. allocated (NoahmpIO%WTXY)      ) allocate ( NoahmpIO%WTXY       (XSTART:XEND,               YSTART:YEND) ) ! groundwater storage [mm]
     if ( .not. allocated (NoahmpIO%SMCWTDXY)  ) allocate ( NoahmpIO%SMCWTDXY   (XSTART:XEND,               YSTART:YEND) ) ! soil moisture below the bottom of the column (m3m-3)
     if ( .not. allocated (NoahmpIO%DEEPRECHXY)) allocate ( NoahmpIO%DEEPRECHXY (XSTART:XEND,               YSTART:YEND) ) ! recharge to the water table when deep (m)
-    if ( .not. allocated (NoahmpIO%RECHXY)    ) allocate ( NoahmpIO%RECHXY     (XSTART:XEND,               YSTART:YEND) ) ! recharge to the water table (diagnostic) (m)
+    if ( .not. allocated (NoahmpIO%RECHXY)    ) allocate ( NoahmpIO%RECHXY     (XSTART:XEND,               YSTART:YEND) ) ! recharge to the water table (diagnostic) (mm)
     if ( .not. allocated (NoahmpIO%LFMASSXY)  ) allocate ( NoahmpIO%LFMASSXY   (XSTART:XEND,               YSTART:YEND) ) ! leaf mass [g/m2]
     if ( .not. allocated (NoahmpIO%RTMASSXY)  ) allocate ( NoahmpIO%RTMASSXY   (XSTART:XEND,               YSTART:YEND) ) ! mass of fine roots [g/m2]
     if ( .not. allocated (NoahmpIO%STMASSXY)  ) allocate ( NoahmpIO%STMASSXY   (XSTART:XEND,               YSTART:YEND) ) ! stem mass [g/m2]
