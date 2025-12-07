@@ -228,9 +228,6 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     where (NoahmpIO%SEAICE > 0.0) NoahmpIO%XICE = 1.0
  
     NoahmpIO%CROPTYPE   = 0       ! make default 0% crops everywhere
-    NoahmpIO%PLANTING   = 126     ! default planting date
-    NoahmpIO%HARVEST    = 290     ! default harvest date
-    NoahmpIO%SEASON_GDD = 1605    ! default total seasonal growing degree days
 
     NoahmpIO%TD_FRACTION = 0.0
 

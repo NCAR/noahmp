@@ -124,19 +124,25 @@ contains
        noahmp%biochem%param%TurnoverCoeffRootCrop   = LISparam%RT_OVRC
 
        if ( OptCropModel == 1 ) then
-          noahmp%biochem%param%DatePlanting         = NoahmpIO%PLANTING(I,J)
-          noahmp%biochem%param%DateHarvest          = NoahmpIO%HARVEST(I,J)
-          noahmp%biochem%param%GrowDegDayEmerg      = NoahmpIO%SEASON_GDD(I,J) / 1770.0 * &
+          if ( (NoahmpIO%PLANTING(I,J)>0) .and. (NoahmpIO%PLANTING(I,J)<365) ) then
+             noahmp%biochem%param%DatePlanting      = NoahmpIO%PLANTING(I,J)
+          endif ! 2D input map exist
+          if ( (NoahmpIO%HARVEST(I,J)>0) .and. (NoahmpIO%HARVEST(I,J)<365) ) then
+             noahmp%biochem%param%DateHarvest       = NoahmpIO%HARVEST(I,J)
+          endif ! 2D input map exist
+          if ( (NoahmpIO%SEASON_GDD(I,J)>0.0) .and. (NoahmpIO%SEASON_GDD(I,J)<10000.0) then
+             noahmp%biochem%param%GrowDegDayEmerg   = NoahmpIO%SEASON_GDD(I,J) / 1770.0 * &
                                                       noahmp%biochem%param%GrowDegDayEmerg
-          noahmp%biochem%param%GrowDegDayInitVeg    = NoahmpIO%SEASON_GDD(I,J) / 1770.0 * &
+             noahmp%biochem%param%GrowDegDayInitVeg = NoahmpIO%SEASON_GDD(I,J) / 1770.0 * &
                                                       noahmp%biochem%param%GrowDegDayInitVeg
-          noahmp%biochem%param%GrowDegDayPostVeg    = NoahmpIO%SEASON_GDD(I,J) / 1770.0 * &
+             noahmp%biochem%param%GrowDegDayPostVeg = NoahmpIO%SEASON_GDD(I,J) / 1770.0 * &
                                                       noahmp%biochem%param%GrowDegDayPostVeg
-          noahmp%biochem%param%GrowDegDayInitReprod = NoahmpIO%SEASON_GDD(I,J) / 1770.0 * &
-                                                      noahmp%biochem%param%GrowDegDayInitReprod
-          noahmp%biochem%param%GrowDegDayMature     = NoahmpIO%SEASON_GDD(I,J) / 1770.0 * &
+             noahmp%biochem%param%GrowDegDayInitReprod = NoahmpIO%SEASON_GDD(I,J) / 1770.0 * &
+                                                         noahmp%biochem%param%GrowDegDayInitReprod
+             noahmp%biochem%param%GrowDegDayMature  = NoahmpIO%SEASON_GDD(I,J) / 1770.0 * &
                                                       noahmp%biochem%param%GrowDegDayMature
-        endif
+          endif ! 2D input map exist
+       endif ! OptCropModel == 1
     endif ! activate crop parameters
 
     if ( noahmp%config%nmlist%OptIrrigation == 2 ) then
