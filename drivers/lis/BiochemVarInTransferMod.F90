@@ -130,7 +130,7 @@ contains
           if ( (NoahmpIO%HARVEST(I,J)>0) .and. (NoahmpIO%HARVEST(I,J)<365) ) then
              noahmp%biochem%param%DateHarvest       = NoahmpIO%HARVEST(I,J)
           endif ! 2D input map exist
-          if ( (NoahmpIO%SEASON_GDD(I,J)>0.0) .and. (NoahmpIO%SEASON_GDD(I,J)<10000.0) then
+          if ( (NoahmpIO%SEASON_GDD(I,J)>0.0) .and. (NoahmpIO%SEASON_GDD(I,J)<10000.0) ) then
              noahmp%biochem%param%GrowDegDayEmerg   = NoahmpIO%SEASON_GDD(I,J) / 1770.0 * &
                                                       noahmp%biochem%param%GrowDegDayEmerg
              noahmp%biochem%param%GrowDegDayInitVeg = NoahmpIO%SEASON_GDD(I,J) / 1770.0 * &

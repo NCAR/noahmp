@@ -100,9 +100,14 @@ contains
 
     ! for multi-layer (>=1) snow
     if ( NumSnowLayerNeg < 0 ) then
+      SnowWaterTmp = SnowIce(NumSnowLayerNeg+1) + SnowLiqWater(NumSnowLayerNeg+1) ! top layer total snow water before sublimation
       SnowIceTmp = SnowIce(NumSnowLayerNeg+1) - SublimSnowSfcIce*MainTimeStep + FrostSnowSfcIce*MainTimeStep
       SnowIce(NumSnowLayerNeg+1) = SnowIceTmp
       if ( (SnowIceTmp < 1.0e-6) .and. (NumSnowLayerNeg < 0) ) call SnowLayerCombine(noahmp)
+      if ( (SnowIceTmp >= 1.0e-6) .and. (NumSnowLayerNeg < 0) ) then ! re-adjust snow layer thickness
+         ThicknessSnowSoilLayer(NumSnowLayerNeg+1) = ThicknessSnowSoilLayer(NumSnowLayerNeg+1) * &
+                       (SnowIce(NumSnowLayerNeg+1) + SnowLiqWater(NumSnowLayerNeg+1)) / SnowWaterTmp ! assuming same snow density
+      endif
       if ( NumSnowLayerNeg < 0 ) then
          SnowLiqWater(NumSnowLayerNeg+1) = SnowLiqWater(NumSnowLayerNeg+1) + RainfallGround * MainTimeStep
          SnowLiqWater(NumSnowLayerNeg+1) = max(0.0, SnowLiqWater(NumSnowLayerNeg+1))
