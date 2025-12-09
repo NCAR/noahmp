@@ -26,7 +26,7 @@ contains
 
 ! local variables
     integer                          :: LoopInd                       ! do loop/array indices
-    real(kind=kind_noahmp)           :: InflowSnowLayer               ! water flow into each snow layer (mm/s)
+    real(kind=kind_noahmp)           :: InflowSnowLayer               ! water flow into each snow layer (mm)
     real(kind=kind_noahmp)           :: SnowIceTmp                    ! ice mass after minus sublimation
     real(kind=kind_noahmp)           :: SnowWaterRatio                ! ratio of SWE after frost & sublimation to original SWE
     real(kind=kind_noahmp)           :: SnowWaterTmp                  ! temporary SWE

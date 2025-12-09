@@ -124,10 +124,10 @@ contains
        noahmp%biochem%param%TurnoverCoeffRootCrop   = LISparam%RT_OVRC
 
        if ( OptCropModel == 1 ) then
-          if ( (NoahmpIO%PLANTING(I,J)>0) .and. (NoahmpIO%PLANTING(I,J)<365) ) then
+          if ( (NoahmpIO%PLANTING(I,J)>0) .and. (NoahmpIO%PLANTING(I,J)<367) ) then
              noahmp%biochem%param%DatePlanting      = NoahmpIO%PLANTING(I,J)
           endif ! 2D input map exist
-          if ( (NoahmpIO%HARVEST(I,J)>0) .and. (NoahmpIO%HARVEST(I,J)<365) ) then
+          if ( (NoahmpIO%HARVEST(I,J)>0) .and. (NoahmpIO%HARVEST(I,J)<367) ) then
              noahmp%biochem%param%DateHarvest       = NoahmpIO%HARVEST(I,J)
           endif ! 2D input map exist
           if ( (NoahmpIO%SEASON_GDD(I,J)>0.0) .and. (NoahmpIO%SEASON_GDD(I,J)<10000.0) ) then
@@ -146,8 +146,12 @@ contains
     endif ! activate crop parameters
 
     if ( noahmp%config%nmlist%OptIrrigation == 2 ) then
-       noahmp%biochem%param%DatePlanting = NoahmpIO%PLANTING(I,J)
-       noahmp%biochem%param%DateHarvest  = NoahmpIO%HARVEST (I,J)
+       if ( (NoahmpIO%PLANTING(I,J)>0) .and. (NoahmpIO%PLANTING(I,J)<367) ) then
+          noahmp%biochem%param%DatePlanting = NoahmpIO%PLANTING(I,J)
+       endif ! 2D input map exist
+       if ( (NoahmpIO%HARVEST(I,J)>0) .and. (NoahmpIO%HARVEST(I,J)<367) ) then
+          noahmp%biochem%param%DateHarvest  = NoahmpIO%HARVEST (I,J)
+       endif ! 2D input map exist
     endif
     
     end associate
