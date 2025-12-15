@@ -1,5 +1,32 @@
 # Noah-MP model release notes
 
+## Noah-MP version 5.1.1 release
+
+### LSM capabilities/enhancements
+
+- none
+
+
+### Driver capabilities/enhancements
+
+- improved driver interface with DOE's ERF model for Multi-Level AMR, Radiation, and Misc. (https://github.com/NCAR/noahmp/pull/201)
+
+
+### LSM bug fixes
+
+- bug fixes and code formatting improvement related to CBIOM, soil depth, snow liquid water, urban, and crop (https://github.com/NCAR/noahmp/pull/219)
+- bug fix for reference height diagnosis (https://github.com/NCAR/noahmp/pull/207)
+
+### Driver bug fixes
+
+- None
+
+
+### External modules capabilities/enhancements
+
+- None
+
+
 ## Noah-MP version 5.1.0 release
 
 ### LSM capabilities/enhancements
