@@ -101,7 +101,9 @@ contains
     integer                 :: khour                              = -9999
     integer                 :: kday                               = -9999
     real(kind=kind_noahmp)  :: zlvl                               = 10.
-    character(len=256)      :: erf_setup_file                     = " "
+    character(len=256)      :: erf_setup_file_01                  = " "
+    character(len=256)      :: erf_setup_file_02                  = " "
+    character(len=256)      :: erf_setup_file_03                  = " "
     character(len=256)      :: spatial_filename                   = " "
     character(len=256)      :: external_veg_filename_template     = " "
     character(len=256)      :: external_lai_filename_template     = " "
@@ -164,7 +166,7 @@ contains
          num_urban_ndm,num_urban_ng,num_urban_nwr ,num_urban_ngb ,                        &
          num_urban_nf ,num_urban_nz,num_urban_nbui,num_urban_ngr ,                        &
          split_output_count,                                                              & 
-         khour, kday, zlvl, erf_setup_file,                                               &
+         khour, kday, zlvl, erf_setup_file_01, erf_setup_file_02, erf_setup_file_03,      &
          spatial_filename, agdata_flnm, tdinput_flnm, snicar_optic_flnm, snicar_age_flnm, &
          external_veg_filename_template, external_lai_filename_template,                  &
          xstart, xend, ystart, yend, nsnow, llanduse,                                     &
@@ -248,7 +250,7 @@ contains
         if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
         stop
     else if (( khour < 0 ) .and. (kday > 0)) then
-        khour = kday * 24
+        NoahmpIO%khour = kday * 24
     else if ((khour > 0) .and. (kday > 0)) then
         if (NoahmpIO%rank == 0) write(*, '("Namelist warning:  KHOUR and KDAY both defined.")')
     else
@@ -425,10 +427,24 @@ contains
     NoahmpIO%forcing_name_VisFrac              = forcing_name_VisFrac
     NoahmpIO%split_output_count                = split_output_count
     NoahmpIO%skip_first_output                 = skip_first_output
-    NoahmpIO%khour                             = khour
     NoahmpIO%kday                              = kday
     NoahmpIO%zlvl                              = zlvl
-    NoahmpIO%erf_setup_file                    = erf_setup_file
+    NoahmpIO%erf_setup_file_01                 = erf_setup_file_01
+    NoahmpIO%erf_setup_file_02                 = erf_setup_file_02
+    NoahmpIO%erf_setup_file_03                 = erf_setup_file_03
+
+    select case(NoahmpIO%level)
+    case(0)
+      NoahmpIO%erf_setup_file_lev = erf_setup_file_01
+    case(1)
+      NoahmpIO%erf_setup_file_lev = erf_setup_file_02
+    case(2)
+      NoahmpIO%erf_setup_file_lev = erf_setup_file_03
+    case default
+      print *, "Error: unsupported level: ", NoahmpIO%level
+      stop
+    end select
+
     NoahmpIO%spatial_filename                  = spatial_filename
     NoahmpIO%external_veg_filename_template    = external_veg_filename_template
     NoahmpIO%external_lai_filename_template    = external_lai_filename_template
