@@ -82,8 +82,8 @@
  MFSNO    =  4.00,  3.00,  3.00,  3.00,  4.00,  4.00,  2.00,  2.00,  2.00,  2.00,  1.00,  1.00,  1.00,  1.00,  1.00,  3.00,  3.00,  3.00,  3.00,  3.50,  3.50,  3.50,  3.50,  2.50,  3.50,  3.50,  3.50,
  ! SCFFAC: snow cover factor (m) (replace original hard-coded 2.5*z0, z0=0.002m everywhere), currently optimized based on SNOTEL SWE & MODIS SCF, surface albedo (He et al. 2021 JGR)
  SCFFAC   = 0.042, 0.014, 0.014, 0.014, 0.026, 0.026, 0.020, 0.018, 0.016, 0.020, 0.008, 0.008, 0.008, 0.008, 0.008, 0.030, 0.020, 0.020, 0.016, 0.030, 0.030, 0.030, 0.030, 0.030, 0.030, 0.030, 0.030,  
- ! CBIOM: canopy biomass heat capacity parameter (m), C. He 12/23/2022 bring hard-coded parameter to here
- CBIOM    =  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02,  0.02, 
+ ! CBIOM: canopy biomass heat capacity parameter (m), C. He 11/24/2025: reduce from 0.02 to 0.001 to address temperature bias
+ CBIOM    = 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 
  ! RHOL_VIS: leaf reflectance at visible (VIS) band
  RHOL_VIS =  0.00,  0.11,  0.11,  0.11,  0.11,  0.11,  0.11,  0.07,  0.10,  0.10,  0.10,  0.07,  0.10,  0.07,  0.10,  0.00,  0.11,  0.10,  0.00,  0.10,  0.10,  0.10,  0.10,  0.00,  0.10,  0.00,  0.00,
  ! RHOL_NIR: leaf reflectance at near-infra (NIR) band
@@ -278,8 +278,8 @@
  MFSNO    =  1.00,   1.00,   1.00,   1.00,   1.00,   2.00,   2.00,   2.00,   2.00,   2.00,   3.00,   3.00,   4.00,   4.00,   2.50,   3.00,   3.00,   3.50,   3.50,   3.50,
  ! SCFFAC: snow cover factor (m) (replace original hard-coded 2.5*z0, z0=0.002m everywhere), currently optimized based on SNOTEL SWE & MODIS SCF, surface albedo (He et al. 2021 JGR)
  SCFFAC   = 0.008,  0.008,  0.008,  0.008,  0.008,  0.016,  0.016,  0.020,  0.020,  0.020,  0.020,  0.014,  0.042,  0.026,  0.030,  0.016,  0.030,  0.030,  0.030,  0.030,
- ! CBIOM: canopy biomass heat capacity parameter (m), C. He 12/23/2022 bring hard-coded parameter to here
- CBIOM    =  0.02,   0.02,   0.02,   0.02,   0.02,   0.02,   0.02,   0.02,   0.02,   0.02,   0.02,   0.02,   0.02,   0.02,   0.02,   0.02,   0.02,   0.02,   0.02,   0.02,
+ ! CBIOM: canopy biomass heat capacity parameter (m), C. He 11/24/2025: reduce from 0.02 to 0.001 to address temperature bias
+ CBIOM    = 0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,
  ! RHOL_VIS: leaf reflectance at visible (VIS) band
  RHOL_VIS =  0.07,   0.10,   0.07,   0.10,   0.10,   0.07,   0.07,   0.07,   0.10,   0.11,  0.105,   0.11,   0.00,   0.11,   0.00,   0.00,   0.00,   0.10,   0.10,   0.10,
  ! RHOL_NIR: leaf reflectance at near-infra (NIR) band
