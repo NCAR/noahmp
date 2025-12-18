@@ -120,7 +120,7 @@ contains
        NoahmpIO%J = J
        if ( NoahmpIO%ITIMESTEP == 1 ) then
           do I = NoahmpIO%ITS, NoahmpIO%ITE
-             do N = 1:NoahmpIO%NumberOfTiles(I,J)             ! NoahMP mosaic/subgrid case
+             do N = 1,NoahmpIO%NumberOfTiles(I,J)             ! NoahMP mosaic/subgrid case
                 if ( (NoahmpIO%XLAND(I,J)-1.5) >= 0.0 ) then  ! Open water point
                    if ( NoahmpIO%XICE(I,J) == 1.0 ) print*,' sea-ice at water point, I=',I,'J=',J
                    NoahmpIO%SMSTAV(I,J,N) = 1.0

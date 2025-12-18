@@ -23,7 +23,8 @@ OBJS = NoahmpGroundwaterInitMod.o \
        EnergyVarInTransferMod.o \
        WaterVarInTransferMod.o \
        BiochemVarInTransferMod.o \
-       PedoTransferSR2006Mod.o
+       PedoTransferSR2006Mod.o \
+       NoahmpMosaicSortTileCatMod.o
 
 all:	$(OBJS)
 
@@ -47,6 +48,7 @@ NoahmpIOVarInitMod.o:       ../../utility/Machine.o NoahmpIOVarType.o
 NoahmpReadTableMod.o:       ../../utility/Machine.o NoahmpIOVarType.o
 NoahmpReadNamelistMod.o:    ../../utility/Machine.o NoahmpIOVarType.o
 PedoTransferSR2006Mod.o:    ../../utility/Machine.o NoahmpIOVarType.o
+NoahmpMosaicSortTileCatMod.o: ../../utility/Machine.o NoahmpIOVarType.o 
 ConfigVarOutTransferMod.o:  ../../utility/Machine.o NoahmpIOVarType.o ../../src/NoahmpVarType.o
 ForcingVarOutTransferMod.o: ../../utility/Machine.o NoahmpIOVarType.o ../../src/NoahmpVarType.o
 EnergyVarOutTransferMod.o:  ../../utility/Machine.o NoahmpIOVarType.o ../../src/NoahmpVarType.o

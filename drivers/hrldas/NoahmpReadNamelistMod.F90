@@ -95,10 +95,7 @@ contains
     integer                 :: irrigation_method                  = 0
     integer                 :: dvic_infiltration_option           = 1
     integer                 :: tile_drainage_option               = 0
-    integer                 :: wetland_option                     = 0
-    integer                 :: mosaic_scheme_option               = 0 
-    integer                 :: mosaic_number_of_tiles             = 1
-    integer                 :: mosaic_write_output                = 0    
+    integer                 :: wetland_option                     = 0 
     integer                 :: split_output_count                 = 1
     logical                 :: skip_first_output                  = .false.
     integer                 :: khour                              = -9999
@@ -141,6 +138,13 @@ contains
     character(len=256)      :: forcing_name_DUST4                 = "DUST4"
     character(len=256)      :: forcing_name_DUST5                 = "DUST5"
 
+    ! NoahMP Mosaic
+    character(len=256)      :: mosaic_fract_name                  = "LANDUSEF" ! subgrid fraction name (e.g. "LANDUSEF")
+    integer                 :: mosaic_scheme_option               = 0          ! = 1 for LULC; = 2 for hydrology; = 3 for soiltype
+    integer                 :: mosaic_number_of_tiles             = 1          ! maximum number of tiles to be considered
+    integer                 :: mosaic_write_output                = 0          ! write subgrid model states to output
+    integer                 :: mosaic_number_of_categories        = 21         ! Number of categories as per input data; 21 as per MODIS LULC
+
     namelist / NOAHLSM_OFFLINE /    &
 #ifdef WRF_HYDRO
          finemesh,finemesh_factor,forc_typ, snow_assim , GEO_STATIC_FLNM, HRLDAS_ini_typ, &
@@ -174,8 +178,9 @@ contains
          snicar_use_aerosol, snicar_snowbc_intmix, snicar_snowdust_intmix,                &
          snicar_use_oc, snicar_aerosol_readtable, forcing_name_BCPHI, forcing_name_BCPHO, &
          forcing_name_OCPHI, forcing_name_OCPHO, forcing_name_DUST1, forcing_name_DUST2,  &
-         forcing_name_DUST3, forcing_name_DUST4, forcing_name_DUST5, mosaic_scheme_option,&
-         mosaic_number_of_tiles, mosaic_write_output
+         forcing_name_DUST3, forcing_name_DUST4, forcing_name_DUST5,                      &
+         mosaic_scheme_option, mosaic_fract_name, mosaic_number_of_tiles,                 &
+         mosaic_write_output, mosaic_number_of_categories
 
     !---------------------------------------------------------------
     !  Initialize namelist variables to dummy values, so we can tell
@@ -384,9 +389,12 @@ contains
     NoahmpIO%IOPT_COMPACT                      = snow_compaction_option
     NoahmpIO%IOPT_WETLAND                      = wetland_option
     NoahmpIO%IOPT_SCF                          = snow_cover_option
+    ! NoahMP Mosaic scheme variables
     NoahmpIO%IOPT_MOSAIC                       = mosaic_scheme_option
     NoahmpIO%IOPT_MOSAIC_NTILES                = mosaic_number_of_tiles
     NoahmpIO%IOPT_MOSAIC_OUTPUT                = mosaic_write_output
+    NoahmpIO%SubGrdFracName                    = mosaic_fract_name
+    NoahmpIO%NumMosaicCat                      = mosaic_number_of_categories
     ! basic model setup variables
     NoahmpIO%indir                             = indir
     NoahmpIO%forcing_timestep                  = forcing_timestep

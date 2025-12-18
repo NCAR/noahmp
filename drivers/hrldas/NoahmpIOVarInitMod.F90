@@ -89,40 +89,40 @@ contains
        if ( .not. allocated (NoahmpIO%soilcl4) ) allocate ( NoahmpIO%soilcl4  (XSTART:XEND,          YSTART:YEND) ) ! Soil texture class with depth
     endif
     if ( NoahmpIO%IOPT_SOIL == 4 ) then
-       if ( .not. allocated (NoahmpIO%bexp_3d)      ) allocate ( NoahmpIO%bexp_3d       (XSTART:XEND,1:NSOIL,YSTART:YEND, 1:NTilesMax) ) ! C-H B exponent
-       if ( .not. allocated (NoahmpIO%smcdry_3D)    ) allocate ( NoahmpIO%smcdry_3D     (XSTART:XEND,1:NSOIL,YSTART:YEND, 1:NTilesMax) ) ! Soil Moisture Limit: Dry
-       if ( .not. allocated (NoahmpIO%smcwlt_3D)    ) allocate ( NoahmpIO%smcwlt_3D     (XSTART:XEND,1:NSOIL,YSTART:YEND, 1:NTilesMax) ) ! Soil Moisture Limit: Wilt
-       if ( .not. allocated (NoahmpIO%smcref_3D)    ) allocate ( NoahmpIO%smcref_3D     (XSTART:XEND,1:NSOIL,YSTART:YEND, 1:NTilesMax) ) ! Soil Moisture Limit: Reference
-       if ( .not. allocated (NoahmpIO%smcmax_3D)    ) allocate ( NoahmpIO%smcmax_3D     (XSTART:XEND,1:NSOIL,YSTART:YEND, 1:NTilesMax) ) ! Soil Moisture Limit: Max
-       if ( .not. allocated (NoahmpIO%dksat_3D)     ) allocate ( NoahmpIO%dksat_3D      (XSTART:XEND,1:NSOIL,YSTART:YEND, 1:NTilesMax) ) ! Saturated Soil Conductivity
-       if ( .not. allocated (NoahmpIO%dwsat_3D)     ) allocate ( NoahmpIO%dwsat_3D      (XSTART:XEND,1:NSOIL,YSTART:YEND, 1:NTilesMax) ) ! Saturated Soil Diffusivity
-       if ( .not. allocated (NoahmpIO%psisat_3D)    ) allocate ( NoahmpIO%psisat_3D     (XSTART:XEND,1:NSOIL,YSTART:YEND, 1:NTilesMax) ) ! Saturated Matric Potential
-       if ( .not. allocated (NoahmpIO%quartz_3D)    ) allocate ( NoahmpIO%quartz_3D     (XSTART:XEND,1:NSOIL,YSTART:YEND, 1:NTilesMax) ) ! Soil quartz content
-       if ( .not. allocated (NoahmpIO%refdk_2D)     ) allocate ( NoahmpIO%refdk_2D      (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! Reference Soil Conductivity
-       if ( .not. allocated (NoahmpIO%refkdt_2D)    ) allocate ( NoahmpIO%refkdt_2D     (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! Soil Infiltration Parameter
-       if ( .not. allocated (NoahmpIO%irr_frac_2D)  ) allocate ( NoahmpIO%irr_frac_2D   (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! irrigation Fraction
-       if ( .not. allocated (NoahmpIO%irr_har_2D)   ) allocate ( NoahmpIO%irr_har_2D    (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! number of days before harvest date to stop irrigation 
-       if ( .not. allocated (NoahmpIO%irr_lai_2D)   ) allocate ( NoahmpIO%irr_lai_2D    (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! Minimum lai to trigger irrigation
-       if ( .not. allocated (NoahmpIO%irr_mad_2D)   ) allocate ( NoahmpIO%irr_mad_2D    (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! management allowable deficit (0-1)
-       if ( .not. allocated (NoahmpIO%filoss_2D)    ) allocate ( NoahmpIO%filoss_2D     (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! fraction of flood irrigation loss (0-1) 
-       if ( .not. allocated (NoahmpIO%sprir_rate_2D)) allocate ( NoahmpIO%sprir_rate_2D (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! mm/h, sprinkler irrigation rate
-       if ( .not. allocated (NoahmpIO%micir_rate_2D)) allocate ( NoahmpIO%micir_rate_2D (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! mm/h, micro irrigation rate
-       if ( .not. allocated (NoahmpIO%firtfac_2D)   ) allocate ( NoahmpIO%firtfac_2D    (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! flood application rate factor
-       if ( .not. allocated (NoahmpIO%ir_rain_2D)   ) allocate ( NoahmpIO%ir_rain_2D    (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! maximum precipitation to stop irrigation trigger
-       if ( .not. allocated (NoahmpIO%bvic_2D)      ) allocate ( NoahmpIO%bvic_2D       (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! VIC model infiltration parameter [-]
-       if ( .not. allocated (NoahmpIO%axaj_2D)      ) allocate ( NoahmpIO%axaj_2D       (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! Tension water distribution inflection parameter [-]
-       if ( .not. allocated (NoahmpIO%bxaj_2D)      ) allocate ( NoahmpIO%bxaj_2D       (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! Tension water distribution shape parameter [-]
-       if ( .not. allocated (NoahmpIO%xxaj_2D)      ) allocate ( NoahmpIO%xxaj_2D       (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! Free water distribution shape parameter [-]
-       if ( .not. allocated (NoahmpIO%bdvic_2D)     ) allocate ( NoahmpIO%bdvic_2D      (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! DVIC model infiltration parameter [-]
-       if ( .not. allocated (NoahmpIO%gdvic_2D)     ) allocate ( NoahmpIO%gdvic_2D      (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! Mean Capillary Drive (m) for infiltration models
-       if ( .not. allocated (NoahmpIO%bbvic_2D)     ) allocate ( NoahmpIO%bbvic_2D      (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! DVIC heterogeniety parameter for infiltration [-]
-       if ( .not. allocated (NoahmpIO%KLAT_FAC)     ) allocate ( NoahmpIO%KLAT_FAC      (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! factor multiplier to hydraulic conductivity
-       if ( .not. allocated (NoahmpIO%TDSMC_FAC)    ) allocate ( NoahmpIO%TDSMC_FAC     (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! factor multiplier to field capacity
-       if ( .not. allocated (NoahmpIO%TD_DC)        ) allocate ( NoahmpIO%TD_DC         (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! drainage coefficient for simple
-       if ( .not. allocated (NoahmpIO%TD_DCOEF)     ) allocate ( NoahmpIO%TD_DCOEF      (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! drainge coefficient for Hooghoudt 
-       if ( .not. allocated (NoahmpIO%TD_DDRAIN)    ) allocate ( NoahmpIO%TD_DDRAIN     (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! depth of drain
-       if ( .not. allocated (NoahmpIO%TD_RADI)      ) allocate ( NoahmpIO%TD_RADI       (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! tile radius
-       if ( .not. allocated (NoahmpIO%TD_SPAC)      ) allocate ( NoahmpIO%TD_SPAC       (XSTART:XEND,        YSTART:YEND, 1:NTilesMax) ) ! tile spacing
+       if ( .not. allocated (NoahmpIO%bexp_3d)      ) allocate ( NoahmpIO%bexp_3d       (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! C-H B exponent
+       if ( .not. allocated (NoahmpIO%smcdry_3D)    ) allocate ( NoahmpIO%smcdry_3D     (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! Soil Moisture Limit: Dry
+       if ( .not. allocated (NoahmpIO%smcwlt_3D)    ) allocate ( NoahmpIO%smcwlt_3D     (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! Soil Moisture Limit: Wilt
+       if ( .not. allocated (NoahmpIO%smcref_3D)    ) allocate ( NoahmpIO%smcref_3D     (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! Soil Moisture Limit: Reference
+       if ( .not. allocated (NoahmpIO%smcmax_3D)    ) allocate ( NoahmpIO%smcmax_3D     (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! Soil Moisture Limit: Max
+       if ( .not. allocated (NoahmpIO%dksat_3D)     ) allocate ( NoahmpIO%dksat_3D      (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! Saturated Soil Conductivity
+       if ( .not. allocated (NoahmpIO%dwsat_3D)     ) allocate ( NoahmpIO%dwsat_3D      (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! Saturated Soil Diffusivity
+       if ( .not. allocated (NoahmpIO%psisat_3D)    ) allocate ( NoahmpIO%psisat_3D     (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! Saturated Matric Potential
+       if ( .not. allocated (NoahmpIO%quartz_3D)    ) allocate ( NoahmpIO%quartz_3D     (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! Soil quartz content
+       if ( .not. allocated (NoahmpIO%refdk_2D)     ) allocate ( NoahmpIO%refdk_2D      (XSTART:XEND,        YSTART:YEND) ) ! Reference Soil Conductivity
+       if ( .not. allocated (NoahmpIO%refkdt_2D)    ) allocate ( NoahmpIO%refkdt_2D     (XSTART:XEND,        YSTART:YEND) ) ! Soil Infiltration Parameter
+       if ( .not. allocated (NoahmpIO%irr_frac_2D)  ) allocate ( NoahmpIO%irr_frac_2D   (XSTART:XEND,        YSTART:YEND) ) ! irrigation Fraction
+       if ( .not. allocated (NoahmpIO%irr_har_2D)   ) allocate ( NoahmpIO%irr_har_2D    (XSTART:XEND,        YSTART:YEND) ) ! number of days before harvest date to stop irrigation 
+       if ( .not. allocated (NoahmpIO%irr_lai_2D)   ) allocate ( NoahmpIO%irr_lai_2D    (XSTART:XEND,        YSTART:YEND) ) ! Minimum lai to trigger irrigation
+       if ( .not. allocated (NoahmpIO%irr_mad_2D)   ) allocate ( NoahmpIO%irr_mad_2D    (XSTART:XEND,        YSTART:YEND) ) ! management allowable deficit (0-1)
+       if ( .not. allocated (NoahmpIO%filoss_2D)    ) allocate ( NoahmpIO%filoss_2D     (XSTART:XEND,        YSTART:YEND) ) ! fraction of flood irrigation loss (0-1) 
+       if ( .not. allocated (NoahmpIO%sprir_rate_2D)) allocate ( NoahmpIO%sprir_rate_2D (XSTART:XEND,        YSTART:YEND) ) ! mm/h, sprinkler irrigation rate
+       if ( .not. allocated (NoahmpIO%micir_rate_2D)) allocate ( NoahmpIO%micir_rate_2D (XSTART:XEND,        YSTART:YEND) ) ! mm/h, micro irrigation rate
+       if ( .not. allocated (NoahmpIO%firtfac_2D)   ) allocate ( NoahmpIO%firtfac_2D    (XSTART:XEND,        YSTART:YEND) ) ! flood application rate factor
+       if ( .not. allocated (NoahmpIO%ir_rain_2D)   ) allocate ( NoahmpIO%ir_rain_2D    (XSTART:XEND,        YSTART:YEND) ) ! maximum precipitation to stop irrigation trigger
+       if ( .not. allocated (NoahmpIO%bvic_2D)      ) allocate ( NoahmpIO%bvic_2D       (XSTART:XEND,        YSTART:YEND) ) ! VIC model infiltration parameter [-]
+       if ( .not. allocated (NoahmpIO%axaj_2D)      ) allocate ( NoahmpIO%axaj_2D       (XSTART:XEND,        YSTART:YEND) ) ! Tension water distribution inflection parameter [-]
+       if ( .not. allocated (NoahmpIO%bxaj_2D)      ) allocate ( NoahmpIO%bxaj_2D       (XSTART:XEND,        YSTART:YEND) ) ! Tension water distribution shape parameter [-]
+       if ( .not. allocated (NoahmpIO%xxaj_2D)      ) allocate ( NoahmpIO%xxaj_2D       (XSTART:XEND,        YSTART:YEND) ) ! Free water distribution shape parameter [-]
+       if ( .not. allocated (NoahmpIO%bdvic_2D)     ) allocate ( NoahmpIO%bdvic_2D      (XSTART:XEND,        YSTART:YEND) ) ! DVIC model infiltration parameter [-]
+       if ( .not. allocated (NoahmpIO%gdvic_2D)     ) allocate ( NoahmpIO%gdvic_2D      (XSTART:XEND,        YSTART:YEND) ) ! Mean Capillary Drive (m) for infiltration models
+       if ( .not. allocated (NoahmpIO%bbvic_2D)     ) allocate ( NoahmpIO%bbvic_2D      (XSTART:XEND,        YSTART:YEND) ) ! DVIC heterogeniety parameter for infiltration [-]
+       if ( .not. allocated (NoahmpIO%KLAT_FAC)     ) allocate ( NoahmpIO%KLAT_FAC      (XSTART:XEND,        YSTART:YEND) ) ! factor multiplier to hydraulic conductivity
+       if ( .not. allocated (NoahmpIO%TDSMC_FAC)    ) allocate ( NoahmpIO%TDSMC_FAC     (XSTART:XEND,        YSTART:YEND) ) ! factor multiplier to field capacity
+       if ( .not. allocated (NoahmpIO%TD_DC)        ) allocate ( NoahmpIO%TD_DC         (XSTART:XEND,        YSTART:YEND) ) ! drainage coefficient for simple
+       if ( .not. allocated (NoahmpIO%TD_DCOEF)     ) allocate ( NoahmpIO%TD_DCOEF      (XSTART:XEND,        YSTART:YEND) ) ! drainge coefficient for Hooghoudt 
+       if ( .not. allocated (NoahmpIO%TD_DDRAIN)    ) allocate ( NoahmpIO%TD_DDRAIN     (XSTART:XEND,        YSTART:YEND) ) ! depth of drain
+       if ( .not. allocated (NoahmpIO%TD_RADI)      ) allocate ( NoahmpIO%TD_RADI       (XSTART:XEND,        YSTART:YEND) ) ! tile radius
+       if ( .not. allocated (NoahmpIO%TD_SPAC)      ) allocate ( NoahmpIO%TD_SPAC       (XSTART:XEND,        YSTART:YEND) ) ! tile spacing
     endif
 
     ! INOUT (with generic LSM equivalent) (as defined in WRF)
@@ -203,7 +203,7 @@ contains
     if ( .not. allocated (NoahmpIO%IRMIVOL) ) allocate ( NoahmpIO%IRMIVOL (XSTART:XEND,YSTART:YEND, 1:NTilesMax) ) ! amount of irrigation by micro (mm)
     if ( .not. allocated (NoahmpIO%IRFIVOL) ) allocate ( NoahmpIO%IRFIVOL (XSTART:XEND,YSTART:YEND, 1:NTilesMax) ) ! amount of irrigation by micro (mm)
     if ( .not. allocated (NoahmpIO%IRRSPLH) ) allocate ( NoahmpIO%IRRSPLH (XSTART:XEND,YSTART:YEND, 1:NTilesMax) ) ! latent heating from sprinkler evaporation (w/m2)
-    if ( .not. allocated (NoahmpIO%LOCTIM)  ) allocate ( NoahmpIO%LOCTIM  (XSTART:XEND,YSTART:YEND, 1:NTilesMax) ) ! local time
+    if ( .not. allocated (NoahmpIO%LOCTIM)  ) allocate ( NoahmpIO%LOCTIM  (XSTART:XEND,YSTART:YEND             ) ) ! local time
   
     ! OUT (with no Noah LSM equivalent) (as defined in WRF)   
     if ( .not. allocated (NoahmpIO%T2MVXY)     ) allocate ( NoahmpIO%T2MVXY      (XSTART:XEND,YSTART:YEND, 1:NTilesMax) ) ! 2m temperature of vegetation part
@@ -254,9 +254,11 @@ contains
     if ( .not. allocated (NoahmpIO%Z0)         ) allocate ( NoahmpIO%Z0          (XSTART:XEND,YSTART:YEND, 1:NTilesMax) ) ! roughness length output to WRF 
     if ( .not. allocated (NoahmpIO%ZNT)        ) allocate ( NoahmpIO%ZNT         (XSTART:XEND,YSTART:YEND, 1:NTilesMax) ) ! roughness length output to WRF 
     if ( .not. allocated (NoahmpIO%QTDRAIN)    ) allocate ( NoahmpIO%QTDRAIN     (XSTART:XEND,YSTART:YEND, 1:NTilesMax) ) ! tile drainage (mm)
-    if ( .not. allocated (NoahmpIO%TD_FRACTION)) allocate ( NoahmpIO%TD_FRACTION (XSTART:XEND,YSTART:YEND, 1:NTilesMax) ) ! tile drainage fraction
-    if ( .not. allocated (NoahmpIO%XLONG)      ) allocate ( NoahmpIO%XLONG       (XSTART:XEND,YSTART:YEND, 1:NTilesMax) ) ! longitude
-    if ( .not. allocated (NoahmpIO%TERRAIN)    ) allocate ( NoahmpIO%TERRAIN     (XSTART:XEND,YSTART:YEND, 1:NTilesMax) ) ! terrain height
+    if ( .not. allocated (NoahmpIO%TD_FRACTION)) allocate ( NoahmpIO%TD_FRACTION (XSTART:XEND,YSTART:YEND)              ) ! tile drainage fraction
+
+    if ( .not. allocated (NoahmpIO%XLONG)      ) allocate ( NoahmpIO%XLONG       (XSTART:XEND,YSTART:YEND             ) ) ! longitude
+    if ( .not. allocated (NoahmpIO%TERRAIN)    ) allocate ( NoahmpIO%TERRAIN     (XSTART:XEND,YSTART:YEND             ) ) ! terrain height
+
     if ( .not. allocated (NoahmpIO%GVFMIN)     ) allocate ( NoahmpIO%GVFMIN      (XSTART:XEND,YSTART:YEND, 1:NTilesMax) ) ! annual minimum in vegetation fraction
     if ( .not. allocated (NoahmpIO%GVFMAX)     ) allocate ( NoahmpIO%GVFMAX      (XSTART:XEND,YSTART:YEND, 1:NTilesMax) ) ! annual maximum in vegetation fraction
 

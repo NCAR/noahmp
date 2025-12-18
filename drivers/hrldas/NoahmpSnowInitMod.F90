@@ -105,7 +105,7 @@ contains
              enddo
 
              ! Assign ZSNSOXY, the layer depths, for soil and snow layers
-             NoahmpIO%ZSNSOXY(I,NoahmpIO%ISNOWXY(I,J,N)+1,J,N) = DZSNSO(NoahmpIO%ISNOWXY(I,J,N)+1,N)
+             NoahmpIO%ZSNSOXY(I,NoahmpIO%ISNOWXY(I,J,N)+1,J,N) = DZSNSO(NoahmpIO%ISNOWXY(I,J,N)+1)
              do IZ = NoahmpIO%ISNOWXY(I,J,N)+2, NoahmpIO%NSOIL
                 NoahmpIO%ZSNSOXY(I,IZ,J,N) = NoahmpIO%ZSNSOXY(I,IZ-1,J,N) + DZSNSO(IZ)
              enddo

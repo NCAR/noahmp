@@ -22,75 +22,75 @@ module GroundWaterMmfMod
 contains
 
   subroutine WTABLE_mmf_noahmp (NoahmpIO)
-)
+
 ! ----------------------------------------------------------------------
   implicit none
 ! ----------------------------------------------------------------------
 ! IN only
 
-  type(NoahmpIO_type), intent(in) :: NoahmpIO
+  type(NoahmpIO_type), intent(inout) :: NoahmpIO
 
 !LOCAL  
   
-  integer                                              :: I,J,K,N  
-  real(kind=kind_noahmp),  dimension(0:NSOIL)          :: ZSOIL                               !depth of soil layer-bottom [m]
-  real(kind=kind_noahmp),  dimension(1:NSOIL)          :: SMCEQ                               !equilibrium soil water  content [m3/m3]
-  real(kind=kind_noahmp),  dimension(1:NSOIL)          :: SMC,SH2O
-  real(kind=kind_noahmp)                               :: DELTAT,RCOND,TOTWATER,PSI,        &
-                                                          WFLUXDEEP,WCNDDEEP,DDZ,SMCWTDMID, &
-                                                          WPLUS,WMINUS
+  integer                                                       :: I,J,K,N  
+  real(kind=kind_noahmp),  dimension(0:NoahmpIO%NSOIL)          :: ZSOIL                               !depth of soil layer-bottom [m]
+  real(kind=kind_noahmp),  dimension(1:NoahmpIO%NSOIL)          :: SMCEQ                               !equilibrium soil water  content [m3/m3]
+  real(kind=kind_noahmp),  dimension(1:NoahmpIO%NSOIL)          :: SMC,SH2O
+  real(kind=kind_noahmp)                                        :: DELTAT,RCOND,TOTWATER,PSI,        &
+                                                                   WFLUXDEEP,WCNDDEEP,DDZ,SMCWTDMID, &
+                                                                   WPLUS,WMINUS
   
-  real(kind=kind_noahmp)                               :: BEXP,DKSAT,PSISAT,SMCMAX,SMCWLT
-  real(kind=kind_noahmp),  dimension(ims:ime, jms:jme) :: WaterTableAvg                       ! grid average WTPD for laterflow subroutine
+  real(kind=kind_noahmp)                                        :: BEXP,DKSAT,PSISAT,SMCMAX,SMCWLT
+  real(kind=kind_noahmp),  dimension(NoahmpIO%ims:NoahmpIO%ime, NoahmpIO%jms:NoahmpIO%jme) :: WaterTableAvg                       ! grid average WTPD for laterflow subroutine
 ! --------------------------------------------------------------------------------    
-  associate(                                              &
-            ids              => NoahmpIO%ids             ,&
-            ide              => NoahmpIO%ide             ,&
-            jds              => NoahmpIO%jds             ,&
-            jde              => NoahmpIO%jde             ,&  
-            kds              => NoahmpIO%kds             ,&
-            kde              => NoahmpIO%kde             ,&
-            ims              => NoahmpIO%ims             ,&
-            ime              => NoahmpIO%ime             ,&  
-            jms              => NoahmpIO%jms             ,&
-            jme              => NoahmpIO%jme             ,&  
-            kms              => NoahmpIO%kms             ,&
-            kme              => NoahmpIO%kme             ,&
-            its              => NoahmpIO%its             ,&
-            ite              => NoahmpIO%ite             ,&  
-            jts              => NoahmpIO%jts             ,&
-            jte              => NoahmpIO%jte             ,&  
-            kts              => NoahmpIO%kts             ,&
-            kte              => NoahmpIO%kte             ,& 
-            NSOIL            => NoahmpIO%NSOIL           ,&                  
-            ISLTYP           => NoahmpIO%ISLTYP          ,&    
-            SMOISEQ          => NoahmpIO%SMOISEQ         ,&  ! mosaic 
-            DZS              => NoahmpIO%DZS             ,&       
-            WTDDT            => NoahmpIO%WTDDT           ,&  
-            FDEPTH           => NoahmpIO%FDEPTHXY        ,&     
-            AREA             => NoahmpIO%AREAXY          ,&      
-            TOPO             => NoahmpIO%TERRAIN         ,&      
-            ISURBAN          => NoahmpIO%ISURBAN         ,&   
-            IVGTYP           => NoahmpIO%IVGTYP          ,&   
-            RIVERCOND        => NoahmpIO%RIVERCONDXY     ,&   
-            RIVERBED         => NoahmpIO%RIVERBEDXY      ,&  
-            EQWTD            => NoahmpIO%EQZWT           ,&    
-            PEXP             => NoahmpIO%PEXPXY          ,&  
-            SMOIS            => NoahmpIO%SMOIS           ,&  ! mosaic    
-            SH2OXY           => NoahmpIO%SH2O            ,&  ! mosaic  
-            SMCWTD           => NoahmpIO%SMCWTDXY        ,&  ! mosaic 
-            WTD              => NoahmpIO%ZWTXY           ,&  ! mosaic 
-            QLAT             => NoahmpIO%QLATXY          ,&  
-            QRF              => NoahmpIO%QRFXY           ,&  
-            DEEPRECH         => NoahmpIO%DEEPRECHXY      ,&   
-            QSPRING          => NoahmpIO%QSPRINGXY       ,&    
-            QSLAT            => NoahmpIO%QSLATXY         ,&    
-            QRFS             => NoahmpIO%QRFSXY          ,&  
-            QSPRINGS         => NoahmpIO%QSPRINGSXY      ,&   
-            RECH             => NoahmpIO%RECHXY          ,&   
-            LANDMASK         => NoahmpIO%LANDMASK        ,&
-            NumberOfTiles    => NoahmpIO%NumberOfTiles   ,&
-            landusefRescaled => NoahmpIO%landusefRescaled &
+  associate(                                                   &
+            ids                => NoahmpIO%ids                ,&
+            ide                => NoahmpIO%ide                ,&
+            jds                => NoahmpIO%jds                ,&
+            jde                => NoahmpIO%jde                ,&  
+            kds                => NoahmpIO%kds                ,&
+            kde                => NoahmpIO%kde                ,&
+            ims                => NoahmpIO%ims                ,&
+            ime                => NoahmpIO%ime                ,&  
+            jms                => NoahmpIO%jms                ,&
+            jme                => NoahmpIO%jme                ,&  
+            kms                => NoahmpIO%kms                ,&
+            kme                => NoahmpIO%kme                ,&
+            its                => NoahmpIO%its                ,&
+            ite                => NoahmpIO%ite                ,&  
+            jts                => NoahmpIO%jts                ,&
+            jte                => NoahmpIO%jte                ,&  
+            kts                => NoahmpIO%kts                ,&
+            kte                => NoahmpIO%kte                ,& 
+            NSOIL              => NoahmpIO%NSOIL              ,&                  
+            ISLTYP             => NoahmpIO%ISLTYP             ,&    
+            SMOISEQ            => NoahmpIO%SMOISEQ            ,&  ! mosaic 
+            DZS                => NoahmpIO%DZS                ,&       
+            WTDDT              => NoahmpIO%WTDDT              ,&  
+            FDEPTH             => NoahmpIO%FDEPTHXY           ,&     
+            AREA               => NoahmpIO%AREAXY             ,&      
+            TOPO               => NoahmpIO%TERRAIN            ,&      
+            ISURBAN            => NoahmpIO%ISURBAN            ,&   
+            IVGTYP             => NoahmpIO%IVGTYP             ,&   
+            RIVERCOND          => NoahmpIO%RIVERCONDXY        ,&   
+            RIVERBED           => NoahmpIO%RIVERBEDXY         ,&  
+            EQWTD              => NoahmpIO%EQZWT              ,&    
+            PEXP               => NoahmpIO%PEXPXY             ,&  
+            SMOIS              => NoahmpIO%SMOIS              ,&  ! mosaic    
+            SH2OXY             => NoahmpIO%SH2O               ,&  ! mosaic  
+            SMCWTD             => NoahmpIO%SMCWTDXY           ,&  ! mosaic 
+            WTD                => NoahmpIO%ZWTXY              ,&  ! mosaic 
+            QLAT               => NoahmpIO%QLATXY             ,&  
+            QRF                => NoahmpIO%QRFXY              ,&  
+            DEEPRECH           => NoahmpIO%DEEPRECHXY         ,&   
+            QSPRING            => NoahmpIO%QSPRINGXY          ,&    
+            QSLAT              => NoahmpIO%QSLATXY            ,&    
+            QRFS               => NoahmpIO%QRFSXY             ,&  
+            QSPRINGS           => NoahmpIO%QSPRINGSXY         ,&   
+            RECH               => NoahmpIO%RECHXY             ,&   
+            LANDMASK           => NoahmpIO%LANDMASK           ,&
+            NumberOfTiles      => NoahmpIO%NumberOfTiles      ,&
+            SubGrdFracRescaled => NoahmpIO%SubGrdFracRescaled  &
            )
 ! -------------------------------------------------------------------------------- 
 
@@ -111,13 +111,13 @@ contains
             IF(LANDMASK(I,J).GT.0)THEN 
               DO N = 1, NumberOfTiles(I,J)
                  WaterTableAvg (I,J) =  WaterTableAvg (I,J) + &
-                                        WTD (I,J,N) * landusefRescaled (I,J,N)
+                                        WTD (I,J,N) * SubGrdFracRescaled (I,J,N)
               ENDDO 
             ENDIF
          ENDDO 
       ENDDO   
     ELSE
-      WaterTableAvg = WTD
+      WaterTableAvg = WTD(:,:,1)
     ENDIF
 !Calculate lateral flow
 
@@ -184,7 +184,7 @@ contains
 
 !Total water flux to or from groundwater in the cell
                IF (NoahmpIO%IOPT_MOSAIC .NE. 0) THEN
-                  TOTWATER = landusefRescaled (I,J,N) * (QLAT(I,J) - QRF(I,J)) + DEEPRECH(I,J,N) 
+                  TOTWATER = SubGrdFracRescaled (I,J,N) * (QLAT(I,J) - QRF(I,J)) + DEEPRECH(I,J,N) 
                ELSE 
                   TOTWATER = QLAT(I,J) - QRF(I,J) + DEEPRECH(I,J,N)                             !If mosaic not ON, N=1
                ENDIF
@@ -196,7 +196,7 @@ contains
 !Update the water table depth and soil moisture
                CALL UPDATEWTD ( NSOIL, DZS , ZSOIL, SMCEQ, SMCMAX, SMCWLT, PSISAT, BEXP, I, J, &!in
                                 TOTWATER, WTD(I,J,N), SMC, SH2O, SMCWTD(I,J,N),                &!inout
-                                QSPRING(I,J,N) ) !out
+                                QSPRING(I,J) ) !out
 
 !now update soil moisture
                SMOIS(I,1:NSOIL,J,N)  = SMC(1:NSOIL)
@@ -214,7 +214,7 @@ contains
            QSLAT(I,J) = QSLAT(I,J) + QLAT(I,J)*1.E3
            QRFS(I,J)  = QRFS(I,J) + QRF(I,J)*1.E3
            DO N = 1, NumberOfTiles(I,J)
-              QSPRINGS(I,J) = QSPRINGS(I,J) + QSPRING(I,J,N)*1.E3
+              QSPRINGS(I,J) = QSPRINGS(I,J) + QSPRING(I,J)*1.E3
               RECH(I,J,N)   = RECH(I,J,N)   + DEEPRECH(I,J,N)*1.E3
               !zero out DEEPRECH
               DEEPRECH(I,J,N) =0.
