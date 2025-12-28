@@ -661,6 +661,7 @@ module NoahmpIOVarType
     integer                                                ::  NumMosaicCat        ! number of mosiac category, which is equal to number of soil type or lulc type, etc.
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  SubGrdFrac          ! Subgrid fraction for lulc or soiltype or hydro type ; input from geo_em file
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  SubGrdFracRescaled  ! land use fraction scaled as per the selected number of NumberOfTiles to 100%
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  SubGrdFracMosaic    ! scaled land use fraction subset for the selected number of NumberOfTiles
     integer,                allocatable, dimension(:,:,:)  ::  SubGrdIndexSorted   ! land use index sorted in decreasing order of llandusef
     integer,                allocatable, dimension(:,:)    ::  NumberOfTiles       ! maximum number of tiles in each grid or N_tiles; for noahmp 1D looping
     integer                                                ::  NTilesMax           ! Maximum mosaic category across the domain to initialize the NoahmpIO & IO

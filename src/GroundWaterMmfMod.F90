@@ -90,7 +90,7 @@ contains
             RECH               => NoahmpIO%RECHXY             ,&   
             LANDMASK           => NoahmpIO%LANDMASK           ,&
             NumberOfTiles      => NoahmpIO%NumberOfTiles      ,&
-            SubGrdFracRescaled => NoahmpIO%SubGrdFracRescaled  &
+            SubGrdFracMosaic   => NoahmpIO%SubGrdFracMosaic    &
            )
 ! -------------------------------------------------------------------------------- 
 
@@ -111,7 +111,7 @@ contains
             IF(LANDMASK(I,J).GT.0)THEN 
               DO N = 1, NumberOfTiles(I,J)
                  WaterTableAvg (I,J) =  WaterTableAvg (I,J) + &
-                                        WTD (I,J,N) * SubGrdFracRescaled (I,J,N)
+                                        WTD (I,J,N) * SubGrdFracMosaic (I,J,N)
               ENDDO 
             ENDIF
          ENDDO 
@@ -184,7 +184,7 @@ contains
 
 !Total water flux to or from groundwater in the cell
                IF (NoahmpIO%IOPT_MOSAIC .NE. 0) THEN
-                  TOTWATER = SubGrdFracRescaled (I,J,N) * (QLAT(I,J) - QRF(I,J)) + DEEPRECH(I,J,N) 
+                  TOTWATER = SubGrdFracMosaic (I,J,N) * (QLAT(I,J) - QRF(I,J)) + DEEPRECH(I,J,N) 
                ELSE 
                   TOTWATER = QLAT(I,J) - QRF(I,J) + DEEPRECH(I,J,N)                             !If mosaic not ON, N=1
                ENDIF

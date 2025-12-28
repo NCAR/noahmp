@@ -48,7 +48,7 @@ contains
     elsewhere
          NoahmpIO%LANDMASK = -1
     endwhere
-
+print*,shape(NoahmpIO%NumberOfTiles),jts,jtf,its,itf
     ! only initialize for non-restart case
     if ( .not. NoahmpIO%restart_flag ) then
 
@@ -144,7 +144,7 @@ contains
        ! initilize other quantities
        do J = jts, jtf
           do I = its, itf
-             do N = 1, NoahmpIO%NumberOfTiles(I,J) 
+             do N = 1, NoahmpIO%NumberOfTiles(I,J)
                 if(NoahmpIO%IOPT_MOSAIC == 1) then                                           ! if mosaic is based ons lulc
                    NoahmpIO%IVGTYP(I,J) = NoahmpIO%SubGrdIndexSorted(I,J,N)
                 endif
@@ -274,12 +274,12 @@ contains
 
                   ! scale irrigation and tile drainage area fractions to subgrid crop fraction
                   if ( NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISCROP_TABLE ) then
-                      if( NoahmpIO%SubGrdFracRescaled(I,J,N) > 0.0 ) then
-                          NoahmpIO%IRFRACT(I,J) = NoahmpIO%IRFRACT(I,J)/NoahmpIO%SubGrdFracRescaled(I,J,N)
-                          NoahmpIO%SIFRACT(I,J) = NoahmpIO%SIFRACT(I,J)/NoahmpIO%SubGrdFracRescaled(I,J,N)
-                          NoahmpIO%MIFRACT(I,J) = NoahmpIO%MIFRACT(I,J)/NoahmpIO%SubGrdFracRescaled(I,J,N)
-                          NoahmpIO%FIFRACT(I,J) = NoahmpIO%FIFRACT(I,J)/NoahmpIO%SubGrdFracRescaled(I,J,N)
-                          NoahmpIO%TD_FRACTION(I,J) = NoahmpIO%TD_FRACTION(I,J)/NoahmpIO%SubGrdFracRescaled(I,J,N)
+                      if( NoahmpIO%SubGrdFracMosaic(I,J,N) > 0.0 ) then
+                          NoahmpIO%IRFRACT(I,J) = NoahmpIO%IRFRACT(I,J)/NoahmpIO%SubGrdFracMosaic(I,J,N)
+                          NoahmpIO%SIFRACT(I,J) = NoahmpIO%SIFRACT(I,J)/NoahmpIO%SubGrdFracMosaic(I,J,N)
+                          NoahmpIO%MIFRACT(I,J) = NoahmpIO%MIFRACT(I,J)/NoahmpIO%SubGrdFracMosaic(I,J,N)
+                          NoahmpIO%FIFRACT(I,J) = NoahmpIO%FIFRACT(I,J)/NoahmpIO%SubGrdFracMosaic(I,J,N)
+                          NoahmpIO%TD_FRACTION(I,J) = NoahmpIO%TD_FRACTION(I,J)/NoahmpIO%SubGrdFracMosaic(I,J,N)
                       else
                           NoahmpIO%IRFRACT(I,J) = 0.0
                           NoahmpIO%SIFRACT(I,J) = 0.0

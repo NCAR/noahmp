@@ -74,9 +74,9 @@ contains
           ! Extract fractions and initialize sorting arrays
           do k = 1, NumMosaicCat
              if (k .eq. NoahmpIO%ISWATER) then     ! to skip water fractions in the grid
-               SubGrdFrac(i,k,j) = 0.
+               SubGrdFrac(i,j,k) = 0.
              endif
-             frac_vec(k)         = SubGrdFrac(i,k,j)
+             frac_vec(k)         = SubGrdFrac(i,j,k)
              sorted_indices(k)   = k
              sorted_values(k)    = frac_vec(k)
           end do
@@ -121,21 +121,26 @@ contains
           end do
 
           !print for diagnosis
-          if(i .eq. 150 .and. j .eq. 150) then
-              WRITE(*,'(A,I2,A,I2,A)') 'Grid (', i, ',', j, '): Dominant Land Cover Types (>90% of total)'
-              DO k = 1, n_dominant
-                WRITE(*,'(A,I2,A,F7.4,A,F7.4)') '  Type: ', sorted_indices(k), &
-                        '  Original: ', sorted_values(k), '  Rescaled: ', rescaled_values(k)
-              END DO
-              WRITE(*,'(A,F7.4)') '  Sum of Rescaled Fractions: ', SUM(rescaled_values(1:n_dominant))
-              PRINT *, '-------------------------------------------------------------'
-          end if
+          !if(i .eq. 450 .and. j .eq. 450) then
+          !    WRITE(*,'(A,I2,A,I2,A)') 'Grid (', i, ',', j, '): Dominant Land Cover Types (>90% of total)'
+          !    DO k = 1, n_dominant
+          !      WRITE(*,'(A,I2,A,F7.4,A,F7.4)') '  Type: ', sorted_indices(k), &
+          !              '  Original: ', sorted_values(k), '  Rescaled: ', rescaled_values(k)
+          !    END DO
+          !    WRITE(*,'(A,F7.4)') '  Sum of Rescaled Fractions: ', SUM(rescaled_values(1:n_dominant))
+          !    PRINT *, '-------------------------------------------------------------'
+          !end if
+          
+          if(n_dominant==0)SubGrdIndexSorted(i,j,k) = NoahmpIO%ISWATER
 
           do k = 1, n_dominant
              SubGrdFracRescaled(i,j,k)  =  rescaled_values(k)
              SubGrdIndexSorted(i,j,k)   =  sorted_indices(k)
              NumberOfTiles(i,j)         =  n_dominant ! it is <= NTiles_user
              NTilesMax                  =  min(max(NTilesMax,n_dominant), NTiles_user) ! maximum value across domain
+             if( (SubGrdFracRescaled(i,j,k)==0) .and. (SubGrdIndexSorted(i,j,k)==0) )then
+               SubGrdIndexSorted(i,j,k) = NoahmpIO%ISWATER
+             endif
           enddo
        end do
     end do
