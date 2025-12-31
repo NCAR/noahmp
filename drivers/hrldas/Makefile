@@ -23,9 +23,18 @@ OBJS = NoahmpGroundwaterInitMod.o \
        EnergyVarInTransferMod.o \
        WaterVarInTransferMod.o \
        BiochemVarInTransferMod.o \
+       GroundWaterMmfMod.o \
        PedoTransferSR2006Mod.o
 
 all:	$(OBJS)
+
+GroundWaterMmfMod.o: GroundWaterMmfMod.F90
+        @echo ""
+        $(RM) GroundWaterMmfMod.f90
+        $(CPP) $(CPPFLAGS) $(*).F90 > $(*).f90
+        $(COMPILERF90) -c -I../../../hrldas/MPP -I. -I../../../hrldas/Utility_routines \
+        -I../../utility $(F90FLAGS) $(FREESOURCE) $(NETCDFMOD) $(*).f90
+        @echo ""
 
 .F90.o:
 	@echo ""
@@ -58,10 +67,11 @@ EnergyVarInTransferMod.o:   ../../utility/Machine.o NoahmpIOVarType.o ../../src/
 BiochemVarInTransferMod.o:  ../../utility/Machine.o NoahmpIOVarType.o ../../src/NoahmpVarType.o
 WaterVarInTransferMod.o:    ../../utility/Machine.o NoahmpIOVarType.o ../../src/NoahmpVarType.o PedoTransferSR2006Mod.o
 NoahmpGroundwaterInitMod.o: ../../../hrldas/Utility_routines/module_domain.o \
-                            ../../utility/Machine.o NoahmpIOVarType.o ../../src/GroundWaterMmfMod.o 
+                            ../../utility/Machine.o NoahmpIOVarType.o GroundWaterMmfMod.o 
 NoahmpSnowInitMod.o:        ../../utility/Machine.o NoahmpIOVarType.o
 NoahmpInitMainMod.o:        ../../utility/Machine.o NoahmpIOVarType.o NoahmpSnowInitMod.o \
                             ../../../hrldas/Utility_routines/module_wrf_utilities.o
+GroundWaterMmfMod.o:        ../../utility/Machine.o NoahmpIOVarType.o
 NoahmpDriverMainMod.o:      ../../utility/Machine.o ../../src/NoahmpVarType.o NoahmpIOVarType.o \
                             ../../src/ConfigVarInitMod.o \
                             ../../src/EnergyVarInitMod.o ../../src/ForcingVarInitMod.o \
