@@ -29,12 +29,12 @@ OBJS = NoahmpGroundwaterInitMod.o \
 all:	$(OBJS)
 
 GroundWaterMmfMod.o: GroundWaterMmfMod.F90
-        @echo ""
-        $(RM) GroundWaterMmfMod.f90
-        $(CPP) $(CPPFLAGS) $(*).F90 > $(*).f90
-        $(COMPILERF90) -c -I../../../hrldas/MPP -I. -I../../../hrldas/Utility_routines \
-        -I../../utility $(F90FLAGS) $(FREESOURCE) $(NETCDFMOD) $(*).f90
-        @echo ""
+	@echo ""
+	$(RM) GroundWaterMmfMod.f90
+	$(CPP) $(CPPFLAGS) $(*).F90 > $(*).f90
+	$(COMPILERF90) -c -I../../../hrldas/MPP -I. -I../../../hrldas/Utility_routines \
+	-I../../utility $(F90FLAGS) $(FREESOURCE) $(NETCDFMOD) $(*).f90
+	@echo ""
 
 .F90.o:
 	@echo ""
