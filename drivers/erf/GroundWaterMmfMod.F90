@@ -14,7 +14,6 @@ module GroundWaterMmfMod
 ! -------------------------------------------------------------------------
 
   use NoahmpIOVarType
-  use NoahmpVarType
   use Machine
 
    implicit none
@@ -678,4 +677,4 @@ ENDIF
 
 ! ----------------------------------------------------------------------
 
-END MODULE GroundWaterMmfMod
+end module GroundWaterMmfMod

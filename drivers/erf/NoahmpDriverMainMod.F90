@@ -20,9 +20,6 @@ module NoahmpDriverMainMod
   use BiochemVarOutTransferMod
   use NoahmpMainMod
   use NoahmpMainGlacierMod
-#if ( WRF_CHEM == 1 )
-  USE module_data_gocart_dust
-#endif
 
   implicit none
   
