@@ -30,6 +30,8 @@ contains
                    NSOIL,   restart,                                                    &
                    allowed_to_read , IOPT_RUNSUB, IOPT_CROP, IOPT_IRR, IOPT_IRRM,       &
                    SF_URBAN_PHYSICS, IOPT_SOIL, IOPT_ALB, IOPT_WETLAND,                 &
+                   SNICAR_SNOWOPTICS_OPT, SNICAR_DUSTOPTICS_OPT, SNICAR_SOLARSPEC_OPT,  & ! optional SNICAR option
+                   SNICAR_BANDNUMBER_OPT,                                               & ! optional SNICAR option
                    ids,ide, jds,jde, kds,kde,                                           &
                    ims,ime, jms,jme, kms,kme,                                           &
                    its,ite, jts,jte, kts,kte,                                           &
@@ -72,6 +74,10 @@ contains
     REAL,    DIMENSION(ims:ime,jms:jme), INTENT(IN), OPTIONAL  :: HT                  ! terrain height (m)
     REAL,    DIMENSION(ims:ime,jms:jme), INTENT(IN), OPTIONAL  :: MSFTX, MSFTY
     REAL,    DIMENSION(ims:ime,jms:jme), INTENT(IN), OPTIONAL  :: rechclim
+    INTEGER, INTENT(IN),                             OPTIONAL  :: SNICAR_SNOWOPTICS_OPT, &
+                                                                  SNICAR_DUSTOPTICS_OPT, &
+                                                                  SNICAR_SOLARSPEC_OPT,  &
+                                                                  SNICAR_BANDNUMBER_OPT
     ! in/out
     REAL,    DIMENSION(ims:ime,jms:jme), INTENT(INOUT)         :: TMN                 ! deep soil temperature (k)
     INTEGER, DIMENSION(ims:ime,jms:jme), INTENT(INOUT)         :: isnowxy             ! actual no. of snow layers
@@ -197,6 +203,12 @@ contains
     NoahmpIO%IOPT_ALB         = IOPT_ALB
     NoahmpIO%IOPT_WETLAND     = IOPT_WETLAND
     NoahmpIO%IOPT_RUNSUB      = IOPT_RUNSUB
+    if ( NoahmpIO%IOPT_ALB == 3 ) then
+       NoahmpIO%SNICAR_SNOWOPTICS_OPT = SNICAR_SNOWOPTICS_OPT
+       NoahmpIO%SNICAR_DUSTOPTICS_OPT = SNICAR_DUSTOPTICS_OPT
+       NoahmpIO%SNICAR_SOLARSPEC_OPT  = SNICAR_SOLARSPEC_OPT
+       NoahmpIO%SNICAR_BANDNUMBER_OPT = SNICAR_BANDNUMBER_OPT
+    endif
 
     ! initialze all NoahmpIO variables with default values
     call NoahmpIOVarInitDefault(NoahmpIO)
