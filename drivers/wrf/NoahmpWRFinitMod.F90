@@ -27,6 +27,7 @@ contains
                    dust2xy, dust3xy, dust4xy, dust5xy, massconcbcphixy, massconcbcphoxy,&
                    massconcocphixy, massconcocphoxy, massconcdust1xy, massconcdust2xy,  &
                    massconcdust3xy, massconcdust4xy, massconcdust5xy,                   &
+                   ALBSOILDIRXY, ALBSOILDIFXY,                                          &
                    NSOIL,   restart,                                                    &
                    allowed_to_read , IOPT_RUNSUB, IOPT_CROP, IOPT_IRR, IOPT_IRRM,       &
                    SF_URBAN_PHYSICS, IOPT_SOIL, IOPT_ALB, IOPT_WETLAND,                 &
@@ -151,6 +152,8 @@ contains
     REAL,    DIMENSION(ims:ime,-2:0,jms:jme), INTENT(INOUT)    :: massconcdust3xy     ! SNICAR DUST3 mass conc in snow
     REAL,    DIMENSION(ims:ime,-2:0,jms:jme), INTENT(INOUT)    :: massconcdust4xy     ! SNICAR DUST4 mass conc in snow
     REAL,    DIMENSION(ims:ime,-2:0,jms:jme), INTENT(INOUT)    :: massconcdust5xy     ! SNICAR DUST5 mass conc in snow
+    REAL,    DIMENSION(ims:ime,1:2,jms:jme),  INTENT(INOUT)    :: ALBSOILDIRXY        ! soil albedo direct
+    REAL,    DIMENSION(ims:ime,1:2,jms:jme),  INTENT(INOUT)    :: ALBSOILDIFXY        ! soil albedo diffuse
     REAL,    DIMENSION(ims:ime,jms:jme),         INTENT(INOUT), OPTIONAL :: smcwtdxy     ! deep soil moisture content [m3m-3]
     REAL,    DIMENSION(ims:ime,jms:jme),         INTENT(INOUT), OPTIONAL :: deeprechxy   ! deep recharge [m]
     REAL,    DIMENSION(ims:ime,jms:jme),         INTENT(INOUT), OPTIONAL :: rechxy       ! accumulated recharge [mm]
@@ -310,6 +313,8 @@ contains
     NoahmpIO%RIVERCONDXY        = RIVERCONDXY
     NoahmpIO%PEXPXY             = PEXPXY
     NoahmpIO%SMOISEQ            = SMOISEQ
+    NoahmpIO%ALBSOILDIRXY       = ALBSOILDIRXY
+    NoahmpIO%ALBSOILDIFXY       = ALBSOILDIFXY
     if ( NoahmpIO%IOPT_WETLAND > 0 ) then
        NoahmpIO%FSATXY          = FSATXY
        NoahmpIO%WSURFXY         = WSURFXY
@@ -411,6 +416,8 @@ contains
     PEXPXY       = NoahmpIO%PEXPXY
     SMOISEQ      = NoahmpIO%SMOISEQ
     CHSTARXY     = 0.1 ! dummy
+    ALBSOILDIRXY = NoahmpIO%ALBSOILDIRXY
+    ALBSOILDIFXY = NoahmpIO%ALBSOILDIFXY 
     if ( NoahmpIO%IOPT_WETLAND > 0 ) then
        FSATXY    = NoahmpIO%FSATXY
        WSURFXY   = NoahmpIO%WSURFXY

@@ -69,6 +69,7 @@ contains
                    MassConcBCPHIXY, MassConcBCPHOXY, MassConcOCPHIXY,            & ! SNICAR variable
                    MassConcOCPHOXY, MassConcDUST1XY, MassConcDUST2XY,            & ! SNICAR variable
                    MassConcDUST3XY, MassConcDUST4XY, MassConcDUST5XY,            & ! SNICAR variable
+                   ALBSOILDIRXY, ALBSOILDIFXY,                                   & ! SNICAR variable
                  ! BEXP_3D,SMCDRY_3D,SMCWLT_3D,SMCREF_3D,SMCMAX_3D,              & ! placeholders to activate 3D soil
                  ! DKSAT_3D,DWSAT_3D,PSISAT_3D,QUARTZ_3D,                        & ! placeholders to activate 3D soil
                  ! REFDK_2D,REFKDT_2D,                                           & ! placeholders to activate 3D soil
@@ -343,6 +344,8 @@ contains
     REAL,    DIMENSION( ims:ime,-2:0,     jms:jme ), INTENT(INOUT) ::  MassConcDUST3XY ! mass concentration of dust species 3 in snow [kg/kg]
     REAL,    DIMENSION( ims:ime,-2:0,     jms:jme ), INTENT(INOUT) ::  MassConcDUST4XY ! mass concentration of dust species 4 in snow [kg/kg]
     REAL,    DIMENSION( ims:ime,-2:0,     jms:jme ), INTENT(INOUT) ::  MassConcDUST5XY ! mass concentration of dust species 5 in snow [kg/kg]
+    REAL,    DIMENSION(ims:ime,1:2,       jms:jme),  INTENT(INOUT) ::  ALBSOILDIRXY    ! soil albedo direct
+    REAL,    DIMENSION(ims:ime,1:2,       jms:jme),  INTENT(INOUT) ::  ALBSOILDIFXY    ! soil albedo diffuse
 #ifdef WRF_HYDRO
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(INOUT) ::  sfcheadrt,INFXSRT,soldrain,qtiledrain,ZWATBLE2D   ! for WRF-Hydro
 #endif
@@ -670,6 +673,8 @@ contains
     NoahmpIO%ACC_ECANXY         = ACC_ECANXY
     NoahmpIO%ACC_ETRANXY        = ACC_ETRANXY
     NoahmpIO%ACC_EDIRXY         = ACC_EDIRXY
+    NoahmpIO%ALBSOILDIRXY       = ALBSOILDIRXY
+    NoahmpIO%ALBSOILDIFXY       = ALBSOILDIFXY
     if ( NoahmpIO%IOPT_WETLAND > 0 ) then
        NoahmpIO%FSATXY          = FSATXY
        NoahmpIO%WSURFXY         = WSURFXY
@@ -797,6 +802,8 @@ contains
     ACC_ECANXY   = NoahmpIO%ACC_ECANXY
     ACC_ETRANXY  = NoahmpIO%ACC_ETRANXY
     ACC_EDIRXY   = NoahmpIO%ACC_EDIRXY
+    ALBSOILDIRXY = NoahmpIO%ALBSOILDIRXY
+    ALBSOILDIFXY = NoahmpIO%ALBSOILDIFXY
     if ( NoahmpIO%IOPT_WETLAND > 0 ) then
        FSATXY    = NoahmpIO%FSATXY
        WSURFXY   = NoahmpIO%WSURFXY
