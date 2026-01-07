@@ -263,11 +263,15 @@ contains
        ! Initialize Noah-MP Snow
        call NoahmpSnowinitMain(NoahmpIO)
  
-       !initialize arrays for groundwater dynamics iopt_runsub=5 
+       ! initialize arrays for groundwater dynamics iopt_runsub=5 
        if ( NoahmpIO%IOPT_RUNSUB == 5 ) then
           NoahmpIO%STEPWTD = nint(NoahmpIO%WTDDT * 60.0 / NoahmpIO%DTBL)
           NoahmpIO%STEPWTD = max(NoahmpIO%STEPWTD,1)
        endif
+
+       ! initialize soil albedo
+       NoahmpIO%ALBSOILDIRXY = 0.0
+       NoahmpIO%ALBSOILDIFXY = 0.0
 
     endif ! NoahmpIO%restart_flag
 
