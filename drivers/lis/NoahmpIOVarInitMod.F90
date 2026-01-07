@@ -703,8 +703,8 @@ contains
     NoahmpIO%ALBSFCDIFXY     = undefined_real
     NoahmpIO%ALBSOILDIRXY    = 0.0
     NoahmpIO%ALBSOILDIFXY    = 0.0
-    NoahmpIO%RadSwVisFrac    = undefined_real
-    NoahmpIO%RadSwDirFrac    = undefined_real
+    NoahmpIO%RadSwVisFrac    = 0.5
+    NoahmpIO%RadSwDirFrac    = 0.7
     NoahmpIO%rivsto          = undefined_real
     NoahmpIO%fldsto          = undefined_real
     NoahmpIO%fldfrc          = undefined_real
