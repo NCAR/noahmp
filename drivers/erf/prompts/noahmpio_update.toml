@@ -63,7 +63,7 @@ File: NoahmpIO.cpp
    add initialization for `T_PHY` and `TSK` as:
 
    ```
-   T_PHY = NoahArray3D<double>(fptr.T_PHY, {xstart, kds, ystart}, {xend, kde, yend});
+   T_PHY = NoahArray3D<double>(fptr.T_PHY, {xstart, kms, ystart}, {xend, kme, yend});
    TSK   = NoahArray2D<double>(fptr.TSK, {xstart, ystart}, {xend, yend});
    ```
 
