@@ -10,7 +10,7 @@ module NoahmpWRFmainMod
 
 contains
 
-  subroutine NoahmpWRFmain(ITIMESTEP, YR, JULIAN,   COSZIN,     XLAT,    XLONG,  & ! IN : Time/Space-related
+  subroutine NoahmpWRFmain(NoahmpIO, ITIMESTEP, YR, JULIAN, COSZIN, XLAT, XLONG, & ! IN : Time/Space-related
                    DZ8W,          DT,        DZS,    NSOIL,       DX,            & ! IN : Model configuration 
                    IVGTYP,    ISLTYP,     VEGFRA,   VEGMAX,      TMN,            & ! IN : Vegetation/Soil characteristics
                    XLAND,       XICE, XICE_THRES,  CROPCAT,                      & ! IN : Vegetation/Soil characteristics
@@ -39,7 +39,6 @@ contains
                    ZSNSOXY,  SNICEXY,    SNLIQXY, LFMASSXY, RTMASSXY, STMASSXY,  & ! IN/OUT Noah MP only
                    WOODXY,  STBLCPXY,   FASTCPXY,   XLAIXY,   XSAIXY,  TAUSSXY,  & ! IN/OUT Noah MP only
                    SMOISEQ, SMCWTDXY, DEEPRECHXY,   RECHXY,GRAINXY,GDDXY,PGSXY,  & ! IN/OUT Noah MP only
-                   GECROS_STATE,                                                 & ! IN/OUT gecros model
                    QTDRAIN,   TD_FRACTION,                                       & ! IN/OUT tile drainage
                    T2MVXY,    T2MBXY,     Q2MVXY,   Q2MBXY,                      & ! OUT Noah MP only
                    TRADXY,     NEEXY,      GPPXY,    NPPXY,   FVEGXY,  RUNSFXY,  & ! OUT Noah MP only
@@ -88,10 +87,15 @@ contains
 !----------------------------------------------------------------
 
     use NoahmpIOVarType
+    use NoahmpIOVarInitMod
+    use NoahmpReadTableMod
+    use SnowInputSnicarMod
     use NoahmpDriverMainMod
     use module_sf_urban,    only: IRI_SCHEME
 
     implicit none
+
+    type(NoahmpIO_type),                             intent(inout) ::  NoahmpIO
 
     ! input
     INTEGER,                                         INTENT(IN   ) ::  ids,ide, jds,jde, kds,kde,  &  ! d -> domain
@@ -318,7 +322,6 @@ contains
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(INOUT) ::  IRMIVOL      ! amount of irrigation by micro (mm)
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(INOUT) ::  IRFIVOL      ! amount of irrigation by micro (mm)
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(INOUT) ::  IRRSPLH      ! latent heating from sprinkler evaporation (w/m2)    
-    REAL,    DIMENSION( ims:ime,       60,jms:jme ), INTENT(INOUT) ::  gecros_state ! gecros crop (not included in NoahMP v5 and later)
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(INOUT) ::  QTDRAIN      ! Tile drain
     ! wetland state varible
     REAL,    DIMENSION( ims:ime,          jms:jme ), INTENT(INOUT) ::  FSATXY       ! saturated fraction of the grid (-)
@@ -453,31 +456,16 @@ contains
     NoahmpIO%jte                = jte
     NoahmpIO%kts                = kts
     NoahmpIO%kte                = kte
-    NoahmpIO%ITIMESTEP          = ITIMESTEP
+    NoahmpIO%xstart             = ims
+    NoahmpIO%xend               = ime
+    NoahmpIO%ystart             = jms
+    NoahmpIO%yend               = jme    
     NoahmpIO%YR                 = YR
     NoahmpIO%JULIAN             = JULIAN
-    NoahmpIO%COSZEN             = COSZIN
-    NoahmpIO%XLAT               = XLAT
-    NoahmpIO%XLONG              = XLONG
-    NoahmpIO%DZ8W               = DZ8W
     NoahmpIO%DTBL               = DT
-    NoahmpIO%IRI_URBAN          = IRI_SCHEME
-    NoahmpIO%DZS                = DZS
     NoahmpIO%NSOIL              = NSOIL
     NoahmpIO%DX                 = DX
     NoahmpIO%DY                 = DX
-    NoahmpIO%IVGTYP             = IVGTYP
-    NoahmpIO%ISLTYP             = ISLTYP
-    NoahmpIO%VEGFRA             = VEGFRA
-    NoahmpIO%GVFMAX             = VEGMAX
-    NoahmpIO%TMN                = TMN
-    NoahmpIO%XLAND              = XLAND
-    NoahmpIO%XICE               = XICE
-    NoahmpIO%XICE_THRESHOLD     = XICE_THRES
-    NoahmpIO%CROPCAT            = CROPCAT
-    NoahmpIO%PLANTING           = PLANTING
-    NoahmpIO%HARVEST            = HARVEST
-    NoahmpIO%SEASON_GDD         = SEASON_GDD
     NoahmpIO%IOPT_DVEG          = IDVEG
     NoahmpIO%IOPT_CRS           = IOPT_CRS
     NoahmpIO%IOPT_BTR           = IOPT_BTR
@@ -521,6 +509,20 @@ contains
        NoahmpIO%SNICAR_USE_OC            = SNICAR_USE_OC
        NoahmpIO%SNICAR_AEROSOL_READTABLE = SNICAR_AEROSOL_READTABLE
     endif
+
+    ! initialze all NoahmpIO variables with default values
+    call NoahmpIOVarInitDefault(NoahmpIO)
+
+    ! read in Noahmp table parameters
+    call NoahmpReadTable(NoahmpIO)
+
+    ! read in SNICAR parameter netcdif file
+    if ( NoahmpIO%IOPT_ALB == 3 ) then
+       NoahmpIO%snicar_optic_flnm = "snicar_optics_5bnd_c013122.nc"
+       NoahmpIO%snicar_age_flnm   = "snicar_drdt_bst_fit_60_c070416.nc"
+       call SnowInputSnicar(NoahmpIO)
+    endif
+
     if ( NoahmpIO%IOPT_SOIL > 1 ) then
        NoahmpIO%SOILCOMP        = SOILCOMP
        NoahmpIO%SOILCL1         = SOILCL1
@@ -528,15 +530,34 @@ contains
        NoahmpIO%SOILCL3         = SOILCL3
        NoahmpIO%SOILCL4         = SOILCL4
     endif
-    NoahmpIO%T_PHY(:,1,:)       = T3D(:,1,:) 
-    NoahmpIO%QV_CURR(:,1,:)     = QV3D(:,1,:)
-    NoahmpIO%U_PHY(:,1,:)       = U_PHY(:,1,:)
-    NoahmpIO%V_PHY(:,1,:)       = V_PHY(:,1,:)
+    NoahmpIO%IVGTYP             = IVGTYP
+    NoahmpIO%ISLTYP             = ISLTYP
+    NoahmpIO%VEGFRA             = VEGFRA
+    NoahmpIO%GVFMAX             = VEGMAX
+    NoahmpIO%TMN                = TMN
+    NoahmpIO%XLAND              = XLAND
+    NoahmpIO%XICE               = XICE
+    NoahmpIO%XICE_THRESHOLD     = XICE_THRES
+    NoahmpIO%CROPCAT            = CROPCAT
+    NoahmpIO%PLANTING           = PLANTING
+    NoahmpIO%HARVEST            = HARVEST
+    NoahmpIO%SEASON_GDD         = SEASON_GDD
+    NoahmpIO%DZS                = DZS
+    NoahmpIO%XLAT               = XLAT
+    NoahmpIO%XLONG              = XLONG
+    NoahmpIO%COSZEN             = COSZIN
+    NoahmpIO%IRI_URBAN          = IRI_SCHEME
+    NoahmpIO%ITIMESTEP          = ITIMESTEP
+    NoahmpIO%DZ8W               = DZ8W
+    NoahmpIO%T_PHY              = T3D
+    NoahmpIO%QV_CURR            = QV3D
+    NoahmpIO%U_PHY              = U_PHY
+    NoahmpIO%V_PHY              = V_PHY
     NoahmpIO%SWDOWN             = SWDOWN
     NoahmpIO%SWDDIR             = SWDDIR
     NoahmpIO%SWDDIF             = SWDDIF
     NoahmpIO%GLW                = GLW
-    NoahmpIO%P8W(:,kts:kts+1,:) = P8W3D(:,kts:kts+1,:) 
+    NoahmpIO%P8W                = P8W3D
     NoahmpIO%RAINBL             = PRECIP_IN
     NoahmpIO%SR                 = SR
     NoahmpIO%IRFRACT            = IRFRACT
