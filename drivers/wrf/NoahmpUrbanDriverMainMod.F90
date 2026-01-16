@@ -10,7 +10,7 @@ module NoahmpUrbanDriverMainMod
   
 contains
 
-  subroutine noahmp_urban(sf_urban_physics,  NSOIL, IVGTYP,  ITIMESTEP,                     & ! IN : Model configuration 
+  subroutine noahmp_urban(NoahmpIO, sf_urban_physics,  NSOIL, IVGTYP,  ITIMESTEP,           & ! IN : Model configuration 
                                  DT,     COSZ_URB2D,     XLAT_URB2D,                        & ! IN : Time/Space-related
                                 T3D,           QV3D,          U_PHY,      V_PHY,   SWDOWN,  & ! IN : Forcing
                              SWDDIR,         SWDDIF,                                        &
@@ -77,6 +77,7 @@ contains
     IMPLICIT NONE
 !----------------------------------------------------------------
 
+    type(NoahmpIO_type), intent(in) :: NoahmpIO
     INTEGER,                                         INTENT(IN   ) ::  sf_urban_physics   ! urban physics option
     INTEGER,                                         INTENT(IN   ) ::  NSOIL     ! number of soil layers
     INTEGER, DIMENSION( ims:ime,          jms:jme ), INTENT(IN   ) ::  IVGTYP    ! vegetation type
