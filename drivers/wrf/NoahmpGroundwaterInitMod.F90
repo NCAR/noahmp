@@ -6,11 +6,13 @@ module NoahmpGroundwaterInitMod
 ! Cenlin He (NCAR), December 2025
 !------------------------------
 
+  use NoahmpIOVarType
+
   implicit none
   
 contains
 
-  subroutine NoahmpGroundwaterInitMain( GRID, NSOIL, DZS, ISLTYP, IVGTYP, WTDDT,        &
+  subroutine NoahmpGroundwaterInitMain(NoahmpIO, GRID, NSOIL, DZS, ISLTYP, IVGTYP, WTDDT,        &
                         FDEPTH, TOPO, RIVERBED, EQWTD, RIVERCOND, PEXP, AREA, WTD,      &
                         SMOIS, SH2O, SMOISEQ, SMCWTDXY, QLATXY, QSLATXY, QRFXY, QRFSXY, &
                         DEEPRECHXY, RECHXY, QSPRINGXY, QSPRINGSXY, rechclim,            &
@@ -21,7 +23,6 @@ contains
 
 ! ----------------------------------------------------------------------
 
-    use NoahmpIOVarType
     use GroundWaterMmfMod, only : LATERALFLOW
     use module_domain,     only : domain
 #if (EM_CORE == 1)
@@ -35,7 +36,8 @@ contains
     
     ! input and output variables 
     TYPE(domain), TARGET :: grid  ! state
-   
+    type(NoahmpIO_type), intent(in) :: NoahmpIO
+
     INTEGER, INTENT(IN)                                        :: ids,ide, jds,jde, kds,kde,    &
                                                                   ims,ime, jms,jme, kms,kme,    &
                                                                   ips,ipe, jps,jpe, kps,kpe,    &
@@ -102,7 +104,7 @@ contains
       ! Calculate lateral flow
       if ( (NCOUNT > 0) .or. (NITER == 1) ) then
          QLAT = 0.0
-         call LATERALFLOW(ISLTYP,WTD,QLAT,FDEPTH,TOPO,LANDMASK,DELTAT,AREA &
+         call LATERALFLOW(NoahmpIO,ISLTYP,WTD,QLAT,FDEPTH,TOPO,LANDMASK,DELTAT,AREA &
                              ,ids,ide,jds,jde,kds,kde                      & 
                              ,ims,ime,jms,jme,kms,kme                      &
                              ,its,ite,jts,jte,kts,kte                      )
@@ -164,7 +166,7 @@ contains
 
     ! recalculate lateral flow
     QLAT = 0.0
-    call LATERALFLOW(ISLTYP,WTD,QLAT,FDEPTH,TOPO,LANDMASK,DELTAT,AREA &
+    call LATERALFLOW(NoahmpIO,ISLTYP,WTD,QLAT,FDEPTH,TOPO,LANDMASK,DELTAT,AREA &
                         ,ids,ide,jds,jde,kds,kde                      & 
                         ,ims,ime,jms,jme,kms,kme                      &
                         ,its,ite,jts,jte,kts,kte                      )

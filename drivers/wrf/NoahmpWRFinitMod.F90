@@ -10,7 +10,7 @@ module NoahmpWRFinitMod
 
 contains
 
-  subroutine NoahmpWRFinit(MMINLU, SNOW, SNOWH,   CANWAT,   ISLTYP, IVGTYP, XLAT,       &
+  subroutine NoahmpWRFinit(NoahmpIO, MMINLU, SNOW, SNOWH, CANWAT, ISLTYP, IVGTYP, XLAT, &
                    TSLB,  SMOIS, SH2O,   DZS, FNDSOILW, FNDSNOWH,                       &
                    TSK, isnowxy, tvxy,  tgxy, canicexy,      TMN,   XICE,               &
                    canliqxy,    eahxy, tahxy,     cmxy,     chxy,                       &
@@ -38,9 +38,7 @@ contains
                    its,ite, jts,jte, kts,kte,                                           &
                    smoiseq,smcwtdxy,rechxy,deeprechxy,qtdrain,areaxy,dx,dy,msftx,msfty, & ! Optional groundwater
                    wtddt,   stepwtd, dt, qrfsxy, qspringsxy, qslatxy,                   & ! Optional groundwater
-                   fdepthxy, ht, riverbedxy, eqzwt, rivercondxy, pexpxy,                & ! Optional groundwater
-                   rechclim,                                                            & ! Optional groundwater
-                   gecros_state)                                                          ! Optional gecros crop
+                   fdepthxy, ht, riverbedxy, eqzwt, rivercondxy, pexpxy, rechclim       ) ! Optional groundwater
 
 ! ---------------------------------------------------------------------------------------
 
@@ -51,6 +49,8 @@ contains
     use SnowInputSnicarMod
 
     implicit none
+
+    type(NoahmpIO_type), intent(inout)                         :: NoahmpIO
 
     ! input only
     INTEGER, INTENT(IN)                                        :: ids,ide, jds,jde, kds,kde,  &
@@ -165,7 +165,6 @@ contains
     REAL,    DIMENSION(ims:ime,jms:jme),         INTENT(INOUT), OPTIONAL :: EQZWT        ! equilibrium water table depth (m)
     REAL,    DIMENSION(ims:ime,jms:jme),         INTENT(INOUT), OPTIONAL :: RIVERCONDXY  ! river conductance
     REAL,    DIMENSION(ims:ime,jms:jme),         INTENT(INOUT), OPTIONAL :: PEXPXY       ! factor for river conductance
-    REAL,    DIMENSION(ims:ime,60,jms:jme),      INTENT(INOUT), OPTIONAL :: gecros_state ! Optional gecros crop (not include in NoahMP v5)
     REAL,    DIMENSION(ims:ime,1:NSOIL,jms:jme), INTENT(INOUT), OPTIONAL :: smoiseq      ! equilibrium soil moisture content [m3m-3]
     ! output only
     INTEGER, DIMENSION(ims:ime,jms:jme), INTENT(OUT)           :: cropcat             ! crop type

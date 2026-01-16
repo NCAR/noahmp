@@ -55,10 +55,10 @@ void NoahmpIO_type::VarInitDefault() {
       XLAT     = NoahArray2D<double>(fptr.XLAT,     {xstart,ystart}, {xend,yend});
       WSLAKEXY = NoahArray2D<double>(fptr.WSLAKEXY, {xstart,ystart}, {xend,yend});
 
-      T_PHY   = NoahArray3D<double>(fptr.T_PHY,   {xstart,kds,ystart}, {xend,kde,yend});
-      U_PHY   = NoahArray3D<double>(fptr.U_PHY,   {xstart,kds,ystart}, {xend,kde,yend});
-      V_PHY   = NoahArray3D<double>(fptr.V_PHY,   {xstart,kds,ystart}, {xend,kde,yend});
-      QV_CURR = NoahArray3D<double>(fptr.QV_CURR, {xstart,kds,ystart}, {xend,kde,yend});
+      T_PHY   = NoahArray3D<double>(fptr.T_PHY,   {xstart,kms,ystart}, {xend,kme,yend});
+      U_PHY   = NoahArray3D<double>(fptr.U_PHY,   {xstart,kms,ystart}, {xend,kme,yend});
+      V_PHY   = NoahArray3D<double>(fptr.V_PHY,   {xstart,kms,ystart}, {xend,kme,yend});
+      QV_CURR = NoahArray3D<double>(fptr.QV_CURR, {xstart,kms,ystart}, {xend,kme,yend});
 
       HFX = NoahArray2D<double>(fptr.HFX, {xstart,ystart}, {xend,yend});
       LH = NoahArray2D<double>(fptr.LH, {xstart,ystart}, {xend,yend});
@@ -72,7 +72,7 @@ void NoahmpIO_type::VarInitDefault() {
       ALBSFCDIFXY = NoahArray3D<double>(fptr.ALBSFCDIFXY, {xstart,1,ystart}, {xend,2,yend});
 
       COSZEN = NoahArray2D<double>(fptr.COSZEN, {xstart,ystart}, {xend,yend});
-      P8W = NoahArray3D<double>(fptr.P8W, {xstart,kds,ystart}, {xend,kde,yend});
+      P8W = NoahArray3D<double>(fptr.P8W, {xstart,kms,ystart}, {xend,kme,yend});
 
       TAU_EW = NoahArray2D<double>(fptr.TAU_EW, {xstart,ystart}, {xend,yend});
       TAU_NS = NoahArray2D<double>(fptr.TAU_NS, {xstart,ystart}, {xend,yend});

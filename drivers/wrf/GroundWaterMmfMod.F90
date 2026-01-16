@@ -20,7 +20,7 @@ module GroundWaterMmfMod
 
 contains
 
-  subroutine WTABLE_mmf_noahmp (NSOIL     ,XLAND    ,XICE    ,XICE_THRESHOLD  ,ISICE ,& !in
+  subroutine WTABLE_mmf_noahmp (NoahmpIO, NSOIL     ,XLAND    ,XICE    ,XICE_THRESHOLD  ,ISICE ,& !in
                                 ISLTYP    ,SMOISEQ  ,DZS     ,WTDDT                  ,& !in
                                 FDEPTH    ,AREA     ,TOPO    ,ISURBAN ,IVGTYP        ,& !in
                                 RIVERCOND ,RIVERBED ,EQWTD   ,PEXP                   ,& !in
@@ -32,6 +32,8 @@ contains
 ! ----------------------------------------------------------------------
 
     implicit none
+
+    type(NoahmpIO_type), intent(in) :: NoahmpIO
 
     ! IN only
     INTEGER, INTENT(IN)                             :: ids,ide, jds,jde, kds,kde,  &
@@ -82,7 +84,7 @@ contains
 
     ! Calculate lateral flow
     QLAT = 0.0
-    call LATERALFLOW(ISLTYP,WTD,QLAT,FDEPTH,TOPO,LANDMASK,DELTAT,AREA &
+    call LATERALFLOW(NoahmpIO,ISLTYP,WTD,QLAT,FDEPTH,TOPO,LANDMASK,DELTAT,AREA &
                      ,ids,ide,jds,jde,kds,kde                         &
                      ,ims,ime,jms,jme,kms,kme                         &
                      ,its,ite,jts,jte,kts,kte                         )
@@ -170,7 +172,7 @@ contains
   end subroutine WTABLE_mmf_noahmp
 
 ! ==================================================================================================
-  subroutine LATERALFLOW (ISLTYP,WTD,QLAT,FDEPTH,TOPO,LANDMASK,DELTAT,AREA &
+  subroutine LATERALFLOW (NoahmpIO, ISLTYP,WTD,QLAT,FDEPTH,TOPO,LANDMASK,DELTAT,AREA &
                           ,ids,ide,jds,jde,kds,kde                         &
                           ,ims,ime,jms,jme,kms,kme                         &
                           ,its,ite,jts,jte,kts,kte                         )
@@ -179,6 +181,7 @@ contains
     implicit none
 
     ! input
+    type(NoahmpIO_type), intent(in)    :: NoahmpIO
     INTEGER,                            INTENT(IN)   :: ids,ide, jds,jde, kds,kde,  &
                                                         ims,ime, jms,jme, kms,kme,  &
                                                         its,ite, jts,jte, kts,kte
