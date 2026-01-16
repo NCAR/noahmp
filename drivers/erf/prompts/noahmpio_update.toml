@@ -29,7 +29,7 @@ such as `U_PHY`, `V_PHY`, and `QV_CURR`.
    - Fortran code allocates arrays like:
 
    ```
-   if (.not. allocated(NoahmpIO%T_PHY)) allocate(NoahmpIO%T_PHY(XSTART:XEND,KDS:KDE,YSTART:YEND))
+   if (.not. allocated(NoahmpIO%T_PHY)) allocate(NoahmpIO%T_PHY(XSTART:XEND,KMS:KME,YSTART:YEND))
    if (.not. allocated(NoahmpIO%TSK)) allocate(NoahmpIO%TSK(XSTART:XEND,YSTART:YEND))
    ```
 
