@@ -71,7 +71,7 @@ contains
   USE module_sf_bep_bem,  only: bep_bem
   USE module_ra_gfdleta,  only: cal_mon_day
   USE module_model_constants, only: KARMAN, CP, XLV
-  USE NoahmpIOVarType
+  USE NoahmpIOVarType,    only: NoahmpIO_type
 
 !----------------------------------------------------------------
     IMPLICIT NONE
