@@ -9,7 +9,7 @@ module NoahmpIOVarInitMod
 ! -------------------------------------------------------------------------
 
   use Machine
-  use NoahmpIOVarType
+  use NoahmpIOVarType, only : NoahmpIO_type
 
   implicit none
 

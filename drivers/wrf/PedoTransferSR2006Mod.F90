@@ -3,7 +3,7 @@ module PedoTransferSR2006Mod
 !!! Compute soil water infiltration based on different soil composition
 
   use Machine
-  use NoahmpIOVarType
+  use NoahmpIOVarType, only : NoahmpIO_type
   use NoahmpVarType
 
   implicit none

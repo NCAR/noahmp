@@ -6,7 +6,7 @@ module NoahmpGroundwaterInitMod
 ! Cenlin He (NCAR), December 2025
 !------------------------------
 
-  use NoahmpIOVarType
+  use NoahmpIOVarType, only : NoahmpIO_type
 
   implicit none
   

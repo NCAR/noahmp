@@ -14,6 +14,8 @@ module NoahmpIOVarType
   save
   private
 
+  public :: NoahmpIOdom
+
   type, public :: NoahmpIO_type
 
 !------------------------------------------------------------------------
@@ -1118,5 +1120,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp)                                 :: sr2006_smcmax_b_TABLE           ! constant adjustment
 
   end type NoahmpIO_type
+
+  type(NoahmpIO_type) :: NoahmpIOdom(5)
 
 end module NoahmpIOVarType
