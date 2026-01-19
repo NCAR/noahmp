@@ -10,7 +10,7 @@ module WaterVarInTransferMod
 ! -------------------------------------------------------------------------
 
   use Machine
-  use NoahmpIOVarType
+  use NoahmpIOVarType, only : NoahmpIO_type
   use NoahmpVarType
   use PedoTransferSR2006Mod
 

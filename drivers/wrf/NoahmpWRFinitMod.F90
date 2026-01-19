@@ -42,7 +42,7 @@ contains
 
 ! ---------------------------------------------------------------------------------------
 
-    use NoahmpIOVarType
+    use NoahmpIOVarType, only : NoahmpIO_type
     use NoahmpIOVarInitMod
     use NoahmpReadTableMod
     use NoahmpInitMainMod
@@ -169,7 +169,8 @@ contains
     ! output only
     INTEGER, DIMENSION(ims:ime,jms:jme), INTENT(OUT)           :: cropcat             ! crop type
     INTEGER,                             INTENT(OUT), OPTIONAL :: STEPWTD
- 
+    ! local
+    integer :: itf, jtf, I, J
 ! ----------------------------------------------------------------------------------
 
     ! initialize NoahmpIO dimension and key config variables
@@ -226,120 +227,131 @@ contains
     endif
 
     !--------- WRF variables mapped to NoahmpIO variables
-    ! input only
-    NoahmpIO%restart_flag       = restart
-    NoahmpIO%IVGTYP             = IVGTYP
-    NoahmpIO%ISLTYP             = ISLTYP
-    NoahmpIO%FNDSNOWH           = FNDSNOWH
-    NoahmpIO%XLAT               = XLAT    
-    NoahmpIO%TSK                = TSK
+
+    ! non-2D variables
+    itf = min0(ite, ide-1)
+    jtf = min0(jte, jde-1)
     NoahmpIO%DZS                = DZS
-    NoahmpIO%XICE               = XICE    
-    NoahmpIO%CROPTYPE           = CROPTYPE
+    NoahmpIO%FNDSNOWH           = FNDSNOWH
+    NoahmpIO%restart_flag       = restart
     NoahmpIO%DTBL               = DT
     NoahmpIO%WTDDT              = WTDDT
     NoahmpIO%DX                 = DX
     NoahmpIO%DY                 = DY
-    NoahmpIO%FDEPTHXY           = FDEPTHXY
-    NoahmpIO%MSFTX              = MSFTX
-    NoahmpIO%MSFTY              = MSFTY
-    NoahmpIO%TERRAIN            = HT
-    NoahmpIO%RECHCLIM           = RECHCLIM
 
+    ! 2D/3D variables
+    do J = jts, jtf
+    do I = its, itf
+    
+    ! input only
+    NoahmpIO%IVGTYP(I,J)               = IVGTYP(I,J)
+    NoahmpIO%ISLTYP(I,J)               = ISLTYP(I,J)
+    NoahmpIO%XLAT(I,J)                 = XLAT(I,J)
+    NoahmpIO%TSK(I,J)                  = TSK(I,J)
+    NoahmpIO%XICE(I,J)                 = XICE(I,J)
+    NoahmpIO%CROPTYPE(I,:,J)           = CROPTYPE(I,:,J)
+    NoahmpIO%FDEPTHXY(I,J)             = FDEPTHXY(I,J)
+    NoahmpIO%MSFTX(I,J)                = MSFTX(I,J)
+    NoahmpIO%MSFTY(I,J)                = MSFTY(I,J)
+    NoahmpIO%TERRAIN(I,J)              = HT(I,J)
+    NoahmpIO%RECHCLIM(I,J)             = RECHCLIM(I,J)
     ! in/out variables
-    NoahmpIO%SMOIS              = SMOIS
-    NoahmpIO%SH2O               = SH2O
-    NoahmpIO%TSLB               = TSLB
-    NoahmpIO%SNOW               = SNOW    
-    NoahmpIO%SNOWH              = SNOWH   
-    NoahmpIO%CANWAT             = CANWAT  
-    NoahmpIO%CANICEXY           = CANICEXY
-    NoahmpIO%CANLIQXY           = CANLIQXY
-    NoahmpIO%TMN                = TMN
-    NoahmpIO%ISNOWXY            = ISNOWXY
-    NoahmpIO%ZSNSOXY            = ZSNSOXY 
-    NoahmpIO%TSNOXY             = TSNOXY  
-    NoahmpIO%SNICEXY            = SNICEXY 
-    NoahmpIO%SNLIQXY            = SNLIQXY 
-    NoahmpIO%TVXY               = TVXY    
-    NoahmpIO%TGXY               = TGXY    
-    NoahmpIO%EAHXY              = EAHXY
-    NoahmpIO%TAHXY              = TAHXY
-    NoahmpIO%CMXY               = CMXY    
-    NoahmpIO%CHXY               = CHXY    
-    NoahmpIO%FWETXY             = FWETXY  
-    NoahmpIO%SNEQVOXY           = SNEQVOXY
-    NoahmpIO%ALBOLDXY           = ALBOLDXY
-    NoahmpIO%QSNOWXY            = QSNOWXY 
-    NoahmpIO%QRAINXY            = QRAINXY 
-    NoahmpIO%WSLAKEXY           = WSLAKEXY
-    NoahmpIO%ZWTXY              = ZWTXY   
-    NoahmpIO%WAXY               = WAXY    
-    NoahmpIO%WTXY               = WTXY    
-    NoahmpIO%LFMASSXY           = LFMASSXY
-    NoahmpIO%RTMASSXY           = RTMASSXY
-    NoahmpIO%STMASSXY           = STMASSXY
-    NoahmpIO%WOODXY             = WOODXY
-    NoahmpIO%GRAINXY            = GRAINXY
-    NoahmpIO%GDDXY              = GDDXY
-    NoahmpIO%STBLCPXY           = STBLCPXY
-    NoahmpIO%FASTCPXY           = FASTCPXY
-    NoahmpIO%LAI                = LAI
-    NoahmpIO%XSAIXY             = XSAIXY
-    NoahmpIO%QTDRAIN            = QTDRAIN
-    NoahmpIO%IRNUMSI            = IRNUMSI 
-    NoahmpIO%IRNUMMI            = IRNUMMI
-    NoahmpIO%IRNUMFI            = IRNUMFI 
-    NoahmpIO%IRWATSI            = IRWATSI
-    NoahmpIO%IRWATMI            = IRWATMI
-    NoahmpIO%IRWATFI            = IRWATFI
-    NoahmpIO%IRELOSS            = IRELOSS
-    NoahmpIO%IRSIVOL            = IRSIVOL
-    NoahmpIO%IRMIVOL            = IRMIVOL
-    NoahmpIO%IRFIVOL            = IRFIVOL
-    NoahmpIO%IRRSPLH            = IRRSPLH
-    NoahmpIO%T2MVXY             = T2MVXY
-    NoahmpIO%T2MBXY             = T2MBXY
-    NoahmpIO%SMCWTDXY           = SMCWTDXY
-    NoahmpIO%DEEPRECHXY         = DEEPRECHXY
-    NoahmpIO%RECHXY             = RECHXY
-    NoahmpIO%QRFSXY             = QRFSXY
-    NoahmpIO%QSPRINGSXY         = QSPRINGSXY
-    NoahmpIO%QSLATXY            = QSLATXY
-    NoahmpIO%AREAXY             = AREAXY
-    NoahmpIO%RIVERBEDXY         = RIVERBEDXY
-    NoahmpIO%EQZWT              = EQZWT
-    NoahmpIO%RIVERCONDXY        = RIVERCONDXY
-    NoahmpIO%PEXPXY             = PEXPXY
-    NoahmpIO%SMOISEQ            = SMOISEQ
-    NoahmpIO%ALBSOILDIRXY       = ALBSOILDIRXY
-    NoahmpIO%ALBSOILDIFXY       = ALBSOILDIFXY
+    NoahmpIO%SMOIS(I,:,J)              = SMOIS(I,:,J)
+    NoahmpIO%SH2O(I,:,J)               = SH2O(I,:,J)
+    NoahmpIO%TSLB(I,:,J)               = TSLB(I,:,J)
+    NoahmpIO%SNOW(I,J)                 = SNOW(I,J)    
+    NoahmpIO%SNOWH(I,J)                = SNOWH(I,J)   
+    NoahmpIO%CANWAT(I,J)               = CANWAT(I,J)  
+    NoahmpIO%CANICEXY(I,J)             = CANICEXY(I,J)
+    NoahmpIO%CANLIQXY(I,J)             = CANLIQXY(I,J)
+    NoahmpIO%TMN(I,J)                  = TMN(I,J)
+    NoahmpIO%ISNOWXY(I,J)              = ISNOWXY(I,J)
+    NoahmpIO%ZSNSOXY(I,:,J)            = ZSNSOXY(I,:,J) 
+    NoahmpIO%TSNOXY(I,:,J)             = TSNOXY(I,:,J)
+    NoahmpIO%SNICEXY(I,:,J)            = SNICEXY(I,:,J)
+    NoahmpIO%SNLIQXY(I,:,J)            = SNLIQXY(I,:,J)
+    NoahmpIO%TVXY(I,J)                 = TVXY(I,J)
+    NoahmpIO%TGXY(I,J)                 = TGXY(I,J)
+    NoahmpIO%EAHXY(I,J)                = EAHXY(I,J)
+    NoahmpIO%TAHXY(I,J)                = TAHXY(I,J)
+    NoahmpIO%CMXY(I,J)                 = CMXY(I,J)
+    NoahmpIO%CHXY(I,J)                 = CHXY(I,J)
+    NoahmpIO%FWETXY(I,J)               = FWETXY(I,J)
+    NoahmpIO%SNEQVOXY(I,J)             = SNEQVOXY(I,J)
+    NoahmpIO%ALBOLDXY(I,J)             = ALBOLDXY(I,J)
+    NoahmpIO%QSNOWXY(I,J)              = QSNOWXY(I,J)
+    NoahmpIO%QRAINXY(I,J)              = QRAINXY(I,J)
+    NoahmpIO%WSLAKEXY(I,J)             = WSLAKEXY(I,J)
+    NoahmpIO%ZWTXY(I,J)                = ZWTXY(I,J)
+    NoahmpIO%WAXY(I,J)                 = WAXY(I,J)
+    NoahmpIO%WTXY(I,J)                 = WTXY(I,J)
+    NoahmpIO%LFMASSXY(I,J)             = LFMASSXY(I,J)
+    NoahmpIO%RTMASSXY(I,J)             = RTMASSXY(I,J)
+    NoahmpIO%STMASSXY(I,J)             = STMASSXY(I,J)
+    NoahmpIO%WOODXY(I,J)               = WOODXY(I,J)
+    NoahmpIO%GRAINXY(I,J)              = GRAINXY(I,J)
+    NoahmpIO%GDDXY(I,J)                = GDDXY(I,J)
+    NoahmpIO%STBLCPXY(I,J)             = STBLCPXY(I,J)
+    NoahmpIO%FASTCPXY(I,J)             = FASTCPXY(I,J)
+    NoahmpIO%LAI(I,J)                  = LAI(I,J)
+    NoahmpIO%XSAIXY(I,J)               = XSAIXY(I,J)
+    NoahmpIO%QTDRAIN(I,J)              = QTDRAIN(I,J)
+    NoahmpIO%IRNUMSI(I,J)              = IRNUMSI(I,J)
+    NoahmpIO%IRNUMMI(I,J)              = IRNUMMI(I,J)
+    NoahmpIO%IRNUMFI(I,J)              = IRNUMFI(I,J)
+    NoahmpIO%IRWATSI(I,J)              = IRWATSI(I,J)
+    NoahmpIO%IRWATMI(I,J)              = IRWATMI(I,J)
+    NoahmpIO%IRWATFI(I,J)              = IRWATFI(I,J)
+    NoahmpIO%IRELOSS(I,J)              = IRELOSS(I,J)
+    NoahmpIO%IRSIVOL(I,J)              = IRSIVOL(I,J)
+    NoahmpIO%IRMIVOL(I,J)              = IRMIVOL(I,J)
+    NoahmpIO%IRFIVOL(I,J)              = IRFIVOL(I,J)
+    NoahmpIO%IRRSPLH(I,J)              = IRRSPLH(I,J)
+    NoahmpIO%T2MVXY(I,J)               = T2MVXY(I,J)
+    NoahmpIO%T2MBXY(I,J)               = T2MBXY(I,J)
+    NoahmpIO%SMCWTDXY(I,J)             = SMCWTDXY(I,J)
+    NoahmpIO%DEEPRECHXY(I,J)           = DEEPRECHXY(I,J)
+    NoahmpIO%RECHXY(I,J)               = RECHXY(I,J)
+    NoahmpIO%QRFSXY(I,J)               = QRFSXY(I,J)
+    NoahmpIO%QSPRINGSXY(I,J)           = QSPRINGSXY(I,J)
+    NoahmpIO%QSLATXY(I,J)              = QSLATXY(I,J)
+    NoahmpIO%AREAXY(I,J)               = AREAXY(I,J)
+    NoahmpIO%RIVERBEDXY(I,J)           = RIVERBEDXY(I,J)
+    NoahmpIO%EQZWT(I,J)                = EQZWT(I,J)
+    NoahmpIO%RIVERCONDXY(I,J)          = RIVERCONDXY(I,J)
+    NoahmpIO%PEXPXY(I,J)               = PEXPXY(I,J)
+    NoahmpIO%SMOISEQ(I,:,J)            = SMOISEQ(I,:,J)
+    NoahmpIO%ALBSOILDIRXY(I,:,J)       = ALBSOILDIRXY(I,:,J)
+    NoahmpIO%ALBSOILDIFXY(I,:,J)       = ALBSOILDIFXY(I,:,J)
     if ( NoahmpIO%IOPT_WETLAND > 0 ) then
-       NoahmpIO%FSATXY          = FSATXY
-       NoahmpIO%WSURFXY         = WSURFXY
+       NoahmpIO%FSATXY(I,J)            = FSATXY(I,J)
+       NoahmpIO%WSURFXY(I,J)           = WSURFXY(I,J)
     endif
     if ( NoahmpIO%IOPT_ALB == 3 ) then
-       NoahmpIO%SNRDSXY         = SNRDSXY
-       NoahmpIO%SNFRXY          = SNFRXY
-       NoahmpIO%BCPHIXY         = BCPHIXY
-       NoahmpIO%BCPHOXY         = BCPHOXY
-       NoahmpIO%OCPHIXY         = OCPHIXY
-       NoahmpIO%OCPHOXY         = OCPHOXY
-       NoahmpIO%DUST1XY         = DUST1XY
-       NoahmpIO%DUST2XY         = DUST2XY
-       NoahmpIO%DUST3XY         = DUST3XY
-       NoahmpIO%DUST4XY         = DUST4XY
-       NoahmpIO%DUST5XY         = DUST5XY
-       NoahmpIO%MassConcBCPHIXY = MassConcBCPHIXY
-       NoahmpIO%MassConcBCPHOXY = MassConcBCPHOXY
-       NoahmpIO%MassConcOCPHIXY = MassConcOCPHIXY
-       NoahmpIO%MassConcOCPHOXY = MassConcOCPHOXY
-       NoahmpIO%MassConcDUST1XY = MassConcDUST1XY
-       NoahmpIO%MassConcDUST2XY = MassConcDUST2XY
-       NoahmpIO%MassConcDUST3XY = MassConcDUST3XY
-       NoahmpIO%MassConcDUST4XY = MassConcDUST4XY
-       NoahmpIO%MassConcDUST5XY = MassConcDUST5XY
+       NoahmpIO%SNRDSXY(I,:,J)         = SNRDSXY(I,:,J)
+       NoahmpIO%SNFRXY(I,:,J)          = SNFRXY(I,:,J)
+       NoahmpIO%BCPHIXY(I,:,J)         = BCPHIXY(I,:,J)
+       NoahmpIO%BCPHOXY(I,:,J)         = BCPHOXY(I,:,J)
+       NoahmpIO%OCPHIXY(I,:,J)         = OCPHIXY(I,:,J)
+       NoahmpIO%OCPHOXY(I,:,J)         = OCPHOXY(I,:,J)
+       NoahmpIO%DUST1XY(I,:,J)         = DUST1XY(I,:,J)
+       NoahmpIO%DUST2XY(I,:,J)         = DUST2XY(I,:,J)
+       NoahmpIO%DUST3XY(I,:,J)         = DUST3XY(I,:,J)
+       NoahmpIO%DUST4XY(I,:,J)         = DUST4XY(I,:,J)
+       NoahmpIO%DUST5XY(I,:,J)         = DUST5XY(I,:,J)
+       NoahmpIO%MassConcBCPHIXY(I,:,J) = MassConcBCPHIXY(I,:,J)
+       NoahmpIO%MassConcBCPHOXY(I,:,J) = MassConcBCPHOXY(I,:,J)
+       NoahmpIO%MassConcOCPHIXY(I,:,J) = MassConcOCPHIXY(I,:,J)
+       NoahmpIO%MassConcOCPHOXY(I,:,J) = MassConcOCPHOXY(I,:,J)
+       NoahmpIO%MassConcDUST1XY(I,:,J) = MassConcDUST1XY(I,:,J)
+       NoahmpIO%MassConcDUST2XY(I,:,J) = MassConcDUST2XY(I,:,J)
+       NoahmpIO%MassConcDUST3XY(I,:,J) = MassConcDUST3XY(I,:,J)
+       NoahmpIO%MassConcDUST4XY(I,:,J) = MassConcDUST4XY(I,:,J)
+       NoahmpIO%MassConcDUST5XY(I,:,J) = MassConcDUST5XY(I,:,J)
     endif
+
+    enddo ! I
+    enddo ! J
 
     !--------- WRF -> NoahmpIO variables mapping ends
 
@@ -348,104 +360,111 @@ contains
     !---------
 
     !--------- initialized NoahmpIO variable mapped to WRF variables
+    do J = jts, jtf
+    do I = its, itf
+
     ! in/out variables
-    SMOIS        = NoahmpIO%SMOIS 
-    SH2O         = NoahmpIO%SH2O
-    TSLB         = NoahmpIO%TSLB
-    SNOW         = NoahmpIO%SNOW
-    SNOWH        = NoahmpIO%SNOWH 
-    CANWAT       = NoahmpIO%CANWAT
-    CANICEXY     = NoahmpIO%CANICEXY
-    CANLIQXY     = NoahmpIO%CANLIQXY
-    TMN          = NoahmpIO%TMN
-    ISNOWXY      = NoahmpIO%ISNOWXY
-    ZSNSOXY      = NoahmpIO%ZSNSOXY
-    TSNOXY       = NoahmpIO%TSNOXY
-    SNICEXY      = NoahmpIO%SNICEXY
-    SNLIQXY      = NoahmpIO%SNLIQXY
-    TVXY         = NoahmpIO%TVXY
-    TGXY         = NoahmpIO%TGXY
-    EAHXY        = NoahmpIO%EAHXY 
-    TAHXY        = NoahmpIO%TAHXY 
-    CMXY         = NoahmpIO%CMXY
-    CHXY         = NoahmpIO%CHXY
-    FWETXY       = NoahmpIO%FWETXY
-    SNEQVOXY     = NoahmpIO%SNEQVOXY
-    ALBOLDXY     = NoahmpIO%ALBOLDXY
-    QSNOWXY      = NoahmpIO%QSNOWXY
-    QRAINXY      = NoahmpIO%QRAINXY
-    WSLAKEXY     = NoahmpIO%WSLAKEXY
-    ZWTXY        = NoahmpIO%ZWTXY 
-    WAXY         = NoahmpIO%WAXY
-    WTXY         = NoahmpIO%WTXY
-    LFMASSXY     = NoahmpIO%LFMASSXY
-    RTMASSXY     = NoahmpIO%RTMASSXY
-    STMASSXY     = NoahmpIO%STMASSXY
-    WOODXY       = NoahmpIO%WOODXY
-    GRAINXY      = NoahmpIO%GRAINXY
-    GDDXY        = NoahmpIO%GDDXY 
-    STBLCPXY     = NoahmpIO%STBLCPXY
-    FASTCPXY     = NoahmpIO%FASTCPXY
-    LAI          = NoahmpIO%LAI 
-    XSAIXY       = NoahmpIO%XSAIXY
-    QTDRAIN      = NoahmpIO%QTDRAIN
-    IRNUMSI      = NoahmpIO%IRNUMSI
-    IRNUMMI      = NoahmpIO%IRNUMMI
-    IRNUMFI      = NoahmpIO%IRNUMFI
-    IRWATSI      = NoahmpIO%IRWATSI
-    IRWATMI      = NoahmpIO%IRWATMI
-    IRWATFI      = NoahmpIO%IRWATFI
-    IRELOSS      = NoahmpIO%IRELOSS
-    IRSIVOL      = NoahmpIO%IRSIVOL
-    IRMIVOL      = NoahmpIO%IRMIVOL
-    IRFIVOL      = NoahmpIO%IRFIVOL
-    IRRSPLH      = NoahmpIO%IRRSPLH
-    T2MVXY       = NoahmpIO%T2MVXY
-    T2MBXY       = NoahmpIO%T2MBXY
-    SMCWTDXY     = NoahmpIO%SMCWTDXY
-    DEEPRECHXY   = NoahmpIO%DEEPRECHXY
-    RECHXY       = NoahmpIO%RECHXY
-    QRFSXY       = NoahmpIO%QRFSXY
-    QSPRINGSXY   = NoahmpIO%QSPRINGSXY
-    QSLATXY      = NoahmpIO%QSLATXY
-    AREAXY       = NoahmpIO%AREAXY 
-    RIVERBEDXY   = NoahmpIO%RIVERBEDXY
-    EQZWT        = NoahmpIO%EQZWT
-    RIVERCONDXY  = NoahmpIO%RIVERCONDXY
-    PEXPXY       = NoahmpIO%PEXPXY
-    SMOISEQ      = NoahmpIO%SMOISEQ
-    CHSTARXY     = 0.1 ! dummy
-    ALBSOILDIRXY = NoahmpIO%ALBSOILDIRXY
-    ALBSOILDIFXY = NoahmpIO%ALBSOILDIFXY 
+    SMOIS(I,:,J)        = NoahmpIO%SMOIS(I,:,J) 
+    SH2O(I,:,J)         = NoahmpIO%SH2O(I,:,J)
+    TSLB(I,:,J)         = NoahmpIO%TSLB(I,:,J)
+    SNOW(I,J)           = NoahmpIO%SNOW(I,J)
+    SNOWH(I,J)          = NoahmpIO%SNOWH(I,J) 
+    CANWAT(I,J)         = NoahmpIO%CANWAT(I,J)
+    CANICEXY(I,J)       = NoahmpIO%CANICEXY(I,J)
+    CANLIQXY(I,J)       = NoahmpIO%CANLIQXY(I,J)
+    TMN(I,J)            = NoahmpIO%TMN(I,J)
+    ISNOWXY(I,J)        = NoahmpIO%ISNOWXY(I,J)
+    ZSNSOXY(I,:,J)      = NoahmpIO%ZSNSOXY(I,:,J)
+    TSNOXY(I,:,J)       = NoahmpIO%TSNOXY(I,:,J)
+    SNICEXY(I,:,J)      = NoahmpIO%SNICEXY(I,:,J)
+    SNLIQXY(I,:,J)      = NoahmpIO%SNLIQXY(I,:,J)
+    TVXY(I,J)           = NoahmpIO%TVXY(I,J)
+    TGXY(I,J)           = NoahmpIO%TGXY(I,J)
+    EAHXY(I,J)          = NoahmpIO%EAHXY(I,J)
+    TAHXY(I,J)          = NoahmpIO%TAHXY(I,J)
+    CMXY(I,J)           = NoahmpIO%CMXY(I,J)
+    CHXY(I,J)           = NoahmpIO%CHXY(I,J)
+    FWETXY(I,J)         = NoahmpIO%FWETXY(I,J)
+    SNEQVOXY(I,J)       = NoahmpIO%SNEQVOXY(I,J)
+    ALBOLDXY(I,J)       = NoahmpIO%ALBOLDXY(I,J)
+    QSNOWXY(I,J)        = NoahmpIO%QSNOWXY(I,J)
+    QRAINXY(I,J)        = NoahmpIO%QRAINXY(I,J)
+    WSLAKEXY(I,J)       = NoahmpIO%WSLAKEXY(I,J)
+    ZWTXY(I,J)          = NoahmpIO%ZWTXY(I,J)
+    WAXY(I,J)           = NoahmpIO%WAXY(I,J)
+    WTXY(I,J)           = NoahmpIO%WTXY(I,J)
+    LFMASSXY(I,J)       = NoahmpIO%LFMASSXY(I,J)
+    RTMASSXY(I,J)       = NoahmpIO%RTMASSXY(I,J)
+    STMASSXY(I,J)       = NoahmpIO%STMASSXY(I,J)
+    WOODXY(I,J)         = NoahmpIO%WOODXY(I,J)
+    GRAINXY(I,J)        = NoahmpIO%GRAINXY(I,J)
+    GDDXY(I,J)          = NoahmpIO%GDDXY(I,J)
+    STBLCPXY(I,J)       = NoahmpIO%STBLCPXY(I,J)
+    FASTCPXY(I,J)       = NoahmpIO%FASTCPXY(I,J)
+    LAI(I,J)            = NoahmpIO%LAI(I,J)
+    XSAIXY(I,J)         = NoahmpIO%XSAIXY(I,J)
+    QTDRAIN(I,J)        = NoahmpIO%QTDRAIN(I,J)
+    IRNUMSI(I,J)        = NoahmpIO%IRNUMSI(I,J)
+    IRNUMMI(I,J)        = NoahmpIO%IRNUMMI(I,J)
+    IRNUMFI(I,J)        = NoahmpIO%IRNUMFI(I,J)
+    IRWATSI(I,J)        = NoahmpIO%IRWATSI(I,J)
+    IRWATMI(I,J)        = NoahmpIO%IRWATMI(I,J)
+    IRWATFI(I,J)        = NoahmpIO%IRWATFI(I,J)
+    IRELOSS(I,J)        = NoahmpIO%IRELOSS(I,J)
+    IRSIVOL(I,J)        = NoahmpIO%IRSIVOL(I,J)
+    IRMIVOL(I,J)        = NoahmpIO%IRMIVOL(I,J)
+    IRFIVOL(I,J)        = NoahmpIO%IRFIVOL(I,J)
+    IRRSPLH(I,J)        = NoahmpIO%IRRSPLH(I,J)
+    T2MVXY(I,J)         = NoahmpIO%T2MVXY(I,J)
+    T2MBXY(I,J)         = NoahmpIO%T2MBXY(I,J)
+    SMCWTDXY(I,J)       = NoahmpIO%SMCWTDXY(I,J)
+    DEEPRECHXY(I,J)     = NoahmpIO%DEEPRECHXY(I,J)
+    RECHXY(I,J)         = NoahmpIO%RECHXY(I,J)
+    QRFSXY(I,J)         = NoahmpIO%QRFSXY(I,J)
+    QSPRINGSXY(I,J)     = NoahmpIO%QSPRINGSXY(I,J)
+    QSLATXY(I,J)        = NoahmpIO%QSLATXY(I,J)
+    AREAXY(I,J)         = NoahmpIO%AREAXY(I,J)
+    RIVERBEDXY(I,J)     = NoahmpIO%RIVERBEDXY(I,J)
+    EQZWT(I,J)          = NoahmpIO%EQZWT(I,J)
+    RIVERCONDXY(I,J)    = NoahmpIO%RIVERCONDXY(I,J)
+    PEXPXY(I,J)         = NoahmpIO%PEXPXY(I,J)
+    SMOISEQ(I,:,J)      = NoahmpIO%SMOISEQ(I,:,J)
+    CHSTARXY(I,J)       = 0.1 ! dummy
+    ALBSOILDIRXY(I,:,J) = NoahmpIO%ALBSOILDIRXY(I,:,J)
+    ALBSOILDIFXY(I,:,J) = NoahmpIO%ALBSOILDIFXY(I,:,J)
     if ( NoahmpIO%IOPT_WETLAND > 0 ) then
-       FSATXY    = NoahmpIO%FSATXY
-       WSURFXY   = NoahmpIO%WSURFXY
+       FSATXY(I,J)      = NoahmpIO%FSATXY(I,J)
+       WSURFXY(I,J)     = NoahmpIO%WSURFXY(I,J)
     endif
     if ( NoahmpIO%IOPT_ALB == 3 ) then
-       SNRDSXY         = NoahmpIO%SNRDSXY
-       SNFRXY          = NoahmpIO%SNFRXY
-       BCPHIXY         = NoahmpIO%BCPHIXY
-       BCPHOXY         = NoahmpIO%BCPHOXY
-       OCPHIXY         = NoahmpIO%OCPHIXY
-       OCPHOXY         = NoahmpIO%OCPHOXY
-       DUST1XY         = NoahmpIO%DUST1XY
-       DUST2XY         = NoahmpIO%DUST2XY
-       DUST3XY         = NoahmpIO%DUST3XY
-       DUST4XY         = NoahmpIO%DUST4XY
-       DUST5XY         = NoahmpIO%DUST5XY
-       MassConcBCPHIXY = NoahmpIO%MassConcBCPHIXY
-       MassConcBCPHOXY = NoahmpIO%MassConcBCPHOXY
-       MassConcOCPHIXY = NoahmpIO%MassConcOCPHIXY
-       MassConcOCPHOXY = NoahmpIO%MassConcOCPHOXY
-       MassConcDUST1XY = NoahmpIO%MassConcDUST1XY
-       MassConcDUST2XY = NoahmpIO%MassConcDUST2XY
-       MassConcDUST3XY = NoahmpIO%MassConcDUST3XY
-       MassConcDUST4XY = NoahmpIO%MassConcDUST4XY
-       MassConcDUST5XY = NoahmpIO%MassConcDUST5XY
+       SNRDSXY(I,:,J)         = NoahmpIO%SNRDSXY(I,:,J)
+       SNFRXY(I,:,J)          = NoahmpIO%SNFRXY(I,:,J)
+       BCPHIXY(I,:,J)         = NoahmpIO%BCPHIXY(I,:,J)
+       BCPHOXY(I,:,J)         = NoahmpIO%BCPHOXY(I,:,J)
+       OCPHIXY(I,:,J)         = NoahmpIO%OCPHIXY(I,:,J)
+       OCPHOXY(I,:,J)         = NoahmpIO%OCPHOXY(I,:,J)
+       DUST1XY(I,:,J)         = NoahmpIO%DUST1XY(I,:,J)
+       DUST2XY(I,:,J)         = NoahmpIO%DUST2XY(I,:,J)
+       DUST3XY(I,:,J)         = NoahmpIO%DUST3XY(I,:,J)
+       DUST4XY(I,:,J)         = NoahmpIO%DUST4XY(I,:,J)
+       DUST5XY(I,:,J)         = NoahmpIO%DUST5XY(I,:,J)
+       MassConcBCPHIXY(I,:,J) = NoahmpIO%MassConcBCPHIXY(I,:,J)
+       MassConcBCPHOXY(I,:,J) = NoahmpIO%MassConcBCPHOXY(I,:,J)
+       MassConcOCPHIXY(I,:,J) = NoahmpIO%MassConcOCPHIXY(I,:,J)
+       MassConcOCPHOXY(I,:,J) = NoahmpIO%MassConcOCPHOXY(I,:,J)
+       MassConcDUST1XY(I,:,J) = NoahmpIO%MassConcDUST1XY(I,:,J)
+       MassConcDUST2XY(I,:,J) = NoahmpIO%MassConcDUST2XY(I,:,J)
+       MassConcDUST3XY(I,:,J) = NoahmpIO%MassConcDUST3XY(I,:,J)
+       MassConcDUST4XY(I,:,J) = NoahmpIO%MassConcDUST4XY(I,:,J)
+       MassConcDUST5XY(I,:,J) = NoahmpIO%MassConcDUST5XY(I,:,J)
     endif
 
     ! out variables only
-    CROPCAT      = NoahmpIO%CROPCAT
+    CROPCAT(I,J) = NoahmpIO%CROPCAT(I,J)
+
+    enddo ! I
+    enddo ! J
+
     STEPWTD      = NoahmpIO%STEPWTD
 
     !--------- NoahmpIO -> WRF variables mapping ends

@@ -3,7 +3,7 @@ module NoahmpInitMainMod
 !!!  Module to initialize Noah-MP 2-D variables
 
   use Machine
-  use NoahmpIOVarType
+  use NoahmpIOVarType, only : NoahmpIO_type
   use NoahmpSnowInitMod
  
   implicit none
@@ -257,6 +257,11 @@ contains
                    endif
                 endif
              endif
+             
+             ! initialize soil albedo
+             NoahmpIO%ALBSOILDIRXY(I,:,J) = 0.0
+             NoahmpIO%ALBSOILDIFXY(I,:,J) = 0.0
+
           enddo ! I
        enddo    ! J
        
@@ -268,10 +273,6 @@ contains
           NoahmpIO%STEPWTD = nint(NoahmpIO%WTDDT * 60.0 / NoahmpIO%DTBL)
           NoahmpIO%STEPWTD = max(NoahmpIO%STEPWTD,1)
        endif
-
-       ! initialize soil albedo
-       NoahmpIO%ALBSOILDIRXY = 0.0
-       NoahmpIO%ALBSOILDIFXY = 0.0
 
     endif ! NoahmpIO%restart_flag
 
