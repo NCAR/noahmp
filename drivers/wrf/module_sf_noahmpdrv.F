@@ -3039,6 +3039,8 @@ end function checkIfHarvest
                            lp_urb2d,       hi_urb2d,       lb_urb2d,  hgt_urb2d,            & !H multi-layer urban
                            mh_urb2d,     stdh_urb2d,       lf_urb2d,                        & !SLUCM
                          lf_urb2d_s,       z0_urb2d,         vegfra,                        & !SLUCM
+                         albr_urb2d,     albb_urb2d,     albg_urb2d,                        & !I urban explicit radiation PK2025
+                         epsr_urb2d,     epsb_urb2d,     epsg_urb2d,                        & !I urban explicit radiation PK2025
                              th_phy,            rho,          p_phy,        ust,            & !I multi-layer urban
                                 gmt,         julday,          xlong,       xlat,            & !I multi-layer urban
                             a_u_bep,        a_v_bep,        a_t_bep,    a_q_bep,            & !O multi-layer urban
@@ -3175,6 +3177,15 @@ end function checkIfHarvest
 
      REAL, OPTIONAL, DIMENSION( ims:ime, 1:num_roof_layers, jms:jme ), INTENT(INOUT) :: TGRL_URB3D
      REAL, OPTIONAL, DIMENSION( ims:ime, 1:num_roof_layers, jms:jme ), INTENT(INOUT) :: SMR_URB3D
+
+!  Explicit radiation parameters PK2025
+     real :: albr_urb,albb_urb,albg_urb,epsr_urb,epsb_urb,epsg_urb
+     real, optional, dimension( ims:ime, jms:jme ), intent(in) :: albr_urb2d
+     real, optional, dimension( ims:ime, jms:jme ), intent(in) :: albb_urb2d
+     real, optional, dimension( ims:ime, jms:jme ), intent(in) :: albg_urb2d
+     real, optional, dimension( ims:ime, jms:jme ), intent(in) :: epsr_urb2d
+     real, optional, dimension( ims:ime, jms:jme ), intent(in) :: epsb_urb2d
+     real, optional, dimension( ims:ime, jms:jme ), intent(in) :: epsg_urb2d
 
 
 ! state variable surface_driver <--> lsm <--> urban
@@ -3489,6 +3500,14 @@ ILOOP : DO I = its, ite
     z0_urb = z0_urb2d(I, J)
     vegfrac = vegfra(I, J) / 100
 
+! Explicit radiation parameters PK2025
+    albr_urb = albr_urb2d(i,j)
+    albb_urb = albb_urb2d(i,j)
+    albg_urb = albg_urb2d(i,j)
+    epsr_urb = epsr_urb2d(i,j)
+    epsb_urb = epsb_urb2d(i,j)
+    epsg_urb = epsg_urb2d(i,j)
+
 ! Call urban
 
     CALL cal_mon_day(julian,julyr,jmonth,jday)
@@ -3509,7 +3528,10 @@ ILOOP : DO I = its, ite
             CMR_URB,    CHR_URB,    CMC_URB,    CHC_URB,                               &
             U10_URB,    V10_URB,    TH2_URB,     Q2_URB,                               & ! O
             UST_URB,     mh_urb,   stdh_urb,     lf_urb,   lp_urb,                     & ! 0
-            hgt_urb,    frc_urb,     lb_urb,      check, CMCR_URB,TGR_URB,             & ! H
+            hgt_urb,    frc_urb,     lb_urb,                                           & ! H
+           albr_urb,   albb_urb,   albg_urb,                                           & ! I
+           epsr_urb,   epsb_urb,   epsg_urb,                                           & ! I
+              check,   CMCR_URB,    TGR_URB,                                                   & ! H
            TGRL_URB,    SMR_URB,   CMGR_URB,   CHGR_URB,   jmonth,                     & ! H
           DRELR_URB,  DRELB_URB,                                                       & ! H
           DRELG_URB,FLXHUMR_URB,FLXHUMB_URB,FLXHUMG_URB,                               &
