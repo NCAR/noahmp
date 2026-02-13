@@ -36,6 +36,8 @@ contains
                          cmcr_urb2d,      tgr_urb2d,     tgrl_urb3d,  smr_urb3d,            & !H urban
                         drelr_urb2d,    drelb_urb2d,    drelg_urb2d,                        & !H urban
                       flxhumr_urb2d,  flxhumb_urb2d,  flxhumg_urb2d,                        & !H urban
+                       tvg_urb2d,      xxxvg_urb2d,    tvgl_urb3d,     smg_urb3d, tt_urb2d, & !H urban
+                      cmcg_urb2d, flxhumvg_urb2d, flxhumt_urb2d,                            & !H urban
                              julian,          julyr,                                        & !H urban
                           frc_urb2d,    utype_urb2d,                                        & !I urban
                                 chs,           chs2,           cqs2,                        & !H
@@ -177,11 +179,19 @@ contains
      REAL    :: FLXHUMR_URB
      REAL    :: FLXHUMB_URB
      REAL    :: FLXHUMG_URB
+     REAL    :: TVG_URB
+     REAL    :: TT_URB
+     REAL    :: XXXVG_URB
+     REAL    :: CMCG_URB
+     REAL    :: FLXHUMVG_URB
+     REAL    :: FLXHUMT_URB
      REAL    :: CMCR_URB
      REAL    :: TGR_URB
 
      REAL, DIMENSION(1:num_roof_layers) :: SMR_URB  ! green roof layer moisture
      REAL, DIMENSION(1:num_roof_layers) :: TGRL_URB ! green roof layer temp [K]
+     REAL, DIMENSION(1:num_road_layers) :: TVGL_URB ! vegetated ground layer temp [K]
+     REAL, DIMENSION(1:num_road_layers) :: SMG_URB  ! vegetated ground layer moisture
 
      REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                    INTENT(INOUT) :: DRELR_URB2D
      REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                    INTENT(INOUT) :: DRELB_URB2D
@@ -189,11 +199,19 @@ contains
      REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                    INTENT(INOUT) :: FLXHUMR_URB2D
      REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                    INTENT(INOUT) :: FLXHUMB_URB2D
      REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                    INTENT(INOUT) :: FLXHUMG_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                    INTENT(INOUT) :: TVG_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                    INTENT(INOUT) :: TT_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                    INTENT(INOUT) :: XXXVG_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                    INTENT(INOUT) :: CMCG_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                    INTENT(INOUT) :: FLXHUMVG_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                    INTENT(INOUT) :: FLXHUMT_URB2D
      REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                    INTENT(INOUT) :: CMCR_URB2D
      REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ),                    INTENT(INOUT) :: TGR_URB2D
 
      REAL, OPTIONAL, DIMENSION( ims:ime, 1:num_roof_layers, jms:jme ), INTENT(INOUT) :: TGRL_URB3D
      REAL, OPTIONAL, DIMENSION( ims:ime, 1:num_roof_layers, jms:jme ), INTENT(INOUT) :: SMR_URB3D
+     REAL, OPTIONAL, DIMENSION( ims:ime, 1:num_road_layers, jms:jme ), INTENT(INOUT) :: TVGL_URB3D
+     REAL, OPTIONAL, DIMENSION( ims:ime, 1:num_road_layers, jms:jme ), INTENT(INOUT) :: SMG_URB3D
 
 
 ! state variable surface_driver <--> lsm <--> urban
@@ -442,6 +460,12 @@ ILOOP : DO I = its, ite
     FLXHUMR_URB = FLXHUMR_URB2D(I,J)
     FLXHUMB_URB = FLXHUMB_URB2D(I,J)
     FLXHUMG_URB = FLXHUMG_URB2D(I,J)
+    TVG_URB     = TVG_URB2D(I,J)
+    TT_URB      = TT_URB2D(I,J)
+    XXXVG_URB   = XXXVG_URB2D(I,J)
+    CMCG_URB    = CMCG_URB2D(I,J)
+    FLXHUMVG_URB= FLXHUMVG_URB2D(I,J)
+    FLXHUMT_URB = FLXHUMT_URB2D(I,J)
     DRELR_URB   = DRELR_URB2D(I,J)
     DRELB_URB   = DRELB_URB2D(I,J)
     DRELG_URB   = DRELG_URB2D(I,J)
@@ -458,6 +482,8 @@ ILOOP : DO I = its, ite
 
     DO K = 1,num_road_layers
       TGL_URB(K) = TGL_URB3D(I,K,J)
+      TVGL_URB(K)= TVGL_URB3D(I,K,J)
+      SMG_URB(K) = SMG_URB3D(I,K,J)
     END DO
 
     XXXR_URB = XXXR_URB2D(I,J)
@@ -533,6 +559,7 @@ ILOOP : DO I = its, ite
            TGRL_URB,    SMR_URB,   CMGR_URB,   CHGR_URB,   jmonth,                     & ! H
           DRELR_URB,  DRELB_URB,                                                       & ! H
           DRELG_URB,FLXHUMR_URB,FLXHUMB_URB,FLXHUMG_URB,                               &
+          TVG_URB,TT_URB,XXXVG_URB,TVGL_URB,SMG_URB,CMCG_URB,FLXHUMVG_URB,FLXHUMT_URB, &
           lf_urb_s, z0_urb, vegfrac)
 
     TS_URB2D(I,J) = TS_URB
@@ -567,6 +594,12 @@ ILOOP : DO I = its, ite
     FLXHUMR_URB2D(I,J) = FLXHUMR_URB
     FLXHUMB_URB2D(I,J) = FLXHUMB_URB
     FLXHUMG_URB2D(I,J) = FLXHUMG_URB
+    TVG_URB2D(I,J)     = TVG_URB
+    TT_URB2D(I,J)      = TT_URB
+    XXXVG_URB2D(I,J)   = XXXVG_URB
+    CMCG_URB2D(I,J)    = CMCG_URB
+    FLXHUMVG_URB2D(I,J)= FLXHUMVG_URB
+    FLXHUMT_URB2D(I,J) = FLXHUMT_URB
     DRELR_URB2D(I,J)   = DRELR_URB
     DRELB_URB2D(I,J)   = DRELB_URB
     DRELG_URB2D(I,J)   = DRELG_URB
@@ -581,6 +614,8 @@ ILOOP : DO I = its, ite
     END DO
     DO K = 1,num_road_layers
       TGL_URB3D(I,K,J) = TGL_URB(K)
+      TVGL_URB3D(I,K,J)= TVGL_URB(K)
+      SMG_URB3D(I,K,J) = SMG_URB(K)
     END DO
 
     XXXR_URB2D(I,J)    = XXXR_URB
