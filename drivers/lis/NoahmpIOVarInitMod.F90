@@ -28,8 +28,8 @@ contains
               XEND    =>  NoahmpIO%XEND     ,&
               YSTART  =>  NoahmpIO%YSTART   ,&
               YEND    =>  NoahmpIO%YEND     ,&
-              KDS     =>  NoahmpIO%KDS      ,&
-              KDE     =>  NoahmpIO%KDE      ,&
+              KMS     =>  NoahmpIO%KMS      ,&
+              KME     =>  NoahmpIO%KME      ,&
               NSOIL   =>  NoahmpIO%NSOIL    ,&
               NSNOW   =>  NoahmpIO%NSNOW    ,&
               NUMRAD  =>  NoahmpIO%NUMRAD    &
@@ -69,12 +69,12 @@ contains
     if ( .not. allocated (NoahmpIO%MP_GRAUP)  ) allocate ( NoahmpIO%MP_GRAUP   (XSTART:XEND,        YSTART:YEND) ) ! non-convective graupel (subset of rainnc) [mm]
     if ( .not. allocated (NoahmpIO%MP_HAIL)   ) allocate ( NoahmpIO%MP_HAIL    (XSTART:XEND,        YSTART:YEND) ) ! non-convective hail (subset of rainnc) [mm]
     if ( .not. allocated (NoahmpIO%SEAICE)    ) allocate ( NoahmpIO%SEAICE     (XSTART:XEND,        YSTART:YEND) ) ! seaice fraction
-    if ( .not. allocated (NoahmpIO%DZ8W)      ) allocate ( NoahmpIO%DZ8W       (XSTART:XEND,KDS:KDE,YSTART:YEND) ) ! thickness of atmo layers [m]
-    if ( .not. allocated (NoahmpIO%T_PHY)     ) allocate ( NoahmpIO%T_PHY      (XSTART:XEND,KDS:KDE,YSTART:YEND) ) ! 3D atmospheric temperature valid at mid-levels [K]
-    if ( .not. allocated (NoahmpIO%QV_CURR)   ) allocate ( NoahmpIO%QV_CURR    (XSTART:XEND,KDS:KDE,YSTART:YEND) ) ! 3D water vapor mixing ratio [kg/kg_dry]
-    if ( .not. allocated (NoahmpIO%U_PHY)     ) allocate ( NoahmpIO%U_PHY      (XSTART:XEND,KDS:KDE,YSTART:YEND) ) ! 3D U wind component [m/s]
-    if ( .not. allocated (NoahmpIO%V_PHY)     ) allocate ( NoahmpIO%V_PHY      (XSTART:XEND,KDS:KDE,YSTART:YEND) ) ! 3D V wind component [m/s]
-    if ( .not. allocated (NoahmpIO%P8W)       ) allocate ( NoahmpIO%P8W        (XSTART:XEND,KDS:KDE,YSTART:YEND) ) ! 3D pressure, valid at interface [Pa]
+    if ( .not. allocated (NoahmpIO%DZ8W)      ) allocate ( NoahmpIO%DZ8W       (XSTART:XEND,KMS:KME,YSTART:YEND) ) ! thickness of atmo layers [m]
+    if ( .not. allocated (NoahmpIO%T_PHY)     ) allocate ( NoahmpIO%T_PHY      (XSTART:XEND,KMS:KME,YSTART:YEND) ) ! 3D atmospheric temperature valid at mid-levels [K]
+    if ( .not. allocated (NoahmpIO%QV_CURR)   ) allocate ( NoahmpIO%QV_CURR    (XSTART:XEND,KMS:KME,YSTART:YEND) ) ! 3D water vapor mixing ratio [kg/kg_dry]
+    if ( .not. allocated (NoahmpIO%U_PHY)     ) allocate ( NoahmpIO%U_PHY      (XSTART:XEND,KMS:KME,YSTART:YEND) ) ! 3D U wind component [m/s]
+    if ( .not. allocated (NoahmpIO%V_PHY)     ) allocate ( NoahmpIO%V_PHY      (XSTART:XEND,KMS:KME,YSTART:YEND) ) ! 3D V wind component [m/s]
+    if ( .not. allocated (NoahmpIO%P8W)       ) allocate ( NoahmpIO%P8W        (XSTART:XEND,KMS:KME,YSTART:YEND) ) ! 3D pressure, valid at interface [Pa]
     if ( .not. allocated (NoahmpIO%shdfac_monthly)) allocate ( NoahmpIO%shdfac_monthly(XSTART:XEND,12,YSTART:YEND) ) ! monthly vegetation fraction
 
     ! spatial varying parameter map
@@ -506,26 +506,26 @@ contains
           if ( .not. allocated (NoahmpIO%sfr_urb3d)  ) allocate ( NoahmpIO%sfr_urb3d   (XSTART:XEND,NoahmpIO%urban_map_zdf,YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%sfg_urb3d)  ) allocate ( NoahmpIO%sfg_urb3d   (XSTART:XEND,NoahmpIO%num_urban_ndm,YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%hi_urb2d)   ) allocate ( NoahmpIO%hi_urb2d    (XSTART:XEND,NoahmpIO%num_urban_hi, YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%theta_urban)) allocate ( NoahmpIO%theta_urban (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%u_urban)    ) allocate ( NoahmpIO%u_urban     (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%v_urban)    ) allocate ( NoahmpIO%v_urban     (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%dz_urban)   ) allocate ( NoahmpIO%dz_urban    (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%rho_urban)  ) allocate ( NoahmpIO%rho_urban   (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%p_urban)    ) allocate ( NoahmpIO%p_urban     (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%a_u_bep)    ) allocate ( NoahmpIO%a_u_bep     (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%a_v_bep)    ) allocate ( NoahmpIO%a_v_bep     (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%a_t_bep)    ) allocate ( NoahmpIO%a_t_bep     (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%a_q_bep)    ) allocate ( NoahmpIO%a_q_bep     (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%a_e_bep)    ) allocate ( NoahmpIO%a_e_bep     (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%b_u_bep)    ) allocate ( NoahmpIO%b_u_bep     (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%b_v_bep)    ) allocate ( NoahmpIO%b_v_bep     (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%b_t_bep)    ) allocate ( NoahmpIO%b_t_bep     (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%b_q_bep)    ) allocate ( NoahmpIO%b_q_bep     (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%b_e_bep)    ) allocate ( NoahmpIO%b_e_bep     (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%dlg_bep)    ) allocate ( NoahmpIO%dlg_bep     (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%dl_u_bep)   ) allocate ( NoahmpIO%dl_u_bep    (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%sf_bep)     ) allocate ( NoahmpIO%sf_bep      (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%vl_bep)     ) allocate ( NoahmpIO%vl_bep      (XSTART:XEND,KDS:KDE,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%theta_urban)) allocate ( NoahmpIO%theta_urban (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%u_urban)    ) allocate ( NoahmpIO%u_urban     (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%v_urban)    ) allocate ( NoahmpIO%v_urban     (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%dz_urban)   ) allocate ( NoahmpIO%dz_urban    (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%rho_urban)  ) allocate ( NoahmpIO%rho_urban   (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%p_urban)    ) allocate ( NoahmpIO%p_urban     (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%a_u_bep)    ) allocate ( NoahmpIO%a_u_bep     (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%a_v_bep)    ) allocate ( NoahmpIO%a_v_bep     (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%a_t_bep)    ) allocate ( NoahmpIO%a_t_bep     (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%a_q_bep)    ) allocate ( NoahmpIO%a_q_bep     (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%a_e_bep)    ) allocate ( NoahmpIO%a_e_bep     (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%b_u_bep)    ) allocate ( NoahmpIO%b_u_bep     (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%b_v_bep)    ) allocate ( NoahmpIO%b_v_bep     (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%b_t_bep)    ) allocate ( NoahmpIO%b_t_bep     (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%b_q_bep)    ) allocate ( NoahmpIO%b_q_bep     (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%b_e_bep)    ) allocate ( NoahmpIO%b_e_bep     (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%dlg_bep)    ) allocate ( NoahmpIO%dlg_bep     (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%dl_u_bep)   ) allocate ( NoahmpIO%dl_u_bep    (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%sf_bep)     ) allocate ( NoahmpIO%sf_bep      (XSTART:XEND,KMS:KME,               YSTART:YEND) )
+          if ( .not. allocated (NoahmpIO%vl_bep)     ) allocate ( NoahmpIO%vl_bep      (XSTART:XEND,KMS:KME,               YSTART:YEND) )
        endif ! BEP/BEP-BEM
 
        if ( NoahmpIO%SF_URBAN_PHYSICS == 3 ) then  ! BEM urban model
@@ -703,8 +703,8 @@ contains
     NoahmpIO%ALBSFCDIFXY     = undefined_real
     NoahmpIO%ALBSOILDIRXY    = 0.0
     NoahmpIO%ALBSOILDIFXY    = 0.0
-    NoahmpIO%RadSwVisFrac    = undefined_real
-    NoahmpIO%RadSwDirFrac    = undefined_real
+    NoahmpIO%RadSwVisFrac    = 0.5
+    NoahmpIO%RadSwDirFrac    = 0.7
     NoahmpIO%rivsto          = undefined_real
     NoahmpIO%fldsto          = undefined_real
     NoahmpIO%fldfrc          = undefined_real

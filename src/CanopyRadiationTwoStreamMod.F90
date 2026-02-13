@@ -174,7 +174,7 @@ contains
     Tmp1  = B * B - C * C
     H     = sqrt(Tmp1) / OpticDepthDif
     Sigma = Tmp0 * Tmp0 - Tmp1
-    if ( abs(Sigma) < 1.0e-6 ) Sigma = sign(1.0e-6, Sigma)
+    if ( abs(Sigma) < real(1.0e-6,kind=kind_noahmp) ) Sigma = sign(real(1.0e-6,kind=kind_noahmp), Sigma)
     P1    = B + OpticDepthDif * H
     P2    = B - OpticDepthDif * H
     P3    = B + Tmp0

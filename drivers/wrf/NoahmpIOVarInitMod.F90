@@ -9,7 +9,7 @@ module NoahmpIOVarInitMod
 ! -------------------------------------------------------------------------
 
   use Machine
-  use NoahmpIOVarType
+  use NoahmpIOVarType, only : NoahmpIO_type
 
   implicit none
 
@@ -300,7 +300,7 @@ contains
     if ( .not. allocated (NoahmpIO%ACC_ETRANIXY)) allocate ( NoahmpIO%ACC_ETRANIXY (XSTART:XEND,1:NSOIL,YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%ACC_GLAFLWXY)) allocate ( NoahmpIO%ACC_GLAFLWXY (XSTART:XEND,        YSTART:YEND) )
 
-    ! Needed for MMF_RUNOFF (IOPT_RUN = 5); not part of MP driver in WRF
+    ! Needed for MMF_RUNOFF (IOPT_RUNSUB = 5); not part of MP driver in WRF
     if ( .not. allocated (NoahmpIO%MSFTX)      ) allocate ( NoahmpIO%MSFTX       (XSTART:XEND,YSTART:YEND) ) 
     if ( .not. allocated (NoahmpIO%MSFTY)      ) allocate ( NoahmpIO%MSFTY       (XSTART:XEND,YSTART:YEND) ) 
     if ( .not. allocated (NoahmpIO%EQZWT)      ) allocate ( NoahmpIO%EQZWT       (XSTART:XEND,YSTART:YEND) )
@@ -424,6 +424,8 @@ contains
        if ( .not. allocated (NoahmpIO%WCAP)   ) allocate ( NoahmpIO%WCAP       (XSTART:XEND,  YSTART:YEND) ) ! maximum wetland capacity [m]
     endif
 
+    !---- For WRF, urban variables are already defined so this part is not needed, so deactivated here
+    if (0 == 1) then 
     ! Single- and Multi-layer Urban Models
     if ( NoahmpIO%SF_URBAN_PHYSICS > 0 ) then
 
@@ -552,7 +554,8 @@ contains
           if ( .not. allocated (NoahmpIO%lfg_urb3d)    ) allocate ( NoahmpIO%lfg_urb3d     (XSTART:XEND,NoahmpIO%num_urban_ndm, YSTART:YEND) )
        endif ! BEM 
 
-    endif
+    endif ! urban physics
+    endif ! deactivate urban for WRF
 
 #ifdef WRF_HYDRO
     if ( .not. allocated (NoahmpIO%infxsrt)   ) allocate ( NoahmpIO%infxsrt    (XSTART:XEND,YSTART:YEND) )
@@ -900,6 +903,8 @@ contains
        NoahmpIO%SOILCOMP     = undefined_real
     endif
 
+    !--- For WRF, this is not needed, so deactivated here
+    if (0 == 1) then
     ! urban model 
     if ( NoahmpIO%SF_URBAN_PHYSICS > 0 ) then
        NoahmpIO%JULDAY        = undefined_int_neg
@@ -1027,7 +1032,8 @@ contains
           NoahmpIO%lfr_urb3d     = undefined_real_neg
           NoahmpIO%lfg_urb3d     = undefined_real_neg
        endif ! BEM 
-    endif
+    endif ! urban physics
+    endif ! deactivate urban for WRF
 
     NoahmpIO%XLAND             = 1.0      ! water = 2.0, land = 1.0
     NoahmpIO%XICE              = 0.0      ! fraction of grid that is seaice

@@ -3,7 +3,7 @@ module NoahmpInitMainMod
 !!!  Module to initialize Noah-MP 2-D variables
 
   use Machine
-  use NoahmpIOVarType
+  use NoahmpIOVarType, only : NoahmpIO_type
   use NoahmpSnowInitMod
  
   implicit none
@@ -34,8 +34,8 @@ contains
 ! --------------------------------------------------------------------------- 
 
     ! initialize
-    ide = NoahmpIO%ide+1 
-    jde = NoahmpIO%jde+1 
+    ide = NoahmpIO%ide 
+    jde = NoahmpIO%jde 
     its = NoahmpIO%its
     jts = NoahmpIO%jts
     itf = min0(NoahmpIO%ite, ide-1)
@@ -257,6 +257,11 @@ contains
                    endif
                 endif
              endif
+             
+             ! initialize soil albedo
+             NoahmpIO%ALBSOILDIRXY(I,:,J) = 0.0
+             NoahmpIO%ALBSOILDIFXY(I,:,J) = 0.0
+
           enddo ! I
        enddo    ! J
        
@@ -269,30 +274,7 @@ contains
           NoahmpIO%STEPWTD = max(NoahmpIO%STEPWTD,1)
        endif
 
-       ! initialize soil albedo
-       NoahmpIO%ALBSOILDIRXY = 0.0
-       NoahmpIO%ALBSOILDIFXY = 0.0
-
     endif ! NoahmpIO%restart_flag
-
-    NoahmpIO%NTIME = (NoahmpIO%KHOUR)*3600.0/nint(NoahmpIO%dtbl)*(NoahmpIO%spinup_loops+1)
-    NoahmpIO%spinup_loop = 0
-    NoahmpIO%reset_spinup_date = .false.
-
-    !! TODO: Read these from ERF client code. 
-    NoahmpIO%P8W(:,1,:)     = 1.0
-    NoahmpIO%GLW            = 0.0
-    NoahmpIO%SWDOWN         = 0.0
-    NoahmpIO%RAINBL         = 0.0
-    NoahmpIO%SNOWBL         = 0.0
-    NoahmpIO%SHBXY          = 0.0
-    NoahmpIO%EVBXY          = 0.0
-
-    if (NoahmpIO%rank == 0) then
-      write(*,'(A8, I6, A8, I6, A8, F10.4)') "NTIME = ", NoahmpIO%NTIME, "KHOUR=", NoahmpIO%KHOUR, "dtbl = ", NoahmpIO%dtbl
-    end if
-
-    call system_clock(count=NoahmpIO%clock_count_1)   ! Start a timer
 
     if ( NoahmpIO%IOPT_ALB == 3 ) then ! initialize SNICAR aerosol content in snow
        do J = jts, jtf

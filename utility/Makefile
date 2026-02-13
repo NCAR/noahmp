@@ -30,5 +30,5 @@ clean:
 # Dependencies:
 #
 CheckNanMod.o: Machine.o
-
+PiecewiseLinearInterp1dMod.o: Machine.o
 

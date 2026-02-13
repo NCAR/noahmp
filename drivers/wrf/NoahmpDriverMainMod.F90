@@ -2,7 +2,7 @@ module NoahmpDriverMainMod
 
   use Machine
   use NoahmpVarType
-  use NoahmpIOVarType
+  use NoahmpIOVarType, only : NoahmpIO_type
   use ConfigVarInitMod
   use EnergyVarInitMod
   use ForcingVarInitMod
@@ -58,31 +58,39 @@ contains
     NoahmpIO%SOIL_UPDATE_STEPS = max(NoahmpIO%SOIL_UPDATE_STEPS,1)
 
     if ( NoahmpIO%SOIL_UPDATE_STEPS == 1 ) then
-       NoahmpIO%ACC_SSOILXY  = 0.0
-       NoahmpIO%ACC_QINSURXY = 0.0
-       NoahmpIO%ACC_QSEVAXY  = 0.0
-       NoahmpIO%ACC_ETRANIXY = 0.0
-       NoahmpIO%ACC_DWATERXY = 0.0
-       NoahmpIO%ACC_PRCPXY   = 0.0
-       NoahmpIO%ACC_ECANXY   = 0.0
-       NoahmpIO%ACC_ETRANXY  = 0.0
-       NoahmpIO%ACC_EDIRXY   = 0.0
-       NoahmpIO%ACC_GLAFLWXY = 0.0
+       do J = NoahmpIO%JTS, NoahmpIO%JTE
+       do I = NoahmpIO%ITS, NoahmpIO%ITE
+          NoahmpIO%ACC_SSOILXY(I,J)    = 0.0
+          NoahmpIO%ACC_QINSURXY(I,J)   = 0.0
+          NoahmpIO%ACC_QSEVAXY(I,J)    = 0.0
+          NoahmpIO%ACC_ETRANIXY(I,:,J) = 0.0
+          NoahmpIO%ACC_DWATERXY(I,J)   = 0.0
+          NoahmpIO%ACC_PRCPXY(I,J)     = 0.0
+          NoahmpIO%ACC_ECANXY(I,J)     = 0.0
+          NoahmpIO%ACC_ETRANXY(I,J)    = 0.0
+          NoahmpIO%ACC_EDIRXY(I,J)     = 0.0
+          NoahmpIO%ACC_GLAFLWXY(I,J)   = 0.0
+       enddo
+       enddo
     endif
 
     if ( NoahmpIO%SOIL_UPDATE_STEPS > 1 ) then
        if ( mod(NoahmpIO%ITIMESTEP, NoahmpIO%SOIL_UPDATE_STEPS) == 1 ) then
-          NoahmpIO%ACC_SSOILXY  = 0.0
-          NoahmpIO%ACC_QINSURXY = 0.0
-          NoahmpIO%ACC_QSEVAXY  = 0.0
-          NoahmpIO%ACC_ETRANIXY = 0.0
-          NoahmpIO%ACC_DWATERXY = 0.0
-          NoahmpIO%ACC_PRCPXY   = 0.0
-          NoahmpIO%ACC_ECANXY   = 0.0
-          NoahmpIO%ACC_ETRANXY  = 0.0
-          NoahmpIO%ACC_EDIRXY   = 0.0
-          NoahmpIO%ACC_GLAFLWXY = 0.0
-       end if
+          do J = NoahmpIO%JTS, NoahmpIO%JTE
+          do I = NoahmpIO%ITS, NoahmpIO%ITE
+             NoahmpIO%ACC_SSOILXY(I,J)    = 0.0
+             NoahmpIO%ACC_QINSURXY(I,J)   = 0.0
+             NoahmpIO%ACC_QSEVAXY(I,J)    = 0.0
+             NoahmpIO%ACC_ETRANIXY(I,:,J) = 0.0
+             NoahmpIO%ACC_DWATERXY(I,J)   = 0.0
+             NoahmpIO%ACC_PRCPXY(I,J)     = 0.0
+             NoahmpIO%ACC_ECANXY(I,J)     = 0.0
+             NoahmpIO%ACC_ETRANXY(I,J)    = 0.0
+             NoahmpIO%ACC_EDIRXY(I,J)     = 0.0
+             NoahmpIO%ACC_GLAFLWXY(I,J)   = 0.0
+          enddo
+          enddo
+       endif
     endif
 
     !if ( mod(NoahmpIO%ITIMESTEP, NoahmpIO%SOIL_UPDATE_STEPS) == 0 ) NoahmpIO%CALCULATE_SOIL = .true.
@@ -140,7 +148,7 @@ contains
 
           NoahmpIO%I = I
           if ( NoahmpIO%XICE(I,J) >= NoahmpIO%XICE_THRESHOLD ) then  ! Sea-ice point
-             NoahmpIO%ICE                         = 1
+             NoahmpIO%ICE                        = 1
              NoahmpIO%SH2O(I,1:NoahmpIO%NSOIL,J) = 1.0
              NoahmpIO%LAI (I,J)                  = 0.01
              cycle ILOOP                                             ! Skip any sea-ice points
