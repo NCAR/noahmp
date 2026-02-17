@@ -1,5 +1,32 @@
 # Noah-MP model release notes
 
+## Noah-MP version 5.2.0 release
+
+### LSM capabilities/enhancements
+
+- none
+
+
+### Driver capabilities/enhancements
+
+- New driver interface for coupling with WRF
+- New urban driver interface for SLUCM urban tree schemes in WRF
+
+
+### LSM bug fixes
+
+- None
+
+### Driver bug fixes
+
+- None
+
+
+### External modules capabilities/enhancements
+
+- None
+
+
 ## Noah-MP version 5.1.1 release
 
 ### LSM capabilities/enhancements
