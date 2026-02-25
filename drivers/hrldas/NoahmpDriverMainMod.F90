@@ -113,7 +113,7 @@ contains
     do K = 2, NoahmpIO%NSOIL
        NoahmpIO%ZSOIL(K) = -NoahmpIO%DZS(K) + NoahmpIO%ZSOIL(K-1)
     enddo
-    
+
     JLOOP : do J = NoahmpIO%JTS, NoahmpIO%JTE
 
        NoahmpIO%J = J

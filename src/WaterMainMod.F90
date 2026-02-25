@@ -43,6 +43,7 @@ contains
               FlagSoilProcess        => noahmp%config%domain%FlagSoilProcess        ,& ! in,    flag to calculate soil processes
               NumSoilTimeStep        => noahmp%config%domain%NumSoilTimeStep        ,& ! in,    number of timesteps for soil process calculation
               OptWetlandModel        => noahmp%config%nmlist%OptWetlandModel        ,& ! in,    options for wetland model
+              OptRoot                => noahmp%config%nmlist%OptRoot                ,& ! in,    root option
               VaporizeGrd            => noahmp%water%flux%VaporizeGrd               ,& ! in,    ground vaporize rate total (evap+sublim) [mm/s]
               CondenseVapGrd         => noahmp%water%flux%CondenseVapGrd            ,& ! in,    ground vapor condense rate total (dew+frost) [mm/s]
               RainfallGround         => noahmp%water%flux%RainfallGround            ,& ! in,    ground surface rain rate [mm/s]
@@ -55,6 +56,7 @@ contains
               ExchCoeffShSfc         => noahmp%energy%state%ExchCoeffShSfc          ,& ! in,    exchange coefficient [m/s] for heat, surface, grid mean
               SpecHumidityRefHeight  => noahmp%forcing%SpecHumidityRefHeight        ,& ! in,    specific humidity [kg/kg] at reference height
               HeatLatentGrd          => noahmp%energy%flux%HeatLatentGrd            ,& ! in,    total ground latent heat [W/m2] (+ to atm)
+              RootActivity           => noahmp%water%state%RootActivity             ,& ! in,    root activity function 
               NumSnowLayerNeg        => noahmp%config%domain%NumSnowLayerNeg        ,& ! inout, actual number of snow layers (negative)
               ThicknessSnowSoilLayer => noahmp%config%domain%ThicknessSnowSoilLayer ,& ! inout, thickness of snow/soil layers [m]
               SnowWaterEquiv         => noahmp%water%state%SnowWaterEquiv           ,& ! inout, snow water equivalent [mm]
@@ -149,9 +151,15 @@ contains
     EvapSoilSfcLiq = EvapSoilSfcLiq * 0.001 ! mm/s -> m/s
 
     ! transpiration mm/s -> m/s
-    do LoopInd = 1, NumSoilLayerRoot
-       TranspWatLossSoil(LoopInd) = Transpiration * SoilTranspFac(LoopInd) * 0.001
-    enddo
+    if ( OptRoot == 1 ) then
+       do LoopInd = 1, NumSoilLayerRoot
+          TranspWatLossSoil(LoopInd) = Transpiration * RootActivity(LoopInd) * 0.001
+       enddo
+    else
+       do LoopInd = 1, NumSoilLayerRoot
+          TranspWatLossSoil(LoopInd) = Transpiration * SoilTranspFac(LoopInd) * 0.001
+       enddo
+    endif
 
     ! total surface input water to soil mm/s -> m/s
     SoilSfcInflow    = (PondSfcThinSnwMelt + PondSfcThinSnwComb + PondSfcThinSnwTrans) / &

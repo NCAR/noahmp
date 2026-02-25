@@ -53,6 +53,7 @@ module EnergyMainMod
   use SurfaceEnergyFluxBareGroundMod, only : SurfaceEnergyFluxBareGround
   use SoilSnowTemperatureMainMod,     only : SoilSnowTemperatureMain
   use SoilSnowWaterPhaseChangeMod,    only : SoilSnowWaterPhaseChange
+  use DynaRootGrowDieMod,             only : DynaRootGrowDie
 
   implicit none
 
@@ -80,6 +81,7 @@ contains
               RadSwDownRefHeight      => noahmp%forcing%RadSwDownRefHeight           ,& ! in,    downward shortwave radiation [W/m2] at reference height
               OptSnowSoilTempTime     => noahmp%config%nmlist%OptSnowSoilTempTime    ,& ! in,    options for snow/soil temperature time scheme
               OptSnowCoverGround      => noahmp%config%nmlist%OptSnowCoverGround     ,& ! in,    options for ground snow cover
+              OptRoot                 => noahmp%config%nmlist%OptRoot                ,& ! in,    dynamic root option
               FlagCropland            => noahmp%config%domain%FlagCropland           ,& ! in,    flag to identify croplands
               FlagSoilProcess         => noahmp%config%domain%FlagSoilProcess        ,& ! in,    flag to determine if calculating soil processes
               NumSoilTimeStep         => noahmp%config%domain%NumSoilTimeStep        ,& ! in,    number of time step for calculating soil processes
@@ -213,6 +215,8 @@ contains
 
     ! longwave emissivity for vegetation, ground, total net surface
     call SurfaceEmissivity(noahmp)
+
+    if ( OptRoot == 1 ) call DynaRootGrowDie(noahmp)
 
     ! soil water transpiration factor controlling stomatal resistance and evapotranspiration
     call SoilWaterTranspiration(noahmp)

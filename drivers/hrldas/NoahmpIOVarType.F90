@@ -66,6 +66,7 @@ module NoahmpIOVarType
     integer                                                ::  IOPT_COMPACT        ! snowpack compaction (1->Anderson1976; 2->Abolafia-Rosenzweig2024)
     integer                                                ::  IOPT_SCF            ! snow cover fraction (1->NiuYang07; 2->Abolafia-Rosenzweig2025)
     integer                                                ::  IOPT_WETLAND        ! wetland model option (0->off; 1->Zhang2022 fixed parameter; 2->Zhang2022 read in 2D parameter)
+    integer                                                ::  IOPT_ROOT           ! root scheme option (0->off; 1->Bieri2025 dynamic root scheme)
     real(kind=kind_noahmp)                                 ::  XICE_THRESHOLD      ! fraction of grid determining seaice
     real(kind=kind_noahmp)                                 ::  JULIAN              ! Julian day
     real(kind=kind_noahmp)                                 ::  DTBL                ! timestep [s]
@@ -500,6 +501,14 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  WSURFXY             ! wetland water storage [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FSATMX              ! maximum saturated fraction
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  WCAP                ! maximum wetland capacity [m]
+
+!------------------------------------------------------------------------
+! Needed for DynaRoot scheme (OPT_ROOT=1)
+!------------------------------------------------------------------------
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  EASYXY              ! ease function (-)
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ROOTACTIVITYXY      ! root activity function (-)
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  INACTIVEXY          ! number of timesteps without active roots (-)
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  DRDEPTHXY           ! root depth layer (-)
 
 !------------------------------------------------------------------------
 ! Single- and Multi-layer Urban Models

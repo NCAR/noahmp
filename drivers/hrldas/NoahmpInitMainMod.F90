@@ -269,6 +269,12 @@ contains
           NoahmpIO%STEPWTD = max(NoahmpIO%STEPWTD,1)
        endif
 
+       ! initialize time step counter for DynaRoot, if activated
+       if ( NoahmpIO%IOPT_ROOT == 1 ) then
+          NoahmpIO%INACTIVEXY(:,1,:) = 0.0
+          NoahmpIO%INACTIVEXY(:,2:NoahmpIO%NSOIL,:) = 366.0*(86400.0 / NoahmpIO%DTBL)
+       endif
+
     endif ! NoahmpIO%restart_flag
 
     if ( NoahmpIO%IOPT_ALB == 3 ) then ! initialize SNICAR aerosol content in snow

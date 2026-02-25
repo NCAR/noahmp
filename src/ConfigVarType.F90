@@ -131,6 +131,9 @@ module ConfigVarType
                                               ! 0 -> No Wetland model
                                               ! 1 -> Single-point/uniform parameter (Zhang, et al. 2022 WRR)
                                               ! 2 -> 2-D regional parameter input (Zhang, et al. 2022 WRR)
+    integer :: OptRoot                     ! option for root scheme
+                                              ! 0 -> No root scheme
+                                              ! 1 -> DynaRoot scheme (Bieri et al 2025; Fan et al. 2017)
     integer :: OptSnicarSnowShape          ! options for snow grain shape in SNICAR (He et al. 2017 JC)
                                               ! 1 -> sphere
                                               ! 2 -> spheroid

@@ -424,6 +424,14 @@ contains
        if ( .not. allocated (NoahmpIO%WCAP)   ) allocate ( NoahmpIO%WCAP       (XSTART:XEND,  YSTART:YEND) ) ! maximum wetland capacity [m]
     endif
 
+    ! Needed for DynaRoot scheme (OPT_ROOT=1)
+    if ( NoahmpIO%IOPT_ROOT == 1 ) then
+       if ( .not. allocated (NoahmpIO%EASYXY)         ) allocate ( NoahmpIO%EASYXY          (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! ease function (-)
+       if ( .not. allocated (NoahmpIO%ROOTACTIVITYXY) ) allocate ( NoahmpIO%ROOTACTIVITYXY  (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! root activity function (-)
+       if ( .not. allocated (NoahmpIO%INACTIVEXY)     ) allocate ( NoahmpIO%INACTIVEXY      (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! number of time steps without active roots (-)
+       if ( .not. allocated (NoahmpIO%DRDEPTHXY)      ) allocate ( NoahmpIO%DRDEPTHXY       (XSTART:XEND,        YSTART:YEND) ) ! root layer depth (-)
+    endif 
+
     ! Single- and Multi-layer Urban Models
     if ( NoahmpIO%SF_URBAN_PHYSICS > 0 )  then
        if ( .not. allocated (NoahmpIO%sh_urb2d)   ) allocate ( NoahmpIO%sh_urb2d    (XSTART:XEND,YSTART:YEND) ) 
@@ -887,6 +895,14 @@ contains
     if ( NoahmpIO%IOPT_WETLAND == 2 ) then
        NoahmpIO%FSATMX       = undefined_real
        NoahmpIO%WCAP         = undefined_real
+    endif
+
+    ! DynaRoot scheme
+    if ( NoahmpIO%IOPT_ROOT == 1 ) then
+       NoahmpIO%EASYXY         = 0.0
+       NoahmpIO%ROOTACTIVITYXY = 0.0
+       NoahmpIO%INACTIVEXY     = undefined_real
+       NoahmpIO%DRDEPTHXY      = undefined_real
     endif
 
     ! spatial varying soil texture

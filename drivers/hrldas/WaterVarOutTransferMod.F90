@@ -170,6 +170,14 @@ contains
        NoahmpIO%FSATXY (I,J) = noahmp%water%state%SoilSaturateFrac
     endif
 
+    ! DynaRoot scheme
+    if ( noahmp%config%nmlist%OptRoot == 1 ) then
+       NoahmpIO%EASYXY        (I,1:NumSoilLayer,J) = noahmp%water%state%EaseFunction(1:NumSoilLayer)
+       NoahmpIO%ROOTACTIVITYXY(I,1:NumSoilLayer,J) = noahmp%water%state%RootActivity(1:NumSoilLayer)
+       NoahmpIO%INACTIVEXY    (I,1:NumSoilLayer,J) = noahmp%water%state%InactiveTimeSteps(1:NumSoilLayer)
+       NoahmpIO%DRDEPTHXY     (I,J)                = noahmp%water%state%DynamicRootDepth
+    endif
+
 #ifdef WRF_HYDRO
     NoahmpIO%infxsrt   (I,J) = max(noahmp%water%flux%RunoffSurface, 0.0)               ! mm, surface runoff
     NoahmpIO%soldrain  (I,J) = max(noahmp%water%flux%RunoffSubsurface, 0.0)            ! mm, underground runoff
