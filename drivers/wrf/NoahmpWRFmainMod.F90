@@ -124,7 +124,7 @@ contains
     INTEGER,                                         INTENT(IN   ) ::  IOPT_CRS     ! canopy stomatal resistance (1-> Ball-Berry; 2->Jarvis)
     INTEGER,                                         INTENT(IN   ) ::  IOPT_BTR     ! soil moisture factor for stomatal resistance (1-> Noah; 2-> CLM; 3-> SSiB)
     INTEGER,                                         INTENT(IN   ) ::  IOPT_RUNSUB  ! subsurface runoff and groundwater (currently keep the same as surface runoff option)
-    INTEGER,                                         INTENT(IN   ) ::  IOPT_RUNSRF  ! surface runoff (1->SIMGM; 2->SIMTOP; 3->Schaake96; 4->BATS; 5->MMF; 6->VIC; 7->XianAnJiang; 8->DynVIC)
+    INTEGER,                                         INTENT(IN   ) ::  IOPT_RUNSRF  ! surface runoff (1->SIMGM; 2->SIMTOP; 3->Schaake96; 4->BATS; 5->MMF; 6->VIC; 7->XinAnJiang; 8->DynVIC)
     INTEGER,                                         INTENT(IN   ) ::  IOPT_COMPACT ! snowpack compaction (1->Anderson1976; 2->Abolafia-Rosenzweig2024)
     INTEGER,                                         INTENT(IN   ) ::  IOPT_TKSNO   ! snow thermal conductivity: 1 -> Stieglitz(yen,1965) scheme (default), 2 -> Anderson, 1976 scheme, 3 -> constant, 4 -> Verseghy (1991) scheme, 5 -> Douvill(Yen, 1981) scheme
     INTEGER,                                         INTENT(IN   ) ::  IOPT_SCF     ! snow cover fraction (1->NiuYang07; 2->Abolafia-Rosenzweig2025)
