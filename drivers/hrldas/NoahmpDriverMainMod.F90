@@ -21,9 +21,6 @@ module NoahmpDriverMainMod
   use NoahmpMainMod
   use NoahmpMainGlacierMod
   use module_ra_gfdleta,  only: cal_mon_day
-#if ( WRF_CHEM == 1 )
-  USE module_data_gocart_dust
-#endif
 
   implicit none
   

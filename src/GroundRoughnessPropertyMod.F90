@@ -76,7 +76,7 @@ contains
     endif
 
     ! reference height above ground
-    RefHeightAboveGrd    = max(ZeroPlaneDispSfc, HeightCanopyTop) + RefHeightAboveSfc
+    RefHeightAboveGrd    = ZeroPlaneDispSfc + RefHeightAboveSfc
     if ( ZeroPlaneDispGrd >= RefHeightAboveGrd ) RefHeightAboveGrd = ZeroPlaneDispGrd + RefHeightAboveSfc
 
     end associate

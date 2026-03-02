@@ -33,23 +33,20 @@ subroutine NoahmpReadLandHeader(NoahmpIO)
     character(len=256) :: units
     integer :: i
     integer :: rank
+    integer :: ilev, is, js, ratio, xoffset, yoffset
 
-    if (NoahmpIO%rank == 0) write(*,'("Noah-MP reading ''", A, "'' headers")') trim(NoahmpIO%erf_setup_file)
+    if (NoahmpIO%rank == 0) write(*,'("Noah-MP reading ''", A, "'' headers")') trim(NoahmpIO%erf_setup_file_lev)
 
-    ierr = nf90_open(NoahmpIO%erf_setup_file, NF90_NOWRITE, ncid)
-    call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file))
+    ierr = nf90_open(NoahmpIO%erf_setup_file_lev, NF90_NOWRITE, ncid)
+    call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file_lev))
 
-    ierr = nf90_inq_dimid(ncid, "west_east", dimid)
-    call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding dimension 'west_east'")
+    ierr = nf90_get_att(ncid, NF90_GLOBAL, "WEST-EAST_GRID_DIMENSION", NoahmpIO%xsglobal)
+    call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding global attribute 'WEST-EAST_GRID_DIMENSION'")
+    NoahmpIO%xsglobal = NoahmpIO%xsglobal-1
 
-    ierr = nf90_inquire_dimension(ncid, dimid, len=NoahmpIO%xend)
-    call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding dimension length for 'west_east'")
-
-    ierr = nf90_inq_dimid(ncid, "south_north", dimid)
-    call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding dimension 'south_north'")
-
-    ierr = nf90_inquire_dimension(ncid, dimid, len=NoahmpIO%yend)
-    call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding dimension length for 'south_north'")
+    ierr = nf90_get_att(ncid, NF90_GLOBAL, "SOUTH-NORTH_GRID_DIMENSION", NoahmpIO%ysglobal)
+    call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding global attribute 'SOUTH-NORTH_GRID_DIMENSION'")
+    NoahmpIO%ysglobal = NoahmpIO%ysglobal-1
 
     ierr = nf90_get_att(ncid, NF90_GLOBAL, "DX", NoahmpIO%dx)
     call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding global attribute 'DX'")
@@ -109,6 +106,43 @@ subroutine NoahmpReadLandHeader(NoahmpIO)
     ierr = nf90_close(ncid)
     call error_handler(ierr, "READ_ERF_HDRINFO:  Problems closing NetCDF file.")
 
+    NoahmpIO%xoffset = 0
+    NoahmpIO%yoffset = 0
+
+    do ilev=0,NoahmpIO%level
+
+      select case(ilev)
+      case(0)
+        ierr = nf90_open(NoahmpIO%erf_setup_file_01, NF90_NOWRITE, ncid)
+        call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file_01))
+      case(1)
+        ierr = nf90_open(NoahmpIO%erf_setup_file_02, NF90_NOWRITE, ncid)
+        call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file_02))
+      case(2)
+        ierr = nf90_open(NoahmpIO%erf_setup_file_03, NF90_NOWRITE, ncid)
+        call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file_03)) 
+      case default
+        print *, "Error: unsupported level: ", ilev
+        stop
+      end select
+
+      ierr = nf90_get_att(ncid, NF90_GLOBAL, "I_PARENT_START", is)
+      call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding global attribute 'I_PARENT_START'")
+
+      ierr = nf90_get_att(ncid, NF90_GLOBAL, "J_PARENT_START", js)
+      call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding global attribute 'J_PARENT_START'")
+
+      ierr = nf90_get_att(ncid, NF90_GLOBAL, "PARENT_GRID_RATIO", ratio)
+      call error_handler(ierr, "READ_ERF_HDRINFO:  Problems finding global attribute 'PARENT_GRID_RATIO'")
+
+      ierr = nf90_close(ncid)
+      call error_handler(ierr, "READ_ERF_HDRINFO:  Problems closing NetCDF file.")        
+
+      NoahmpIO%xoffset = ratio*(NoahmpIO%xoffset+is-1)
+      NoahmpIO%yoffset = ratio*(NoahmpIO%yoffset+js-1)
+
+    end do
+
 end subroutine NoahmpReadLandHeader
 
 subroutine NoahmpReadLandMain(NoahmpIO)
@@ -118,7 +152,8 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     character(len=256) :: units
     integer :: ierr
     integer :: ncid
-    real, dimension(NoahmpIO%xstart:NoahmpIO%xend,NoahmpIO%ystart:NoahmpIO%yend) :: xdum
+    real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, \
+                    NoahmpIO%ystart-NoahmpIO%yoffset:NoahmpIO%yend-NoahmpIO%yoffset) :: xdum
     integer :: rank
 
     character(len=256) :: titlestr
@@ -131,60 +166,68 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     real, dimension(100) :: layer_top
     real, dimension(NoahmpIO%nsoil)   :: dzs
 
-    real, dimension(NoahmpIO%xstart:NoahmpIO%xend, NoahmpIO%ystart:NoahmpIO%yend, NoahmpIO%nsoil) :: insoil
-    real, dimension(NoahmpIO%xstart:NoahmpIO%xend, NoahmpIO%nsoil, NoahmpIO%ystart:NoahmpIO%yend) :: soildummy
+    real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, \
+                    NoahmpIO%ystart-NoahmpIO%yoffset:NoahmpIO%yend-NoahmpIO%yoffset, NoahmpIO%nsoil) :: insoil
+
+    real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, \
+                    NoahmpIO%nsoil, \
+                    NoahmpIO%ystart-NoahmpIO%yoffset:NoahmpIO%yend-NoahmpIO%yoffset) :: soildummy
 
     integer :: ierr_vegfra
     integer :: ierr_lai
 
     integer :: i, j
     integer :: iret
+    integer :: xstart, ystart, xend, yend
 
-    if (NoahmpIO%rank == 0) write(*,'("Noah-MP reading ''", A, "'' variables")') trim(NoahmpIO%erf_setup_file)
+    if (NoahmpIO%rank == 0) write(*,'("Noah-MP reading ''", A, "'' variables")') trim(NoahmpIO%erf_setup_file_lev)
 
-    ierr = nf90_open(NoahmpIO%erf_setup_file, NF90_NOWRITE, ncid)
-    call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file))
+    ierr = nf90_open(NoahmpIO%erf_setup_file_lev, NF90_NOWRITE, ncid)
+    call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file_lev))
+
+    xstart = NoahmpIO%xstart-NoahmpIO%xoffset
+    ystart = NoahmpIO%ystart-NoahmpIO%yoffset
+
+    xend = NoahmpIO%xend-NoahmpIO%xoffset
+    yend = NoahmpIO%yend-NoahmpIO%yoffset
 
     ! Get Latitude (lat)
-    call get_2d_netcdf("XLAT", ncid, NoahmpIO%xlat,  units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_2d_netcdf("XLAT", ncid, NoahmpIO%xlat,  units, xstart, xend, ystart, yend, FATAL, ierr)
 
     ! Get Longitude (lon)
-    call get_2d_netcdf("XLONG", ncid, NoahmpIO%xlong, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_2d_netcdf("XLONG", ncid, NoahmpIO%xlong, units, xstart, xend, ystart, yend, FATAL, ierr)
 
     ! Get land mask (xland)
-    call get_2d_netcdf("XLAND", ncid, NoahmpIO%xland, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NOT_FATAL, ierr)
+    call get_2d_netcdf("XLAND", ncid, NoahmpIO%xland, units, xstart, xend, ystart, yend, NOT_FATAL, ierr)
 
     ! Get seaice (seaice)
-    call get_2d_netcdf("SEAICE", ncid, NoahmpIO%seaice, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NOT_FATAL, ierr)
+    call get_2d_netcdf("SEAICE", ncid, NoahmpIO%seaice, units, xstart, xend, ystart, yend, NOT_FATAL, ierr)
 
     ! Get Terrain (avg)
-    call get_2d_netcdf("HGT", ncid, NoahmpIO%terrain, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_2d_netcdf("HGT", ncid, NoahmpIO%terrain, units, xstart, xend, ystart, yend, FATAL, ierr)
 
     ! Get Deep layer temperature (TMN)
-    call get_2d_netcdf("TMN", ncid, NoahmpIO%TMN, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_2d_netcdf("TMN", ncid, NoahmpIO%TMN, units, xstart, xend, ystart, yend, FATAL, ierr)
 
     ! Get Map Factors (MAPFAC_MX)
-    call get_2d_netcdf("MAPFAC_MX", ncid, NoahmpIO%msftx, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NOT_FATAL, ierr)
+    call get_2d_netcdf("MAPFAC_MX", ncid, NoahmpIO%msftx, units, xstart, xend, ystart, yend, NOT_FATAL, ierr)
     if (ierr /= 0) print*, 'Did not find MAPFAC_MX, only needed for iopt_run=5'
 
     ! Get Map Factors (MAPFAC_MY)
-    call get_2d_netcdf("MAPFAC_MY", ncid, NoahmpIO%msfty, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NOT_FATAL, ierr)
+    call get_2d_netcdf("MAPFAC_MY", ncid, NoahmpIO%msfty, units, xstart, xend, ystart, yend, NOT_FATAL, ierr)
     if (ierr /= 0) print*, 'Did not find MAPFAC_MY, only needed for iopt_run=5'
 
     ! Get Dominant Land Use categories (use)
-    call get_landuse_netcdf(ncid, xdum , units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend)
+    call get_landuse_netcdf(ncid, xdum , units, xstart, xend, ystart, yend)
     NoahmpIO%ivgtyp = nint(xdum)
 
     ! Get Dominant Soil Type categories in the top layer (stl)
-    call get_soilcat_netcdf(ncid, xdum , units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend)
+    call get_soilcat_netcdf(ncid, xdum , units, xstart, xend, ystart, yend)
     NoahmpIO%isltyp = nint(xdum)
 
     where (NoahmpIO%SEAICE > 0.0) NoahmpIO%XICE = 1.0
  
     NoahmpIO%CROPTYPE   = 0       ! make default 0% crops everywhere
-    NoahmpIO%PLANTING   = 126     ! default planting date
-    NoahmpIO%HARVEST    = 290     ! default harvest date
-    NoahmpIO%SEASON_GDD = 1605    ! default total seasonal growing degree days
 
     NoahmpIO%TD_FRACTION = 0.0
 
@@ -202,13 +245,13 @@ subroutine NoahmpReadLandMain(NoahmpIO)
        if (NoahmpIO%rank == 0) write(*,'("MMNINLU attribute: ", A)') llanduse
     endif
 
-    call get_2d_netcdf("CANWAT", ncid, NoahmpIO%canwat, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
-    call get_2d_netcdf("TSK",    ncid, NoahmpIO%tsk, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
-    call get_2d_netcdf("SNOW",   ncid, NoahmpIO%snow, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
-    call get_2d_netcdf("SNOWC",  ncid, NoahmpIO%snowc, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_2d_netcdf("CANWAT", ncid, NoahmpIO%canwat, units, xstart, xend, ystart, yend, FATAL, ierr)
+    call get_2d_netcdf("TSK",    ncid, NoahmpIO%tsk, units, xstart, xend, ystart, yend, FATAL, ierr)
+    call get_2d_netcdf("SNOW",   ncid, NoahmpIO%snow, units, xstart, xend, ystart, yend, FATAL, ierr)
+    call get_2d_netcdf("SNOWC",  ncid, NoahmpIO%snowc, units, xstart, xend, ystart, yend, FATAL, ierr)
 
     NoahmpIO%snowh = 0.0
-    call get_2d_netcdf("SNOWH", ncid, NoahmpIO%snowh, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NOT_FATAL, ierr_snodep)
+    call get_2d_netcdf("SNOWH", ncid, NoahmpIO%snowh, units, xstart, xend, ystart, yend, NOT_FATAL, ierr_snodep)
     NoahmpIO%fndsnowh = .true.
     if (ierr_snodep /= 0) NoahmpIO%fndsnowh = .false.
    
@@ -222,30 +265,30 @@ subroutine NoahmpReadLandMain(NoahmpIO)
       layer_bottom(isoil) = layer_top(isoil) + dzs(isoil)
     end do
 
-    call get_netcdf_soillevel("TSLB", ncid, NoahmpIO%nsoil, soildummy, units,  NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_netcdf_soillevel("TSLB", ncid, NoahmpIO%nsoil, soildummy, units,  xstart, xend, ystart, yend, FATAL, ierr)
     
-    if (NoahmpIO%rank == 0) write(*, '("layer_bottom(1:nsoil) = ", 4F9.4)') layer_bottom(1:NoahmpIO%nsoil)
-    if (NoahmpIO%rank == 0) write(*, '("layer_top(1:nsoil)    = ", 4F9.4)') layer_top(1:NoahmpIO%nsoil)
-    if (NoahmpIO%rank == 0) write(*, '("Soil depth = ", 10F12.6)') NoahmpIO%dzs
+    !if (NoahmpIO%rank == 0) write(*, '("layer_bottom(1:nsoil) = ", 4F9.4)') layer_bottom(1:NoahmpIO%nsoil)
+    !if (NoahmpIO%rank == 0) write(*, '("layer_top(1:nsoil)    = ", 4F9.4)') layer_top(1:NoahmpIO%nsoil)
+    !if (NoahmpIO%rank == 0) write(*, '("Soil depth = ", 10F12.6)') NoahmpIO%dzs
     
     call init_interp(NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NoahmpIO%nsoil, &
                      NoahmpIO%dzs, NoahmpIO%tslb, NoahmpIO%nsoil, soildummy, layer_bottom(1:NoahmpIO%nsoil), layer_top(1:NoahmpIO%nsoil), NoahmpIO%rank)
 
-    call get_netcdf_soillevel("SMOIS", ncid, NoahmpIO%nsoil, soildummy, units,  NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_netcdf_soillevel("SMOIS", ncid, NoahmpIO%nsoil, soildummy, units,  xstart, xend, ystart, yend, FATAL, ierr)
 
     call init_interp(NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NoahmpIO%nsoil, \
     NoahmpIO%dzs, NoahmpIO%smois, NoahmpIO%nsoil, soildummy, layer_bottom(1:NoahmpIO%nsoil), layer_top(1:NoahmpIO%nsoil), NoahmpIO%rank)
 
     NoahmpIO%VEGFRA =  0.0
 
-    call get_2d_netcdf("VEGFRA", ncid, NoahmpIO%vegfra, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NOT_FATAL, ierr_vegfra)
-    call get_2d_netcdf("LAI", ncid, NoahmpIO%lai, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NOT_FATAL, ierr_lai)
+    call get_2d_netcdf("VEGFRA", ncid, NoahmpIO%vegfra, units, xstart, xend, ystart, yend, NOT_FATAL, ierr_vegfra)
+    call get_2d_netcdf("LAI", ncid, NoahmpIO%lai, units, xstart, xend, ystart, yend, NOT_FATAL, ierr_lai)
 
     ! Get Minimum Green Vegetation Fraction SHDMIN
-    call get_2d_netcdf("SHDMIN", ncid, NoahmpIO%gvfmin, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_2d_netcdf("SHDMIN", ncid, NoahmpIO%gvfmin, units, xstart, xend, ystart, yend, FATAL, ierr)
 
     ! Get Minimum Green Vegetation Fraction SHDMAX
-    call get_2d_netcdf("SHDMAX", ncid, NoahmpIO%gvfmax, units, NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, FATAL, ierr)
+    call get_2d_netcdf("SHDMAX", ncid, NoahmpIO%gvfmax, units, xstart, xend, ystart, yend, FATAL, ierr)
 
     ! Close the NetCDF file
     ierr = nf90_close(ncid)
@@ -487,13 +530,13 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
        else
           dst_centerpoint(k) = sldpth(k)/2. + sum(sldpth(1:k-1))
        endif
-       if (rank == 0) print*, 'k, dst_centerpoint(k) = ', k, dst_centerpoint(k)
+       !if (rank == 0) print*, 'k, dst_centerpoint(k) = ', k, dst_centerpoint(k)
     enddo
     print*
 
     do k = 1, nvar
        src_centerpoint(k) = 0.5*(layer_bottom(k)+layer_top(k))
-       if (rank == 0) print*, 'k, src_centerpoint(k) = ', k, src_centerpoint(k)
+       !if (rank == 0) print*, 'k, src_centerpoint(k) = ', k, src_centerpoint(k)
     enddo
 
     KLOOP : do k = 1, nsoil
@@ -502,10 +545,10 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
           ! If the center of the destination layer is closer to the surface than
           ! the center of the topmost source layer, then simply set the 
           ! value of the destination layer equal to the topmost source layer:
-          if (rank == 0) then
-             print'("Shallow destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
-                  dst_centerpoint(k), src_centerpoint(1)
-          endif
+          !if (rank == 0) then
+          !   print'("Shallow destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
+          !        dst_centerpoint(k), src_centerpoint(1)
+          !endif
           var(:,k,:) = src(:,1,:)
           cycle KLOOP
        endif
@@ -514,10 +557,10 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
           ! If the center of the destination layer is deeper than
           ! the center of the deepest source layer, then simply set the 
           ! value of the destination layer equal to the deepest source layer:
-          if (rank == 0) then
-             print'("Deep destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
-                  dst_centerpoint(k), src_centerpoint(nvar)
-          endif
+          !if (rank == 0) then
+          !   print'("Deep destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
+          !        dst_centerpoint(k), src_centerpoint(nvar)
+          !endif
           var(:,k,:) = src(:,nvar,:)
           cycle KLOOP
        endif
@@ -527,10 +570,10 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
        ! equal to the value of that close soil layer:
        do kk = 1, nvar
           if (abs(dst_centerpoint(k)-src_centerpoint(kk)) < 0.01) then
-             if (rank == 0) then
-                print'("(Near) match for destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
-                     dst_centerpoint(k), src_centerpoint(kk)
-             endif
+             !if (rank == 0) then
+             !   print'("(Near) match for destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
+             !        dst_centerpoint(k), src_centerpoint(kk)
+             !endif
              var(:,k,:) = src(:,kk,:)
              cycle KLOOP
           endif
@@ -568,9 +611,9 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
 
        ! print '(I2, 1x, 3F7.3, F8.5)', k, src_centerpoint(ktop), dst_centerpoint(k), src_centerpoint(kbottom), fraction
 
-       if (rank == 0) then
-          print '("dst(",I1,") = src(",I1,")*",F8.5," + src(",I1,")*",F8.5)', k, ktop, fraction, kbottom, (1.0-fraction)
-       endif
+       !if (rank == 0) then
+       !   print '("dst(",I1,") = src(",I1,")*",F8.5," + src(",I1,")*",F8.5)', k, ktop, fraction, kbottom, (1.0-fraction)
+       !endif
 
        var(:,k,:) = (src(:,ktop,:)*fraction) + (src(:,kbottom,:)*(1.0-fraction))
 

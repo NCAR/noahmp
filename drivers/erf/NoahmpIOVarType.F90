@@ -38,6 +38,7 @@ module NoahmpIOVarType
     integer(C_INT), pointer                                ::  ITIMESTEP           ! timestep number
     integer                                                ::  YR                  ! 4-digit year
     integer(C_INT), pointer                                ::  NSOIL               ! number of soil layers
+    integer(C_INT), pointer                                ::  BLKID, LEVEL        ! Block ID and AMR level
     integer                                                ::  ICE                 ! Sea-ice point
     integer                                                ::  ISICE               ! land cover category for ice
     integer                                                ::  ISURBAN             ! land cover category for urban
@@ -81,7 +82,7 @@ module NoahmpIOVarType
     integer                                                ::  soil_update_steps   ! number of model time steps to update soil process
     integer,                allocatable, dimension(:,:)    ::  IVGTYP              ! vegetation type
     integer,                allocatable, dimension(:,:)    ::  ISLTYP              ! soil type
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  COSZEN              ! cosine zenith angle
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  COSZEN              ! cosine zenith angle
     real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  XLAT                ! latitude [rad]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  DZ8W                ! thickness of atmo layers [m]
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  DZS                 ! thickness of soil layers [m]
@@ -97,9 +98,9 @@ module NoahmpIOVarType
     real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  QV_CURR             ! 3D water vapor mixing ratio [kg/kg_dry]
     real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  U_PHY               ! 3D U wind component [m/s]
     real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  V_PHY               ! 3D V wind component [m/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SWDOWN              ! solar down at surface [W m-2]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  GLW                 ! longwave down at surface [W m-2]
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  P8W                 ! 3D pressure, valid at interface [Pa]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  SWDOWN              ! solar down at surface [W m-2]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  GLW                 ! longwave down at surface [W m-2]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  P8W                 ! 3D pressure, valid at interface [Pa]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RAINBL              ! precipitation entering land model [mm] per time step
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SNOWBL              ! snow entering land model [mm] per time step
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SR                  ! frozen precip ratio entering land model [-]
@@ -166,10 +167,12 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_SPAC             ! tile spacing
 
     ! INOUT (with generic LSM equivalent) (as defined in WRF)
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TSK                 ! surface radiative temperature [K]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  HFX                 ! sensible heat flux [W m-2]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QFX                 ! latent heat flux [kg s-1 m-2]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  LH                  ! latent heat flux [W m-2]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  TAU_EW              ! wind stress in east-west direction [N/m2]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  TAU_NS              ! wind stress in north-south direction [N/m2]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  TSK                 ! surface radiative temperature [K]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  HFX                 ! sensible heat flux [W m-2]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  QFX                 ! latent heat flux [kg s-1 m-2]
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  LH                  ! latent heat flux [W m-2]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  GRDFLX              ! ground/snow heat flux [W m-2]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SMSTAV              ! soil moisture avail. [not used]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SMSTOT              ! total soil water [mm][not used]
@@ -186,7 +189,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  CANWAT              ! total canopy water + ice [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACSNOM              ! accumulated snow melt leaving pack
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACSNOW              ! accumulated snow on grid
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  EMISS               ! surface bulk emissivity
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  EMISS               ! surface bulk emissivity
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QSFC                ! bulk surface specific humidity
 
     ! INOUT (with no Noah LSM equivalent) (as defined in WRF)
@@ -477,8 +480,8 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSOILDIFXY                  ! soil albedo (diffuse)
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSNOWDIRXY                  ! snow albedo (direct)
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSNOWDIFXY                  ! snow albedo (diffuse)
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIRXY                   ! surface albedo (direct)
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIFXY                   ! surface albedo (diffuse)
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  ALBSFCDIRXY                   ! surface albedo (direct)
+    real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  ALBSFCDIFXY                   ! surface albedo (diffuse)
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RadSwVisFrac                  ! fraction of downward solar visible band
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RadSwDirFrac                  ! fraction of downward solar direct band
 
@@ -653,7 +656,7 @@ module NoahmpIOVarType
 !------------------------------------------------------------------------
 
     CHARACTER(LEN=256)                                     ::  MMINSL  = 'STAS'    ! soil classification
-    CHARACTER(kind=C_CHAR, LEN=:), pointer                 ::  LLANDUSE            ! (=USGS, using USGS landuse classification)
+    CHARACTER(LEN=256)                                     ::  LLANDUSE            ! (=USGS, using USGS landuse classification)
 
 !------------------------------------------------------------------------
 ! Timing:
@@ -699,7 +702,7 @@ module NoahmpIOVarType
     integer                                                ::  jxpar
     integer                                                ::  xstartpar
     integer                                                ::  ystartpar
-    integer(C_INT), pointer                                ::  rank
+    integer(C_INT), pointer                                ::  rank, comm
     character(len=256)                                     ::  inflnm,  &
                                                                outflnm, &
                                                                inflnm_template
@@ -784,7 +787,8 @@ module NoahmpIOVarType
     integer                                                ::  khour
     integer                                                ::  kday
     real(kind=kind_noahmp)                                 ::  zlvl 
-    character(len=256)                                     ::  erf_setup_file
+    character(len=256)                                     ::  erf_setup_file_lev
+    character(len=256)                                     ::  erf_setup_file_01, erf_setup_file_02, erf_setup_file_03
     character(len=256)                                     ::  spatial_filename
     character(len=256)                                     ::  external_veg_filename_template
     character(len=256)                                     ::  external_lai_filename_template
@@ -793,6 +797,7 @@ module NoahmpIOVarType
     character(len=256)                                     ::  snicar_optic_flnm  ! SNICAR filename for optics parameters
     character(len=256)                                     ::  snicar_age_flnm    ! SNICAR filename for snow aging parameters
     integer(C_INT), pointer                                ::  xstart, xend, ystart, yend
+    integer(C_INT)                                         ::  xoffset, yoffset, xsglobal, ysglobal
     integer                                                ::  MAX_SOIL_LEVELS
     real(kind=kind_noahmp),  allocatable, dimension(:)     ::  soil_thick_input
 

@@ -5,7 +5,7 @@ module SnowInputSnicarMod
 
   use netcdf
   use Machine
-  use NoahmpIOVarType
+  use NoahmpIOVarType, only : NoahmpIO_type
 
 #ifdef _PARALLEL_
   use mpi

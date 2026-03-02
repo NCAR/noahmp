@@ -72,6 +72,13 @@ contains
           enddo
        enddo
 
+       ! Given the soil layer thicknesses (in DZS), initialize the soil layer
+       ! depths from the surface.
+       NoahmpIO%ZSOIL(1) = -NoahmpIO%DZS(1)          ! negative
+       do NS = 2, NoahmpIO%NSOIL
+          NoahmpIO%ZSOIL(NS) = NoahmpIO%ZSOIL(NS-1) - NoahmpIO%DZS(NS)
+       enddo
+
        ! check soil type
        errflag = 0
        do J = jts, jtf
@@ -157,7 +164,7 @@ contains
              if ( NoahmpIO%IOPT_RUNSUB /= 5 ) then 
                 NoahmpIO%WAXY(I,J)   = 4900.0 
                 NoahmpIO%WTXY(I,J)   = NoahmpIO%WAXY(i,j) 
-                NoahmpIO%ZWTXY(I,J)  = (25.0 + 2.0) - NoahmpIO%WAXY(i,j)/1000/0.2
+                NoahmpIO%ZWTXY(I,J)  = (25.0 - NoahmpIO%ZSOIL(NoahmpIO%NSOIL)) - NoahmpIO%WAXY(i,j)/1000/0.2
              else
                 NoahmpIO%WAXY(I,J)   = 0.0
                 NoahmpIO%WTXY(I,J)   = 0.0
@@ -253,17 +260,10 @@ contains
           enddo ! I
        enddo    ! J
        
-       ! Given the soil layer thicknesses (in DZS), initialize the soil layer
-       ! depths from the surface.
-       NoahmpIO%ZSOIL(1) = -NoahmpIO%DZS(1)          ! negative
-       do NS = 2, NoahmpIO%NSOIL
-          NoahmpIO%ZSOIL(NS) = NoahmpIO%ZSOIL(NS-1) - NoahmpIO%DZS(NS)
-       enddo
-       
        ! Initialize Noah-MP Snow
        call NoahmpSnowinitMain(NoahmpIO)
  
-       !initialize arrays for groundwater dynamics iopt_runsub=5 
+       ! initialize arrays for groundwater dynamics iopt_runsub=5 
        if ( NoahmpIO%IOPT_RUNSUB == 5 ) then
           NoahmpIO%STEPWTD = nint(NoahmpIO%WTDDT * 60.0 / NoahmpIO%DTBL)
           NoahmpIO%STEPWTD = max(NoahmpIO%STEPWTD,1)
@@ -274,6 +274,10 @@ contains
           NoahmpIO%INACTIVEXY(:,1,:) = 0.0
           NoahmpIO%INACTIVEXY(:,2:NoahmpIO%NSOIL,:) = 366.0*(86400.0 / NoahmpIO%DTBL)
        endif
+
+       ! initialize soil albedo
+       NoahmpIO%ALBSOILDIRXY = 0.0
+       NoahmpIO%ALBSOILDIFXY = 0.0
 
     endif ! NoahmpIO%restart_flag
 

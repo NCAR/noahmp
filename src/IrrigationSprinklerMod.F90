@@ -47,11 +47,12 @@ contains
               SoilMoisture            => noahmp%water%state%SoilMoisture            ,& ! in,    total soil moisture [m3/m3]
               SoilLiqWater            => noahmp%water%state%SoilLiqWater            ,& ! in,    soil water content [m3/m3]
               HeatLatentIrriEvap      => noahmp%energy%flux%HeatLatentIrriEvap      ,& ! inout, latent heating due to sprinkler evaporation [W/m2]
-              IrrigationAmtSprinkler  => noahmp%water%state%IrrigationAmtSprinkler  ,& ! inout, irrigation water amount [m] to be applied, Sprinkler
               EvapIrriSprinkler       => noahmp%water%flux%EvapIrriSprinkler        ,& ! inout, evaporation of irrigation water, sprinkler [mm/s]
               RainfallRefHeight       => noahmp%water%flux%RainfallRefHeight        ,& ! inout, rainfall [mm/s] at reference height
               IrrigationRateSprinkler => noahmp%water%flux%IrrigationRateSprinkler  ,& ! inout, rate of irrigation by sprinkler [m/timestep]
               IrriEvapLossSprinkler   => noahmp%water%flux%IrriEvapLossSprinkler    ,& ! inout, loss of irrigation water to evaporation,sprinkler [m/timestep]
+              IrrigationAmtSprinkler  => noahmp%water%state%IrrigationAmtSprinkler  ,& ! inout, irrigation water amount [m] to be applied, Sprinkler
+              PrecipAreaFrac          => noahmp%water%state%PrecipAreaFrac          ,& ! inout, fraction of area receiving precipitation
               SoilIce                 => noahmp%water%state%SoilIce                  & ! out,   soil ice content [m3/m3]
              )
 ! ----------------------------------------------------------------------
@@ -97,6 +98,8 @@ contains
 
     ! include sprinkler water to total rain for canopy process later
     RainfallRefHeight  = RainfallRefHeight + (IrrigationRateSprinkler * 1000.0 / MainTimeStep)
+    ! assuming sprinkler irrigated water is like large scale precipitation, so PrecipAreaFrac = 1.0
+    PrecipAreaFrac = 1.0
 
     ! cooling and humidification due to sprinkler evaporation, per m^2 calculation 
     HeatLatentIrriEvap = IrriEvapLossSprinkler * 1000.0 * ConstLatHeatEvap / MainTimeStep   ! heat used for evaporation [W/m2]
