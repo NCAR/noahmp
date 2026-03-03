@@ -278,9 +278,11 @@ contains
         
        if( HeatLatentPotCanEvap > 0.0 .and. CanopyWetFrac > 0.0 ) then
           if ( TemperatureCanopy > ConstFreezePoint ) then
-             ExchCoeffLhEvap = min( CanopyWetFrac, CanopyLiqWater*LatHeatVapCanopy/MainTimeStep/evpot ) * VegAreaIndTmp / ResistanceLeafBoundary
+             ExchCoeffLhEvap = min( CanopyWetFrac, CanopyLiqWater*LatHeatVapCanopy/MainTimeStep/HeatLatentPotCanEvap ) * & 
+                               VegAreaIndTmp / ResistanceLeafBoundary
           else 
-             ExchCoeffLhEvap = min( CanopyWetFrac, CanopyIce*LatHeatVapCanopy/MainTimeStep/evpot ) * VegAreaIndTmp / ResistanceLeafBoundary
+             ExchCoeffLhEvap = min( CanopyWetFrac, CanopyIce*LatHeatVapCanopy/MainTimeStep/HeatLatentPotCanEvap ) * &
+                               VegAreaIndTmp / ResistanceLeafBoundary
           endif
        else
           ExchCoeffLhEvap   = CanopyWetFrac * VegAreaIndTmp / ResistanceLeafBoundary
