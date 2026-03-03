@@ -69,6 +69,7 @@ contains
     real(kind=kind_noahmp)                :: TempTmp                 ! temporary temperature
     real(kind=kind_noahmp)                :: TempUnitConv            ! Kelvin to degree Celsius with limit -50 to +50
     real(kind=kind_noahmp)                :: HeatCapacCan            ! canopy heat capacity [J/m2/K]
+    real(kind=kind_noahmp)                :: HeatLatentPotCanEvap    ! potential evaporation from wet foliage per unit wetted area [W/m2] (+ to atm)
 ! local statement function
     TempUnitConv(TempTmp) = min(50.0, max(-50.0, (TempTmp - ConstFreezePoint)))
 
@@ -273,13 +274,14 @@ contains
        ExchCoeffLhAbvCan = 1.0 / ResistanceLhAbvCan
        ExchCoeffLhEvap   = CanopyWetFrac * VegAreaIndTmp / ResistanceLeafBoundary
 
-       evpot= fveg*rhoair*cpair*vaie/rb * (estv-eah) / gammav
+       HeatLatentPotCanEvap = VegFrac * DensityAirRefHeight * ConstHeatCapacAir * VegAreaIndTmp / ResistanceLeafBoundary * &
+                              (VapPresSatCanopy - PressureVaporCanAir) / PsychConstCanopy
         
-       if( evpot > 0.0 .and. CanopyWetFrac > 0.0 ) then
+       if( HeatLatentPotCanEvap > 0.0 .and. CanopyWetFrac > 0.0 ) then
           if ( TemperatureCanopy > ConstFreezePoint ) then
-             ExchCoeffLhEvap = min( CanopyWetFrac, canliq*latheav/dt/evpot ) * vaie/rb
-          else
-             ExchCoeffLhEvap = min( CanopyWetFrac, canice*latheav/dt/evpot ) * vaie/rb
+             ExchCoeffLhEvap = min( CanopyWetFrac, CanopyLiqWater*LatHeatVapCanopy/MainTimeStep/evpot ) * VegAreaIndTmp / ResistanceLeafBoundary
+          else 
+             ExchCoeffLhEvap = min( CanopyWetFrac, CanopyIce*LatHeatVapCanopy/MainTimeStep/evpot ) * VegAreaIndTmp / ResistanceLeafBoundary
           endif
        else
           ExchCoeffLhEvap   = CanopyWetFrac * VegAreaIndTmp / ResistanceLeafBoundary
