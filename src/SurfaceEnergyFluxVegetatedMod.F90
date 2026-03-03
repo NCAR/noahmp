@@ -272,6 +272,19 @@ contains
        ! latent heat conductance and coeff above veg.
        ExchCoeffLhAbvCan = 1.0 / ResistanceLhAbvCan
        ExchCoeffLhEvap   = CanopyWetFrac * VegAreaIndTmp / ResistanceLeafBoundary
+
+       evpot= fveg*rhoair*cpair*vaie/rb * (estv-eah) / gammav
+        
+       if( evpot > 0.0 .and. CanopyWetFrac > 0.0 ) then
+          if ( TemperatureCanopy > ConstFreezePoint ) then
+             ExchCoeffLhEvap = min( CanopyWetFrac, canliq*latheav/dt/evpot ) * vaie/rb
+          else
+             ExchCoeffLhEvap = min( CanopyWetFrac, canice*latheav/dt/evpot ) * vaie/rb
+          endif
+       else
+          ExchCoeffLhEvap   = CanopyWetFrac * VegAreaIndTmp / ResistanceLeafBoundary
+       endif
+
        ExchCoeffLhTransp = (1.0 - CanopyWetFrac) * (LeafAreaIndSunEff/(ResistanceLeafBoundary+ResistanceStomataSunlit) + &
                                                     LeafAreaIndShdEff/(ResistanceLeafBoundary+ResistanceStomataShade))
        ExchCoeffLhUndCan = 1.0 / (ResistanceLhUndCan + ResistanceGrdEvap)
