@@ -43,9 +43,9 @@ contains
               SoilMoistureSat           => noahmp%water%param%SoilMoistureSat             ,& ! in,  saturated value of soil moisture [m3/m3]
               SoilExpCoeffB             => noahmp%water%param%SoilExpCoeffB               ,& ! in,  soil B parameter              
               SoilLiqWater              => noahmp%water%state%SoilLiqWater                ,& ! in,  soil water content [m3/m3]
+              SoilMatPotential          => noahmp%water%state%SoilMatPotential            ,& ! in, soil matrix potential [m]
               SoilTranspFac             => noahmp%water%state%SoilTranspFac               ,& ! out, soil water transpiration factor (0 to 1)
-              SoilTranspFacAcc          => noahmp%water%state%SoilTranspFacAcc            ,& ! out, accumulated soil water transpiration factor (0 to 1)
-              SoilMatPotential          => noahmp%water%state%SoilMatPotential             & ! out, soil matrix potential [m]
+              SoilTranspFacAcc          => noahmp%water%state%SoilTranspFacAcc             & ! out, accumulated soil water transpiration factor (0 to 1)
              )
 ! ----------------------------------------------------------------------
 
@@ -61,16 +61,16 @@ contains
                                          (SoilMoistureFieldCap(IndSoil) - SoilMoistureWilt(IndSoil))
           endif
           if ( OptSoilWaterTranspiration == 2 ) then  ! CLM
-             SoilMatPotential(IndSoil) = max(SoilMatPotentialWilt, -SoilMatPotentialSat(IndSoil) * &
-                                            (max(0.01,SoilLiqWater(IndSoil))/SoilMoistureSat(IndSoil)) ** &
-                                            (-SoilExpCoeffB(IndSoil)))
+             !SoilMatPotential(IndSoil) = max(SoilMatPotentialWilt, -SoilMatPotentialSat(IndSoil) * &
+             !                               (max(0.01,SoilLiqWater(IndSoil))/SoilMoistureSat(IndSoil)) ** &
+             !                               (-SoilExpCoeffB(IndSoil)))
              SoilWetFac                = (1.0 - SoilMatPotential(IndSoil)/SoilMatPotentialWilt) / &
                                          (1.0 + SoilMatPotentialSat(IndSoil)/SoilMatPotentialWilt)
           endif
           if ( OptSoilWaterTranspiration == 3 ) then  ! SSiB
-             SoilMatPotential(IndSoil) = max(SoilMatPotentialWilt, -SoilMatPotentialSat(IndSoil) * &
-                                            (max(0.01,SoilLiqWater(IndSoil))/SoilMoistureSat(IndSoil)) ** &
-                                            (-SoilExpCoeffB(IndSoil)))
+             !SoilMatPotential(IndSoil) = max(SoilMatPotentialWilt, -SoilMatPotentialSat(IndSoil) * &
+             !                               (max(0.01,SoilLiqWater(IndSoil))/SoilMoistureSat(IndSoil)) ** &
+             !                               (-SoilExpCoeffB(IndSoil)))
              SoilWetFac                = 1.0 - exp(-5.8*(log(SoilMatPotentialWilt/SoilMatPotential(IndSoil))))
           endif
           SoilWetFac                   = min(1.0, max(0.0,SoilWetFac))

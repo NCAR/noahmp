@@ -81,12 +81,6 @@ contains
        noahmp%water%state%SoilSaturateFrac                = NoahmpIO%FSATXY     (I,J)
        noahmp%water%state%WaterStorageWetland             = NoahmpIO%WSURFXY    (I,J)
     endif
-    if ( noahmp%config%nmlist%OptRoot == 1 ) then
-       noahmp%water%state%EaseFunction                    = NoahmpIO%EASYXY        (I,1:NumSoilLayer,J)
-       noahmp%water%state%RootActivity                    = NoahmpIO%ROOTACTIVITYXY(I,1:NumSoilLayer,J)
-       noahmp%water%state%InactiveTimeSteps               = NoahmpIO%INACTIVEXY    (I,1:NumSoilLayer,J)
-       noahmp%water%state%DynamicRootDepth                = NoahmpIO%DRDEPTHXY     (I,J)
-    endif
 #ifdef WRF_HYDRO
     noahmp%water%state%WaterTableHydro                    = NoahmpIO%ZWATBLE2D  (I,J)
     noahmp%water%state%WaterHeadSfc                       = NoahmpIO%sfcheadrt  (I,J)
@@ -289,6 +283,13 @@ contains
        noahmp%water%param%SoilMoistureFieldCap = 0.42
        noahmp%water%param%SoilMoistureWilt     = 0.40
        noahmp%water%param%SoilMoistureDry      = 0.40
+    endif
+
+    if ( noahmp%config%nmlist%OptRoot == 1 ) then
+       noahmp%water%state%EaseFunction         = NoahmpIO%EASYXY        (I,1:NumSoilLayer,J)
+       noahmp%water%state%RootActivity         = NoahmpIO%ROOTACTIVITYXY(I,1:NumSoilLayer,J)
+       noahmp%water%state%InactiveTimeSteps    = NoahmpIO%INACTIVEXY    (I,1:NumSoilLayer,J)
+       noahmp%water%state%DynamicRootDepth     = NoahmpIO%DRDEPTHXY     (I,J)
     endif
 
     if ( SoilType(1) /= 14 ) then

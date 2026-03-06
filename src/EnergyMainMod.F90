@@ -54,6 +54,7 @@ module EnergyMainMod
   use SoilSnowTemperatureMainMod,     only : SoilSnowTemperatureMain
   use SoilSnowWaterPhaseChangeMod,    only : SoilSnowWaterPhaseChange
   use DynaRootGrowDieMod,             only : DynaRootGrowDie
+  use SoilMatricPotentialMod,         only : SoilMatricPotential
 
   implicit none
 
@@ -215,6 +216,8 @@ contains
 
     ! longwave emissivity for vegetation, ground, total net surface
     call SurfaceEmissivity(noahmp)
+
+    call SoilMatricPotential(noahmp)
 
     if ( OptRoot == 1 ) call DynaRootGrowDie(noahmp)
 

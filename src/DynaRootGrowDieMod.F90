@@ -34,7 +34,7 @@ contains
     real(kind=kind_noahmp)             :: EffectiveCanopyHeight ! canopy height used in ease function calculation [m]
     real(kind=kind_noahmp), parameter  :: LeafWiltMatPotential = -150.0 ! leaf wilting point matric potential [m]
 
-    integer, allocatable, dimension(:) :: DynaRootMask    ! indicator for presence of active roots (1=roots active; 0=roots not active)
+    real(kind=kind_noahmp), allocatable, dimension(:) :: DynaRootMask    ! indicator for presence of active roots (1=roots active; 0=roots not active)
     real(kind=kind_noahmp), allocatable, dimension(:) :: ThicknessSoilLayerTmp   ! ThicknessSoilLayer accounting for location of water table, only for root scheme [mm]    
     real(kind=kind_noahmp), allocatable, dimension(:) :: InactiveDays ! number of days without active roots [s]
 ! --------------------------------------------------------------------
@@ -61,7 +61,6 @@ contains
     ! initialize
     DynaRootMask          = 0.0
     ThicknessSoilLayerTmp = undefined_real
-    InactiveDays          = undefined_real
     MaximumInactiveDays   = 31536000.0 ! seconds in a year 
     EaseFunction          = 0.0
     RootActivity          = 0.0
@@ -89,6 +88,7 @@ contains
         IF(InactiveDays(IndSoil) .le. MaximumInactiveDays)EXIT
     END DO
     DynaRootLayer = MIN(MAX(IndSoil,1),NumSoilLayer)
+    print *, "DynaRootLayer:", DynaRootLayer
 
     EffectiveCanopyHeight = HeightCanopyTop*(2./3.)
     ! calculation of ease function and root activity
@@ -109,7 +109,11 @@ contains
         ENDIF
 
         ! calculate ease function
-        EaseFunction(IndSoil) = MAX(-( LeafWiltMatPotential - SoilMatPotential(IndSoil) )*SoilIceFactor / ( EffectiveCanopyHeight-LayerMidpoint ), 0.)
+        ! EaseFunction(IndSoil) = MAX(-( LeafWiltMatPotential - SoilMatPotential(IndSoil) )*SoilIceFactor / ( EffectiveCanopyHeight-LayerMidpoint ), 0.)
+        EaseFunction(IndSoil) = -( LeafWiltMatPotential - SoilMatPotential(IndSoil) )*SoilIceFactor / ( EffectiveCanopyHeight-LayerMidpoint )
+        print *, "Ease function:", EaseFunction(IndSoil)
+        print *, "Matric potential:", SoilMatPotential(IndSoil)
+    
     END DO
 
     ! to grow roots anew, the layer has to be easiest to get water from than the
