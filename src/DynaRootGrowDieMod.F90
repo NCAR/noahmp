@@ -1,7 +1,7 @@
 module DynaRootGrowDieMod
 
-!!! compute soil water transpiration factor that will be used for
-!!! stomata resistance and evapotranspiration calculations
+!!! determine "growth" or "death" of roots based on root water uptake profile (Bieri et al. 2025)
+!!! based on Fan et al. (2017)
 
   use Machine
   use NoahmpVarType
@@ -88,7 +88,6 @@ contains
         IF(InactiveDays(IndSoil) .le. MaximumInactiveDays)EXIT
     END DO
     DynaRootLayer = MIN(MAX(IndSoil,1),NumSoilLayer)
-    print *, "DynaRootLayer:", DynaRootLayer
 
     EffectiveCanopyHeight = HeightCanopyTop*(2./3.)
     ! calculation of ease function and root activity
@@ -109,10 +108,7 @@ contains
         ENDIF
 
         ! calculate ease function
-        ! EaseFunction(IndSoil) = MAX(-( LeafWiltMatPotential - SoilMatPotential(IndSoil) )*SoilIceFactor / ( EffectiveCanopyHeight-LayerMidpoint ), 0.)
-        EaseFunction(IndSoil) = -( LeafWiltMatPotential - SoilMatPotential(IndSoil) )*SoilIceFactor / ( EffectiveCanopyHeight-LayerMidpoint )
-        print *, "Ease function:", EaseFunction(IndSoil)
-        print *, "Matric potential:", SoilMatPotential(IndSoil)
+        EaseFunction(IndSoil) = MAX(-( LeafWiltMatPotential - SoilMatPotential(IndSoil) )*SoilIceFactor / ( EffectiveCanopyHeight-LayerMidpoint ), 0.)
     
     END DO
 
