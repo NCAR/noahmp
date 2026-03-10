@@ -139,7 +139,9 @@ OBJS = ConstantDefineMod.o \
        SurfaceEmissivityGlacierMod.o \
        SurfaceEnergyFluxGlacierMod.o \
        SurfaceRadiationGlacierMod.o \
-       WaterMainGlacierMod.o
+       WaterMainGlacierMod.o \
+       DynaRootGrowDieMod.o \
+       SoilMatricPotentialMod.o
 
 all:	$(OBJS)
 
@@ -278,7 +280,8 @@ EnergyMainMod.o:                      ../utility/Machine.o NoahmpVarType.o Const
                                       SurfaceEnergyFluxBareGroundMod.o SoilSnowTemperatureMainMod.o \
                                       SoilSnowWaterPhaseChangeMod.o SnowCoverGroundNiu07Mod.o SurfaceEmissivityMod.o \
                                       GroundRoughnessPropertyMod.o PsychrometricVariableMod.o ResistanceGroundEvaporationMod.o \
-                                      SoilWaterTranspirationMod.o SurfaceAlbedoMod.o SurfaceRadiationMod.o SnowCoverGroundAR25Mod.o
+                                      SoilWaterTranspirationMod.o SurfaceAlbedoMod.o SurfaceRadiationMod.o SnowCoverGroundAR25Mod.o \
+				      DynaRootGrowDieMod.o SoilMatricPotentialMod.o
 NoahmpMainMod.o:                      ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       IrrigationPrepareMod.o IrrigationSprinklerMod.o CanopyWaterInterceptMod.o \
                                       PrecipitationHeatAdvectMod.o EnergyMainMod.o WaterMainMod.o AtmosForcingMod.o \
@@ -365,4 +368,5 @@ SurfaceEnergyFluxGlacierMod.o:           ../utility/Machine.o NoahmpVarType.o Co
                                          VaporPressureSaturationMod.o ResistanceBareGroundMostMod.o
 SurfaceRadiationGlacierMod.o:            ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 WaterMainGlacierMod.o:                   ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o SnowWaterMainGlacierMod.o
-
+DynaRootGrowDieMod.o:                    ../utility/Machine.o NoahmpVarType.o
+SoilMatricPotentialMod.o:                ../utility/Machine.o NoahmpVarType.o	

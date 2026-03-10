@@ -139,6 +139,7 @@ module WaterVarType
     real(kind=kind_noahmp) :: WaterBalanceError          ! water balance error [mm]
     real(kind=kind_noahmp) :: WaterStorageTotEnd         ! total water storage [mm] at the end of NoahMP process
     real(kind=kind_noahmp) :: SnowRadiusFresh            ! fresh snow radius [microns]
+    real(kind=kind_noahmp) :: MaxUptakeDepth             ! bottom of deepest root water uptake layer [m]
 
     integer               , allocatable, dimension(:) :: IndexPhaseChange      ! phase change index (0-none;1-melt;2-refreeze)
     real(kind=kind_noahmp), allocatable, dimension(:) :: SnowIce               ! snow layer ice [mm]
@@ -160,6 +161,9 @@ module WaterVarType
     real(kind=kind_noahmp), allocatable, dimension(:) :: SnowLiqWaterVol       ! partial volume of snow liquid water [m3/m3]
     real(kind=kind_noahmp), allocatable, dimension(:) :: SoilSupercoolWater    ! supercooled water in soil [kg/m2]
     real(kind=kind_noahmp), allocatable, dimension(:) :: SoilMatPotential      ! soil matric potential [m]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: EaseFunction          ! ease function
+    real(kind=kind_noahmp), allocatable, dimension(:) :: RootActivity          ! root activity function
+    real(kind=kind_noahmp), allocatable, dimension(:) :: InactiveTimeSteps     ! number of time steps without active roots
     real(kind=kind_noahmp), allocatable, dimension(:) :: SnowRadius            ! snow effective grain radius [microns, m-6]
     real(kind=kind_noahmp), allocatable, dimension(:) :: MassBChydropho        ! mass of hydrophobic Black Carbon in snow [kg m-2]
     real(kind=kind_noahmp), allocatable, dimension(:) :: MassBChydrophi        ! mass of hydrophillic Black Carbon in snow [kg m-2]
