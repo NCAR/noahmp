@@ -25,7 +25,8 @@ contains
     integer                            :: IndSoil         ! loop index
     integer                            :: WaterTableLayer ! layer that contains water table
     integer                            :: AboveWaterTableLayer ! layer above water table
-    integer                            :: DynaRootLayer   ! bottom layer of root zone (root depth)
+    integer                            :: DynaRootLayer   ! deepest layer with active roots
+    integer                            :: MaxUptakeLayer  ! deepest layer with active root water uptake
     integer                            :: SoilIceFactor   ! multiplication factor corresponding to IndicatorIceSfc
     real(kind=kind_noahmp)             :: LayerMidpoint   ! depth to midpoint of soil layer [m]
     real(kind=kind_noahmp)             :: MaximumInactiveDays ! max number of days without active roots until layer is inactive [s]
@@ -50,7 +51,8 @@ contains
               InactiveTimeSteps         => noahmp%water%state%InactiveTimeSteps           ,& ! inout, number of time steps without active roots               
               NumSoilLayerRoot          => noahmp%water%param%NumSoilLayerRoot            ,& ! inout,  number of soil layers with root present
               EaseFunction              => noahmp%water%state%EaseFunction                ,& ! out, ease function
-              RootActivity              => noahmp%water%state%RootActivity                 & ! out, root activity function
+              RootActivity              => noahmp%water%state%RootActivity                ,& ! out, root activity function
+              MaxUptakeDepth            => noahmp%water%state%MaxUptakeDepth               & ! out, bottom of deepest root water uptake layer [m]
               )
 ! ----------------------------------------------------------------------
 
@@ -61,10 +63,11 @@ contains
     ! initialize
     DynaRootMask          = 0.0
     ThicknessSoilLayerTmp = undefined_real
-    MaximumInactiveDays   = 31536000.0 ! seconds in a year 
     EaseFunction          = 0.0
     RootActivity          = 0.0
     InactiveDays          = 0.0
+
+    MaximumInactiveDays   = 31536000.0 ! seconds in a year
 
     ThicknessSoilLayerTmp = ThicknessSoilLayer(1:NumSoilLayer)   ! soil thickness variable for use in root scheme
 
@@ -87,7 +90,7 @@ contains
     DO IndSoil = NumSoilLayer,1,-1
         IF(InactiveDays(IndSoil) .le. MaximumInactiveDays)EXIT
     END DO
-    DynaRootLayer = MIN(MAX(IndSoil,1),NumSoilLayer)
+    DynaRootLayer = MAX(IndSoil,1)
 
     EffectiveCanopyHeight = HeightCanopyTop*(2./3.)
     ! calculation of ease function and root activity
@@ -145,9 +148,15 @@ contains
         ENDIF
     ENDDO
 
-         !INACTIVEDAYS = MIN(INACTIVEDAYS,MaximumInactiveDays+1)
-
+    ! Set model number of root layers to number of layers with active roots
     NumSoilLayerRoot = DynaRootLayer
+
+    ! Find deepest layer with active root water uptake
+    DO IndSoil = NumSoilLayer,1,-1
+        IF(EaseFunction(IndSoil) .gt. 0.)EXIT
+    END DO
+    MaxUptakeLayer = MAX(IndSoil,1)
+    MaxUptakeDepth = DepthSoilLayer(MaxUptakeLayer)
 
    end associate
   

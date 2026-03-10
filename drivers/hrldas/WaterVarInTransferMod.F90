@@ -285,11 +285,12 @@ contains
        noahmp%water%param%SoilMoistureDry      = 0.40
     endif
 
+    ! dynamic root scheme 
     if ( noahmp%config%nmlist%OptRoot == 1 ) then
        noahmp%water%state%EaseFunction         = NoahmpIO%EASYXY        (I,1:NumSoilLayer,J)
        noahmp%water%state%RootActivity         = NoahmpIO%ROOTACTIVITYXY(I,1:NumSoilLayer,J)
        noahmp%water%state%InactiveTimeSteps    = NoahmpIO%INACTIVEXY    (I,1:NumSoilLayer,J)
-       noahmp%water%state%DynamicRootDepth     = NoahmpIO%DRDEPTHXY     (I,J)
+       noahmp%water%state%MaxUptakeDepth       = NoahmpIO%MAXUPTAKEXY   (I,J)
     endif
 
     if ( SoilType(1) /= 14 ) then

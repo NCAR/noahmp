@@ -429,7 +429,7 @@ contains
        if ( .not. allocated (NoahmpIO%EASYXY)         ) allocate ( NoahmpIO%EASYXY          (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! ease function (-)
        if ( .not. allocated (NoahmpIO%ROOTACTIVITYXY) ) allocate ( NoahmpIO%ROOTACTIVITYXY  (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! root activity function (-)
        if ( .not. allocated (NoahmpIO%INACTIVEXY)     ) allocate ( NoahmpIO%INACTIVEXY      (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! number of time steps without active roots (-)
-       if ( .not. allocated (NoahmpIO%DRDEPTHXY)      ) allocate ( NoahmpIO%DRDEPTHXY       (XSTART:XEND,        YSTART:YEND) ) ! root layer depth (-)
+       if ( .not. allocated (NoahmpIO%MAXUPTAKEXY)    ) allocate ( NoahmpIO%MAXUPTAKEXY     (XSTART:XEND,        YSTART:YEND) ) ! root layer depth (-)
     endif 
 
     ! Single- and Multi-layer Urban Models
@@ -904,7 +904,7 @@ contains
        NoahmpIO%EASYXY         = 0.0
        NoahmpIO%ROOTACTIVITYXY = 0.0
        NoahmpIO%INACTIVEXY     = undefined_real
-       NoahmpIO%DRDEPTHXY      = undefined_real
+       NoahmpIO%MAXUPTAKEXY    = undefined_real
     endif
 
     ! spatial varying soil texture

@@ -508,7 +508,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  EASYXY              ! ease function (-)
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ROOTACTIVITYXY      ! root activity function (-)
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  INACTIVEXY          ! number of timesteps without active roots (-)
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  DRDEPTHXY           ! root depth layer (-)
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MAXUPTAKEXY         ! bottom of deepest root water uptake layer (m)
 
 !------------------------------------------------------------------------
 ! Single- and Multi-layer Urban Models

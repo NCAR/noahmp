@@ -139,7 +139,7 @@ module WaterVarType
     real(kind=kind_noahmp) :: WaterBalanceError          ! water balance error [mm]
     real(kind=kind_noahmp) :: WaterStorageTotEnd         ! total water storage [mm] at the end of NoahMP process
     real(kind=kind_noahmp) :: SnowRadiusFresh            ! fresh snow radius [microns]
-    real(kind=kind_noahmp) :: DynamicRootDepth           ! root depth layer
+    real(kind=kind_noahmp) :: MaxUptakeDepth             ! bottom of deepest root water uptake layer [m]
 
     integer               , allocatable, dimension(:) :: IndexPhaseChange      ! phase change index (0-none;1-melt;2-refreeze)
     real(kind=kind_noahmp), allocatable, dimension(:) :: SnowIce               ! snow layer ice [mm]

@@ -175,7 +175,7 @@ contains
        NoahmpIO%EASYXY        (I,1:NumSoilLayer,J) = noahmp%water%state%EaseFunction(1:NumSoilLayer)
        NoahmpIO%ROOTACTIVITYXY(I,1:NumSoilLayer,J) = noahmp%water%state%RootActivity(1:NumSoilLayer)
        NoahmpIO%INACTIVEXY    (I,1:NumSoilLayer,J) = noahmp%water%state%InactiveTimeSteps(1:NumSoilLayer)
-       NoahmpIO%DRDEPTHXY     (I,J)                = noahmp%water%state%DynamicRootDepth
+       NoahmpIO%MAXUPTAKEXY   (I,J)                = noahmp%water%state%MaxUptakeDepth
     endif
 
 #ifdef WRF_HYDRO
