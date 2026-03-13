@@ -440,7 +440,6 @@ contains
        if ( .not. allocated (NoahmpIO%hgt_urb2d)  ) allocate ( NoahmpIO%hgt_urb2d   (XSTART:XEND,YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%ust)        ) allocate ( NoahmpIO%ust         (XSTART:XEND,YSTART:YEND) )
          
-       if ( NoahmpIO%SF_URBAN_PHYSICS == 1 ) then  ! single layer urban model  
           if ( .not. allocated (NoahmpIO%cmr_sfcdif)   ) allocate ( NoahmpIO%cmr_sfcdif    (XSTART:XEND,        YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%chr_sfcdif)   ) allocate ( NoahmpIO%chr_sfcdif    (XSTART:XEND,        YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%cmc_sfcdif)   ) allocate ( NoahmpIO%cmc_sfcdif    (XSTART:XEND,        YSTART:YEND) )
@@ -488,7 +487,6 @@ contains
           if ( .not. allocated (NoahmpIO%dzr)          ) allocate ( NoahmpIO%dzr           (            1:NSOIL            ) )
           if ( .not. allocated (NoahmpIO%dzb)          ) allocate ( NoahmpIO%dzb           (            1:NSOIL            ) )
           if ( .not. allocated (NoahmpIO%dzg)          ) allocate ( NoahmpIO%dzg           (            1:NSOIL            ) )
-       endif ! SLUCM
 
        if ( NoahmpIO%SF_URBAN_PHYSICS == 2 .or. NoahmpIO%SF_URBAN_PHYSICS == 3 ) then  ! BEP or BEM urban models
           if ( .not. allocated (NoahmpIO%trb_urb4d)  ) allocate ( NoahmpIO%trb_urb4d   (XSTART:XEND,NoahmpIO%urban_map_zrd,YSTART:YEND) )
@@ -918,7 +916,6 @@ contains
        NoahmpIO%lb_urb2d      = undefined_real_neg
        NoahmpIO%hgt_urb2d     = undefined_real_neg
        NoahmpIO%ust           = undefined_real_neg
-       if ( NoahmpIO%SF_URBAN_PHYSICS == 1 ) then  ! single layer urban model
           NoahmpIO%cmr_sfcdif    = 1.0e-4
           NoahmpIO%chr_sfcdif    = 1.0e-4
           NoahmpIO%cmc_sfcdif    = 1.0e-4
@@ -966,7 +963,6 @@ contains
           NoahmpIO%trl_urb3d     = undefined_real_neg
           NoahmpIO%tbl_urb3d     = undefined_real_neg
           NoahmpIO%tgl_urb3d     = undefined_real_neg
-       endif ! SLUCM
        if ( NoahmpIO%SF_URBAN_PHYSICS == 2 .or. NoahmpIO%SF_URBAN_PHYSICS == 3 ) then  ! BEP or BEM urban models
           NoahmpIO%trb_urb4d     = undefined_real_neg
           NoahmpIO%tw1_urb4d     = undefined_real_neg
