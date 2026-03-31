@@ -532,7 +532,6 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
        endif
        !if (rank == 0) print*, 'k, dst_centerpoint(k) = ', k, dst_centerpoint(k)
     enddo
-    print*
 
     do k = 1, nvar
        src_centerpoint(k) = 0.5*(layer_bottom(k)+layer_top(k))
