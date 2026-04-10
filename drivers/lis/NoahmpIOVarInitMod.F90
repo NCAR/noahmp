@@ -445,7 +445,27 @@ contains
        if ( .not. allocated (NoahmpIO%lb_urb2d)   ) allocate ( NoahmpIO%lb_urb2d    (XSTART:XEND,YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%hgt_urb2d)  ) allocate ( NoahmpIO%hgt_urb2d   (XSTART:XEND,YSTART:YEND) )
        if ( .not. allocated (NoahmpIO%ust)        ) allocate ( NoahmpIO%ust         (XSTART:XEND,YSTART:YEND) )
-         
+       if ( .not. allocated (NoahmpIO%qc_urb2d)   ) allocate ( NoahmpIO%qc_urb2d    (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%dzr)        ) allocate ( NoahmpIO%dzr         (    1:NSOIL            ) )
+       if ( .not. allocated (NoahmpIO%dzb)        ) allocate ( NoahmpIO%dzb         (    1:NSOIL            ) )
+       if ( .not. allocated (NoahmpIO%dzg)        ) allocate ( NoahmpIO%dzg         (    1:NSOIL            ) )
+       if ( .not. allocated (NoahmpIO%xxxr_urb2d) ) allocate ( NoahmpIO%xxxr_urb2d  (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%xxxb_urb2d) ) allocate ( NoahmpIO%xxxb_urb2d  (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%xxxg_urb2d) ) allocate ( NoahmpIO%xxxg_urb2d  (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%xxxc_urb2d) ) allocate ( NoahmpIO%xxxc_urb2d  (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%tr_urb2d)   ) allocate ( NoahmpIO%tr_urb2d    (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%tb_urb2d)   ) allocate ( NoahmpIO%tb_urb2d    (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%tg_urb2d)   ) allocate ( NoahmpIO%tg_urb2d    (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%tc_urb2d)   ) allocate ( NoahmpIO%tc_urb2d    (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%trl_urb3d)  ) allocate ( NoahmpIO%trl_urb3d   (XSTART:XEND,1:NSOIL,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%tbl_urb3d)  ) allocate ( NoahmpIO%tbl_urb3d   (XSTART:XEND,1:NSOIL,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%tgl_urb3d)  ) allocate ( NoahmpIO%tgl_urb3d   (XSTART:XEND,1:NSOIL,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%sf_ac_urb3d)) allocate ( NoahmpIO%sf_ac_urb3d (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%lf_ac_urb3d)) allocate ( NoahmpIO%lf_ac_urb3d (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%cm_ac_urb3d)) allocate ( NoahmpIO%cm_ac_urb3d (XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%sfvent_urb3d))allocate ( NoahmpIO%sfvent_urb3d(XSTART:XEND,YSTART:YEND) )
+       if ( .not. allocated (NoahmpIO%lfvent_urb3d))allocate ( NoahmpIO%lfvent_urb3d(XSTART:XEND,YSTART:YEND) )         
+
        if ( NoahmpIO%SF_URBAN_PHYSICS == 1 ) then  ! single layer urban model  
           if ( .not. allocated (NoahmpIO%cmr_sfcdif)   ) allocate ( NoahmpIO%cmr_sfcdif    (XSTART:XEND,        YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%chr_sfcdif)   ) allocate ( NoahmpIO%chr_sfcdif    (XSTART:XEND,        YSTART:YEND) )
@@ -453,16 +473,7 @@ contains
           if ( .not. allocated (NoahmpIO%chc_sfcdif)   ) allocate ( NoahmpIO%chc_sfcdif    (XSTART:XEND,        YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%cmgr_sfcdif)  ) allocate ( NoahmpIO%cmgr_sfcdif   (XSTART:XEND,        YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%chgr_sfcdif)  ) allocate ( NoahmpIO%chgr_sfcdif   (XSTART:XEND,        YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%tr_urb2d)     ) allocate ( NoahmpIO%tr_urb2d      (XSTART:XEND,        YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%tb_urb2d)     ) allocate ( NoahmpIO%tb_urb2d      (XSTART:XEND,        YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%tg_urb2d)     ) allocate ( NoahmpIO%tg_urb2d      (XSTART:XEND,        YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%tc_urb2d)     ) allocate ( NoahmpIO%tc_urb2d      (XSTART:XEND,        YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%qc_urb2d)     ) allocate ( NoahmpIO%qc_urb2d      (XSTART:XEND,        YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%uc_urb2d)     ) allocate ( NoahmpIO%uc_urb2d      (XSTART:XEND,        YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%xxxr_urb2d)   ) allocate ( NoahmpIO%xxxr_urb2d    (XSTART:XEND,        YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%xxxb_urb2d)   ) allocate ( NoahmpIO%xxxb_urb2d    (XSTART:XEND,        YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%xxxg_urb2d)   ) allocate ( NoahmpIO%xxxg_urb2d    (XSTART:XEND,        YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%xxxc_urb2d)   ) allocate ( NoahmpIO%xxxc_urb2d    (XSTART:XEND,        YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%psim_urb2d)   ) allocate ( NoahmpIO%psim_urb2d    (XSTART:XEND,        YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%psih_urb2d)   ) allocate ( NoahmpIO%psih_urb2d    (XSTART:XEND,        YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%u10_urb2d)    ) allocate ( NoahmpIO%u10_urb2d     (XSTART:XEND,        YSTART:YEND) )
@@ -486,14 +497,8 @@ contains
           if ( .not. allocated (NoahmpIO%mh_urb2d)     ) allocate ( NoahmpIO%mh_urb2d      (XSTART:XEND,        YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%stdh_urb2d)   ) allocate ( NoahmpIO%stdh_urb2d    (XSTART:XEND,        YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%lf_urb2d)     ) allocate ( NoahmpIO%lf_urb2d      (XSTART:XEND,4,      YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%trl_urb3d)    ) allocate ( NoahmpIO%trl_urb3d     (XSTART:XEND,1:NSOIL,YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%tbl_urb3d)    ) allocate ( NoahmpIO%tbl_urb3d     (XSTART:XEND,1:NSOIL,YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%tgl_urb3d)    ) allocate ( NoahmpIO%tgl_urb3d     (XSTART:XEND,1:NSOIL,YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%tgrl_urb3d)   ) allocate ( NoahmpIO%tgrl_urb3d    (XSTART:XEND,1:NSOIL,YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%smr_urb3d)    ) allocate ( NoahmpIO%smr_urb3d     (XSTART:XEND,1:NSOIL,YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%dzr)          ) allocate ( NoahmpIO%dzr           (            1:NSOIL            ) )
-          if ( .not. allocated (NoahmpIO%dzb)          ) allocate ( NoahmpIO%dzb           (            1:NSOIL            ) )
-          if ( .not. allocated (NoahmpIO%dzg)          ) allocate ( NoahmpIO%dzg           (            1:NSOIL            ) )
        endif ! SLUCM
 
        if ( NoahmpIO%SF_URBAN_PHYSICS == 2 .or. NoahmpIO%SF_URBAN_PHYSICS == 3 ) then  ! BEP or BEM urban models
@@ -535,11 +540,6 @@ contains
           if ( .not. allocated (NoahmpIO%tw2lev_urb3d) ) allocate ( NoahmpIO%tw2lev_urb3d  (XSTART:XEND,NoahmpIO%urban_map_wd,  YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%tglev_urb3d)  ) allocate ( NoahmpIO%tglev_urb3d   (XSTART:XEND,NoahmpIO%urban_map_gbd, YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%tflev_urb3d)  ) allocate ( NoahmpIO%tflev_urb3d   (XSTART:XEND,NoahmpIO%urban_map_fbd, YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%sf_ac_urb3d)  ) allocate ( NoahmpIO%sf_ac_urb3d   (XSTART:XEND,                        YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%lf_ac_urb3d)  ) allocate ( NoahmpIO%lf_ac_urb3d   (XSTART:XEND,                        YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%cm_ac_urb3d)  ) allocate ( NoahmpIO%cm_ac_urb3d   (XSTART:XEND,                        YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%sfvent_urb3d) ) allocate ( NoahmpIO%sfvent_urb3d  (XSTART:XEND,                        YSTART:YEND) )
-          if ( .not. allocated (NoahmpIO%lfvent_urb3d) ) allocate ( NoahmpIO%lfvent_urb3d  (XSTART:XEND,                        YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%sfwin1_urb3d) ) allocate ( NoahmpIO%sfwin1_urb3d  (XSTART:XEND,NoahmpIO%urban_map_wd,  YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%sfwin2_urb3d) ) allocate ( NoahmpIO%sfwin2_urb3d  (XSTART:XEND,NoahmpIO%urban_map_wd,  YSTART:YEND) )
           if ( .not. allocated (NoahmpIO%ep_pv_urb3d)  ) allocate ( NoahmpIO%ep_pv_urb3d   (XSTART:XEND,                        YSTART:YEND) )
@@ -926,6 +926,27 @@ contains
        NoahmpIO%lb_urb2d      = undefined_real_neg
        NoahmpIO%hgt_urb2d     = undefined_real_neg
        NoahmpIO%ust           = undefined_real_neg
+       NoahmpIO%qc_urb2d      = undefined_real_neg
+       NoahmpIO%dzr           = undefined_real_neg
+       NoahmpIO%dzb           = undefined_real_neg
+       NoahmpIO%dzg           = undefined_real_neg
+       NoahmpIO%xxxr_urb2d    = undefined_real_neg
+       NoahmpIO%xxxb_urb2d    = undefined_real_neg
+       NoahmpIO%xxxg_urb2d    = undefined_real_neg
+       NoahmpIO%xxxc_urb2d    = undefined_real_neg
+       NoahmpIO%tr_urb2d      = undefined_real_neg
+       NoahmpIO%tb_urb2d      = undefined_real_neg
+       NoahmpIO%tg_urb2d      = undefined_real_neg
+       NoahmpIO%tc_urb2d      = undefined_real_neg
+       NoahmpIO%trl_urb3d     = undefined_real_neg
+       NoahmpIO%tbl_urb3d     = undefined_real_neg
+       NoahmpIO%tgl_urb3d     = undefined_real_neg
+       NoahmpIO%sf_ac_urb3d   = undefined_real_neg
+       NoahmpIO%lf_ac_urb3d   = undefined_real_neg
+       NoahmpIO%cm_ac_urb3d   = undefined_real_neg
+       NoahmpIO%sfvent_urb3d  = undefined_real_neg
+       NoahmpIO%lfvent_urb3d  = undefined_real_neg
+
        if ( NoahmpIO%SF_URBAN_PHYSICS == 1 ) then  ! single layer urban model
           NoahmpIO%cmr_sfcdif    = 1.0e-4
           NoahmpIO%chr_sfcdif    = 1.0e-4
@@ -933,19 +954,7 @@ contains
           NoahmpIO%chc_sfcdif    = 1.0e-4
           NoahmpIO%cmgr_sfcdif   = 1.0e-4
           NoahmpIO%chgr_sfcdif   = 1.0e-4
-          NoahmpIO%tr_urb2d      = undefined_real_neg
-          NoahmpIO%tb_urb2d      = undefined_real_neg
-          NoahmpIO%tg_urb2d      = undefined_real_neg
-          NoahmpIO%tc_urb2d      = undefined_real_neg
-          NoahmpIO%qc_urb2d      = undefined_real_neg
           NoahmpIO%uc_urb2d      = undefined_real_neg
-          NoahmpIO%xxxr_urb2d    = undefined_real_neg
-          NoahmpIO%xxxb_urb2d    = undefined_real_neg
-          NoahmpIO%xxxg_urb2d    = undefined_real_neg
-          NoahmpIO%xxxc_urb2d    = undefined_real_neg
-          NoahmpIO%trl_urb3d     = undefined_real_neg
-          NoahmpIO%tbl_urb3d     = undefined_real_neg
-          NoahmpIO%tgl_urb3d     = undefined_real_neg
           NoahmpIO%psim_urb2d    = undefined_real_neg
           NoahmpIO%psih_urb2d    = undefined_real_neg
           NoahmpIO%u10_urb2d     = undefined_real_neg
@@ -955,9 +964,6 @@ contains
           NoahmpIO%th2_urb2d     = undefined_real_neg
           NoahmpIO%q2_urb2d      = undefined_real_neg
           NoahmpIO%ust_urb2d     = undefined_real_neg
-          NoahmpIO%dzr           = undefined_real_neg
-          NoahmpIO%dzb           = undefined_real_neg
-          NoahmpIO%dzg           = undefined_real_neg
           NoahmpIO%cmcr_urb2d    = undefined_real_neg
           NoahmpIO%tgr_urb2d     = undefined_real_neg
           NoahmpIO%tgrl_urb3d    = undefined_real_neg
@@ -1013,11 +1019,6 @@ contains
           NoahmpIO%tw2lev_urb3d  = undefined_real_neg
           NoahmpIO%tglev_urb3d   = undefined_real_neg
           NoahmpIO%tflev_urb3d   = undefined_real_neg
-          NoahmpIO%sf_ac_urb3d   = undefined_real_neg
-          NoahmpIO%lf_ac_urb3d   = undefined_real_neg
-          NoahmpIO%cm_ac_urb3d   = undefined_real_neg
-          NoahmpIO%sfvent_urb3d  = undefined_real_neg
-          NoahmpIO%lfvent_urb3d  = undefined_real_neg
           NoahmpIO%sfwin1_urb3d  = undefined_real_neg
           NoahmpIO%sfwin2_urb3d  = undefined_real_neg
           NoahmpIO%ep_pv_urb3d   = undefined_real_neg
