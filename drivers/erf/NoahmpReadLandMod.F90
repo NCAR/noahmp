@@ -152,7 +152,7 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     character(len=256) :: units
     integer :: ierr
     integer :: ncid
-    real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, \
+    real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, &
                     NoahmpIO%ystart-NoahmpIO%yoffset:NoahmpIO%yend-NoahmpIO%yoffset) :: xdum
     integer :: rank
 
@@ -166,11 +166,11 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     real, dimension(100) :: layer_top
     real, dimension(NoahmpIO%nsoil)   :: dzs
 
-    real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, \
+    real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, &
                     NoahmpIO%ystart-NoahmpIO%yoffset:NoahmpIO%yend-NoahmpIO%yoffset, NoahmpIO%nsoil) :: insoil
 
-    real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, \
-                    NoahmpIO%nsoil, \
+    real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, &
+                    NoahmpIO%nsoil, &
                     NoahmpIO%ystart-NoahmpIO%yoffset:NoahmpIO%yend-NoahmpIO%yoffset) :: soildummy
 
     integer :: ierr_vegfra
@@ -276,7 +276,7 @@ subroutine NoahmpReadLandMain(NoahmpIO)
 
     call get_netcdf_soillevel("SMOIS", ncid, NoahmpIO%nsoil, soildummy, units,  xstart, xend, ystart, yend, FATAL, ierr)
 
-    call init_interp(NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NoahmpIO%nsoil, \
+    call init_interp(NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NoahmpIO%nsoil, &
     NoahmpIO%dzs, NoahmpIO%smois, NoahmpIO%nsoil, soildummy, layer_bottom(1:NoahmpIO%nsoil), layer_top(1:NoahmpIO%nsoil), NoahmpIO%rank)
 
     NoahmpIO%VEGFRA =  0.0
@@ -532,7 +532,6 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
        endif
        !if (rank == 0) print*, 'k, dst_centerpoint(k) = ', k, dst_centerpoint(k)
     enddo
-    print*
 
     do k = 1, nvar
        src_centerpoint(k) = 0.5*(layer_bottom(k)+layer_top(k))

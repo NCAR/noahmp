@@ -245,7 +245,7 @@ contains
 
     ! sanity check for snow layer
     if (-NumSnowLayerMax /= NumSnowLayerNeg) then
-       SnowRadius(-NumSnowLayerMax:NumSnowLayerNeg) = 0.0
+       SnowRadius(-NumSnowLayerMax+1:NumSnowLayerNeg) = 0.0
     endif
 
     if (NumSnowLayerNeg == 0) then
