@@ -56,7 +56,7 @@ contains
     integer                 :: num_urban_hi     = 15 
     integer                 :: num_urban_ngr    = 10  ! = ngr_u in bep_bem.F
     integer                 :: noahmp_output    = 0
-    real(kind=kind_noahmp)  :: urban_atmosphere_thickness = 2.0
+    real(kind=kind_noahmp)  :: urban_atmosphere_thickness = 5.0
     real(kind=kind_noahmp)  :: soil_timestep    = 0.0   ! soil timestep (default=0: same as main noahmp timestep)
 
     character(len=256)      :: forcing_name_T  = "T2D"
