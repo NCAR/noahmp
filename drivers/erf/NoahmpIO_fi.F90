@@ -47,6 +47,7 @@ module NoahmpIO_fi
     type(C_PTR) :: itimestep, ntime
     type(C_PTR) :: rank, blkid, level
     type(C_PTR) :: comm
+    type(C_PTR) :: DTBL
     type(C_PTR) :: XLAT, WSLAKEXY
     type(C_PTR) :: U_PHY, T_PHY, V_PHY, QV_CURR
     type(C_PTR) :: HFX, LH
@@ -104,6 +105,8 @@ contains
 
     call C_F_POINTER(NoahmpIO_cptr%RANK, NoahmpIO_vect(level)%NoahmpIO(bid)%RANK)
     call C_F_POINTER(NoahmpIO_cptr%COMM, NoahmpIO_vect(level)%NoahmpIO(bid)%COMM)
+
+    call C_F_POINTER(NoahmpIO_cptr%DTBL, NoahmpIO_vect(level)%NoahmpIO(bid)%DTBL)
 
   end subroutine NoahmpIOScalarInitDefault_fi
 

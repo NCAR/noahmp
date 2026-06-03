@@ -16,6 +16,8 @@ extern "C" {
         int *rank, *blkid, *level;
         int *comm;
 
+        double* DTBL = nullptr;       // Timestep 
+
         double* XLAT = nullptr;       // latitude [rad]
         double* WSLAKEXY = nullptr;   // lake water storage [mm]
         double* U_PHY = nullptr;
@@ -41,14 +43,14 @@ extern "C" {
           int* its, int* ite, int* jts, int* jte, int* kts, int* kte,
           int* xstart, int* xend, int* ystart, int* yend, int* itimestep,
           int* ntime, int* nsoil, int* nsnow, int* rank,
-          int* blkid, int* level, int *comm
+          int* blkid, int* level, int *comm, double* DTBL
         ):
           ids(ids), ide(ide), jds(jds), jde(jde), kds(kds), kde(kde),
           ims(ims), ime(ime), jms(jms), jme(jme), kms(kms), kme(kme),
           its(its), ite(ite), jts(jts), jte(jte), kts(kts), kte(kte),
           xstart(xstart), xend(xend), ystart(ystart), yend(yend), itimestep(itimestep),
           ntime(ntime), nsoil(nsoil), nsnow(nsnow), rank(rank), blkid(blkid), 
-          level(level), comm(comm) {}
+          level(level), comm(comm), DTBL(DTBL) {}
     };
 }
 
@@ -64,6 +66,8 @@ class NoahmpIO_type {
         int rank, blkid, level;
         int comm;
 
+        double DTBL;
+    
         NoahArray2D<double> XLAT;
         NoahArray2D<double> WSLAKEXY;
         NoahArray3D<double> U_PHY;
@@ -87,7 +91,8 @@ class NoahmpIO_type {
                &ims, &ime, &jms, &jme, &kms, &kme,
                &its, &ite, &jts, &jte, &kts, &kte,
                &xstart, &xend, &ystart, &yend, &itimestep,
-               &ntime, &nsoil, &nsnow, &rank, &blkid, &level, &comm) {}
+               &ntime, &nsoil, &nsnow, &rank, &blkid,
+               &level, &comm, &DTBL) {}
 
         void ScalarInitDefault();
         void VarInitDefault();
