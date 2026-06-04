@@ -74,7 +74,7 @@ module NoahmpIOVarType
     integer                                                ::  IOPT_WETLAND        ! wetland model option (0->off; 1->Zhang2022 fixed parameter; 2->Zhang2022 read in 2D parameter)
     real(kind=kind_noahmp)                                 ::  XICE_THRESHOLD      ! fraction of grid determining seaice
     real(kind=kind_noahmp)                                 ::  JULIAN              ! Julian day
-    real(kind=kind_noahmp)                                 ::  DTBL                ! timestep [s]
+    real(kind=C_DOUBLE), pointer                           ::  DTBL                ! timestep [s]
     real(kind=kind_noahmp)                                 ::  DX                  ! horizontal grid spacing [m]
     real(kind=kind_noahmp)                                 ::  soiltstep           ! soil time step (s) (default=0: same as main NoahMP timstep)
     logical                                                ::  FNDSNOWH            ! snow depth present in input
