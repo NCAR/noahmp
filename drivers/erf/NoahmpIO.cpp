@@ -11,6 +11,8 @@ extern "C" {
     void NoahmpReadLandMain_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpDriverMain_fi(NoahmpIO_type_fi* noahmpio);
     void NoahmpWriteLand_fi(NoahmpIO_type_fi* noahmpio, int* filenum);
+    void NoahmpWriteRestart_fi(NoahmpIO_type_fi* noahmpio, const char* dir, int* dir_len);
+    void NoahmpReadRestart_fi(NoahmpIO_type_fi* noahmpio, const char* dir, int* dir_len);
     void NoahmpIOTypeVectInit_fi(int* level, int* NBlocks);
 }
 
@@ -45,6 +47,16 @@ void NoahmpIO_type::DriverMain() {
 
 void NoahmpIO_type::WriteLand(int filenum) {
      NoahmpWriteLand_fi(&fptr, &filenum);
+};
+
+void NoahmpIO_type::WriteRestart(const std::string& dir) {
+     int dir_len = static_cast<int>(dir.size());
+     NoahmpWriteRestart_fi(&fptr, dir.c_str(), &dir_len);
+};
+
+void NoahmpIO_type::ReadRestart(const std::string& dir) {
+     int dir_len = static_cast<int>(dir.size());
+     NoahmpReadRestart_fi(&fptr, dir.c_str(), &dir_len);
 };
 
 

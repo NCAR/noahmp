@@ -3,6 +3,7 @@
 
 #include <NoahArray.H>
 #include <vector>
+#include <string>
 
 extern "C" {
     struct NoahmpIO_type_fi {
@@ -103,6 +104,8 @@ class NoahmpIO_type {
         void ReadLandMain();
         void DriverMain();
         void WriteLand(int filenum);
+        void WriteRestart(const std::string& dir);
+        void ReadRestart(const std::string& dir);
 
     private:
         NoahmpIO_type_fi fptr;

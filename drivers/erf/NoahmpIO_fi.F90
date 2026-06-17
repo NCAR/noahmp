@@ -8,6 +8,8 @@ module NoahmpIO_fi
   use NoahmpReadLandMod, ONLY: NoahmpReadLandHeader, NoahmpReadLandMain
   use NoahmpDriverMainMod, ONLY: NoahmpDriverMain
   use NoahmpWriteLandMod, ONLY: NoahmpWriteLand
+  use NoahmpWriteRestartMod, ONLY: NoahmpWriteRestart
+  use NoahmpReadRestartMod, ONLY: NoahmpReadRestart
 
   use  iso_c_binding
 
@@ -211,6 +213,40 @@ contains
     call C_F_POINTER(NoahmpIO_cptr%LEVEL, level)
     call NoahmpWriteLand(NoahmpIO_vect(level)%NoahmpIO(bid), filenum, SIZE(NoahmpIO_vect(level)%NoahmpIO))
   end subroutine NoahmpWriteLand_fi
+
+  subroutine NoahmpWriteRestart_fi(NoahmpIO_cptr, dir_cptr, dir_len) bind(C, name="NoahmpWriteRestart_fi")
+    use iso_c_binding, only : C_INT, C_CHAR
+    implicit none
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    character(kind=C_CHAR), intent(in) :: dir_cptr(*)
+    integer(C_INT), intent(in) :: dir_len
+    integer(C_INT), pointer :: level, bid
+    character(len=dir_len) :: dir
+    integer :: ic
+    do ic = 1, dir_len
+       dir(ic:ic) = dir_cptr(ic)
+    end do
+    call C_F_POINTER(NoahmpIO_cptr%BLKID, bid)
+    call C_F_POINTER(NoahmpIO_cptr%LEVEL, level)
+    call NoahmpWriteRestart(NoahmpIO_vect(level)%NoahmpIO(bid), dir, SIZE(NoahmpIO_vect(level)%NoahmpIO))
+  end subroutine NoahmpWriteRestart_fi
+
+  subroutine NoahmpReadRestart_fi(NoahmpIO_cptr, dir_cptr, dir_len) bind(C, name="NoahmpReadRestart_fi")
+    use iso_c_binding, only : C_INT, C_CHAR
+    implicit none
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    character(kind=C_CHAR), intent(in) :: dir_cptr(*)
+    integer(C_INT), intent(in) :: dir_len
+    integer(C_INT), pointer :: level, bid
+    character(len=dir_len) :: dir
+    integer :: ic
+    do ic = 1, dir_len
+       dir(ic:ic) = dir_cptr(ic)
+    end do
+    call C_F_POINTER(NoahmpIO_cptr%BLKID, bid)
+    call C_F_POINTER(NoahmpIO_cptr%LEVEL, level)
+    call NoahmpReadRestart(NoahmpIO_vect(level)%NoahmpIO(bid), dir, SIZE(NoahmpIO_vect(level)%NoahmpIO))
+  end subroutine NoahmpReadRestart_fi
 
   subroutine NoahmpIOTypeVectInit_fi(level, NBlocks) bind(C, name="NoahmpIOTypeVectInit_fi")
     use iso_c_binding, only : C_INT
