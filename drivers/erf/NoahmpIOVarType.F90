@@ -786,7 +786,7 @@ module NoahmpIOVarType
     logical                                                ::  skip_first_output
     integer                                                ::  khour
     integer                                                ::  kday
-    real(kind=kind_noahmp)                                 ::  zlvl 
+    real(kind=C_DOUBLE),    pointer                        ::  zlvl 
     character(len=256)                                     ::  erf_setup_file_lev
     character(len=256)                                     ::  erf_setup_file_01, erf_setup_file_02, erf_setup_file_03
     character(len=256)                                     ::  spatial_filename

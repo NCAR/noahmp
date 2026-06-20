@@ -193,7 +193,6 @@ contains
     NoahmpIO%start_min               = undefined_int
     NoahmpIO%khour                   = undefined_int
     NoahmpIO%kday                    = undefined_int
-    NoahmpIO%zlvl                    = undefined_real
     NoahmpIO%forcing_timestep        = undefined_int
     NoahmpIO%noah_timestep           = undefined_int
     NoahmpIO%output_timestep         = undefined_int
@@ -428,7 +427,7 @@ contains
     NoahmpIO%split_output_count                = split_output_count
     NoahmpIO%skip_first_output                 = skip_first_output
     NoahmpIO%kday                              = kday
-    NoahmpIO%zlvl                              = zlvl
+    if (NoahmpIO%zlvl == undefined_real) NoahmpIO%zlvl = zlvl
     NoahmpIO%erf_setup_file_01                 = erf_setup_file_01
     NoahmpIO%erf_setup_file_02                 = erf_setup_file_02
     NoahmpIO%erf_setup_file_03                 = erf_setup_file_03

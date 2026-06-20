@@ -18,6 +18,7 @@ extern "C" {
         int *comm;
 
         double* DTBL = nullptr;       // Timestep 
+        double* ZLVL = nullptr;       // Reference height [m]
 
         double* XLAT = nullptr;       // latitude [rad]
         double* WSLAKEXY = nullptr;   // lake water storage [mm]
@@ -44,14 +45,14 @@ extern "C" {
           int* its, int* ite, int* jts, int* jte, int* kts, int* kte,
           int* xstart, int* xend, int* ystart, int* yend, int* itimestep,
           int* ntime, int* nsoil, int* nsnow, int* rank,
-          int* blkid, int* level, int *comm, double* DTBL
+          int* blkid, int* level, int *comm, double* DTBL, double* ZLVL
         ):
           ids(ids), ide(ide), jds(jds), jde(jde), kds(kds), kde(kde),
           ims(ims), ime(ime), jms(jms), jme(jme), kms(kms), kme(kme),
           its(its), ite(ite), jts(jts), jte(jte), kts(kts), kte(kte),
           xstart(xstart), xend(xend), ystart(ystart), yend(yend), itimestep(itimestep),
           ntime(ntime), nsoil(nsoil), nsnow(nsnow), rank(rank), blkid(blkid), 
-          level(level), comm(comm), DTBL(DTBL) {}
+          level(level), comm(comm), DTBL(DTBL), ZLVL(ZLVL) {}
     };
 }
 
@@ -68,6 +69,7 @@ class NoahmpIO_type {
         int comm;
 
         double DTBL;
+        double ZLVL = -9999.0;    // Reference height [m]; set via C++ API or falls back to namelist
     
         NoahArray2D<double> XLAT;
         NoahArray2D<double> WSLAKEXY;
@@ -93,7 +95,7 @@ class NoahmpIO_type {
                &its, &ite, &jts, &jte, &kts, &kte,
                &xstart, &xend, &ystart, &yend, &itimestep,
                &ntime, &nsoil, &nsnow, &rank, &blkid,
-               &level, &comm, &DTBL) {}
+               &level, &comm, &DTBL, &ZLVL) {}
 
         void ScalarInitDefault();
         void VarInitDefault();
