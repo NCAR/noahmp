@@ -1,5 +1,5 @@
 # Usage: code-scribe update NoahmpIO.H NoahmpIO.cpp NoahpmIO_fi.F90 \
-#                           -p prompts/noahmpio_update.toml \
+#                           -p specs/noahmpio_update.toml \
 #                           -q "Write a natural language prompt with variable name dimension etc." \
 #                           -m <openai|argo|..>
 #
@@ -16,6 +16,11 @@ to prevent segmentation faults.
 
 Maintain the same naming conventions and pointer mapping logic as existing entries
 such as `U_PHY`, `V_PHY`, and `QV_CURR`.
+
+This prompt is for ARRAY variables (wrapped in `NoahArray2D`/`NoahArray3D` and bound
+with `C_LOC` in `NoahmpIOVarInitDefault_fi`). For SCALAR variables (single `double`
+values such as `DTBL`/`ZLVL`, bound with `C_F_POINTER` in
+`NoahmpIOScalarInitDefault_fi`), use `specs/noahmpioscalar_update.toml` instead.
 
 1. Context
 

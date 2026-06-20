@@ -1,0 +1,124 @@
+# Usage: code-scribe update NoahmpIO.H NoahmpIO.cpp NoahpmIO_fi.F90 \
+#                           -p specs/noahmpioscalar_update.toml \
+#                           -q "Write a natural language prompt with variable name etc." \
+#                           -m <openai|argo|..>
+#
+# Documentation: https://erf.readthedocs.io/en/latest/CouplingToNoahMP.html
+
+[[chat.user]]
+content = '''
+You are a code-update assistant for Fortran–C interoperability interfaces used
+in the Noah-MP land-surface model.
+
+Only edit the appended files. You must preserve consistent variable ordering between
+the C++ struct (`NoahmpIO_type_fi`) and the Fortran bind(C) type (`NoahmpIO_type_fi`)
+to prevent segmentation faults.
+
+This prompt is for SCALAR variables (single `double` values), which use a different
+binding mechanism than array variables. For array variables (wrapped in `NoahArray2D`
+or `NoahArray3D`), use `specs/noahmpio_update.toml` instead.
+
+Maintain the same naming conventions and pointer mapping logic as existing scalar
+entries such as `DTBL` and `ZLVL`.
+
+1. Context
+
+-  Scalar variables are declared in **NoahmpIOVarType.F90** as `pointer` scalars
+   of kind `C_DOUBLE` (NOT `allocatable` arrays). They are not allocated in
+   **NoahmpIOVarInitMod.F90**; instead they point directly at storage owned by the
+   C++ side.
+
+-  Each scalar has:
+   - a `double*` pointer in the C++ `struct NoahmpIO_type_fi`,
+   - a plain `double` member in the `class NoahmpIO_type` (the actual storage),
+   - a `type(C_PTR)` field in the Fortran bind(C) type, and
+   - a `real(kind=C_DOUBLE), pointer` scalar in the Fortran `NoahmpIO_type`.
+
+-  Unlike arrays, scalars are bound in **NoahmpIOScalarInitDefault_fi** using
+   `C_F_POINTER` (the C++ side owns the memory and the Fortran pointer is aimed at
+   it), e.g.:
+
+   ```
+   call C_F_POINTER(NoahmpIO_cptr%DTBL, NoahmpIO_vect(level)%NoahmpIO(bid)%DTBL)
+   call C_F_POINTER(NoahmpIO_cptr%ZLVL, NoahmpIO_vect(level)%NoahmpIO(bid)%zlvl)
+   ```
+
+   Scalars are NOT wrapped with `NoahArray` and have NO entry in
+   `NoahmpIO_type::VarInitDefault()` or in `NoahmpIOVarInitDefault_fi`.
+
+2. Task Details
+
+Update the following files to include and correctly link the new scalar variable
+`ZLVL` between the C++ and Fortran layers.
+
+File: NoahmpIO.H
+
+-  Add a pointer member `double* ZLVL = nullptr;` in `struct NoahmpIO_type_fi`
+   immediately after the existing scalar pointer `DTBL`. Add a short trailing
+   comment with the physical meaning and units.
+
+-  Add a plain scalar member `double ZLVL = -9999.0;` to `class NoahmpIO_type`
+   immediately after `double DTBL;`. Initialize it to a sentinel so it can fall
+   back to a namelist value when not set via the C++ API.
+
+-  Add `double* ZLVL` to the `NoahmpIO_type_fi(...)` constructor parameter list
+   (after `double* DTBL`), and add `ZLVL(ZLVL)` to its member initializer list
+   (after `DTBL(DTBL)`).
+
+-  Add `&ZLVL` to the `fptr(...)` initializer in the `NoahmpIO_type()` constructor
+   (after `&DTBL`).
+
+File: NoahmpIO.cpp
+
+-  No change. Scalars are bound on the Fortran side in `NoahmpIOScalarInitDefault_fi`
+   and do NOT get a `NoahArray` wrapper in `NoahmpIO_type::VarInitDefault()`.
+
+File: NoahmpIO_fi.F90
+
+-  Add `type(C_PTR) :: ZLVL` to type `NoahmpIO_type_fi`, immediately after the
+   `DTBL` field, matching the order in the C++ struct.
+
+-  Within subroutine `NoahmpIOScalarInitDefault_fi` (NOT `NoahmpIOVarInitDefault_fi`),
+   after the `C_F_POINTER` call for `DTBL`, add:
+
+   ```
+   call C_F_POINTER(NoahmpIO_cptr%ZLVL, NoahmpIO_vect(level)%NoahmpIO(bid)%zlvl)
+   ```
+
+File: NoahmpIOVarType.F90
+
+-  Declare the scalar in `NoahmpIO_type` as a `C_DOUBLE` pointer (NOT an
+   allocatable array):
+
+   ```
+   real(kind=C_DOUBLE),    pointer                        ::  zlvl
+   ```
+
+   Note the spaces to align everything at the right locations.
+
+File: NoahmpReadNamelistMod.F90 (only if the scalar also has a namelist value)
+
+-  Do NOT unconditionally overwrite a scalar that the C++ side may have already set.
+   Guard the namelist assignment with the sentinel so an API-provided value wins,
+   following the `zlvl` pattern:
+
+   ```
+   if (NoahmpIO%zlvl == undefined_real) NoahmpIO%zlvl = zlvl
+   ```
+
+3. Validation
+
+Check that both `NoahmpIO_type_fi` definitions (C++ and Fortran) have identical
+ordering. Ensure variable names exactly match between Fortran and C++ to avoid
+memory mapping issues. Confirm the scalar is declared `pointer` (not `allocatable`)
+and is bound with `C_F_POINTER` in `NoahmpIOScalarInitDefault_fi`, not with `C_LOC`
+in `NoahmpIOVarInitDefault_fi`.
+
+Only modify the files that are explicitly requested to modify. That is, if I don't add
+contents of the file, do not edit it.
+
+4. Actual Task
+
+Create bindings for the requested scalar variables
+
+'''

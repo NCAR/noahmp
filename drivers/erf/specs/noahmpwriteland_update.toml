@@ -1,6 +1,6 @@
 
 # Usage: code-scribe update NoahmpWriteLandMod.F90 \
-#                           -p prompts/noahmpwriteland_update.toml \
+#                           -p specs/noahmpwriteland_update.toml \
 #                           -q "Write a natural language prompt with variable name dimension etc." \
 #                           -m <openai|argo|..>
 #
