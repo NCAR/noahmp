@@ -23,7 +23,13 @@ file(GLOB NoahMP_Sources
 add_library(noahmp ${NoahMP_Sources})
 add_library(NoahMP::noahmp ALIAS noahmp)
 
-target_compile_definitions(noahmp PRIVATE DOUBLE_PREC)
+# Floating-point precision (the DOUBLE_PREC macro -> kind_noahmp) is selected by
+# the PARENT project, not here. ERF compiles this library with -DDOUBLE_PREC
+# because the ERF<->Noah-MP C++ interface (NoahArray<double>, NoahmpIO_type) is
+# double-precision only; see the ERF root CMakeLists.txt. When this directory is
+# built standalone, precision falls back to Noah-MP's upstream default (single);
+# add the definition explicitly for a double-precision standalone build:
+#   target_compile_definitions(noahmp PRIVATE DOUBLE_PREC)
 
 if("${CMAKE_Fortran_COMPILER_ID}" MATCHES "GNU")
     target_compile_options(noahmp PRIVATE "-ffree-line-length-none")

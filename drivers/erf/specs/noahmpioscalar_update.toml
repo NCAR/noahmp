@@ -24,15 +24,18 @@ entries such as `DTBL` and `ZLVL`.
 1. Context
 
 -  Scalar variables are declared in **NoahmpIOVarType.F90** as `pointer` scalars
-   of kind `C_DOUBLE` (NOT `allocatable` arrays). They are not allocated in
+   of kind `c_kind_noahmp` (NOT `allocatable` arrays). They are not allocated in
    **NoahmpIOVarInitMod.F90**; instead they point directly at storage owned by the
    C++ side.
 
 -  Each scalar has:
-   - a `double*` pointer in the C++ `struct NoahmpIO_type_fi`,
-   - a plain `double` member in the `class NoahmpIO_type` (the actual storage),
+   - a `noahmp_real*` pointer in the C++ `struct NoahmpIO_type_fi`,
+   - a plain `noahmp_real` member in the `class NoahmpIO_type` (the actual storage),
    - a `type(C_PTR)` field in the Fortran bind(C) type, and
-   - a `real(kind=C_DOUBLE), pointer` scalar in the Fortran `NoahmpIO_type`.
+   - a `real(kind=c_kind_noahmp), pointer` scalar in the Fortran `NoahmpIO_type`.
+
+   (`noahmp_real` / `c_kind_noahmp` are C_DOUBLE/C_FLOAT depending on the
+   DOUBLE_PREC macro, so the coupling boundary tracks ERF/amrex::Real.)
 
 -  Unlike arrays, scalars are bound in **NoahmpIOScalarInitDefault_fi** using
    `C_F_POINTER` (the C++ side owns the memory and the Fortran pointer is aimed at
@@ -53,20 +56,31 @@ Update the following files to include and correctly link the new scalar variable
 
 File: NoahmpIO.H
 
--  Add a pointer member `double* ZLVL = nullptr;` in `struct NoahmpIO_type_fi`
+-  Add a pointer member `noahmp_real* ZLVL = nullptr;` in `struct NoahmpIO_type_fi`
    immediately after the existing scalar pointer `DTBL`. Add a short trailing
    comment with the physical meaning and units.
 
--  Add a plain scalar member `double ZLVL = -9999.0;` to `class NoahmpIO_type`
-   immediately after `double DTBL;`. Initialize it to a sentinel so it can fall
+-  Add a plain scalar member `noahmp_real ZLVL = -9999.0;` to `class NoahmpIO_type`
+   immediately after `noahmp_real DTBL;`. Initialize it to a sentinel so it can fall
    back to a namelist value when not set via the C++ API.
 
--  Add `double* ZLVL` to the `NoahmpIO_type_fi(...)` constructor parameter list
-   (after `double* DTBL`), and add `ZLVL(ZLVL)` to its member initializer list
+-  Add `noahmp_real* ZLVL` to the `NoahmpIO_type_fi(...)` constructor parameter list
+   (after `noahmp_real* DTBL`), and add `ZLVL(ZLVL)` to its member initializer list
    (after `DTBL(DTBL)`).
 
 -  Add `&ZLVL` to the `fptr(...)` initializer in the `NoahmpIO_type()` constructor
    (after `&DTBL`).
+
+-  Increment `NOAHMP_IO_FI_NUM_MEMBERS` by one. This compile-time constant must
+   equal the number of members in `NoahmpIO_type_fi`; the static_assert and the
+   run-time ABI guards rely on it.
+
+-  Update the `NoahmpIO_type` MOVE constructor (`NoahmpIO_type(NoahmpIO_type&& o)`),
+   which is self-referential and must be kept in sync by hand:
+     - add `ZLVL(o.ZLVL),` to the member initializer list (after `DTBL(o.DTBL)`), and
+     - add `fptr.ZLVL=&ZLVL;` in the constructor body (after `fptr.DTBL=&DTBL;`),
+       re-pointing the new scalar handle at THIS object's member.
+   Omitting either half leaves the moved object's fptr pointing at freed memory.
 
 File: NoahmpIO.cpp
 
@@ -85,13 +99,25 @@ File: NoahmpIO_fi.F90
    call C_F_POINTER(NoahmpIO_cptr%ZLVL, NoahmpIO_vect(level)%NoahmpIO(bid)%zlvl)
    ```
 
-File: NoahmpIOVarType.F90
-
--  Declare the scalar in `NoahmpIO_type` as a `C_DOUBLE` pointer (NOT an
-   allocatable array):
+-  Add a positional entry for the new field to function `NoahmpIOCheckMemberOrder_fi`,
+   in the canonical order block, immediately after the `DTBL`/`ZLVL` entries:
 
    ```
-   real(kind=C_DOUBLE),    pointer                        ::  zlvl
+   call chk(probe%ZLVL, 31)
+   ```
+
+   The index is the field's zero-based position in `NoahmpIO_type_fi` (same on both
+   sides). Renumber the entries that follow so every index stays equal to its
+   position; this handshake is what catches a member reordered on only one side.
+
+File: NoahmpIOVarType.F90
+
+-  Declare the scalar in `NoahmpIO_type` as a `c_kind_noahmp` pointer (NOT an
+   allocatable array), default-initialized to `null()` so its association status
+   is well-defined before `NoahmpIOScalarInitDefault_fi` wires it:
+
+   ```
+   real(kind=c_kind_noahmp), pointer                       ::  zlvl=>null()
    ```
 
    Note the spaces to align everything at the right locations.
@@ -113,6 +139,14 @@ ordering. Ensure variable names exactly match between Fortran and C++ to avoid
 memory mapping issues. Confirm the scalar is declared `pointer` (not `allocatable`)
 and is bound with `C_F_POINTER` in `NoahmpIOScalarInitDefault_fi`, not with `C_LOC`
 in `NoahmpIOVarInitDefault_fi`.
+
+Confirm the four cross-cutting bookkeeping edits are all present, since each backs
+a run-time ABI guard and a missing one is silent corruption:
+  - `NOAHMP_IO_FI_NUM_MEMBERS` increased by one (must equal the member count);
+  - the new field copied AND re-pointed in the `NoahmpIO_type` move constructor;
+  - a `call chk(...)` entry added with the correct index in `NoahmpIOCheckMemberOrder_fi`,
+    with all following indices still equal to their positions;
+  - the Fortran pointer declared with `=> null()`.
 
 Only modify the files that are explicitly requested to modify. That is, if I don't add
 contents of the file, do not edit it.

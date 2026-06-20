@@ -4,13 +4,24 @@
 #include <cstddef>
 #include <initializer_list>
 #include <array>
- 
+
+// Floating-point precision of the ERF<->Noah-MP coupling boundary. ERF (the
+// client) owns this: the build defines DOUBLE_PREC iff ERF/AMReX is double
+// precision, so noahmp_real always matches amrex::Real. This mirrors the
+// Fortran c_kind_noahmp parameter in utility/Machine.F90 (C_DOUBLE/C_FLOAT),
+// and the two must agree for the C<->Fortran ABI to be correct.
+#ifdef DOUBLE_PREC
+using noahmp_real = double;
+#else
+using noahmp_real = float;
+#endif
+
 template <typename T>
 struct NoahArray1D {
 
     int begin=1;
     int end=0;
-    T* data;
+    T* data = nullptr;
 
     constexpr NoahArray1D () noexcept = default;
 
@@ -38,7 +49,7 @@ struct NoahArray2D {
 
     std::array<int,2> begin={1,1};
     std::array<int,2> end={0,0};
-    T* data;
+    T* data = nullptr;
 
     constexpr NoahArray2D () noexcept = default;
 
@@ -64,7 +75,7 @@ struct NoahArray3D {
     
     std::array<int,3> begin = {1,1,1};
     std::array<int,3> end = {0,0,0};
-    T* data;
+    T* data = nullptr;
 
     constexpr NoahArray3D() noexcept = default;
 

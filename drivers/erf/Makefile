@@ -16,8 +16,20 @@ CXX      ?= mpicxx
 AR       ?= ar
 
 # --- Flags ---
-FFLAGS_NOAHMP   += -O3 -cpp -fPIC -ffree-line-length-none -DDOUBLE_PREC -J$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_INC_DIR))
-CXXFLAGS_NOAHMP += -O3 -fPIC -I$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_HOME)/drivers/erf)
+# Floating-point precision (the DOUBLE_PREC macro -> kind_noahmp) is selected by
+# the parent build via NOAHMP_PRECISION_FLAG, not hardcoded here. ERF's Make.ERF
+# passes NOAHMP_PRECISION_FLAG=-DDOUBLE_PREC because the ERF<->Noah-MP C++
+# interface is double-precision only. A standalone "make" with no override falls
+# back to Noah-MP's upstream default (single precision).
+#
+# The flag MUST be applied to BOTH the Fortran and C++ compiles: it selects
+# c_kind_noahmp (C_DOUBLE/C_FLOAT) on the Fortran side and noahmp_real
+# (double/float) on the C++ side, and the two must agree byte-for-byte or the
+# shared NoahArray element layout is corrupt. Applying it to only one language
+# is a silent ABI mismatch that the pointer-struct size check cannot detect.
+NOAHMP_PRECISION_FLAG ?=
+FFLAGS_NOAHMP   += -O3 -cpp -fPIC -ffree-line-length-none $(NOAHMP_PRECISION_FLAG) -J$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_INC_DIR))
+CXXFLAGS_NOAHMP += -O3 -fPIC $(NOAHMP_PRECISION_FLAG) -I$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_HOME)/drivers/erf)
 
 # --- NetCDF detection ---
 ifneq (, $(shell which nf-config 2>/dev/null))

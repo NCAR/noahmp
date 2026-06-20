@@ -1,6 +1,6 @@
 module NoahmpReadLandMod
 
-  use, intrinsic :: iso_c_binding, only: C_INT, C_DOUBLE, C_PTR, C_CHAR
+  use, intrinsic :: iso_c_binding, only: C_INT, C_PTR, C_CHAR
   use netcdf
   use Machine
   use NoahmpIOVarType
@@ -10,15 +10,21 @@ module NoahmpReadLandMod
   public :: NoahmpReadLandHeader, NoahmpReadLandMain
 
   private :: FATAL, NOT_FATAL, get_2d_netcdf, error_handler, get_landuse_netcdf, &
-             get_soilcat_netcdf, get_netcdf_soillevel, init_interp, get_2d_netcdf_cfloat, &
-             get_2d_netcdf_ffloat
+             get_soilcat_netcdf, get_netcdf_soillevel, init_interp, get_2d_netcdf_cfloat
+#ifdef DOUBLE_PREC
+  private :: get_2d_netcdf_ffloat
+#endif
 
   logical, parameter :: FATAL = .TRUE.
   logical, parameter :: NOT_FATAL = .FALSE.
 
   interface get_2d_netcdf
     module procedure get_2d_netcdf_cfloat
+    ! Only a distinct procedure when default real differs from c_kind_noahmp
+    ! (i.e. double-precision builds); otherwise it would be ambiguous.
+#ifdef DOUBLE_PREC
     module procedure get_2d_netcdf_ffloat
+#endif
   end interface get_2d_netcdf
 
 contains
@@ -162,14 +168,14 @@ subroutine NoahmpReadLandMain(NoahmpIO)
 
     integer :: ierr_snodep, varid
     integer :: idx, isoil
-    real, dimension(100) :: layer_bottom
-    real, dimension(100) :: layer_top
-    real, dimension(NoahmpIO%nsoil)   :: dzs
+    real(kind_noahmp), dimension(100) :: layer_bottom
+    real(kind_noahmp), dimension(100) :: layer_top
+    real(kind_noahmp), dimension(NoahmpIO%nsoil)   :: dzs
 
     real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, &
                     NoahmpIO%ystart-NoahmpIO%yoffset:NoahmpIO%yend-NoahmpIO%yoffset, NoahmpIO%nsoil) :: insoil
 
-    real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, &
+    real(kind_noahmp), dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, &
                     NoahmpIO%nsoil, &
                     NoahmpIO%ystart-NoahmpIO%yoffset:NoahmpIO%yend-NoahmpIO%yoffset) :: soildummy
 
@@ -303,7 +309,7 @@ subroutine get_2d_netcdf_cfloat(name, ncid, array, units, xstart, xend, ystart, 
     character(len=*), intent(in) :: name
     integer, intent(in) :: ncid
     integer, intent(in) :: xstart, xend, ystart, yend
-    real(c_double), dimension(xstart:xend,ystart:yend), intent(out) :: array
+    real(c_kind_noahmp), dimension(xstart:xend,ystart:yend), intent(out) :: array
     character(len=*), intent(out) :: units
     integer :: iret, varid
     ! FATAL_IF_ERROR:  an input code value:
@@ -344,6 +350,7 @@ subroutine get_2d_netcdf_cfloat(name, ncid, array, units, xstart, xend, ystart, 
 
 end subroutine get_2d_netcdf_cfloat
 
+#ifdef DOUBLE_PREC
 subroutine get_2d_netcdf_ffloat(name, ncid, array, units, xstart, xend, ystart, yend, fatal_if_error, ierr)
 
     implicit none
@@ -391,6 +398,7 @@ subroutine get_2d_netcdf_ffloat(name, ncid, array, units, xstart, xend, ystart, 
     ierr = 0;
 
 end subroutine get_2d_netcdf_ffloat
+#endif
 
 
 subroutine error_handler(status, failure, success)
@@ -465,13 +473,13 @@ subroutine get_netcdf_soillevel(name, ncid, nsoil, array, units, xstart, xend, y
     integer, intent(in) :: ncid
     integer, intent(in) :: nsoil
     integer, intent(in) :: xstart, xend, ystart, yend
-    real, dimension(xstart:xend,nsoil,ystart:yend), intent(out) :: array
+    real(kind_noahmp), dimension(xstart:xend,nsoil,ystart:yend), intent(out) :: array
     character(len=256), intent(out) :: units
-    logical, intent(in) :: fatal_if_error 
+    logical, intent(in) :: fatal_if_error
     integer, intent(out) :: ierr
 
     integer :: iret, varid, isoil
-    real:: insoil(xstart:xend,ystart:yend,nsoil)
+    real(kind_noahmp):: insoil(xstart:xend,ystart:yend,nsoil)
 
     units = " "
 
@@ -512,15 +520,15 @@ end subroutine get_netcdf_soillevel
 subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src, layer_bottom, layer_top, rank)
     implicit none
     integer, intent(in)    :: xstart, xend, ystart, yend, nsoil, nvar
-    real, dimension(nsoil) :: sldpth ! the thickness of each layer
-    real, dimension(xstart:xend, nsoil, ystart:yend), intent(out) :: var
-    real, dimension(xstart:xend, nvar, ystart:yend ), intent(in)  :: src
-    real, dimension(nvar),                            intent(in)  :: layer_bottom ! The depth from the surface of each layer bottom.
-    real, dimension(nvar),                            intent(in)  :: layer_top    ! The depth from the surface of each layer top.
+    real(kind_noahmp), dimension(nsoil) :: sldpth ! the thickness of each layer
+    real(kind_noahmp), dimension(xstart:xend, nsoil, ystart:yend), intent(out) :: var
+    real(kind_noahmp), dimension(xstart:xend, nvar, ystart:yend ), intent(in)  :: src
+    real(kind_noahmp), dimension(nvar),               intent(in)  :: layer_bottom ! The depth from the surface of each layer bottom.
+    real(kind_noahmp), dimension(nvar),               intent(in)  :: layer_top    ! The depth from the surface of each layer top.
     integer :: i, j, k, kk, ktop, kbottom
-    real, dimension(nsoil) :: dst_centerpoint
-    real, dimension(nvar)  :: src_centerpoint
-    real :: fraction
+    real(kind_noahmp), dimension(nsoil) :: dst_centerpoint
+    real(kind_noahmp), dimension(nvar)  :: src_centerpoint
+    real(kind_noahmp) :: fraction
     integer :: ierr
     integer, intent(in) :: rank
 

@@ -18,9 +18,14 @@ Maintain the same naming conventions and pointer mapping logic as existing entri
 such as `U_PHY`, `V_PHY`, and `QV_CURR`.
 
 This prompt is for ARRAY variables (wrapped in `NoahArray2D`/`NoahArray3D` and bound
-with `C_LOC` in `NoahmpIOVarInitDefault_fi`). For SCALAR variables (single `double`
+with `C_LOC` in `NoahmpIOVarInitDefault_fi`). For SCALAR variables (single `noahmp_real`
 values such as `DTBL`/`ZLVL`, bound with `C_F_POINTER` in
 `NoahmpIOScalarInitDefault_fi`), use `specs/noahmpioscalar_update.toml` instead.
+
+The ERF coupling boundary uses the `noahmp_real` C++ type alias and the matching
+Fortran `c_kind_noahmp` kind (both selected by the `DOUBLE_PREC` macro so the
+boundary precision tracks ERF/amrex::Real). Use these, NOT a hardcoded `double`
+/ `C_DOUBLE`, for new coupling variables.
 
 1. Context
 
@@ -28,7 +33,7 @@ values such as `DTBL`/`ZLVL`, bound with `C_F_POINTER` in
    **NoahmpIOVarInitMod.F90**.
 
 -  Each variable has a pointer representation in the **Fortran bind(C)** type and
-   a mirrored `double*` pointer in the C++ struct.
+   a mirrored `noahmp_real*` pointer in the C++ struct.
 
 -  During initialization:
    - Fortran code allocates arrays like:
@@ -54,13 +59,23 @@ Update the following files to include and correctly link new variables
 
 File: NoahmpIO.H
 
--  Add pointer members `double* T_PHY = nullptr;` and `double* TSK = nullptr;`
+-  Add pointer members `noahmp_real* T_PHY = nullptr;` and `noahmp_real* TSK = nullptr;`
    in `struct NoahmpIO_type_fi` immediately after similar fields like `U_PHY` and `V_PHY`.
 
--  Add corresponding `NoahArray3D<double> T_PHY;` and `NoahArray2D<double> TSK;`
+-  Add corresponding `NoahArray3D<noahmp_real> T_PHY;` and `NoahArray2D<noahmp_real> TSK;`
    members to the `class NoahmpIO_type`.
 
 -  Ensure constructor and initialization ordering are consistent with the existing pattern.
+
+-  Increment `NOAHMP_IO_FI_NUM_MEMBERS` by one per new field. This compile-time
+   constant must equal the number of members in `NoahmpIO_type_fi`; the
+   static_assert and the run-time ABI guards rely on it.
+
+-  Update the `NoahmpIO_type` MOVE constructor (`NoahmpIO_type(NoahmpIO_type&& o)`):
+   add `T_PHY(o.T_PHY),` / `TSK(o.TSK),` to the member initializer list, in the
+   same position as the member declarations. Array members are `NoahArray` views,
+   so ONLY the initializer-list copy is needed (the body re-points scalar handles
+   only; the array handles are carried over wholesale by `fptr(o.fptr)`).
 
 File: NoahmpIO.cpp
 
@@ -68,8 +83,8 @@ File: NoahmpIO.cpp
    add initialization for `T_PHY` and `TSK` as:
 
    ```
-   T_PHY = NoahArray3D<double>(fptr.T_PHY, {xstart, kms, ystart}, {xend, kme, yend});
-   TSK   = NoahArray2D<double>(fptr.TSK, {xstart, ystart}, {xend, yend});
+   T_PHY = NoahArray3D<noahmp_real>(fptr.T_PHY, {xstart, kms, ystart}, {xend, kme, yend});
+   TSK   = NoahArray2D<noahmp_real>(fptr.TSK, {xstart, ystart}, {xend, yend});
    ```
 
 -  Maintain the same comment and style as existing array initializations.
@@ -86,6 +101,18 @@ File: NoahmpIO_fi.F90
    NoahmpIO_cptr%TSK   = C_LOC(NoahmpIO_vect(level)%NoahmpIO(bid)%TSK)
    ```
 
+-  Add a positional entry for each new field to function `NoahmpIOCheckMemberOrder_fi`,
+   in the canonical order block, at the field's position:
+
+   ```
+   call chk(probe%T_PHY, 35)
+   call chk(probe%TSK,   42)
+   ```
+
+   The index is the field's zero-based position in `NoahmpIO_type_fi` (same on both
+   sides). Renumber the entries that follow so every index stays equal to its
+   position; this handshake is what catches a member reordered on only one side.
+
 File: NoahmpIOVarType.F90
 
 -  Update the variable declarations in NoahmpIO_type from:
@@ -98,16 +125,25 @@ File: NoahmpIOVarType.F90
    to:
 
    ```
-   real(kind=C_DOUBLE),    allocatable, dimension(:,:)    ::  TSK
-   real(kind=C_DOUBLE),    allocatable, dimension(:,:,:)  ::  T_PHY
+   real(kind=c_kind_noahmp), allocatable, dimension(:,:)    ::  TSK
+   real(kind=c_kind_noahmp), allocatable, dimension(:,:,:)  ::  T_PHY
    ```
 
    Note the spaces to align everything at right locations.
+   (`c_kind_noahmp` comes from module Machine; it is C_DOUBLE/C_FLOAT depending
+   on the DOUBLE_PREC macro, so the boundary precision tracks ERF/amrex::Real.)
 
 3. Validation
 
 Check that both NoahmpIO_type_fi definitions (C++ and Fortran) have identical ordering.
 Ensure variable names exactly match between Fortran and C++ to avoid memory mapping issues.
+
+Confirm the three cross-cutting bookkeeping edits are present, since each backs a
+run-time ABI guard and a missing one is silent corruption:
+  - `NOAHMP_IO_FI_NUM_MEMBERS` increased by one per field (must equal the member count);
+  - each new field copied in the `NoahmpIO_type` move constructor's initializer list;
+  - a `call chk(...)` entry added with the correct index in `NoahmpIOCheckMemberOrder_fi`,
+    with all following indices still equal to their positions.
 
 Only modify the files that are explicitly requested to modify. That is, if I don't add
 contents of the file, do not edit it.

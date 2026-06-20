@@ -1,5 +1,8 @@
 #include <NoahmpIO.H>
 #include <NoahArray.H>
+#include <array>
+#include <cstdint>
+#include <limits>
 
 extern "C" {
     void NoahmpIOScalarInitDefault_fi(NoahmpIO_type_fi* noahmpio);
@@ -14,6 +17,59 @@ extern "C" {
     void NoahmpWriteRestart_fi(NoahmpIO_type_fi* noahmpio, const char* dir, int* dir_len);
     void NoahmpReadRestart_fi(NoahmpIO_type_fi* noahmpio, const char* dir, int* dir_len);
     void NoahmpIOTypeVectInit_fi(int* level, int* NBlocks);
+}
+
+// Run-time ABI guards (size + precision + member order), executed once. See the
+// "ABI guards" comment in NoahmpIO.H for what each layer catches and why the
+// pointer-struct size check alone is insufficient.
+void NoahmpIO_AssertAbi() {
+    static const bool ok = []() -> bool {
+        // 1. Total struct size: catches a member added/removed on only one side.
+        const std::size_t fortran_size = NoahmpIOTypeFiSize_fi();
+        if (fortran_size != sizeof(NoahmpIO_type_fi)) {
+            std::cerr << "NoahmpIO ABI mismatch: Fortran NoahmpIO_type_fi is "
+                      << fortran_size << " bytes but C++ NoahmpIO_type_fi is "
+                      << sizeof(NoahmpIO_type_fi) << " bytes. The struct "
+                         "definitions in NoahmpIO.H and NoahmpIO_fi.F90 are out "
+                         "of sync." << std::endl;
+            std::abort();
+        }
+        // 2. Element precision: the struct is all pointers, so its size is the
+        //    same for float and double; this is the only size-invariant way to
+        //    catch DOUBLE_PREC applied to only one of the two compilers.
+        const std::size_t fortran_real_size = NoahmpRealSize_fi();
+        if (fortran_real_size != sizeof(noahmp_real)) {
+            std::cerr << "NoahmpIO precision mismatch: Fortran coupling real is "
+                      << fortran_real_size << " bytes but C++ noahmp_real is "
+                      << sizeof(noahmp_real) << " bytes. DOUBLE_PREC must be "
+                         "defined (or undefined) consistently for BOTH the "
+                         "Fortran and C++ compiles of the Noah-MP ERF driver."
+                      << std::endl;
+            std::abort();
+        }
+        // 3. Member order: fill slot i (in C++ declaration order) with a pointer
+        //    to an int holding i, then let Fortran confirm each named member, in
+        //    the agreed canonical order, sees its own index. A reorder on either
+        //    side -- invisible to the size/precision checks -- is caught here.
+        std::array<int, NOAHMP_IO_FI_NUM_MEMBERS> sentinel;
+        for (std::size_t i = 0; i < sentinel.size(); ++i)
+            sentinel[i] = static_cast<int>(i);
+        void* slots[NOAHMP_IO_FI_NUM_MEMBERS];
+        for (std::size_t i = 0; i < NOAHMP_IO_FI_NUM_MEMBERS; ++i)
+            slots[i] = &sentinel[i];
+        const int bad = NoahmpIOCheckMemberOrder_fi(
+            reinterpret_cast<NoahmpIO_type_fi*>(static_cast<void*>(slots)));
+        if (bad >= 0) {
+            std::cerr << "NoahmpIO ABI mismatch: member at canonical index " << bad
+                      << " is out of order between the C++ NoahmpIO_type_fi "
+                         "(NoahmpIO.H) and the Fortran bind(C) type / canonical "
+                         "list (NoahmpIO_fi.F90). The two member orders must match "
+                         "exactly." << std::endl;
+            std::abort();
+        }
+        return true;
+    }();
+    (void)ok;
 }
 
 void NoahmpIO_type::ScalarInitDefault() {
@@ -49,13 +105,25 @@ void NoahmpIO_type::WriteLand(int filenum) {
      NoahmpWriteLand_fi(&fptr, &filenum);
 };
 
+// The directory length is passed to Fortran as an int; guard against a path so
+// long that the size_t -> int cast would overflow to a bogus/negative length.
+static int checked_dir_len(const std::string& dir, const char* who) {
+     if (dir.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+         std::cerr << who << ": directory path length " << dir.size()
+                   << " exceeds INT_MAX and cannot be passed to the Fortran "
+                      "interface." << std::endl;
+         std::abort();
+     }
+     return static_cast<int>(dir.size());
+}
+
 void NoahmpIO_type::WriteRestart(const std::string& dir) {
-     int dir_len = static_cast<int>(dir.size());
+     int dir_len = checked_dir_len(dir, "NoahmpIO_type::WriteRestart");
      NoahmpWriteRestart_fi(&fptr, dir.c_str(), &dir_len);
 };
 
 void NoahmpIO_type::ReadRestart(const std::string& dir) {
-     int dir_len = static_cast<int>(dir.size());
+     int dir_len = checked_dir_len(dir, "NoahmpIO_type::ReadRestart");
      NoahmpReadRestart_fi(&fptr, dir.c_str(), &dir_len);
 };
 
@@ -64,36 +132,54 @@ void NoahmpIO_type::VarInitDefault() {
 
       NoahmpIOVarInitDefault_fi(&fptr);
 
-      XLAT     = NoahArray2D<double>(fptr.XLAT,     {xstart,ystart}, {xend,yend});
-      WSLAKEXY = NoahArray2D<double>(fptr.WSLAKEXY, {xstart,ystart}, {xend,yend});
+      XLAT     = NoahArray2D<noahmp_real>(fptr.XLAT,     {xstart,ystart}, {xend,yend});
+      WSLAKEXY = NoahArray2D<noahmp_real>(fptr.WSLAKEXY, {xstart,ystart}, {xend,yend});
 
-      T_PHY   = NoahArray3D<double>(fptr.T_PHY,   {xstart,kms,ystart}, {xend,kme,yend});
-      U_PHY   = NoahArray3D<double>(fptr.U_PHY,   {xstart,kms,ystart}, {xend,kme,yend});
-      V_PHY   = NoahArray3D<double>(fptr.V_PHY,   {xstart,kms,ystart}, {xend,kme,yend});
-      QV_CURR = NoahArray3D<double>(fptr.QV_CURR, {xstart,kms,ystart}, {xend,kme,yend});
+      T_PHY   = NoahArray3D<noahmp_real>(fptr.T_PHY,   {xstart,kms,ystart}, {xend,kme,yend});
+      U_PHY   = NoahArray3D<noahmp_real>(fptr.U_PHY,   {xstart,kms,ystart}, {xend,kme,yend});
+      V_PHY   = NoahArray3D<noahmp_real>(fptr.V_PHY,   {xstart,kms,ystart}, {xend,kme,yend});
+      QV_CURR = NoahArray3D<noahmp_real>(fptr.QV_CURR, {xstart,kms,ystart}, {xend,kme,yend});
 
-      HFX = NoahArray2D<double>(fptr.HFX, {xstart,ystart}, {xend,yend});
-      LH = NoahArray2D<double>(fptr.LH, {xstart,ystart}, {xend,yend});
+      HFX = NoahArray2D<noahmp_real>(fptr.HFX, {xstart,ystart}, {xend,yend});
+      LH = NoahArray2D<noahmp_real>(fptr.LH, {xstart,ystart}, {xend,yend});
 
-      SWDOWN = NoahArray2D<double>(fptr.SWDOWN, {xstart,ystart}, {xend,yend});
-      GLW = NoahArray2D<double>(fptr.GLW, {xstart,ystart}, {xend,yend});
-      TSK = NoahArray2D<double>(fptr.TSK, {xstart,ystart}, {xend,yend});
-      EMISS = NoahArray2D<double>(fptr.EMISS, {xstart,ystart}, {xend,yend});
+      SWDOWN = NoahArray2D<noahmp_real>(fptr.SWDOWN, {xstart,ystart}, {xend,yend});
+      GLW = NoahArray2D<noahmp_real>(fptr.GLW, {xstart,ystart}, {xend,yend});
+      TSK = NoahArray2D<noahmp_real>(fptr.TSK, {xstart,ystart}, {xend,yend});
+      EMISS = NoahArray2D<noahmp_real>(fptr.EMISS, {xstart,ystart}, {xend,yend});
 
-      ALBSFCDIRXY = NoahArray3D<double>(fptr.ALBSFCDIRXY, {xstart,1,ystart}, {xend,2,yend});
-      ALBSFCDIFXY = NoahArray3D<double>(fptr.ALBSFCDIFXY, {xstart,1,ystart}, {xend,2,yend});
+      ALBSFCDIRXY = NoahArray3D<noahmp_real>(fptr.ALBSFCDIRXY, {xstart,1,ystart}, {xend,2,yend});
+      ALBSFCDIFXY = NoahArray3D<noahmp_real>(fptr.ALBSFCDIFXY, {xstart,1,ystart}, {xend,2,yend});
 
-      COSZEN = NoahArray2D<double>(fptr.COSZEN, {xstart,ystart}, {xend,yend});
-      P8W = NoahArray3D<double>(fptr.P8W, {xstart,kms,ystart}, {xend,kme,yend});
+      COSZEN = NoahArray2D<noahmp_real>(fptr.COSZEN, {xstart,ystart}, {xend,yend});
+      P8W = NoahArray3D<noahmp_real>(fptr.P8W, {xstart,kms,ystart}, {xend,kme,yend});
 
-      TAU_EW = NoahArray2D<double>(fptr.TAU_EW, {xstart,ystart}, {xend,yend});
-      TAU_NS = NoahArray2D<double>(fptr.TAU_NS, {xstart,ystart}, {xend,yend});
+      TAU_EW = NoahArray2D<noahmp_real>(fptr.TAU_EW, {xstart,ystart}, {xend,yend});
+      TAU_NS = NoahArray2D<noahmp_real>(fptr.TAU_NS, {xstart,ystart}, {xend,yend});
 };
 
 
 void NoahmpIO_vector::resize(size_t size, size_t level) {
+     // Run-time ABI cross-checks (size, precision, member order). The Fortran
+     // bind(C) NoahmpIO_type_fi must agree with the C++ struct or the shared
+     // pointer mapping is corrupt; this catches divergences the C++ compiler
+     // cannot see. Runs once (also from NoahmpIO_type's constructor).
+     NoahmpIO_AssertAbi();
+     if (initialized_) {
+         std::cerr << "NoahmpIO_vector::resize(size, level): the block array has "
+                      "already been initialized and cannot be resized again; the "
+                      "Fortran mirror (NoahmpIO_vect) is allocated only once."
+                   << std::endl;
+         std::abort();
+     }
+     if (size == 0) {
+         std::cerr << "NoahmpIO_vector::resize(size, level): size must be > 0."
+                   << std::endl;
+         std::abort();
+     }
      std::vector<NoahmpIO_type>::resize(size);
-     int _size = size;
-     int _level = level;
+     int _size = static_cast<int>(size);
+     int _level = static_cast<int>(level);
      NoahmpIOTypeVectInit_fi(&_level, &_size);
+     initialized_ = true;
 };

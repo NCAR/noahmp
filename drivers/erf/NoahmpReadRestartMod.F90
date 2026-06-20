@@ -14,8 +14,7 @@ module NoahmpReadRestartMod
 
    use mpi
    use netcdf
-   use iso_c_binding, only : C_DOUBLE
-   use Machine, only : kind_noahmp
+   use Machine, only : kind_noahmp, c_kind_noahmp
    use NoahmpIOVarType
 
    implicit none
@@ -94,7 +93,7 @@ contains
       call get2d(ncid, "CHXY",    NoahmpIO%CHXY,     start, count, .true.)
       call get2d(ncid, "FWETXY",  NoahmpIO%FWETXY,   start, count, .true.)
       call get2d(ncid, "QSFC",    NoahmpIO%QSFC,     start, count, .true.)
-      call get2dd(ncid, "TSK",    NoahmpIO%TSK,      start, count, .true.)  ! C_DOUBLE
+      call get2dd(ncid, "TSK",    NoahmpIO%TSK,      start, count, .true.)  ! c_kind_noahmp
       call get2d(ncid, "QSNOWXY", NoahmpIO%QSNOWXY,  start, count, .true.)
       call get2d(ncid, "QRAINXY", NoahmpIO%QRAINXY,  start, count, .true.)
 
@@ -121,7 +120,7 @@ contains
       call get2d(ncid, "UDRUNOFF", NoahmpIO%UDRUNOFF,  start, count, .true.)
       call get2d(ncid, "SMSTAV",   NoahmpIO%SMSTAV,    start, count, .true.)
       call get2d(ncid, "SMSTOT",   NoahmpIO%SMSTOT,    start, count, .true.)
-      call get2dd(ncid,"EMISS",    NoahmpIO%EMISS,     start, count, .true.)  ! C_DOUBLE
+      call get2dd(ncid,"EMISS",    NoahmpIO%EMISS,     start, count, .true.)  ! c_kind_noahmp
       call get2d(ncid, "GRDFLX",   NoahmpIO%GRDFLX,    start, count, .true.)
 
       ! --- optional carbon / lake (only if allocated; missing var is skipped)
@@ -131,7 +130,7 @@ contains
       if (allocated(NoahmpIO%WOODXY))   call get2d(ncid, "WOODXY",   NoahmpIO%WOODXY,   start, count, .false.)
       if (allocated(NoahmpIO%GRAINXY))  call get2d(ncid, "GRAINXY",  NoahmpIO%GRAINXY,  start, count, .false.)
       if (allocated(NoahmpIO%GDDXY))    call get2d(ncid, "GDDXY",    NoahmpIO%GDDXY,    start, count, .false.)
-      if (allocated(NoahmpIO%WSLAKEXY)) call get2dd(ncid, "WSLAKEXY", NoahmpIO%WSLAKEXY, start, count, .false.)  ! C_DOUBLE
+      if (allocated(NoahmpIO%WSLAKEXY)) call get2dd(ncid, "WSLAKEXY", NoahmpIO%WSLAKEXY, start, count, .false.)  ! c_kind_noahmp
 
       if (NoahmpIO%blkid == (maxblocks-1)) then
          ierr = nf90_close(ncid)
@@ -163,12 +162,14 @@ contains
       end if
    end subroutine get2d
 
-   ! Variant for the few NoahmpIO 2D fields declared C_DOUBLE (TSK, EMISS,
-   ! WSLAKEXY) rather than kind_noahmp.
+   ! Variant for the few NoahmpIO 2D fields exposed on the ERF coupling boundary
+   ! (TSK, EMISS, WSLAKEXY), declared with the C-interop kind c_kind_noahmp.
+   ! c_kind_noahmp == kind_noahmp in every build, so this matches the other
+   ! fields; it is kept distinct to mark these as the C-boundary fields.
    subroutine get2dd(nc, name, arr, start, count, required)
       integer,          intent(in)    :: nc
       character(len=*), intent(in)    :: name
-      real(kind=C_DOUBLE), intent(inout) :: arr(:,:)
+      real(kind=c_kind_noahmp), intent(inout) :: arr(:,:)
       integer,          intent(in)    :: start(2), count(2)
       logical,          intent(in)    :: required
       integer :: vid, ierr
