@@ -23,6 +23,8 @@ file(GLOB NoahMP_Sources
 add_library(noahmp ${NoahMP_Sources})
 add_library(NoahMP::noahmp ALIAS noahmp)
 
+target_compile_definitions(noahmp PRIVATE DOUBLE_PREC)
+
 if("${CMAKE_Fortran_COMPILER_ID}" MATCHES "GNU")
     target_compile_options(noahmp PRIVATE "-ffree-line-length-none")
 endif()
