@@ -46,6 +46,18 @@ FFLAGS_NOAHMP += $(NETCDF_INCFLAGS)
 $(shell mkdir -p $(NOAHMP_OBJ_DIR) $(NOAHMP_LIB_DIR) $(NOAHMP_INC_DIR))
 
 # ======================================================================
+# Coupling code generation (parse time)
+# ======================================================================
+# The @NoahmpIOCoupling:<region> blocks in NoahmpIO.{H,cpp}, NoahmpIO_fi.F90 and
+# NoahmpIOVarType.F90 are expanded from the @NoahmpIOCoupling:source block in the
+# tracked *-mc templates. The generated files are gitignored (not committed), so
+# they must be (re)generated BEFORE the wildcard source discovery below picks
+# them up. The generator is stdlib-only Python and idempotent. Run it here, at
+# parse time, so a fresh checkout builds with no manual step.
+NOAHMP_CODEGEN ?= $(NOAHMP_HOME)/drivers/erf/tools/NoahmpIOCoupling.py
+$(info NoahmpIOCoupling codegen: $(shell python3 $(NOAHMP_CODEGEN) 2>&1))
+
+# ======================================================================
 # Source discovery
 # ======================================================================
 SRC_DIRS := $(NOAHMP_HOME)/src $(NOAHMP_HOME)/utility $(NOAHMP_HOME)/drivers/erf
@@ -66,9 +78,20 @@ DEPS := $(OBJS:.o=.d)
 # ======================================================================
 # Primary targets
 # ======================================================================
-.PHONY: all_noahmp clean_noahmp noahmp_includes
+.PHONY: all_noahmp clean_noahmp noahmp_includes codegen codegen-check
 
 all_noahmp: $(NOAHMP_LIB) noahmp_includes
+
+# ----------------------------------------------------------------------
+# Convenience codegen targets. The glue is already regenerated at parse time
+# above (before source discovery), so the normal build needs no extra step.
+# These let you regenerate or drift-check on demand: run `codegen` after editing
+# a *-mc template, and `codegen-check` in CI to catch drift.
+# ----------------------------------------------------------------------
+codegen:
+	@python3 $(NOAHMP_CODEGEN)
+codegen-check:
+	@python3 $(NOAHMP_CODEGEN) --check
 
 $(NOAHMP_LIB): $(OBJS)
 	@mkdir -p $(NOAHMP_LIB_DIR)
@@ -149,3 +172,8 @@ noahmp_includes:
 clean_noahmp:
 	@echo "Cleaning Noah-MP build artifacts..."
 	rm -rf $(NOAHMP_OBJ_DIR) $(NOAHMP_LIB_DIR) $(NOAHMP_INC_DIR)
+	@echo "Removing generated coupling files (expanded from *-mc templates)..."
+	rm -f $(NOAHMP_HOME)/drivers/erf/NoahmpIO.H \
+	      $(NOAHMP_HOME)/drivers/erf/NoahmpIO.cpp \
+	      $(NOAHMP_HOME)/drivers/erf/NoahmpIO_fi.F90 \
+	      $(NOAHMP_HOME)/drivers/erf/NoahmpIOVarType.F90

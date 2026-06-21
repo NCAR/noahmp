@@ -12,51 +12,13 @@
 extern "C" {
     struct NoahmpIO_type_fi {
 
-        int *ids, *ide, *jds, *jde, *kds, *kde;
-        int *ims, *ime, *jms, *jme, *kms, *kme;
-        int *its, *ite, *jts, *jte, *kts, *kte;
-        int *xstart, *xend, *ystart, *yend;
-        int *nsoil, *nsnow;
-        int *itimestep, *ntime;
-        int *rank, *blkid, *level;
-        int *comm;
+        @NoahmpIOCoupling:FiMembers();
 
-        noahmp_real* DTBL = nullptr;       // Timestep
-        noahmp_real* ZLVL = nullptr;       // Reference height [m]
-
-        noahmp_real* XLAT = nullptr;       // latitude [rad]
-        noahmp_real* WSLAKEXY = nullptr;   // lake water storage [mm]
-        noahmp_real* U_PHY = nullptr;
-        noahmp_real* T_PHY = nullptr;
-        noahmp_real* V_PHY = nullptr;
-        noahmp_real* QV_CURR = nullptr;
-        noahmp_real* HFX = nullptr;
-        noahmp_real* LH = nullptr;
-        noahmp_real* SWDOWN = nullptr;
-        noahmp_real* GLW = nullptr;
-        noahmp_real* TSK = nullptr;
-        noahmp_real* EMISS = nullptr;
-        noahmp_real* ALBSFCDIRXY = nullptr;
-        noahmp_real* ALBSFCDIFXY = nullptr;
-        noahmp_real* COSZEN = nullptr;
-        noahmp_real* P8W = nullptr;
-        noahmp_real* TAU_EW = nullptr;
-        noahmp_real* TAU_NS = nullptr;
-
-        NoahmpIO_type_fi(        
-          int* ids, int* ide, int* jds, int* jde, int* kds, int* kde,
-          int* ims, int* ime, int* jms, int* jme, int* kms, int* kme,
-          int* its, int* ite, int* jts, int* jte, int* kts, int* kte,
-          int* xstart, int* xend, int* ystart, int* yend, int* itimestep,
-          int* ntime, int* nsoil, int* nsnow, int* rank,
-          int* blkid, int* level, int *comm, noahmp_real* DTBL, noahmp_real* ZLVL
+        NoahmpIO_type_fi(
+          @NoahmpIOCoupling:FiCtorParams();
         ):
-          ids(ids), ide(ide), jds(jds), jde(jde), kds(kds), kde(kde),
-          ims(ims), ime(ime), jms(jms), jme(jme), kms(kms), kme(kme),
-          its(its), ite(ite), jts(jts), jte(jte), kts(kts), kte(kte),
-          xstart(xstart), xend(xend), ystart(ystart), yend(yend), itimestep(itimestep),
-          ntime(ntime), nsoil(nsoil), nsnow(nsnow), rank(rank), blkid(blkid), 
-          level(level), comm(comm), DTBL(DTBL), ZLVL(ZLVL) {}
+          @NoahmpIOCoupling:FiCtorInit();
+        {}
     };
 }
 
@@ -83,11 +45,13 @@ extern "C" {
 //     reordering has the same count, size, and precision, yet silently crosses
 //     the whole pointer map; only a positional handshake catches it.
 //
-// The run-time guards are all run once via NoahmpIO_AssertAbi(). If you add or
-// reorder a variable, update NoahmpIO.H, NoahmpIO_fi.F90, NOAHMP_IO_FI_NUM_MEMBERS,
-// and the canonical order list in NoahmpIOCheckMemberOrder_fi together.
+// The run-time guards are all run once via NoahmpIO_AssertAbi(). All of the above
+// (the mirror struct, NOAHMP_IO_FI_NUM_MEMBERS, and the canonical order list in
+// NoahmpIOCheckMemberOrder_fi) are generated from the single @NoahmpIOCoupling:Source
+// block, so adding or reordering a variable is a one-line edit there.
 // ---------------------------------------------------------------------------
-inline constexpr std::size_t NOAHMP_IO_FI_NUM_MEMBERS = 50;
+// Coupled member count; drives the ABI size / order guards.
+@NoahmpIOCoupling:NumMembers();
 
 static_assert(std::is_standard_layout<NoahmpIO_type_fi>::value,
               "NoahmpIO_type_fi must be standard-layout to share an ABI with the "
@@ -117,6 +81,8 @@ void NoahmpIO_AssertAbi();
 class NoahmpIO_type {
 
     public:
+        @NoahmpIOCoupling:Source {
+
         int ids, ide, jds, jde, kds, kde;
         int ims, ime, jms, jme, kms, kme;
         int its, ite, jts, jte, kts, kte;
@@ -126,34 +92,33 @@ class NoahmpIO_type {
         int rank, blkid, level;
         int comm;
 
-        noahmp_real DTBL;
-        noahmp_real ZLVL = -9999.0;    // Reference height [m]; set via C++ API or falls back to namelist
+        noahmp_real DTBL;                      // @NoahmpIOCoupling:scalar
+        noahmp_real ZLVL = -9999.0;            // @NoahmpIOCoupling:scalar
 
-        NoahArray2D<noahmp_real> XLAT;
-        NoahArray2D<noahmp_real> WSLAKEXY;
-        NoahArray3D<noahmp_real> U_PHY;
-        NoahArray3D<noahmp_real> T_PHY;
-        NoahArray3D<noahmp_real> V_PHY;
-        NoahArray3D<noahmp_real> QV_CURR;
-        NoahArray2D<noahmp_real> HFX;
-        NoahArray2D<noahmp_real> LH;
-        NoahArray2D<noahmp_real> SWDOWN;
-        NoahArray2D<noahmp_real> GLW;
-        NoahArray2D<noahmp_real> TSK;
-        NoahArray2D<noahmp_real> EMISS;
-        NoahArray3D<noahmp_real> ALBSFCDIRXY;
-        NoahArray3D<noahmp_real> ALBSFCDIFXY;
-        NoahArray2D<noahmp_real> COSZEN;
-        NoahArray3D<noahmp_real> P8W;
-        NoahArray2D<noahmp_real> TAU_EW, TAU_NS;
+        NoahArray2D<noahmp_real> XLAT;         // @NoahmpIOCoupling:bounds_2d(xstart:xend, ystart:yend)
+        NoahArray2D<noahmp_real> WSLAKEXY;     // @NoahmpIOCoupling:bounds_2d(xstart:xend, ystart:yend)
+        NoahArray3D<noahmp_real> U_PHY;        // @NoahmpIOCoupling:bounds_3d(xstart:xend, kms:kme, ystart:yend)
+        NoahArray3D<noahmp_real> T_PHY;        // @NoahmpIOCoupling:bounds_3d(xstart:xend, kms:kme, ystart:yend)
+        NoahArray3D<noahmp_real> V_PHY;        // @NoahmpIOCoupling:bounds_3d(xstart:xend, kms:kme, ystart:yend)
+        NoahArray3D<noahmp_real> QV_CURR;      // @NoahmpIOCoupling:bounds_3d(xstart:xend, kms:kme, ystart:yend)
+        NoahArray2D<noahmp_real> HFX;          // @NoahmpIOCoupling:bounds_2d(xstart:xend, ystart:yend)
+        NoahArray2D<noahmp_real> LH;           // @NoahmpIOCoupling:bounds_2d(xstart:xend, ystart:yend)
+        NoahArray2D<noahmp_real> SWDOWN;       // @NoahmpIOCoupling:bounds_2d(xstart:xend, ystart:yend)
+        NoahArray2D<noahmp_real> GLW;          // @NoahmpIOCoupling:bounds_2d(xstart:xend, ystart:yend)
+        NoahArray2D<noahmp_real> TSK;          // @NoahmpIOCoupling:bounds_2d(xstart:xend, ystart:yend)
+        NoahArray2D<noahmp_real> EMISS;        // @NoahmpIOCoupling:bounds_2d(xstart:xend, ystart:yend)
+        NoahArray3D<noahmp_real> ALBSFCDIRXY;  // @NoahmpIOCoupling:bounds_3d(xstart:xend, 1:2, ystart:yend)
+        NoahArray3D<noahmp_real> ALBSFCDIFXY;  // @NoahmpIOCoupling:bounds_3d(xstart:xend, 1:2, ystart:yend)
+        NoahArray2D<noahmp_real> COSZEN;       // @NoahmpIOCoupling:bounds_2d(xstart:xend, ystart:yend)
+        NoahArray3D<noahmp_real> P8W;          // @NoahmpIOCoupling:bounds_3d(xstart:xend, kms:kme, ystart:yend)
+        NoahArray2D<noahmp_real> TAU_EW;       // @NoahmpIOCoupling:bounds_2d(xstart:xend, ystart:yend)
+        NoahArray2D<noahmp_real> TAU_NS;       // @NoahmpIOCoupling:bounds_2d(xstart:xend, ystart:yend)
+        }
 
         NoahmpIO_type():
-          fptr(&ids, &ide, &jds, &jde, &kds, &kde,
-               &ims, &ime, &jms, &jme, &kms, &kme,
-               &its, &ite, &jts, &jte, &kts, &kte,
-               &xstart, &xend, &ystart, &yend, &itimestep,
-               &ntime, &nsoil, &nsnow, &rank, &blkid,
-               &level, &comm, &DTBL, &ZLVL) { NoahmpIO_AssertAbi(); }
+          fptr(
+            @NoahmpIOCoupling:TypeCtorFptr();
+          ) { NoahmpIO_AssertAbi(); }
 
         // fptr stores the addresses of THIS object's own scalar members, so the
         // struct is self-referential. A default memberwise copy/move would leave
@@ -167,36 +132,14 @@ class NoahmpIO_type {
         NoahmpIO_type& operator=(NoahmpIO_type&&)      = delete;
 
         NoahmpIO_type(NoahmpIO_type&& o) noexcept:
-          ids(o.ids), ide(o.ide), jds(o.jds), jde(o.jde), kds(o.kds), kde(o.kde),
-          ims(o.ims), ime(o.ime), jms(o.jms), jme(o.jme), kms(o.kms), kme(o.kme),
-          its(o.its), ite(o.ite), jts(o.jts), jte(o.jte), kts(o.kts), kte(o.kte),
-          xstart(o.xstart), xend(o.xend), ystart(o.ystart), yend(o.yend),
-          nsoil(o.nsoil), nsnow(o.nsnow),
-          itimestep(o.itimestep), ntime(o.ntime),
-          rank(o.rank), blkid(o.blkid), level(o.level),
-          comm(o.comm),
-          DTBL(o.DTBL), ZLVL(o.ZLVL),
-          XLAT(o.XLAT), WSLAKEXY(o.WSLAKEXY),
-          U_PHY(o.U_PHY), T_PHY(o.T_PHY), V_PHY(o.V_PHY), QV_CURR(o.QV_CURR),
-          HFX(o.HFX), LH(o.LH), SWDOWN(o.SWDOWN), GLW(o.GLW), TSK(o.TSK), EMISS(o.EMISS),
-          ALBSFCDIRXY(o.ALBSFCDIRXY), ALBSFCDIFXY(o.ALBSFCDIFXY),
-          COSZEN(o.COSZEN), P8W(o.P8W),
-          TAU_EW(o.TAU_EW), TAU_NS(o.TAU_NS),
+          @NoahmpIOCoupling:MoveInitList();
           fptr(o.fptr)
         {
           // fptr(o.fptr) copied all handles: the array handles (set later by the
           // Fortran side via C_LOC into Fortran-owned memory) are correct as-is;
           // the self-referential scalar handles must be re-pointed from the
           // source's members to THIS object's members.
-          fptr.ids=&ids; fptr.ide=&ide; fptr.jds=&jds; fptr.jde=&jde; fptr.kds=&kds; fptr.kde=&kde;
-          fptr.ims=&ims; fptr.ime=&ime; fptr.jms=&jms; fptr.jme=&jme; fptr.kms=&kms; fptr.kme=&kme;
-          fptr.its=&its; fptr.ite=&ite; fptr.jts=&jts; fptr.jte=&jte; fptr.kts=&kts; fptr.kte=&kte;
-          fptr.xstart=&xstart; fptr.xend=&xend; fptr.ystart=&ystart; fptr.yend=&yend;
-          fptr.nsoil=&nsoil; fptr.nsnow=&nsnow;
-          fptr.itimestep=&itimestep; fptr.ntime=&ntime;
-          fptr.rank=&rank; fptr.blkid=&blkid; fptr.level=&level;
-          fptr.comm=&comm;
-          fptr.DTBL=&DTBL; fptr.ZLVL=&ZLVL;
+          @NoahmpIOCoupling:MoveFptrRepoint();
         }
 
         void ScalarInitDefault();

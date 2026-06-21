@@ -129,33 +129,8 @@ void NoahmpIO_type::ReadRestart(const std::string& dir) {
 
 
 void NoahmpIO_type::VarInitDefault() {
-
       NoahmpIOVarInitDefault_fi(&fptr);
-
-      XLAT     = NoahArray2D<noahmp_real>(fptr.XLAT,     {xstart,ystart}, {xend,yend});
-      WSLAKEXY = NoahArray2D<noahmp_real>(fptr.WSLAKEXY, {xstart,ystart}, {xend,yend});
-
-      T_PHY   = NoahArray3D<noahmp_real>(fptr.T_PHY,   {xstart,kms,ystart}, {xend,kme,yend});
-      U_PHY   = NoahArray3D<noahmp_real>(fptr.U_PHY,   {xstart,kms,ystart}, {xend,kme,yend});
-      V_PHY   = NoahArray3D<noahmp_real>(fptr.V_PHY,   {xstart,kms,ystart}, {xend,kme,yend});
-      QV_CURR = NoahArray3D<noahmp_real>(fptr.QV_CURR, {xstart,kms,ystart}, {xend,kme,yend});
-
-      HFX = NoahArray2D<noahmp_real>(fptr.HFX, {xstart,ystart}, {xend,yend});
-      LH = NoahArray2D<noahmp_real>(fptr.LH, {xstart,ystart}, {xend,yend});
-
-      SWDOWN = NoahArray2D<noahmp_real>(fptr.SWDOWN, {xstart,ystart}, {xend,yend});
-      GLW = NoahArray2D<noahmp_real>(fptr.GLW, {xstart,ystart}, {xend,yend});
-      TSK = NoahArray2D<noahmp_real>(fptr.TSK, {xstart,ystart}, {xend,yend});
-      EMISS = NoahArray2D<noahmp_real>(fptr.EMISS, {xstart,ystart}, {xend,yend});
-
-      ALBSFCDIRXY = NoahArray3D<noahmp_real>(fptr.ALBSFCDIRXY, {xstart,1,ystart}, {xend,2,yend});
-      ALBSFCDIFXY = NoahArray3D<noahmp_real>(fptr.ALBSFCDIFXY, {xstart,1,ystart}, {xend,2,yend});
-
-      COSZEN = NoahArray2D<noahmp_real>(fptr.COSZEN, {xstart,ystart}, {xend,yend});
-      P8W = NoahArray3D<noahmp_real>(fptr.P8W, {xstart,kms,ystart}, {xend,kme,yend});
-
-      TAU_EW = NoahArray2D<noahmp_real>(fptr.TAU_EW, {xstart,ystart}, {xend,yend});
-      TAU_NS = NoahArray2D<noahmp_real>(fptr.TAU_NS, {xstart,ystart}, {xend,yend});
+      @NoahmpIOCoupling:VarInitArrays();
 };
 
 

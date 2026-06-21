@@ -1,0 +1,104 @@
+# Spec: improve the coupling code generator (tools/NoahmpIOCoupling.py).
+#
+# Usage: feed `content` to an AI tool when the task is to extend, refactor, or fix
+#        the generator itself -- a new annotation kind, a new generated region,
+#        better diagnostics, etc. Append specifics under "Actual task".
+#
+# Combine with:
+#   specs/add-coupled-variable.toml  -- the consumer of the generator. Any change
+#                                       here must keep that workflow's one-line-edit
+#                                       promise and its ABI guarantees intact.
+#
+# Documentation: https://erf.readthedocs.io/en/latest/CouplingToNoahMP.html
+
+[[chat.user]]
+content = '''
+You are a Python tooling assistant working on tools/NoahmpIOCoupling.py, the
+generator that expands the `@NoahmpIOCoupling:Source` block into the four
+generated Noah-MP <-> ERF coupling targets.
+
+PURPOSE
+Extend, refactor, or fix the generator itself.
+
+SCOPE
+This spec owns the TOOL. Using the tool to add a variable is
+specs/add-coupled-variable.toml; reach for this spec only when that one cannot
+express what you need (e.g. a binding the generator does not yet emit) or when the
+generator has a bug.
+
+WHAT THE GENERATOR GUARANTEES
+Every member on both sides of the ABI is an opaque pointer handle, so a correct
+C <-> Fortran mapping requires the SAME NUMBER of members, in the SAME ORDER, with
+the SAME element precision, and no padding. The generator exists to make those
+impossible to get wrong by hand. Any change MUST preserve:
+  1. Order = ABI order. The order of members in the Source block is canonical and
+     is propagated identically to the C++ fi struct, the Fortran bind(C) type, and
+     the NoahmpIOCheckMemberOrder_fi index handshake.
+  2. Derived count. NOAHMP_IO_FI_NUM_MEMBERS and every `call chk(probe%X, i)` index
+     are computed from the member list, never typed by hand.
+  3. Precision. Real members use noahmp_real (C++) / c_kind_noahmp (Fortran), both
+     driven by DOUBLE_PREC. Never emit a hardcoded double / C_DOUBLE.
+  4. Templates are the only hand-edited files; targets are gitignored. No marker
+     may survive into a compiled target.
+  5. Stdlib only, any Python 3. No third-party imports, no TOML.
+
+ARCHITECTURE (read the file top-to-bottom)
+    parse_source(h_text)        # @NoahmpIOCoupling:Source block -> ordered [Member]
+      Member(name, kind, rank, begin, end, doc, namelist)
+           kind in {int, scalar, array}; inferred from the C++ type
+    renderers r_*(members)      # each returns the body LINES for one region
+      H_REGIONS / CPP_REGIONS / F90_REGIONS / VARTYPE_REGIONS  # region -> renderer
+    _slice_markers(lines, region)  # find a region's marker in a template
+    apply_regions(text, ...)       # replace each call-form marker: banner+body+close
+    render_source_block(text)      # strip the Source macro -> bare C++ declarations
+    process(members)               # {target_path: new_text} for all four targets
+    main(argv)                     # write targets, or --check (exit 1 on drift + diff)
+
+Markers in the templates:
+  - Call form (every expandable region): `@NoahmpIOCoupling:Region();` on its own
+    line -- expanded in place to a banner-commented { ... } block.
+  - Block form (only @NoahmpIOCoupling:Source { ... }): the real member
+    declarations; its wrapper and per-line @NoahmpIOCoupling: annotations are
+    stripped for the compiled header (the "doc" is kept as a plain comment).
+Region names are PascalCase to match the codebase's method naming (DriverMain,
+ReadLandMain, ...). The renderer registries map each name to its body function.
+
+Rendering helpers: _wrap / _wrap_joined / _decl_lines pack several members per line
+to a soft WRAP_COL margin; _runs groups consecutive members by a key (for grouped
+declarations per pointer type). Targets are regenerated every build, so dense
+packing costs no diff noise -- readability is the only goal.
+
+HOW TO MAKE COMMON CHANGES
+  - New annotation kind / member kind: extend parse_source (and the Member slots if
+    new metadata is needed). Validate aggressively and raise
+    SystemExit("NoahmpIOCoupling: ...") with an actionable message on malformed
+    input; the existing errors are the model.
+  - New generated region: write an r_<name>(members) renderer returning body lines,
+    register it in the right *_REGIONS dict, and add the bare
+    `@NoahmpIOCoupling:<Name>();` marker to the matching *-mc template at the
+    correct indentation.
+  - Change emitted code: edit only the relevant r_* renderer. Keep the
+    c_kind_noahmp / noahmp_real precision rule and the per-index handshake intact.
+
+TESTING
+The generator has no separate unit suite; its contract is IDEMPOTENT regeneration
+and THE TARGETS COMPILE. After any change:
+  1. `make codegen` (or cmake --build <dir> --target noahmp_codegen) -- regenerate
+     the four targets without error.
+  2. `make codegen-check` (...noahmp_codegen_check) -- must exit 0; run twice to
+     confirm regeneration is idempotent (no drift on a clean tree). Prints a
+     unified diff on drift.
+  3. Build the project so the layered ABI guards run -- the compile-time
+     static_asserts (count + packing) and the run-time NoahmpIO_AssertAbi checks
+     (size, precision, member order) are the real acceptance test.
+  4. Add or move a variable in the Source block and confirm
+     specs/add-coupled-variable.toml still works end to end.
+
+The build invokes the generator automatically (Make at parse time, CMake at
+configure time), so a regression here breaks every build -- keep changes small and
+verify regeneration is a no-op on an unchanged tree.
+
+ACTUAL TASK
+Make the requested change to the generator:
+
+'''

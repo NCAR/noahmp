@@ -9,23 +9,19 @@ module NoahmpReadLandMod
 
   public :: NoahmpReadLandHeader, NoahmpReadLandMain
 
-  private :: FATAL, NOT_FATAL, get_2d_netcdf, error_handler, get_landuse_netcdf, &
-             get_soilcat_netcdf, get_netcdf_soillevel, init_interp, get_2d_netcdf_cfloat
-#ifdef DOUBLE_PREC
-  private :: get_2d_netcdf_ffloat
-#endif
+  private :: FATAL, NOT_FATAL, get_2d_netcdf, get_2d_netcdf_c, error_handler, &
+             get_landuse_netcdf, get_soilcat_netcdf, get_netcdf_soillevel, init_interp
 
   logical, parameter :: FATAL = .TRUE.
   logical, parameter :: NOT_FATAL = .FALSE.
 
-  interface get_2d_netcdf
-    module procedure get_2d_netcdf_cfloat
-    ! Only a distinct procedure when default real differs from c_kind_noahmp
-    ! (i.e. double-precision builds); otherwise it would be ambiguous.
-#ifdef DOUBLE_PREC
-    module procedure get_2d_netcdf_ffloat
-#endif
-  end interface get_2d_netcdf
+  ! get_2d_netcdf reads 2-D fields into model-precision (kind_noahmp) arrays via
+  ! the netCDF Fortran API -- it has no C boundary of its own. The few fields that
+  ! are owned by ERF's C++ side (XLAT, TSK) are read through get_2d_netcdf_c, whose
+  ! dummy carries the C-interop kind c_kind_noahmp to mark them as boundary fields,
+  ! mirroring get2d/get2dd in NoahmpReadRestartMod. c_kind_noahmp == kind_noahmp in
+  ! every build, so the two readers are otherwise identical. See the note in
+  ! Machine.F90 on c_kind_noahmp.
 
 contains
 
@@ -35,7 +31,7 @@ subroutine NoahmpReadLandHeader(NoahmpIO)
     type(NoahmpIO_type), intent(inout)  :: NoahmpIO
 
     integer :: ncid, dimid, varid, ierr
-    real, allocatable, dimension(:,:) :: dum2d
+    real(kind_noahmp), allocatable, dimension(:,:) :: dum2d  ! scratch for XLAT/XLONG -> only used to extract lat1/lon1 scalars
     character(len=256) :: units
     integer :: i
     integer :: rank
@@ -198,7 +194,7 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     yend = NoahmpIO%yend-NoahmpIO%yoffset
 
     ! Get Latitude (lat)
-    call get_2d_netcdf("XLAT", ncid, NoahmpIO%xlat,  units, xstart, xend, ystart, yend, FATAL, ierr)
+    call get_2d_netcdf_c("XLAT", ncid, NoahmpIO%xlat,  units, xstart, xend, ystart, yend, FATAL, ierr)  ! c_kind_noahmp
 
     ! Get Longitude (lon)
     call get_2d_netcdf("XLONG", ncid, NoahmpIO%xlong, units, xstart, xend, ystart, yend, FATAL, ierr)
@@ -252,7 +248,7 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     endif
 
     call get_2d_netcdf("CANWAT", ncid, NoahmpIO%canwat, units, xstart, xend, ystart, yend, FATAL, ierr)
-    call get_2d_netcdf("TSK",    ncid, NoahmpIO%tsk, units, xstart, xend, ystart, yend, FATAL, ierr)
+    call get_2d_netcdf_c("TSK",  ncid, NoahmpIO%tsk, units, xstart, xend, ystart, yend, FATAL, ierr)  ! c_kind_noahmp
     call get_2d_netcdf("SNOW",   ncid, NoahmpIO%snow, units, xstart, xend, ystart, yend, FATAL, ierr)
     call get_2d_netcdf("SNOWC",  ncid, NoahmpIO%snowc, units, xstart, xend, ystart, yend, FATAL, ierr)
 
@@ -302,7 +298,59 @@ subroutine NoahmpReadLandMain(NoahmpIO)
 
 end subroutine NoahmpReadLandMain
 
-subroutine get_2d_netcdf_cfloat(name, ncid, array, units, xstart, xend, ystart, yend, fatal_if_error, ierr)
+subroutine get_2d_netcdf(name, ncid, array, units, xstart, xend, ystart, yend, fatal_if_error, ierr)
+
+    implicit none
+
+    character(len=*), intent(in) :: name
+    integer, intent(in) :: ncid
+    integer, intent(in) :: xstart, xend, ystart, yend
+    real(kind_noahmp), dimension(xstart:xend,ystart:yend), intent(out) :: array
+    character(len=*), intent(out) :: units
+    integer :: iret, varid
+    ! FATAL_IF_ERROR:  an input code value:
+    !      .TRUE. if an error in reading the data should stop the program.
+    !      Otherwise the, IERR error flag is set, but the program continues.
+    logical, intent(in) :: fatal_if_error
+    integer, intent(out) :: ierr
+
+    units = " "
+
+    iret = nf90_inq_varid(ncid,  name,  varid)
+    if (iret /= 0) then
+       if (FATAL_IF_ERROR) then
+          print*, 'ncid = ', ncid
+          call error_handler(iret, "MODULE_ERF_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file.")
+       else
+          ierr = iret
+         return
+       endif
+    endif
+
+    iret = nf90_get_att(ncid, varid, "units", units)
+    if (iret /= 0) units = "units unknown"
+
+    iret = nf90_get_var(ncid, varid, values=array, start=(/xstart+1,ystart+1/), count=(/xend-xstart+1,yend-ystart+1/))
+
+    if (iret /= 0) then
+       if (FATAL_IF_ERROR) then
+          print*, 'ncid =', ncid
+          call error_handler(iret, "MODULE_ERF_NETCDF_IO:  Problem retrieving variable '"//trim(name)//"' from NetCDF file.")
+       else
+          ierr = iret
+          return
+       endif
+    endif
+
+    ierr = 0;
+
+end subroutine get_2d_netcdf
+
+! Variant for the 2-D fields owned by ERF's C++ side (XLAT, TSK), whose NoahmpIO
+! components carry the C-interop kind c_kind_noahmp. c_kind_noahmp == kind_noahmp
+! in every build, so this is identical to get_2d_netcdf; it is kept distinct to
+! mark these as the C-boundary fields, mirroring get2dd in NoahmpReadRestartMod.
+subroutine get_2d_netcdf_c(name, ncid, array, units, xstart, xend, ystart, yend, fatal_if_error, ierr)
 
     implicit none
 
@@ -315,11 +363,11 @@ subroutine get_2d_netcdf_cfloat(name, ncid, array, units, xstart, xend, ystart, 
     ! FATAL_IF_ERROR:  an input code value:
     !      .TRUE. if an error in reading the data should stop the program.
     !      Otherwise the, IERR error flag is set, but the program continues.
-    logical, intent(in) :: fatal_if_error 
+    logical, intent(in) :: fatal_if_error
     integer, intent(out) :: ierr
- 
+
     units = " "
-    
+
     iret = nf90_inq_varid(ncid,  name,  varid)
     if (iret /= 0) then
        if (FATAL_IF_ERROR) then
@@ -348,58 +396,7 @@ subroutine get_2d_netcdf_cfloat(name, ncid, array, units, xstart, xend, ystart, 
 
     ierr = 0;
 
-end subroutine get_2d_netcdf_cfloat
-
-#ifdef DOUBLE_PREC
-subroutine get_2d_netcdf_ffloat(name, ncid, array, units, xstart, xend, ystart, yend, fatal_if_error, ierr)
-
-    implicit none
-
-    character(len=*), intent(in) :: name
-    integer, intent(in) :: ncid
-    integer, intent(in) :: xstart, xend, ystart, yend
-    real, dimension(xstart:xend,ystart:yend), intent(out) :: array
-    character(len=*), intent(out) :: units
-    integer :: iret, varid
-    ! FATAL_IF_ERROR:  an input code value:
-    !      .TRUE. if an error in reading the data should stop the program.
-    !      Otherwise the, IERR error flag is set, but the program continues.
-    logical, intent(in) :: fatal_if_error 
-    integer, intent(out) :: ierr
- 
-    units = " "
-    
-    iret = nf90_inq_varid(ncid,  name,  varid)
-    if (iret /= 0) then
-       if (FATAL_IF_ERROR) then
-          print*, 'ncid = ', ncid
-          call error_handler(iret, "MODULE_ERF_NETCDF_IO:  Problem finding variable '"//trim(name)//"' in NetCDF file.")
-       else
-          ierr = iret
-         return
-       endif
-    endif
-
-    iret = nf90_get_att(ncid, varid, "units", units)
-    if (iret /= 0) units = "units unknown"
-
-    iret = nf90_get_var(ncid, varid, values=array, start=(/xstart+1,ystart+1/), count=(/xend-xstart+1,yend-ystart+1/))
-
-    if (iret /= 0) then
-       if (FATAL_IF_ERROR) then
-          print*, 'ncid =', ncid
-          call error_handler(iret, "MODULE_ERF_NETCDF_IO:  Problem retrieving variable '"//trim(name)//"' from NetCDF file.")
-       else
-          ierr = iret
-          return
-       endif
-    endif
-
-    ierr = 0;
-
-end subroutine get_2d_netcdf_ffloat
-#endif
-
+end subroutine get_2d_netcdf_c
 
 subroutine error_handler(status, failure, success)
     !
