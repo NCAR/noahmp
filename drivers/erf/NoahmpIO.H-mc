@@ -25,57 +25,47 @@ extern "C" {
 // ---------------------------------------------------------------------------
 // ABI guards
 //
-// NoahmpIO_type_fi mirrors the bind(C) Fortran derived type of the same name
-// in NoahmpIO_fi.F90. Every member on BOTH sides is an opaque handle (a C
-// pointer / type(C_PTR)), so a correct C<->Fortran mapping requires exactly
-// the same NUMBER of members, in the same ORDER, with no padding. No single
-// check covers all three; the guards are layered, and each catches what the
-// others cannot:
+// NoahmpIO_type_fi mirrors the bind(C) Fortran derived type of the same name in
+// NoahmpIO_fi.F90. BOTH sides are generated from the single @NoahmpIOCoupling:Source
+// block (see tools/NoahmpIOCoupling.py), so the member COUNT, ORDER, and
+// (all-pointer) TYPES are identical by construction -- they cannot drift unless
+// the generator itself is wrong, which `make codegen-check` catches in CI. The
+// former run-time size and member-order handshakes only re-verified those
+// generated facts, so they have been removed as redundant overhead.
 //
-//   * count + packing  -- static_assert below (compile time). Standard-layout
-//     and sizeof == N*sizeof(void*) pins the member count and rules out padding.
-//   * total byte size  -- NoahmpIOTypeFiSize_fi() (run time). Confirms the
-//     Fortran compiler sees the same struct size; catches a member added/removed
-//     on only one side.
+// Two hazards remain that codegen CANNOT prevent, and each keeps a guard:
+//
+//   * compiler layout / packing -- the static_assert below (compile time, free).
+//     Standard-layout + sizeof == N*sizeof(void*) pins the C++ side to a flat
+//     pointer array; the Fortran bind(C) side is guaranteed the same layout by
+//     companion-C interop. This is the only realistic way the two structs could
+//     differ (e.g. an incompatible compiler pairing), and it costs nothing.
 //   * element precision -- NoahmpRealSize_fi() (run time). The struct is all
 //     pointers, so its size is identical for float vs double; this is the only
-//     way to detect a noahmp_real vs c_kind_noahmp mismatch (DOUBLE_PREC applied
-//     to only one compiler).
-//   * member ORDER     -- NoahmpIOCheckMemberOrder_fi() (run time). A pure
-//     reordering has the same count, size, and precision, yet silently crosses
-//     the whole pointer map; only a positional handshake catches it.
+//     way to detect a noahmp_real vs c_kind_noahmp mismatch when DOUBLE_PREC is
+//     applied to only one of the two SEPARATELY-INVOKED compilers (a build-flag
+//     mismatch, which shared source cannot prevent).
 //
-// The run-time guards are all run once via NoahmpIO_AssertAbi(). All of the above
-// (the mirror struct, NOAHMP_IO_FI_NUM_MEMBERS, and the canonical order list in
-// NoahmpIOCheckMemberOrder_fi) are generated from the single @NoahmpIOCoupling:Source
-// block, so adding or reordering a variable is a one-line edit there.
+// The precision guard runs once via NoahmpIO_AssertAbi().
 // ---------------------------------------------------------------------------
-// Coupled member count; drives the ABI size / order guards.
+// Coupled member count; drives the compile-time ABI layout guard.
 @NoahmpIOCoupling:NumMembers();
 
 static_assert(std::is_standard_layout<NoahmpIO_type_fi>::value,
               "NoahmpIO_type_fi must be standard-layout to share an ABI with the "
               "Fortran bind(C) NoahmpIO_type_fi.");
 static_assert(sizeof(NoahmpIO_type_fi) == NOAHMP_IO_FI_NUM_MEMBERS * sizeof(void*),
-              "NoahmpIO_type_fi layout drifted from the Fortran bind(C) type: "
-              "unexpected member count or padding. Update NoahmpIO.H, "
-              "NoahmpIO_fi.F90, and NOAHMP_IO_FI_NUM_MEMBERS together.");
-
-// Returns sizeof(NoahmpIO_type_fi) as seen by the Fortran compiler.
-extern "C" std::size_t NoahmpIOTypeFiSize_fi();
+              "NoahmpIO_type_fi is not a flat array of pointers: unexpected "
+              "padding or member count. Both sides are generated from "
+              "@NoahmpIOCoupling:Source; run `make codegen` and rebuild.");
 
 // Returns sizeof(real(c_kind_noahmp)) as seen by the Fortran compiler.
 extern "C" std::size_t NoahmpRealSize_fi();
 
-// Positional member-order handshake: see NoahmpIOCheckMemberOrder_fi in
-// NoahmpIO_fi.F90. Returns the canonical index of the first mismatched member,
-// or -1 if every member agrees.
-extern "C" int NoahmpIOCheckMemberOrder_fi(NoahmpIO_type_fi* probe);
-
-// Runs all run-time ABI guards (size, precision, member order) exactly once,
-// aborting with a diagnostic on any mismatch. Cheap to call repeatedly. Invoked
-// from both NoahmpIO_type construction (single-instance path) and
-// NoahmpIO_vector::resize (block-array path) so neither path can skip the check.
+// Runs the run-time ABI precision guard exactly once, aborting with a diagnostic
+// on mismatch. Cheap to call repeatedly. Invoked from both NoahmpIO_type
+// construction (single-instance path) and NoahmpIO_vector::resize (block-array
+// path) so neither path can skip the check.
 void NoahmpIO_AssertAbi();
 
 class NoahmpIO_type {
@@ -88,6 +78,7 @@ class NoahmpIO_type {
         int its, ite, jts, jte, kts, kte;
         int xstart, xend, ystart, yend;
         int nsoil, nsnow;
+        int numrad = 2;        // number of shortwave radiation bands; ERF may override
         int itimestep, ntime;
         int rank, blkid, level;
         int comm;
@@ -107,8 +98,8 @@ class NoahmpIO_type {
         NoahArray2D<noahmp_real> GLW;          // @NoahmpIOCoupling:bounds_2d(xstart:xend, ystart:yend)
         NoahArray2D<noahmp_real> TSK;          // @NoahmpIOCoupling:bounds_2d(xstart:xend, ystart:yend)
         NoahArray2D<noahmp_real> EMISS;        // @NoahmpIOCoupling:bounds_2d(xstart:xend, ystart:yend)
-        NoahArray3D<noahmp_real> ALBSFCDIRXY;  // @NoahmpIOCoupling:bounds_3d(xstart:xend, 1:2, ystart:yend)
-        NoahArray3D<noahmp_real> ALBSFCDIFXY;  // @NoahmpIOCoupling:bounds_3d(xstart:xend, 1:2, ystart:yend)
+        NoahArray3D<noahmp_real> ALBSFCDIRXY;  // @NoahmpIOCoupling:bounds_3d(xstart:xend, 1:numrad, ystart:yend)
+        NoahArray3D<noahmp_real> ALBSFCDIFXY;  // @NoahmpIOCoupling:bounds_3d(xstart:xend, 1:numrad, ystart:yend)
         NoahArray2D<noahmp_real> COSZEN;       // @NoahmpIOCoupling:bounds_2d(xstart:xend, ystart:yend)
         NoahArray3D<noahmp_real> P8W;          // @NoahmpIOCoupling:bounds_3d(xstart:xend, kms:kme, ystart:yend)
         NoahArray2D<noahmp_real> TAU_EW;       // @NoahmpIOCoupling:bounds_2d(xstart:xend, ystart:yend)

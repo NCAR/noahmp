@@ -16,10 +16,17 @@
 # From that one list this script regenerates the bodies of all `NoahmpIOCoupling:<name>`
 # regions in the four generated files -- the mirrored fi struct, the constructors,
 # the move constructor, NOAHMP_IO_FI_NUM_MEMBERS, the Fortran bind(C) type, the
-# coupled members of the NoahmpIO_type storage type, the C_LOC / C_F_POINTER wiring,
-# and the NoahmpIOCheckMemberOrder_fi index handshake. The count and the indices are
-# derived, never typed by hand, so the runtime ABI guards can no longer be
-# tripped by a missed bookkeeping edit.
+# coupled members of the NoahmpIO_type storage type, and the C_LOC / C_F_POINTER
+# wiring. Because the C++ struct and the Fortran bind(C) type are emitted from the
+# SAME ordered list, their member count and order are identical by construction --
+# so the old runtime size and member-order ABI handshakes were redundant and have
+# been removed; only the (free) compile-time layout static_assert and the runtime
+# precision check (a build-flag hazard codegen cannot prevent) remain.
+#
+# As a separate, read-only safety net, --check also audits the hand-written
+# allocate() bounds in NoahmpIOVarInitMod.F90 against each array's bounds_Nd
+# annotation (see audit_allocate), since that allocate is deliberately NOT
+# generated yet must stay consistent with the C++ NoahArray extent.
 #
 # Stdlib only (regex). No TOML, no third-party libraries, any Python 3.
 #
@@ -67,6 +74,13 @@ F90_MC_FILE    = os.path.join(ROOT, "NoahmpIO_fi.F90-mc")
 F90_FILE       = os.path.join(ROOT, "NoahmpIO_fi.F90")
 VARTYPE_MC_FILE = os.path.join(ROOT, "NoahmpIOVarType.F90-mc")
 VARTYPE_FILE    = os.path.join(ROOT, "NoahmpIOVarType.F90")
+
+# Hand-written (NOT generated) file the audit reads. Each coupled array's
+# allocate() lives here; its bounds must match the array's @NoahmpIOCoupling:bounds_Nd
+# annotation, because the C++ NoahArray extent is built from the annotation while
+# this allocate is the Fortran-owned storage the C++ side points into. Nothing
+# else keeps the two in sync, so audit_allocate() cross-checks them.
+VARINIT_FILE   = os.path.join(ROOT, "NoahmpIOVarInitMod.F90")
 
 # Banner stamped onto every generated region's opening marker in the TARGET. The
 # templates carry only the bare function-call marker; this is appended by the
@@ -191,7 +205,7 @@ def parse_source(h_text):
 
         elif code.startswith("int"):
             for nm in code[3:].split(","):
-                nm = nm.strip().lstrip("*").strip()
+                nm = nm.split("=")[0].strip().lstrip("*").strip()   # drop any `= default`
                 if nm:
                     members.append(Member(nm, "int"))
         else:
@@ -365,11 +379,6 @@ def r_varinit_cloc(ms):
     return _wrap_joined(items, "    ", "; ")
 
 
-def r_checkorder(ms):
-    items = ["call chk(probe%%%s, %d)" % (m.name, i) for i, m in enumerate(ms)]
-    return _wrap_joined(items, "    ", "; ")
-
-
 def r_vartype_members(ms):
     # The coupled storage in the NoahmpIO_type derived type: int dims/handles and
     # real scalars are C-owned pointers (=> null() so their association status is
@@ -411,7 +420,6 @@ F90_REGIONS = {
     "FiTypeMembers":   r_fi_type_members,
     "ScalarInitCfptr": r_scalarinit_cfptr,
     "VarInitCloc":     r_varinit_cloc,
-    "CheckOrder":      r_checkorder,
 }
 VARTYPE_REGIONS = {
     "VarTypeMembers":  r_vartype_members,
@@ -490,6 +498,62 @@ def process(members):
     }
 
 
+def _norm_bound(b):
+    """Normalize one `lo:hi` Fortran bound for comparison: strip all whitespace
+    and case-fold (Fortran identifiers are case-insensitive, so XSTART == xstart)."""
+    return re.sub(r"\s+", "", b).lower()
+
+
+def audit_allocate(members):
+    """Cross-check each coupled ARRAY's hand-written allocate() in
+    NoahmpIOVarInitMod.F90 against its @NoahmpIOCoupling:bounds_Nd annotation.
+
+    The allocate is deliberately NOT generated (it is a single, single-file edit,
+    not a cross-file contract worth a codegen marker). But the C++ NoahArray
+    extent IS built from the annotation, and the two must agree or the C++ side
+    indexes Fortran-owned storage with the wrong stride -- silent corruption that
+    no other guard catches. This read-only audit closes that gap: it parses the
+    bound tokens of `allocate(NoahmpIO%NAME(...))` and compares them, token by
+    token, to the annotation. Returns a list of human-readable problems (empty
+    means in sync)."""
+    arrays = [m for m in members if m.kind == "array"]
+    if not arrays:
+        return []
+    try:
+        with open(VARINIT_FILE) as f:
+            text = f.read()
+    except FileNotFoundError:
+        return ["cannot open %s for the allocate audit" % os.path.basename(VARINIT_FILE)]
+
+    fname = os.path.basename(VARINIT_FILE)
+    problems = []
+    for m in arrays:
+        # allocate ( NoahmpIO%NAME ( <bounds> ) ) -- bounds carry no nested parens.
+        pat = re.compile(r"allocate\s*\(\s*NoahmpIO%%%s\s*\(([^)]*)\)" % re.escape(m.name),
+                         re.IGNORECASE)
+        hits = pat.findall(text)
+        if not hits:
+            problems.append("%s: coupled array has no `allocate(NoahmpIO%%%s(...))` "
+                            "in %s" % (m.name, m.name, fname))
+            continue
+        bounds_sets = [[p.strip() for p in h.split(",") if p.strip()] for h in hits]
+        bounds = bounds_sets[0]
+        if any(bs != bounds for bs in bounds_sets[1:]):
+            problems.append("%s: multiple allocate() statements in %s disagree on bounds"
+                            % (m.name, fname))
+        want = ["%s:%s" % (lo, hi) for lo, hi in zip(m.begin, m.end)]
+        if len(bounds) != m.rank:
+            problems.append("%s: allocate() has %d dimension(s) but the annotation "
+                            "declares %d" % (m.name, len(bounds), m.rank))
+            continue
+        for d, (got, exp) in enumerate(zip(bounds, want)):
+            if _norm_bound(got) != _norm_bound(exp):
+                problems.append("%s: dim %d allocate bound `%s` (%s) != annotation "
+                                "`%s` (bounds_%dd in NoahmpIO.H-mc)"
+                                % (m.name, d + 1, got.strip(), fname, exp, m.rank))
+    return problems
+
+
 def main(argv):
     check = "--check" in argv[1:]
     with open(H_MC_FILE) as f:
@@ -513,20 +577,38 @@ def main(argv):
         elif not check:
             pass
 
+    problems = audit_allocate(members)
+
     if check:
+        rc = 0
         if changed:
             print("\nNoahmpIOCoupling: %d file(s) are out of sync with the @NoahmpIOCoupling:Source "
                   "block in NoahmpIO.H: %s\nRun `make codegen` and commit the result."
                   % (len(changed), ", ".join(os.path.basename(p) for p in changed)),
                   file=sys.stderr)
-            return 1
-        print("NoahmpIOCoupling: %d coupling members; all generated regions are in sync."
-              % len(members))
-        return 0
+            rc = 1
+        if problems:
+            print("\nNoahmpIOCoupling: %d array allocate()/annotation mismatch(es):"
+                  % len(problems), file=sys.stderr)
+            for p in problems:
+                print("  - " + p, file=sys.stderr)
+            print("Fix the allocate() bounds in %s or the bounds_Nd annotation in "
+                  "NoahmpIO.H-mc so they agree." % os.path.basename(VARINIT_FILE),
+                  file=sys.stderr)
+            rc = 1
+        if rc == 0:
+            print("NoahmpIOCoupling: %d coupling members; all generated regions are in "
+                  "sync and array allocate() bounds match their annotations." % len(members))
+        return rc
 
     for path in changed:
         with open(path, "w") as f:
             f.write(new_texts[path])
+    if problems:
+        print("NoahmpIOCoupling: WARNING -- %d array allocate()/annotation mismatch(es) "
+              "(run `make codegen-check` for detail):" % len(problems), file=sys.stderr)
+        for p in problems:
+            print("  - " + p, file=sys.stderr)
     print("NoahmpIOCoupling: %d coupling members; updated %d file(s)%s."
           % (len(members), len(changed),
              ": " + ", ".join(os.path.basename(p) for p in changed) if changed else " (already in sync)"))

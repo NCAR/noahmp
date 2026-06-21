@@ -289,28 +289,15 @@ contains
   end subroutine NoahmpIOTypeVectInit_fi
 
   ! ---------------------------------------------------------------------------
-  ! ABI guard (run time): report sizeof(NoahmpIO_type_fi) as seen by the Fortran
-  ! compiler so the C++ side can confirm the two bind(C) struct definitions agree
-  ! byte-for-byte (see NoahmpIO_vector::resize). This catches a CHANGE IN MEMBER
-  ! COUNT or unexpected padding. It does NOT catch a pure reordering (the struct
-  ! is all C_PTR, so any permutation has the same byte size) -- member ORDER is
-  ! checked separately by NoahmpIOCheckMemberOrder_fi below.
-  ! ---------------------------------------------------------------------------
-  function NoahmpIOTypeFiSize_fi() bind(C, name="NoahmpIOTypeFiSize_fi") result(nbytes)
-    use iso_c_binding, only : C_SIZE_T, C_SIZEOF
-    implicit none
-    integer(C_SIZE_T) :: nbytes
-    type(NoahmpIO_type_fi) :: probe
-    nbytes = C_SIZEOF(probe)
-  end function NoahmpIOTypeFiSize_fi
-
-  ! ---------------------------------------------------------------------------
   ! Precision guard (run time): report sizeof(real(c_kind_noahmp)) as seen by the
-  ! Fortran compiler. NoahmpIO_type_fi is all C_PTR, so its byte size is the same
-  ! whether the coupling reals are single or double precision; NoahmpIOTypeFiSize_fi
+  ! Fortran compiler. NoahmpIO_type_fi is all C_PTR, so its byte size is identical
+  ! whether the coupling reals are single or double precision -- a size check
   ! therefore CANNOT detect a float/double mismatch between the two languages
-  ! (e.g. DOUBLE_PREC applied to only one compiler). The C++ side compares this
-  ! against sizeof(noahmp_real) to catch exactly that case (see resize()).
+  ! (e.g. DOUBLE_PREC applied to only one of the separately-invoked compilers).
+  ! The C++ side compares this against sizeof(noahmp_real) to catch exactly that
+  ! case (see NoahmpIO_AssertAbi / resize()). Member count and order need no
+  ! run-time guard: both structs are generated from @NoahmpIOCoupling:Source, so
+  ! they cannot drift, and the C++ static_assert pins the layout.
   ! ---------------------------------------------------------------------------
   function NoahmpRealSize_fi() bind(C, name="NoahmpRealSize_fi") result(nbytes)
     use iso_c_binding, only : C_SIZE_T, C_SIZEOF
@@ -320,49 +307,5 @@ contains
     real(kind=c_kind_noahmp) :: probe
     nbytes = C_SIZEOF(probe)
   end function NoahmpRealSize_fi
-
-  ! ---------------------------------------------------------------------------
-  ! Member-ORDER guard (run time). The size/precision guards above cannot detect
-  ! a field reordered on only one side, because every member is a pointer and any
-  ! permutation has the same byte size -- yet a reorder silently crosses the whole
-  ! C<->Fortran pointer map. This handshake catches it:
-  !
-  !   The C++ caller fills slot i (in C++ declaration order, i = 0..N-1) with a
-  !   pointer to an int holding the value i, then passes the struct here. For each
-  !   named member, in the agreed canonical order, we dereference it and confirm
-  !   it sees its own canonical index. If the C++ and Fortran field orders agree,
-  !   member M (canonical index k) sits at the same offset on both sides and reads
-  !   k. If either side is reordered, M reads a different slot's value -> mismatch.
-  !
-  ! Returns the canonical index of the FIRST member that fails, or -1 if every
-  ! member is in agreement. The canonical order below MUST match the C++ struct
-  ! declaration order in NoahmpIO.H (and this Fortran type's order); all three are
-  ! updated together when a field is added.
-  ! ---------------------------------------------------------------------------
-  function NoahmpIOCheckMemberOrder_fi(probe) bind(C, name="NoahmpIOCheckMemberOrder_fi") result(bad)
-    use iso_c_binding, only : C_INT, C_PTR, C_F_POINTER, c_associated
-    implicit none
-    type(NoahmpIO_type_fi), intent(in) :: probe
-    integer(C_INT) :: bad
-
-    bad = -1
-    @NoahmpIOCoupling:CheckOrder();
-
-  contains
-
-    subroutine chk(p, idx)
-      type(C_PTR),    intent(in) :: p
-      integer(C_INT), intent(in) :: idx
-      integer(C_INT), pointer    :: ip
-      if (bad >= 0) return                 ! already found a mismatch; stop at the first
-      if (.not. c_associated(p)) then
-         bad = idx
-         return
-      end if
-      call C_F_POINTER(p, ip)
-      if (ip /= idx) bad = idx
-    end subroutine chk
-
-  end function NoahmpIOCheckMemberOrder_fi
 
 end module NoahmpIO_fi

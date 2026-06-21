@@ -29,18 +29,32 @@ generator has a bug.
 WHAT THE GENERATOR GUARANTEES
 Every member on both sides of the ABI is an opaque pointer handle, so a correct
 C <-> Fortran mapping requires the SAME NUMBER of members, in the SAME ORDER, with
-the SAME element precision, and no padding. The generator exists to make those
-impossible to get wrong by hand. Any change MUST preserve:
+the SAME element precision, and no padding. The generator makes the count and
+order impossible to get wrong by hand by emitting BOTH sides from one ordered
+list, so they match BY CONSTRUCTION (no runtime size or order handshake is needed
+-- those were removed; see GUARDS below). Any change MUST preserve:
   1. Order = ABI order. The order of members in the Source block is canonical and
-     is propagated identically to the C++ fi struct, the Fortran bind(C) type, and
-     the NoahmpIOCheckMemberOrder_fi index handshake.
-  2. Derived count. NOAHMP_IO_FI_NUM_MEMBERS and every `call chk(probe%X, i)` index
-     are computed from the member list, never typed by hand.
+     is propagated identically to the C++ fi struct and the Fortran bind(C) type.
+  2. Derived count. NOAHMP_IO_FI_NUM_MEMBERS is computed from the member list,
+     never typed by hand; it drives the compile-time layout static_assert.
   3. Precision. Real members use noahmp_real (C++) / c_kind_noahmp (Fortran), both
      driven by DOUBLE_PREC. Never emit a hardcoded double / C_DOUBLE.
   4. Templates are the only hand-edited files; targets are gitignored. No marker
      may survive into a compiled target.
   5. Stdlib only, any Python 3. No third-party imports, no TOML.
+
+GUARDS (what stays, and why)
+Because count/order/types match by construction, the binding keeps ONLY the guards
+for hazards codegen CANNOT prevent. Do not reintroduce a runtime size or
+member-order handshake -- they only re-verified generated facts.
+  - compile-time static_assert (is_standard_layout + sizeof == N*sizeof(void*)) --
+    pins the C++ layout; free. Catches an incompatible compiler pairing.
+  - run-time NoahmpRealSize_fi vs sizeof(noahmp_real) (NoahmpIO_AssertAbi) --
+    catches a DOUBLE_PREC mismatch between the two SEPARATELY-INVOKED compilers
+    (a build-flag hazard shared source cannot prevent).
+  - the --check allocate audit (audit_allocate) -- compares each coupled array's
+    hand-written allocate() bounds in NoahmpIOVarInitMod.F90 against its bounds_Nd
+    annotation. Read-only; no runtime cost.
 
 ARCHITECTURE (read the file top-to-bottom)
     parse_source(h_text)        # @NoahmpIOCoupling:Source block -> ordered [Member]
@@ -52,7 +66,8 @@ ARCHITECTURE (read the file top-to-bottom)
     apply_regions(text, ...)       # replace each call-form marker: banner+body+close
     render_source_block(text)      # strip the Source macro -> bare C++ declarations
     process(members)               # {target_path: new_text} for all four targets
-    main(argv)                     # write targets, or --check (exit 1 on drift + diff)
+    audit_allocate(members)        # cross-check allocate() bounds vs bounds_Nd annotations
+    main(argv)                     # write targets, or --check (exit 1 on drift/audit + diff)
 
 Markers in the templates:
   - Call form (every expandable region): `@NoahmpIOCoupling:Region();` on its own
@@ -78,7 +93,7 @@ HOW TO MAKE COMMON CHANGES
     `@NoahmpIOCoupling:<Name>();` marker to the matching *-mc template at the
     correct indentation.
   - Change emitted code: edit only the relevant r_* renderer. Keep the
-    c_kind_noahmp / noahmp_real precision rule and the per-index handshake intact.
+    c_kind_noahmp / noahmp_real precision rule intact.
 
 TESTING
 The generator has no separate unit suite; its contract is IDEMPOTENT regeneration
@@ -88,9 +103,10 @@ and THE TARGETS COMPILE. After any change:
   2. `make codegen-check` (...noahmp_codegen_check) -- must exit 0; run twice to
      confirm regeneration is idempotent (no drift on a clean tree). Prints a
      unified diff on drift.
-  3. Build the project so the layered ABI guards run -- the compile-time
-     static_asserts (count + packing) and the run-time NoahmpIO_AssertAbi checks
-     (size, precision, member order) are the real acceptance test.
+  3. Build the project so the ABI guards run -- the compile-time static_assert
+     (layout + packing) and the run-time NoahmpIO_AssertAbi precision check are the
+     real acceptance test. (Member count/order are guaranteed by codegen, not
+     re-checked at runtime.)
   4. Add or move a variable in the Source block and confirm
      specs/add-coupled-variable.toml still works end to end.
 

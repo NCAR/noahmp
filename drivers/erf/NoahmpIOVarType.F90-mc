@@ -345,7 +345,6 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  NONRIVERXY          ! non-river portion
     real(kind=kind_noahmp)                                 ::  WTDDT  = 30.0       ! frequency of groundwater call [minutes]
     integer                                                ::  STEPWTD             ! step of groundwater call
-    integer                                                ::  NUMRAD = 2          ! number of shortwave band
 
 !------------------------------------------------------------------------
 ! Needed for SNICAR SNOW ALBEDO (IOPT_ALB = 3)

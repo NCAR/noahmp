@@ -1,7 +1,5 @@
 #include <NoahmpIO.H>
 #include <NoahArray.H>
-#include <array>
-#include <cstdint>
 #include <limits>
 
 extern "C" {
@@ -19,24 +17,15 @@ extern "C" {
     void NoahmpIOTypeVectInit_fi(int* level, int* NBlocks);
 }
 
-// Run-time ABI guards (size + precision + member order), executed once. See the
-// "ABI guards" comment in NoahmpIO.H for what each layer catches and why the
-// pointer-struct size check alone is insufficient.
+// Run-time ABI guard, executed once. Member count and order are identical by
+// construction (both structs are generated from @NoahmpIOCoupling:Source) and the
+// C++ layout is pinned by the static_assert in NoahmpIO.H, so no runtime size or
+// member-order handshake is needed. The one cross-language hazard codegen cannot
+// prevent is a precision (DOUBLE_PREC) mismatch between the two separately-invoked
+// compilers: the struct is all pointers, so its size is precision-invariant and
+// only this value check catches it. See the "ABI guards" comment in NoahmpIO.H.
 void NoahmpIO_AssertAbi() {
     static const bool ok = []() -> bool {
-        // 1. Total struct size: catches a member added/removed on only one side.
-        const std::size_t fortran_size = NoahmpIOTypeFiSize_fi();
-        if (fortran_size != sizeof(NoahmpIO_type_fi)) {
-            std::cerr << "NoahmpIO ABI mismatch: Fortran NoahmpIO_type_fi is "
-                      << fortran_size << " bytes but C++ NoahmpIO_type_fi is "
-                      << sizeof(NoahmpIO_type_fi) << " bytes. The struct "
-                         "definitions in NoahmpIO.H and NoahmpIO_fi.F90 are out "
-                         "of sync." << std::endl;
-            std::abort();
-        }
-        // 2. Element precision: the struct is all pointers, so its size is the
-        //    same for float and double; this is the only size-invariant way to
-        //    catch DOUBLE_PREC applied to only one of the two compilers.
         const std::size_t fortran_real_size = NoahmpRealSize_fi();
         if (fortran_real_size != sizeof(noahmp_real)) {
             std::cerr << "NoahmpIO precision mismatch: Fortran coupling real is "
@@ -45,26 +34,6 @@ void NoahmpIO_AssertAbi() {
                          "defined (or undefined) consistently for BOTH the "
                          "Fortran and C++ compiles of the Noah-MP ERF driver."
                       << std::endl;
-            std::abort();
-        }
-        // 3. Member order: fill slot i (in C++ declaration order) with a pointer
-        //    to an int holding i, then let Fortran confirm each named member, in
-        //    the agreed canonical order, sees its own index. A reorder on either
-        //    side -- invisible to the size/precision checks -- is caught here.
-        std::array<int, NOAHMP_IO_FI_NUM_MEMBERS> sentinel;
-        for (std::size_t i = 0; i < sentinel.size(); ++i)
-            sentinel[i] = static_cast<int>(i);
-        void* slots[NOAHMP_IO_FI_NUM_MEMBERS];
-        for (std::size_t i = 0; i < NOAHMP_IO_FI_NUM_MEMBERS; ++i)
-            slots[i] = &sentinel[i];
-        const int bad = NoahmpIOCheckMemberOrder_fi(
-            reinterpret_cast<NoahmpIO_type_fi*>(static_cast<void*>(slots)));
-        if (bad >= 0) {
-            std::cerr << "NoahmpIO ABI mismatch: member at canonical index " << bad
-                      << " is out of order between the C++ NoahmpIO_type_fi "
-                         "(NoahmpIO.H) and the Fortran bind(C) type / canonical "
-                         "list (NoahmpIO_fi.F90). The two member orders must match "
-                         "exactly." << std::endl;
             std::abort();
         }
         return true;
@@ -135,10 +104,9 @@ void NoahmpIO_type::VarInitDefault() {
 
 
 void NoahmpIO_vector::resize(size_t size, size_t level) {
-     // Run-time ABI cross-checks (size, precision, member order). The Fortran
-     // bind(C) NoahmpIO_type_fi must agree with the C++ struct or the shared
-     // pointer mapping is corrupt; this catches divergences the C++ compiler
-     // cannot see. Runs once (also from NoahmpIO_type's constructor).
+     // Run-time ABI precision cross-check (DOUBLE_PREC must match across the two
+     // compilers). Layout/order are guaranteed by codegen + the static_assert in
+     // NoahmpIO.H. Runs once (also from NoahmpIO_type's constructor).
      NoahmpIO_AssertAbi();
      if (initialized_) {
          std::cerr << "NoahmpIO_vector::resize(size, level): the block array has "

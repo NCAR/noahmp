@@ -214,7 +214,11 @@ contains
        stop " ***** ERROR: Problem reading namelist NOAHLSM_OFFLINE"
     endif
     close(30)
-  
+
+    ! Use the ERF-coupled zlvl if it was set externally; otherwise fall back
+    ! to the namelist value (which has just been read above).
+    if (NoahmpIO%zlvl == undefined_real) NoahmpIO%zlvl = zlvl
+
     NoahmpIO%DTBL            = real(noah_timestep)
     NoahmpIO%soiltstep       = soil_timestep
     NoahmpIO%NSOIL           = nsoil
@@ -342,8 +346,8 @@ contains
          if (NoahmpIO%rank == 0) write(*, *)
          stop
        endif
-       NoahmpIO%num_urban_atmosphere = int(zlvl/urban_atmosphere_thickness)
-       if (zlvl - NoahmpIO%num_urban_atmosphere*urban_atmosphere_thickness >= 0.5*urban_atmosphere_thickness)  &
+       NoahmpIO%num_urban_atmosphere = int(NoahmpIO%zlvl/urban_atmosphere_thickness)
+       if (NoahmpIO%zlvl - NoahmpIO%num_urban_atmosphere*urban_atmosphere_thickness >= 0.5*urban_atmosphere_thickness)  &
            NoahmpIO%num_urban_atmosphere = NoahmpIO%num_urban_atmosphere + 1
        if ( NoahmpIO%num_urban_atmosphere <= 2) then
          if (NoahmpIO%rank == 0) write(*, *)
@@ -427,7 +431,6 @@ contains
     NoahmpIO%split_output_count                = split_output_count
     NoahmpIO%skip_first_output                 = skip_first_output
     NoahmpIO%kday                              = kday
-    if (NoahmpIO%zlvl == undefined_real) NoahmpIO%zlvl = zlvl
     NoahmpIO%erf_setup_file_01                 = erf_setup_file_01
     NoahmpIO%erf_setup_file_02                 = erf_setup_file_02
     NoahmpIO%erf_setup_file_03                 = erf_setup_file_03
