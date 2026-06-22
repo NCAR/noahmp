@@ -1,56 +1,60 @@
 #!/usr/bin/env python3
 # =============================================================================
-# NoahmpIOCoupling.py -- expand the Noah-MP <-> ERF coupling member list into every
+# NoahmpMacro.py -- expand the Noah-MP <-> ERF coupling member list into every
 # place the C<->Fortran ABI needs it.
 # =============================================================================
 # SINGLE SOURCE OF TRUTH: the member declarations of `class NoahmpIO_type` in
-# NoahmpIO.H-mc, wrapped in the `@NoahmpIOCoupling:Source { ... }` marker block.
+# NoahmpIO.H-mc, wrapped in the `@NoahmpMacro:Source { ... }` marker block.
 # Their ORDER is the canonical ABI order. Member kind is inferred from the C++
-# type and annotated with a `@NoahmpIOCoupling:` macro in a trailing comment:
+# type and annotated with a `@NoahmpMacro:` macro in a trailing comment:
 #
 #     int <names>;                                                       -> int handle(s) (no annotation)
-#     noahmp_real NAME [= init];  // @NoahmpIOCoupling:scalar [namelist] ["doc"]    -> real scalar
-#     NoahArray2D<noahmp_real> N; // @NoahmpIOCoupling:bounds_2d(lo:hi, lo:hi) ["doc"]        -> 2-D array
-#     NoahArray3D<noahmp_real> N; // @NoahmpIOCoupling:bounds_3d(lo:hi, lo:hi, lo:hi) ["doc"] -> 3-D array
+#     noahmp_real NAME [= init];  // @NoahmpMacro:scalar [doc="..."]          -> real scalar
+#     NoahmpArray2D<noahmp_real> N; // @NoahmpMacro:bounds_2d(lo:hi, lo:hi) [doc="..."]        -> 2-D array
+#     NoahmpArray3D<noahmp_real> N; // @NoahmpMacro:bounds_3d(lo:hi, lo:hi, lo:hi) [doc="..."] -> 3-D array
 #
-# From that one list this script regenerates the bodies of all `NoahmpIOCoupling:<name>`
-# regions in the four generated files -- the mirrored fi struct, the constructors,
+# From that one list this script regenerates the bodies of all `NoahmpMacro:<name>`
+# regions in the five generated files -- the mirrored fi struct, the constructors,
 # the move constructor, NOAHMP_IO_FI_NUM_MEMBERS, the Fortran bind(C) type, the
-# coupled members of the NoahmpIO_type storage type, and the C_LOC / C_F_POINTER
-# wiring. Because the C++ struct and the Fortran bind(C) type are emitted from the
-# SAME ordered list, their member count and order are identical by construction --
-# so the old runtime size and member-order ABI handshakes were redundant and have
-# been removed; only the (free) compile-time layout static_assert and the runtime
-# precision check (a build-flag hazard codegen cannot prevent) remain.
+# coupled members of the NoahmpIO_type storage type, the C_LOC / C_F_POINTER
+# wiring, and the Fortran allocate() of the coupled arrays. Because the C++ struct
+# and the Fortran bind(C) type are emitted from the SAME ordered list, their member
+# count and order are identical by construction -- so the old runtime size and
+# member-order ABI handshakes were redundant and have been removed; only the (free)
+# compile-time layout static_assert and the runtime precision check (a build-flag
+# hazard codegen cannot prevent) remain.
 #
-# As a separate, read-only safety net, --check also audits the hand-written
-# allocate() bounds in NoahmpIOVarInitMod.F90 against each array's bounds_Nd
-# annotation (see audit_allocate), since that allocate is deliberately NOT
-# generated yet must stay consistent with the C++ NoahArray extent.
+# The Fortran-owned allocate() of each coupled array (in NoahmpIOVarInitMod.F90) is
+# emitted from the SAME bounds_Nd annotation that drives the C++ NoahmpArray extent,
+# so the two can no longer disagree by construction. (This replaces an older
+# read-only audit that compared a hand-written allocate against the annotation.)
 #
 # Stdlib only (regex). No TOML, no third-party libraries, any Python 3.
 #
 # Only the tracked `*-mc` TEMPLATES are edited by hand:
-#     NoahmpIO.H-mc, NoahmpIO.cpp-mc, NoahmpIO_fi.F90-mc, NoahmpIOVarType.F90-mc
-# Each carries bare, function-call `@NoahmpIOCoupling:Region();` markers (PascalCase,
+#     NoahmpIO.H-mc, NoahmpIO.cpp-mc, NoahmpIO_fi.F90-mc, NoahmpIOVarType.F90-mc,
+#     NoahmpIOVarInitMod.F90-mc
+# Each carries bare, function-call `@NoahmpMacro:Region();` markers (PascalCase,
 # like the codebase's DriverMain / ReadLandMain methods). The lone block marker is
-# `@NoahmpIOCoupling:Source { ... }`: an un-commented macro whose body is the real
+# `@NoahmpMacro:Source { ... }`: an un-commented macro whose body is the real
 # member declarations. The generator strips its wrapper and the per-line
-# `@NoahmpIOCoupling:` annotations (keeping any "doc" as a plain comment) so no
+# `@NoahmpMacro:` annotations (keeping any "doc" as a plain comment) so no
 # marker reaches the compiled header. This script expands every marker into its
-# do-not-edit body and writes the four GENERATED, gitignored targets (NoahmpIO.H,
-# NoahmpIO.cpp, NoahmpIO_fi.F90, NoahmpIOVarType.F90). The build runs this before
-# compiling, so the targets are never committed -- only the templates are. The
+# do-not-edit body and writes the five GENERATED, gitignored targets (NoahmpIO.H,
+# NoahmpIO.cpp, NoahmpIO_fi.F90, NoahmpIOVarType.F90, NoahmpIOVarInitMod.F90). The
+# build runs this before compiling, so the targets are never committed -- only the
+# templates are. The
 # generated list-regions are packed several members per line (fixed-width wrap);
 # the targets are regenerated every build, so density costs no diff noise.
 #
 # Usage:
-#   python3 tools/NoahmpIOCoupling.py            # (re)generate the targets
-#   python3 tools/NoahmpIOCoupling.py --check    # fail (exit 1) if regen would change
+#   python3 tools/NoahmpMacro.py            # (re)generate the targets
+#   python3 tools/NoahmpMacro.py --check    # fail (exit 1) if regen would change
 #
-# Adding a coupled variable: add ONE annotated line to the @NoahmpIOCoupling:Source
-# block in NoahmpIO.H-mc and rebuild. (Non-boundary edits -- the allocate() and any
-# namelist guard -- remain manual; see specs/add-coupled-variable.toml)
+# Adding a coupled variable: add ONE annotated line to the @NoahmpMacro:Source
+# block in NoahmpIO.H-mc and rebuild -- for an array the bounds_Nd annotation also
+# generates its Fortran allocate(). (Any namelist guard remains manual; see
+# dev/spec-add-coupled-variable.md)
 # =============================================================================
 
 import os
@@ -63,8 +67,8 @@ ROOT = os.path.dirname(SCRIPT_DIR)            # drivers/erf
 
 # Each generated file is produced from a tracked `*-mc` TEMPLATE into a gitignored
 # TARGET that the build (re)creates every time. The templates carry only bare
-# `@NoahmpIOCoupling:Region();` markers; the generator expands each into the
-# do-not-edit body below. The single source of truth (the @NoahmpIOCoupling:Source
+# `@NoahmpMacro:Region();` markers; the generator expands each into the
+# do-not-edit body below. The single source of truth (the @NoahmpMacro:Source
 # member list) lives in NoahmpIO.H-mc.
 H_MC_FILE      = os.path.join(ROOT, "NoahmpIO.H-mc")
 H_FILE         = os.path.join(ROOT, "NoahmpIO.H")
@@ -74,34 +78,28 @@ F90_MC_FILE    = os.path.join(ROOT, "NoahmpIO_fi.F90-mc")
 F90_FILE       = os.path.join(ROOT, "NoahmpIO_fi.F90")
 VARTYPE_MC_FILE = os.path.join(ROOT, "NoahmpIOVarType.F90-mc")
 VARTYPE_FILE    = os.path.join(ROOT, "NoahmpIOVarType.F90")
-
-# Hand-written (NOT generated) file the audit reads. Each coupled array's
-# allocate() lives here; its bounds must match the array's @NoahmpIOCoupling:bounds_Nd
-# annotation, because the C++ NoahArray extent is built from the annotation while
-# this allocate is the Fortran-owned storage the C++ side points into. Nothing
-# else keeps the two in sync, so audit_allocate() cross-checks them.
-VARINIT_FILE   = os.path.join(ROOT, "NoahmpIOVarInitMod.F90")
+VARINIT_MC_FILE = os.path.join(ROOT, "NoahmpIOVarInitMod.F90-mc")
+VARINIT_FILE    = os.path.join(ROOT, "NoahmpIOVarInitMod.F90")
 
 # Banner stamped onto every generated region's opening marker in the TARGET. The
 # templates carry only the bare function-call marker; this is appended by the
 # generator so the warning lands only in the generated output, never in the template.
-BANNER = "— GENERATED from @NoahmpIOCoupling:Source in NoahmpIO.H-mc, do not edit"
+BANNER = "generated by tools/NoahmpMacro.py from NoahmpIO.H-mc, do not edit"
 
 
 # ---------------------------------------------------------------------------
-# Parse the @NoahmpIOCoupling:Source block of NoahmpIO.H into an ordered member list.
+# Parse the @NoahmpMacro:Source block of NoahmpIO.H into an ordered member list.
 # ---------------------------------------------------------------------------
 class Member:
-    __slots__ = ("name", "kind", "rank", "begin", "end", "doc", "namelist")
+    __slots__ = ("name", "kind", "rank", "begin", "end", "doc")
 
-    def __init__(self, name, kind, rank=0, begin=None, end=None, doc="", namelist=False):
+    def __init__(self, name, kind, rank=0, begin=None, end=None, doc=""):
         self.name = name
         self.kind = kind            # 'int' | 'scalar' | 'array'
         self.rank = rank
         self.begin = begin or []
         self.end = end or []
         self.doc = doc
-        self.namelist = namelist
 
 
 def _slice_markers(lines, region, cc):
@@ -111,13 +109,13 @@ def _slice_markers(lines, region, cc):
       * function-call (the convention for every expandable region). The template
         is never compiled directly, so the marker carries no comment prefix and
         reads like a call:
-            <indent>@NoahmpIOCoupling:Region();
+            <indent>@NoahmpMacro:Region();
         here begin_index == end_index (the single line is both open and close);
-      * block (only @NoahmpIOCoupling:Source, whose body is the real member
+      * block (only @NoahmpMacro:Source, whose body is the real member
         declarations). It is an un-commented macro too -- the generator strips the
         wrapper (and the per-line annotations) so nothing reaches the compiled
         output:
-            <indent>@NoahmpIOCoupling:Region { ...
+            <indent>@NoahmpMacro:Region { ...
             ...
             <indent>}
         terminated by the next bare `}` line. The optional `cc` prefix is still
@@ -126,14 +124,14 @@ def _slice_markers(lines, region, cc):
 
     Errors if the marker is missing/duplicated or a block opener has no matching
     closer."""
-    call_re  = re.compile(r"^\s*@NoahmpIOCoupling:%s\s*\(\s*\)\s*;\s*$" % re.escape(region))
-    block_re = re.compile(r"^\s*(?:%s\s*)?@NoahmpIOCoupling:%s\b.*\{" % (re.escape(cc), re.escape(region)))
+    call_re  = re.compile(r"^\s*@NoahmpMacro:%s\s*\(\s*\)\s*;\s*$" % re.escape(region))
+    block_re = re.compile(r"^\s*(?:%s\s*)?@NoahmpMacro:%s\b.*\{" % (re.escape(cc), re.escape(region)))
     close_re = re.compile(r"^\s*(?:%s\s*)?\}\s*$" % re.escape(cc))
     hits = [(i, "call") for i, l in enumerate(lines) if call_re.match(l)]
     hits += [(i, "block") for i, l in enumerate(lines) if block_re.search(l)]
     if len(hits) != 1:
-        raise SystemExit("NoahmpIOCoupling: expected exactly one "
-                         "'@NoahmpIOCoupling:%s();' marker (found %d)"
+        raise SystemExit("NoahmpMacro: expected exactly one "
+                         "'@NoahmpMacro:%s();' marker (found %d)"
                          % (region, len(hits)))
     b, form = hits[0]
     if form == "call":
@@ -141,8 +139,8 @@ def _slice_markers(lines, region, cc):
     for j in range(b + 1, len(lines)):
         if close_re.match(lines[j]):
             return b, j
-    raise SystemExit("NoahmpIOCoupling: no closing '%s }' marker for "
-                     "@NoahmpIOCoupling:%s" % (cc, region))
+    raise SystemExit("NoahmpMacro: no closing '%s }' marker for "
+                     "@NoahmpMacro:%s" % (cc, region))
 
 
 def parse_source(h_text):
@@ -154,7 +152,7 @@ def parse_source(h_text):
         if raw.strip().startswith("//"):
             continue                                   # comment-only line (usage note, closing brace)
         # Split the declaration from its trailing // comment; the annotation, if
-        # any, is a @NoahmpIOCoupling: macro inside that comment.
+        # any, is a @NoahmpMacro: macro inside that comment.
         if "//" in raw:
             code, annot = raw.split("//", 1)
         else:
@@ -164,44 +162,42 @@ def parse_source(h_text):
             continue                                   # blank / comment-only line
         code = code[:-1].strip()                        # drop trailing ';'
 
-        if code.startswith("NoahArray"):
-            m = re.match(r"NoahArray([23])D<noahmp_real>\s+(\w+)$", code)
+        if code.startswith("NoahmpArray"):
+            m = re.match(r"NoahmpArray([23])D<noahmp_real>\s+(\w+)$", code)
             if not m:
-                raise SystemExit("NoahmpIOCoupling: cannot parse array decl: %r" % raw)
+                raise SystemExit("NoahmpMacro: cannot parse array decl: %r" % raw)
             rank, name = int(m.group(1)), m.group(2)
-            mb = re.search(r"@NoahmpIOCoupling:bounds_([23])d\s*\(([^)]*)\)", annot)
+            mb = re.search(r"@NoahmpMacro:bounds_([23])d\s*\(([^)]*)\)", annot)
             if not mb:
-                raise SystemExit("NoahmpIOCoupling: array %s needs a "
-                                 "@NoahmpIOCoupling:bounds_%dd(lo:hi, ...) annotation" % (name, rank))
+                raise SystemExit("NoahmpMacro: array %s needs a "
+                                 "@NoahmpMacro:bounds_%dd(lo:hi, ...) annotation" % (name, rank))
             if int(mb.group(1)) != rank:
-                raise SystemExit("NoahmpIOCoupling: array %s is %d-D but annotated bounds_%sd"
+                raise SystemExit("NoahmpMacro: array %s is %d-D but annotated bounds_%sd"
                                  % (name, rank, mb.group(1)))
             pairs = [p.strip() for p in mb.group(2).split(",") if p.strip()]
             if len(pairs) != rank:
-                raise SystemExit("NoahmpIOCoupling: array %s is %d-D but has %d bound pairs"
+                raise SystemExit("NoahmpMacro: array %s is %d-D but has %d bound pairs"
                                  % (name, rank, len(pairs)))
             begin, end = [], []
             for p in pairs:
                 if p.count(":") != 1:
-                    raise SystemExit("NoahmpIOCoupling: bad bound %r for %s (want lo:hi)"
+                    raise SystemExit("NoahmpMacro: bad bound %r for %s (want lo:hi)"
                                      % (p, name))
                 lo, hi = (s.strip() for s in p.split(":"))
                 begin.append(lo)
                 end.append(hi)
-            members.append(Member(name, "array", rank, begin, end, _doc(annot)))
+            members.append(Member(name, "array", rank, begin, end, _doc(annot, name)))
 
         elif code.startswith("noahmp_real"):
             m = re.match(r"noahmp_real\s+(\w+)\s*(=.*)?$", code)
             if not m:
-                raise SystemExit("NoahmpIOCoupling: cannot parse scalar decl: %r" % raw)
-            sm = re.search(r"@NoahmpIOCoupling:scalar\b(.*)", annot)
+                raise SystemExit("NoahmpMacro: cannot parse scalar decl: %r" % raw)
+            sm = re.search(r"@NoahmpMacro:scalar\b(.*)", annot)
             if not sm:
-                raise SystemExit("NoahmpIOCoupling: scalar %s needs a "
-                                 "@NoahmpIOCoupling:scalar [namelist] [\"doc\"] annotation"
+                raise SystemExit("NoahmpMacro: scalar %s needs a "
+                                 "@NoahmpMacro:scalar [doc=\"...\"] annotation"
                                  % m.group(1))
-            flags = re.sub(r'"[^"]*"', "", sm.group(1)).split()   # words outside the doc string
-            members.append(Member(m.group(1), "scalar", doc=_doc(annot),
-                                  namelist=("namelist" in flags)))
+            members.append(Member(m.group(1), "scalar", doc=_doc(annot, m.group(1))))
 
         elif code.startswith("int"):
             for nm in code[3:].split(","):
@@ -209,20 +205,46 @@ def parse_source(h_text):
                 if nm:
                     members.append(Member(nm, "int"))
         else:
-            raise SystemExit("NoahmpIOCoupling: unrecognised member decl in @NoahmpIOCoupling:Source: %r" % raw)
+            raise SystemExit("NoahmpMacro: unrecognised member decl in @NoahmpMacro:Source: %r" % raw)
 
     for m in members:
         if m.name in seen:
-            raise SystemExit("NoahmpIOCoupling: duplicate member name %r" % m.name)
+            raise SystemExit("NoahmpMacro: duplicate member name %r" % m.name)
         seen.add(m.name)
     if not members:
-        raise SystemExit("NoahmpIOCoupling: @NoahmpIOCoupling:Source block is empty")
+        raise SystemExit("NoahmpMacro: @NoahmpMacro:Source block is empty")
+
+    # Validate every array bound token now that all members are known (so it is
+    # independent of where the int dims sit relative to the arrays). Each token is
+    # emitted verbatim into BOTH the C++ NoahmpArray extent and the Fortran
+    # allocate(), so it must resolve to the SAME integer on both sides: an integer
+    # literal (negative lower bounds allowed) or a declared int member. This turns
+    # a typo'd/renamed dimension from an opaque downstream compile error into a
+    # named SystemExit here. (It checks token IDENTITY, not whether the int is
+    # semantically a dimension, nor the dimension order.)
+    int_names = {m.name for m in members if m.kind == "int"}
+    for m in members:
+        if m.kind != "array":
+            continue
+        for tok in m.begin + m.end:
+            if not (re.match(r"^-?\d+$", tok) or tok in int_names):
+                raise SystemExit("NoahmpMacro: array %s bound %r is neither an "
+                                 "integer literal nor a declared int member (typo?)"
+                                 % (m.name, tok))
     return members
 
 
-def _doc(annot):
-    m = re.search(r'"([^"]*)"', annot)
-    return m.group(1) if m else ""
+def _doc(annot, where):
+    """Extract the optional doc string. STRICT: a doc MUST be written as
+    doc="..."; a bare quoted string is rejected so the annotation grammar stays
+    unambiguous. `where` names the member for the error message."""
+    m = re.search(r'\bdoc\s*=\s*"([^"]*)"', annot)
+    doc = m.group(1) if m else ""
+    leftover = re.sub(r'\bdoc\s*=\s*"[^"]*"', "", annot)   # strip the valid doc=, keep the rest
+    if '"' in leftover:
+        raise SystemExit('NoahmpMacro: %s: a doc string must be written as '
+                         'doc="..." (a bare "..." is not allowed)' % where)
+    return doc
 
 
 # ---------------------------------------------------------------------------
@@ -358,8 +380,26 @@ def r_varinit_arrays(ms):
     for m in ms:
         if m.kind != "array":
             continue
-        out.append("      %s = NoahArray%dD<noahmp_real>(fptr.%s, {%s}, {%s});"
+        out.append("      %s = NoahmpArray%dD<noahmp_real>(fptr.%s, {%s}, {%s});"
                    % (m.name, m.rank, m.name, ",".join(m.begin), ",".join(m.end)))
+    return out
+
+
+def r_varinit_allocate(ms):
+    # The Fortran-owned storage the C++ NoahmpArray points into. Generated from the
+    # SAME bounds_Nd annotation that drives the C++ extent (r_varinit_arrays), so
+    # the two can no longer drift -- this region replaces the old read-only
+    # allocate audit. Emitted inside NoahmpIOVarInitDefault's `associate`, so the
+    # bound names (xstart, kms, numrad, ...) resolve via its aliases; the guard
+    # keeps it idempotent. One statement per line stays clearest.
+    out = []
+    for m in ms:
+        if m.kind != "array":
+            continue
+        bounds = ", ".join("%s:%s" % (lo, hi) for lo, hi in zip(m.begin, m.end))
+        doc = "  ! " + m.doc if m.doc else ""
+        out.append("    if ( .not. allocated (NoahmpIO%%%s) ) allocate ( NoahmpIO%%%s (%s) )%s"
+                   % (m.name, m.name, bounds, doc))
     return out
 
 
@@ -424,6 +464,9 @@ F90_REGIONS = {
 VARTYPE_REGIONS = {
     "VarTypeMembers":  r_vartype_members,
 }
+VARINIT_REGIONS = {
+    "VarInitAllocate": r_varinit_allocate,
+}
 
 
 # ---------------------------------------------------------------------------
@@ -434,14 +477,14 @@ def apply_regions(text, regions, members, cc):
     # Replace from the bottom up so earlier indices stay valid.
     for region in sorted(regions, key=lambda r: _slice_markers(lines, r, cc)[0], reverse=True):
         bi, ei = _slice_markers(lines, region, cc)
-        # Expand the `@NoahmpIOCoupling:Region();` template marker into the generated
+        # Expand the `@NoahmpMacro:Region();` template marker into the generated
         # block: an opening comment marker carrying the GENERATED/do-not-edit banner,
         # the rendered body, and a matching closing comment marker -- all at the
         # template marker's own indentation. The banner therefore lands only on the
         # TARGET, never on the tracked template.
         indent = re.match(r"\s*", lines[bi]).group(0)
-        open_marker  = "%s%s @NoahmpIOCoupling:%s { %s" % (indent, cc, region, BANNER)
-        close_marker = "%s%s }" % (indent, cc)
+        open_marker  = "%s%s %s -- %s" % (indent, cc, region, BANNER)
+        close_marker = "%s%s end %s" % (indent, cc, region)
         body = regions[region](members)
         lines = lines[:bi] + [open_marker] + body + [close_marker] + lines[ei + 1:]
     out = "\n".join(lines)
@@ -451,10 +494,10 @@ def apply_regions(text, regions, members, cc):
 
 
 def render_source_block(text):
-    """Expand the @NoahmpIOCoupling:Source { ... } block of the H template into the
+    """Expand the @NoahmpMacro:Source { ... } block of the H template into the
     bare member declarations for the compiled header. Unlike the call-form regions,
     the body here is the single source of truth, so it is emitted (near-)verbatim --
-    only the macro wrapper and the per-line `@NoahmpIOCoupling:` annotations are
+    only the macro wrapper and the per-line `@NoahmpMacro:` annotations are
     stripped (any "doc" string is kept as a plain comment), leaving valid C++ with
     initializers (e.g. `= -9999.0`) and the blank-line grouping intact. No marker
     survives into NoahmpIO.H."""
@@ -467,7 +510,7 @@ def render_source_block(text):
             continue                                   # guidance/usage comment -> drop
         if "//" in raw:
             code, annot = raw.split("//", 1)
-            doc = _doc(annot)
+            doc = _doc(annot, code.strip())
             body.append(code.rstrip() + ("  // " + doc if doc else ""))
         else:
             body.append(raw.rstrip())                   # declaration or blank separator
@@ -476,6 +519,29 @@ def render_source_block(text):
     if text.endswith("\n"):
         out += "\n"
     return out
+
+
+# A live marker is a region name immediately followed by `(` (call form) or `{`
+# (block form). Matching the GRAMMAR -- not the bare `@NoahmpMacro:` string -- lets
+# the legit author prose that survives into generated output (e.g. "generated from
+# @NoahmpMacro:Source) and...", the static_assert "@NoahmpMacro:Source; run make
+# codegen") pass untouched: those are followed by `)`/`,`/`;`/space, never `(`/`{`.
+MARKER_RE = re.compile(r"@NoahmpMacro:\w+\s*[({]")
+
+
+def _assert_no_markers(texts):
+    """Fail if any @NoahmpMacro marker survived expansion -- the signature of an
+    unknown/misspelled region name, which apply_regions silently leaves in place
+    (it only iterates the KNOWN region dicts). Reports every hit as file:line."""
+    bad = []
+    for path, text in texts.items():
+        for n, line in enumerate(text.splitlines(), 1):
+            if MARKER_RE.search(line):
+                bad.append("  %s:%d: %s" % (os.path.basename(path), n, line.strip()))
+    if bad:
+        raise SystemExit("NoahmpMacro: unexpanded @NoahmpMacro marker(s) left in "
+                         "generated output (unknown/misspelled region name?):\n"
+                         + "\n".join(bad))
 
 
 def process(members):
@@ -489,69 +555,18 @@ def process(members):
         f90 = f.read()
     with open(VARTYPE_MC_FILE) as f:
         vartype = f.read()
+    with open(VARINIT_MC_FILE) as f:
+        varinit = f.read()
     h = render_source_block(h)          # strip the Source macro -> bare declarations
-    return {
+    out = {
         H_FILE:       apply_regions(h,       H_REGIONS,       members, "//"),
         CPP_FILE:     apply_regions(cpp,     CPP_REGIONS,     members, "//"),
         F90_FILE:     apply_regions(f90,     F90_REGIONS,     members, "!"),
         VARTYPE_FILE: apply_regions(vartype, VARTYPE_REGIONS, members, "!"),
+        VARINIT_FILE: apply_regions(varinit, VARINIT_REGIONS, members, "!"),
     }
-
-
-def _norm_bound(b):
-    """Normalize one `lo:hi` Fortran bound for comparison: strip all whitespace
-    and case-fold (Fortran identifiers are case-insensitive, so XSTART == xstart)."""
-    return re.sub(r"\s+", "", b).lower()
-
-
-def audit_allocate(members):
-    """Cross-check each coupled ARRAY's hand-written allocate() in
-    NoahmpIOVarInitMod.F90 against its @NoahmpIOCoupling:bounds_Nd annotation.
-
-    The allocate is deliberately NOT generated (it is a single, single-file edit,
-    not a cross-file contract worth a codegen marker). But the C++ NoahArray
-    extent IS built from the annotation, and the two must agree or the C++ side
-    indexes Fortran-owned storage with the wrong stride -- silent corruption that
-    no other guard catches. This read-only audit closes that gap: it parses the
-    bound tokens of `allocate(NoahmpIO%NAME(...))` and compares them, token by
-    token, to the annotation. Returns a list of human-readable problems (empty
-    means in sync)."""
-    arrays = [m for m in members if m.kind == "array"]
-    if not arrays:
-        return []
-    try:
-        with open(VARINIT_FILE) as f:
-            text = f.read()
-    except FileNotFoundError:
-        return ["cannot open %s for the allocate audit" % os.path.basename(VARINIT_FILE)]
-
-    fname = os.path.basename(VARINIT_FILE)
-    problems = []
-    for m in arrays:
-        # allocate ( NoahmpIO%NAME ( <bounds> ) ) -- bounds carry no nested parens.
-        pat = re.compile(r"allocate\s*\(\s*NoahmpIO%%%s\s*\(([^)]*)\)" % re.escape(m.name),
-                         re.IGNORECASE)
-        hits = pat.findall(text)
-        if not hits:
-            problems.append("%s: coupled array has no `allocate(NoahmpIO%%%s(...))` "
-                            "in %s" % (m.name, m.name, fname))
-            continue
-        bounds_sets = [[p.strip() for p in h.split(",") if p.strip()] for h in hits]
-        bounds = bounds_sets[0]
-        if any(bs != bounds for bs in bounds_sets[1:]):
-            problems.append("%s: multiple allocate() statements in %s disagree on bounds"
-                            % (m.name, fname))
-        want = ["%s:%s" % (lo, hi) for lo, hi in zip(m.begin, m.end)]
-        if len(bounds) != m.rank:
-            problems.append("%s: allocate() has %d dimension(s) but the annotation "
-                            "declares %d" % (m.name, len(bounds), m.rank))
-            continue
-        for d, (got, exp) in enumerate(zip(bounds, want)):
-            if _norm_bound(got) != _norm_bound(exp):
-                problems.append("%s: dim %d allocate bound `%s` (%s) != annotation "
-                                "`%s` (bounds_%dd in NoahmpIO.H-mc)"
-                                % (m.name, d + 1, got.strip(), fname, exp, m.rank))
-    return problems
+    _assert_no_markers(out)             # catch unknown/misspelled region markers
+    return out
 
 
 def main(argv):
@@ -577,39 +592,21 @@ def main(argv):
         elif not check:
             pass
 
-    problems = audit_allocate(members)
-
     if check:
-        rc = 0
         if changed:
-            print("\nNoahmpIOCoupling: %d file(s) are out of sync with the @NoahmpIOCoupling:Source "
+            print("\nNoahmpMacro: %d file(s) are out of sync with the @NoahmpMacro:Source "
                   "block in NoahmpIO.H: %s\nRun `make codegen` and commit the result."
                   % (len(changed), ", ".join(os.path.basename(p) for p in changed)),
                   file=sys.stderr)
-            rc = 1
-        if problems:
-            print("\nNoahmpIOCoupling: %d array allocate()/annotation mismatch(es):"
-                  % len(problems), file=sys.stderr)
-            for p in problems:
-                print("  - " + p, file=sys.stderr)
-            print("Fix the allocate() bounds in %s or the bounds_Nd annotation in "
-                  "NoahmpIO.H-mc so they agree." % os.path.basename(VARINIT_FILE),
-                  file=sys.stderr)
-            rc = 1
-        if rc == 0:
-            print("NoahmpIOCoupling: %d coupling members; all generated regions are in "
-                  "sync and array allocate() bounds match their annotations." % len(members))
-        return rc
+            return 1
+        print("NoahmpMacro: %d coupling members; all generated regions are in sync."
+              % len(members))
+        return 0
 
     for path in changed:
         with open(path, "w") as f:
             f.write(new_texts[path])
-    if problems:
-        print("NoahmpIOCoupling: WARNING -- %d array allocate()/annotation mismatch(es) "
-              "(run `make codegen-check` for detail):" % len(problems), file=sys.stderr)
-        for p in problems:
-            print("  - " + p, file=sys.stderr)
-    print("NoahmpIOCoupling: %d coupling members; updated %d file(s)%s."
+    print("NoahmpMacro: %d coupling members; updated %d file(s)%s."
           % (len(members), len(changed),
              ": " + ", ".join(os.path.basename(p) for p in changed) if changed else " (already in sync)"))
     return 0

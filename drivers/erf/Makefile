@@ -25,7 +25,7 @@ AR       ?= ar
 # The flag MUST be applied to BOTH the Fortran and C++ compiles: it selects
 # c_kind_noahmp (C_DOUBLE/C_FLOAT) on the Fortran side and noahmp_real
 # (double/float) on the C++ side, and the two must agree byte-for-byte or the
-# shared NoahArray element layout is corrupt. Applying it to only one language
+# shared NoahmpArray element layout is corrupt. Applying it to only one language
 # is a silent ABI mismatch that the pointer-struct size check cannot detect.
 NOAHMP_PRECISION_FLAG ?=
 FFLAGS_NOAHMP   += -O3 -cpp -fPIC -ffree-line-length-none $(NOAHMP_PRECISION_FLAG) -J$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_INC_DIR))
@@ -48,14 +48,15 @@ $(shell mkdir -p $(NOAHMP_OBJ_DIR) $(NOAHMP_LIB_DIR) $(NOAHMP_INC_DIR))
 # ======================================================================
 # Coupling code generation (parse time)
 # ======================================================================
-# The @NoahmpIOCoupling:<region> blocks in NoahmpIO.{H,cpp}, NoahmpIO_fi.F90 and
-# NoahmpIOVarType.F90 are expanded from the @NoahmpIOCoupling:source block in the
-# tracked *-mc templates. The generated files are gitignored (not committed), so
+# The @NoahmpMacro:<region> blocks in NoahmpIO.{H,cpp}, NoahmpIO_fi.F90,
+# NoahmpIOVarType.F90 and NoahmpIOVarInitMod.F90 are expanded from the
+# @NoahmpMacro:source block in the tracked *-mc templates. The generated files are
+# gitignored (not committed), so
 # they must be (re)generated BEFORE the wildcard source discovery below picks
 # them up. The generator is stdlib-only Python and idempotent. Run it here, at
 # parse time, so a fresh checkout builds with no manual step.
-NOAHMP_CODEGEN ?= $(NOAHMP_HOME)/drivers/erf/tools/NoahmpIOCoupling.py
-$(info NoahmpIOCoupling codegen: $(shell python3 $(NOAHMP_CODEGEN) 2>&1))
+NOAHMP_CODEGEN ?= $(NOAHMP_HOME)/drivers/erf/tools/NoahmpMacro.py
+$(info NoahmpMacro codegen: $(shell python3 $(NOAHMP_CODEGEN) 2>&1))
 
 # ======================================================================
 # Source discovery
@@ -176,4 +177,5 @@ clean_noahmp:
 	rm -f $(NOAHMP_HOME)/drivers/erf/NoahmpIO.H \
 	      $(NOAHMP_HOME)/drivers/erf/NoahmpIO.cpp \
 	      $(NOAHMP_HOME)/drivers/erf/NoahmpIO_fi.F90 \
-	      $(NOAHMP_HOME)/drivers/erf/NoahmpIOVarType.F90
+	      $(NOAHMP_HOME)/drivers/erf/NoahmpIOVarType.F90 \
+	      $(NOAHMP_HOME)/drivers/erf/NoahmpIOVarInitMod.F90

@@ -41,10 +41,30 @@ module NoahmpIO_fi
   !            should be consistent for memory managment. 
   ! ---------------------------------------------------------------------------
   type, bind(c), public :: NoahmpIO_type_fi
-    @NoahmpIOCoupling:FiTypeMembers();
+    @NoahmpMacro:FiTypeMembers();
   end type NoahmpIO_type_fi
 
 contains
+
+  ! ---------------------------------------------------------------------------
+  ! Fatal-error exit. A bare `error stop` terminates only the calling image, so
+  ! peers can deadlock in the next collective. Rather than reach for MPI here
+  ! (Noah-MP keeps no parallel-runtime dependency of its own), route through the
+  ! C++ shim NoahmpIO_fatal_c, which calls the host-installed handler that
+  ! propagates the failure to all ranks (e.g. amrex::Abort -> MPI_Abort). The
+  ! trailing `error stop` is a fallback for when no handler is installed (serial
+  ! build) or the handler returns.
+  ! ---------------------------------------------------------------------------
+  subroutine NoahmpIO_abort()
+    implicit none
+    interface
+       subroutine NoahmpIO_fatal_c() bind(C, name="NoahmpIO_fatal_c")
+       end subroutine NoahmpIO_fatal_c
+    end interface
+    flush(0)
+    call NoahmpIO_fatal_c()
+    error stop 1
+  end subroutine NoahmpIO_abort
 
   ! ---------------------------------------------------------------------------
   ! Resolve (level, bid) from the incoming C struct and return a pointer to the
@@ -72,7 +92,7 @@ contains
     if (.not. c_associated(NoahmpIO_cptr%LEVEL) .or. &
         .not. c_associated(NoahmpIO_cptr%BLKID)) then
        write(0,*) "NoahmpIO_fi: LEVEL or BLKID C pointer is not associated"
-       error stop
+       call NoahmpIO_abort()
     end if
 
     call C_F_POINTER(NoahmpIO_cptr%LEVEL, plevel)
@@ -83,12 +103,12 @@ contains
     if (level < NLEVEL_MIN .or. level > NLEVEL_MAX) then
        write(0,*) "NoahmpIO_fi: level out of range [", NLEVEL_MIN, ",", &
                   NLEVEL_MAX, "]:", level
-       error stop
+       call NoahmpIO_abort()
     end if
     if (.not. allocated(NoahmpIO_vect(level)%NoahmpIO)) then
        write(0,*) "NoahmpIO_fi: level not initialized (call NoahmpIOTypeVectInit "// &
                   "first), level:", level
-       error stop
+       call NoahmpIO_abort()
     end if
     if (bid < lbound(NoahmpIO_vect(level)%NoahmpIO, 1) .or. &
         bid > ubound(NoahmpIO_vect(level)%NoahmpIO, 1)) then
@@ -96,7 +116,7 @@ contains
                   lbound(NoahmpIO_vect(level)%NoahmpIO, 1), ",", &
                   ubound(NoahmpIO_vect(level)%NoahmpIO, 1), "] for level", &
                   level, ", blkid:", bid
-       error stop
+       call NoahmpIO_abort()
     end if
 
     blk => NoahmpIO_vect(level)%NoahmpIO(bid)
@@ -108,7 +128,7 @@ contains
     if (check_init .and. .not. associated(blk%DTBL)) then
        write(0,*) "NoahmpIO_fi: block scalars not initialized (call "// &
                   "NoahmpIOScalarInitDefault first) for level", level, ", blkid", bid
-       error stop
+       call NoahmpIO_abort()
     end if
   end subroutine resolve_block
 
@@ -120,7 +140,7 @@ contains
     integer(C_INT) :: level, bid
     ! This call performs the scalar wiring, so do not require it to be done yet.
     call resolve_block(NoahmpIO_cptr, blk, level, bid, require_init=.false.)
-    @NoahmpIOCoupling:ScalarInitCfptr();
+    @NoahmpMacro:ScalarInitCfptr();
   end subroutine NoahmpIOScalarInitDefault_fi
 
   subroutine NoahmpIOVarInitDefault_fi(NoahmpIO_cptr) bind(C, name="NoahmpIOVarInitDefault_fi")
@@ -131,7 +151,7 @@ contains
     integer(C_INT) :: level, bid
     call resolve_block(NoahmpIO_cptr, blk, level, bid)
     call NoahmpIOVarInitDefault(blk)
-    @NoahmpIOCoupling:VarInitCloc();
+    @NoahmpMacro:VarInitCloc();
   end subroutine NoahmpIOVarInitDefault_fi
 
   subroutine NoahmpInitMain_fi(NoahmpIO_cptr) bind(C, name="NoahmpInitMain_fi")
@@ -217,7 +237,7 @@ contains
     if (dir_len < 0) then
        write(0,*) "NoahmpWriteRestart_fi: negative dir_len (likely an int "// &
                   "overflow of the C++ string length):", dir_len
-       error stop
+       call NoahmpIO_abort()
     end if
     block
       character(len=dir_len) :: dir
@@ -241,7 +261,7 @@ contains
     if (dir_len < 0) then
        write(0,*) "NoahmpReadRestart_fi: negative dir_len (likely an int "// &
                   "overflow of the C++ string length):", dir_len
-       error stop
+       call NoahmpIO_abort()
     end if
     block
       character(len=dir_len) :: dir
@@ -264,11 +284,11 @@ contains
     if (level < NLEVEL_MIN .or. level > NLEVEL_MAX) then
        write(0,*) "NoahmpIOTypeVectInit_fi: level out of range [", NLEVEL_MIN, &
                   ",", NLEVEL_MAX, "]:", level
-       error stop
+       call NoahmpIO_abort()
     end if
     if (NBlocks < 1) then
        write(0,*) "NoahmpIOTypeVectInit_fi: NBlocks must be >= 1, got", NBlocks
-       error stop
+       call NoahmpIO_abort()
     end if
     if (allocated(NoahmpIO_vect(level)%NoahmpIO)) then
        ! Same size -> idempotent no-op; different size -> refuse (would discard
@@ -278,13 +298,13 @@ contains
        write(0,*) "NoahmpIOTypeVectInit_fi: level", level, "already initialized "// &
                   "with", size(NoahmpIO_vect(level)%NoahmpIO), &
                   "blocks; refusing to re-init with", NBlocks
-       error stop
+       call NoahmpIO_abort()
     end if
 
     allocate(NoahmpIO_vect(level)%NoahmpIO(0:NBlocks-1), stat=ierr, errmsg=emsg)
     if (ierr /= 0) then
        write(0,*) "NoahmpIOTypeVectInit_fi: allocate failed: ", trim(emsg)
-       error stop
+       call NoahmpIO_abort()
     end if
   end subroutine NoahmpIOTypeVectInit_fi
 
@@ -296,7 +316,7 @@ contains
   ! (e.g. DOUBLE_PREC applied to only one of the separately-invoked compilers).
   ! The C++ side compares this against sizeof(noahmp_real) to catch exactly that
   ! case (see NoahmpIO_AssertAbi / resize()). Member count and order need no
-  ! run-time guard: both structs are generated from @NoahmpIOCoupling:Source, so
+  ! run-time guard: both structs are generated from @NoahmpMacro:Source, so
   ! they cannot drift, and the C++ static_assert pins the layout.
   ! ---------------------------------------------------------------------------
   function NoahmpRealSize_fi() bind(C, name="NoahmpRealSize_fi") result(nbytes)
