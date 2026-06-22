@@ -41,7 +41,7 @@ module NoahmpIO_fi
   !            should be consistent for memory managment. 
   ! ---------------------------------------------------------------------------
   type, bind(c), public :: NoahmpIO_type_fi
-    @NoahmpMacro:FiTypeMembers();
+    @NoahmpMacro:FortranMirrorFields(m_noahmpio);
   end type NoahmpIO_type_fi
 
 contains
@@ -140,7 +140,7 @@ contains
     integer(C_INT) :: level, bid
     ! This call performs the scalar wiring, so do not require it to be done yet.
     call resolve_block(NoahmpIO_cptr, blk, level, bid, require_init=.false.)
-    @NoahmpMacro:ScalarInitCfptr();
+    @NoahmpMacro:FortranScalarWire(m_noahmpio, ftype_fi=NoahmpIO_cptr, ftype=blk);
   end subroutine NoahmpIOScalarInitDefault_fi
 
   subroutine NoahmpIOVarInitDefault_fi(NoahmpIO_cptr) bind(C, name="NoahmpIOVarInitDefault_fi")
@@ -151,7 +151,7 @@ contains
     integer(C_INT) :: level, bid
     call resolve_block(NoahmpIO_cptr, blk, level, bid)
     call NoahmpIOVarInitDefault(blk)
-    @NoahmpMacro:VarInitCloc();
+    @NoahmpMacro:FortranArrayWire(m_noahmpio, ftype_fi=NoahmpIO_cptr, ftype=blk);
   end subroutine NoahmpIOVarInitDefault_fi
 
   subroutine NoahmpInitMain_fi(NoahmpIO_cptr) bind(C, name="NoahmpInitMain_fi")

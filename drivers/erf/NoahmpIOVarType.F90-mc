@@ -32,7 +32,7 @@ module NoahmpIOVarType
     ! safe to test (used by the scalar-init guard in NoahmpIO_fi), and an
     ! out-of-order dereference is a clean null crash rather than silent UB.
 
-    @NoahmpMacro:VarTypeMembers();
+    @NoahmpMacro:FortranStorageFields(m_noahmpio);
 
     integer                                                ::  YR                  ! 4-digit year
     integer                                                ::  ICE                 ! Sea-ice point

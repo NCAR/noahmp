@@ -93,10 +93,15 @@ C++ side guards the `size_t → int` length cast against overflow
 
 ### Single source of truth
 
-The member declarations of `class NoahmpIO_type`, wrapped in the
-`@NoahmpMacro:Source { ... }` block of `NoahmpIO.H-mc`. **Order in the block =
-ABI order.** From this one list the generator regenerates the bodies of every
-`@NoahmpMacro:<Region>()` marker across five files:
+The field list, written as one **contract block** `@NoahmpMacro:Source m_noahmpio
+{ ... }` near the top of `NoahmpIO.H-mc`. The **handle** `m_noahmpio` only names the
+binding for reference — the tool derives **no** symbols from it; concrete local
+names are passed explicitly at each projection (see the binding grammar below).
+**Order in the block = ABI order.** The contract block is *consumed* (replaced by a
+breadcrumb comment); the owner class materializes its own fields through an ordinary
+`@NoahmpMacro:CppStorageFields(m_noahmpio);` projection, exactly like every other
+side of the boundary. From this one list the generator regenerates the bodies of
+every `@NoahmpMacro:<Region>(m_noahmpio, …);` projection marker across five files:
 
 | Template (`-mc`, hand-edited) | Generated target (gitignored) |
 |-------------------------------|-------------------------------|
@@ -116,31 +121,91 @@ from the *same* `bounds_Nd` annotation, so they cannot disagree.
 ### Annotation grammar
 
 ```cpp
-@NoahmpMacro:Source {
-  int ids, ide, jds, jde;                 // ints: no annotation
-  int numrad = 2;                         // int with C++ default (shared with Fortran)
+@NoahmpMacro:Source m_noahmpio {           // the contract block (near top of header)
+  int ids, ide, jds, jde;                  // ints: kind inferred, no annotation
+  int numrad = 2;                          // int with C++ default (shared with Fortran)
 
-  noahmp_real DTBL;                       // @NoahmpMacro:scalar
-  noahmp_real ZLVL = -9999.0;             // @NoahmpMacro:scalar doc="..."
+  noahmp_real DTBL;                        // scalar: kind inferred from the type
+  noahmp_real ZLVL = -9999.0;              // free-form trailing doc, optional
 
-  NoahmpArray2D<noahmp_real> XLAT;        // @NoahmpMacro:bounds_2d(xstart:xend, ystart:yend) doc="latitude [rad]"
-  NoahmpArray3D<noahmp_real> U_PHY;       // @NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend) doc="..."
+  NoahmpArray2D<noahmp_real> XLAT(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend)); // latitude [rad]
+  NoahmpArray3D<noahmp_real> U_PHY(@NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend)); // U wind
 }
 ```
 
-Rules the generator enforces (it raises `SystemExit("NoahmpMacro: …")` otherwise):
+**The annotation rule is uniform: kind is always inferred from the declared type;
+you annotate only what the type cannot express.** Concretely, the generator
+enforces (raising `SystemExit("NoahmpMacro: …")` otherwise):
 
 - **Kind is inferred from the C++ type** (`int` / `noahmp_real` /
-  `NoahmpArray{2,3}D`).
-- **Arrays** need a `bounds_{2,3}d(lo:hi, …)` list in **Fortran order**. The rank
-  must match the `NoahmpArrayND` type and the number of bound pairs. Every bound
-  token must be a **literal** or a **coupled member name** (`xstart`, `xend`,
-  `kms`, `kme`, `nsoil`, `numrad`, …) so C++ and Fortran resolve it to the *same*
-  value — never a Fortran-only parameter. An optional `doc="…"` is kept as a
-  plain comment.
-- **Scalars** carry `@NoahmpMacro:scalar` and an optional `doc`.
-- **Ints** need no annotation; an optional C++ default (`int numrad = 2;`) is
-  shared with Fortran.
+  `NoahmpArray{2,3}D`) — never spelled out. (There is no `@NoahmpMacro:scalar`;
+  the `noahmp_real` type already says "scalar", exactly as `int` says "int".) A type
+  the vocabulary does not know (`double`, `int64_t`, …) is a hard error.
+- **Arrays** carry an in-declaration `(@NoahmpMacro:bounds_{2,3}d(lo:hi, …))`
+  annotation in **Fortran order** — the one fact the type cannot hold. The rank is
+  stated in **both** the type and the annotation and they must agree; the number of
+  bound pairs must match. Every bound token must be a **literal** or a **coupled
+  member name** (`xstart`, `xend`, `kms`, `kme`, `nsoil`, `numrad`, …) so C++ and
+  Fortran resolve it to the *same* value — never a Fortran-only parameter.
+- **Trailing comments** are free-form doc (no `doc=` form): kept verbatim in the
+  owner header, dropped from the Fortran `allocate`, and ignored by the tool.
+- **Ints / scalars** need no annotation; an optional C++ default
+  (`int numrad = 2;`) is shared with Fortran.
+
+### The binding grammar (what you write in the templates)
+
+A **binding** is identified by a **handle** (`m_noahmpio`). The handle is only a
+reference — the tool derives **no** identifiers from it. There is ONE marker prefix,
+`@NoahmpMacro:`; the forms are distinguished by position, not by a second punctuator:
+
+- **Contract** (one per handle) — a single block, the source of truth, near the top
+  of the owning template: `@NoahmpMacro:Source <handle> { …field declarations… }`.
+  It is *consumed* (replaced by a breadcrumb); the owner class emits its own fields
+  through the `CppStorageFields` projection below.
+- **Projection** — names a region, the handle, and any **site-local names** the
+  region needs as explicit `key=value` args. Two shapes:
+  - **block**: `@NoahmpMacro:<Region>(<handle>[, key=value]…);` on its own line,
+    expanded to a banner-commented body block;
+  - **value**: `… = @NoahmpMacro:MemberCount(<handle>);` substituted in place as a
+    scalar (shows *where* the constant is assigned; the declaration is hand-written).
+- **Field annotation** — `(@NoahmpMacro:bounds_{2,3}d(...))` inside an array
+  declaration in the contract block (the one thing the C++ type cannot carry).
+
+Rigidly enforced: a malformed `Source` line, an unknown region, a block region used
+inline (or a value region used as a statement / given params), a marker arg that is
+not a bare identifier, and a missing/unknown projection param are each a named error.
+
+Site-local names are **never derived from the handle** — they are passed at the
+call so the generated code references the right local. The param names follow a
+`<lang>type[_fi]` convention (`f*` = Fortran, `c*` = C++, `*_fi` = the flat interop
+struct on that side):
+
+| Param | Meaning | Example |
+|-------|---------|---------|
+| `ftype` | owning Fortran derived-type instance (`<ftype>%X`) | `blk`, `NoahmpIO` |
+| `ftype_fi` | Fortran bind(C) interop struct instance | `NoahmpIO_cptr` |
+| `ctype` | C++ owner-object instance | `o` (move source) |
+| `ctype_fi` | C++ mirror member holding the interop struct | `fptr` |
+
+`REGION_PARAMS` declares which keys each region requires; the generator errors on a
+missing **or** unknown key, so a typo'd local is a named failure, not a miscompile.
+
+Region names are **purpose-based and file-agnostic**, grouped by the four facets a
+struct binding must model (type-correspondence / construction / ownership-wiring /
+layout). Each is a named registry entry, so `grep <RegionName>` lands on its
+definition:
+
+| Facet | Region (required params) | Emits |
+|-------|--------------------------|-------|
+| **Mirror** | `CppMirrorFields` / `FortranMirrorFields` / `MemberCount` (value) | the flat pointer struct on each side + its element count |
+| **Construct** | `CppCtorParams` / `CppCtorInit` / `CppBindAddrs` / `CppMoveInit`(`ctype`) / `CppMoveRepoint`(`ctype_fi`) | ctor + move plumbing for the C++ owner and its mirror |
+| **Wire** | `CppArrayViews`(`ctype_fi`) / `FortranScalarWire`(`ftype_fi`,`ftype`) (`C_F_POINTER`) / `FortranArrayWire`(`ftype_fi`,`ftype`) (`C_LOC`) | physically connect the two representations |
+| **Storage** | `CppStorageFields` / `FortranStorageFields` / `FortranArrayAllocate`(`ftype`) | each owning side's real fields + the Fortran allocation |
+
+`CppStorageFields` is the C++ owner class's own fields, emitted **verbatim** from the
+contract body (so initializers like `int numrad = 2;`, trailing doc comments, and the
+blank-line grouping survive exactly); every other region is reconstructed from the
+parsed members.
 
 ### Internal architecture (read `tools/NoahmpMacro.py` top-to-bottom)
 
@@ -148,27 +213,82 @@ Rules the generator enforces (it raises `SystemExit("NoahmpMacro: …")` otherwi
 > coupled variable needs only §1 here and
 > [`spec-add-coupled-variable.md`](spec-add-coupled-variable.md).
 
+The generator is a few declarative layers over a **binding-agnostic** engine.
+
+**Layer 1 — `KIND_TRAITS`: the matching rules, in one place.** A kind→projection
+table that *is* the code form of the §1 "What the boundary carries" table. For
+each kind it states every projection a region needs — the C++ pointer/ctor type,
+the Fortran `bind(C)` field type, the `NoahmpIO_type` storage declaration, and the
+wiring (`cfptr` = `C_F_POINTER` for scalar-likes, `cloc` = `C_LOC` for arrays):
+
+| kind | C++ ctor type | Fortran `bind(C)` | `NoahmpIO_type` storage | wiring |
+|------|---------------|-------------------|-------------------------|--------|
+| `int`    | `int*`         | `type(C_PTR)` | `integer(C_INT), pointer => null()`        | `cfptr` |
+| `scalar` | `noahmp_real*` | `type(C_PTR)` | `real(c_kind_noahmp), pointer => null()`   | `cfptr` |
+| `array`  | (n/a — `C_LOC`)| `type(C_PTR)` | `real(c_kind_noahmp), allocatable, dim(:…)`| `cloc`  |
+
+Every per-kind type string lives here only; no renderer re-encodes one.
+
+**Layer 2 — `Region(filter, item, layout)`: regions as specs.** Most regions are
+"select some members, render one token each from the trait table, lay the tokens
+out", so they are declarative `Region` entries. Every region — spec or kept
+function — is uniformly `f(binding, params) -> [lines]`, where `params` are the
+call-site `key=value` site-locals:
+
 ```
-parse_source(h_text)   -> ordered [Member(name, kind, rank, begin, end, doc)]
-r_*(members)           -> body LINES for one region
-H_REGIONS / CPP_REGIONS / F90_REGIONS / VARTYPE_REGIONS / VARINIT_REGIONS  -> region -> renderer
-_slice_markers / apply_regions  -> find a region's marker, replace with banner+body+close
-render_source_block    -> strip the Source macro down to bare C++ declarations
-process(members)       -> {target_path: new_text} for all five targets
-main(argv)             -> write targets, or --check (exit 1 + unified diff on drift)
+Region(SCALAR_LIKE, cpp_ctor_param, L_wrap(...))   # filter, per-member item, layout
 ```
 
-Two marker forms in templates:
+*Stop-collapsing rule* — a region stays a named `r_*` function only when it (a)
+needs run-grouped per-run prefixes (`CppMirrorFields`, `FortranStorageFields` —
+keep `_runs`), (b) carries array bounds the trait table doesn't model
+(`CppArrayViews`, `FortranArrayAllocate`), or (c) emits the contract body verbatim
+(`CppStorageFields`, which reads `Binding.body` rather than the parsed members). The
+element count is none of these — it is an inline scalar, so it lives in
+`VALUE_REGIONS` (substituted mid-line, not a block). Kept functions still read
+`KIND_TRAITS` for type *facts*.
 
-- **Call form** `@NoahmpMacro:Region();` on its own line — expanded in place to a
-  banner-commented body block.
-- **Block form** `@NoahmpMacro:Source { … }` — the only one; its wrapper and
-  per-line annotations are stripped for the compiled header (`doc` kept as a
-  comment).
+**Layer 3 — `REGION_PARAMS`: explicit call-site site-locals.** There is **no**
+name-derivation seam: the handle yields no identifiers. Any region that emits code
+referencing a hand-written local (`ftype`/`ftype_fi`/`ctype`/`ctype_fi`, per the
+table above) declares those keys in `REGION_PARAMS`, and the projection marker
+supplies them as `key=value`. `expand` validates exactly the required keys are
+present (missing or unknown → named `SystemExit`); `_validate_registry()` self-checks
+the tables at startup (a region cannot be both block and value; `REGION_PARAMS` may
+only name block regions). The C++ array-view class is the fixed `ARRAY_TMPL` constant
+(`NoahmpArray`), not a site-local.
 
-Region names are PascalCase (matching method naming). Rendering helpers
-(`_wrap`, `_decl_lines`, `_runs`) pack several members per line; since targets
-regenerate every build, density costs no diff noise.
+**Layer 4 — `Binding`: one resolved contract.** the `tag` (handle) + parsed
+`members` + the raw `body` (for `CppStorageFields`' verbatim emission) + the
+do-not-edit `banner` (built from the file the contract lives in, so it lands only in
+generated output).
+
+**Layer 5 — the engine (two passes, binding-agnostic).**
+
+```
+parse_members(body, cc, tag) -> ordered [Member(name, kind, rank, begin, end)]
+Region / r_*                 -> body LINES for one region: f(binding, params)
+REGIONS / VALUE_REGIONS      -> GLOBAL {region -> block-renderer} / {region -> scalar}
+collect_bindings(templates)  -> PASS 1: {handle -> Binding} from each Source block
+expand(text, cc, bindings)   -> PASS 2: contract block -> breadcrumb; block markers
+                                expanded; then ONE strict classifier pass (PROJ_RE)
+                                over every remaining marker (value, or precise error)
+main(argv)                   -> validate registry, glob *-mc, run both passes, write/--check
+```
+
+Templates are discovered by **glob** (`ROOT/*-mc`); each target is the template
+with `-mc` stripped, and the comment char is inferred from the extension. There is
+no per-file region dict and no `Boundary`/`Target` object — the engine scans each
+template for whatever markers it contains.
+
+**Adding a new binding:** add a `@NoahmpMacro:Source <newhandle> { … }` contract
+block (in any `*-mc` template) plus projection markers (each supplying its
+`REGION_PARAMS` site-locals). No Python edits — the target follows the `*-mc`
+convention and `collect_bindings` picks the handle up automatically. (Only a
+genuinely new *kind* of field needs a `KIND_TRAITS` entry.)
+
+Rendering helpers pack several members per line; since targets regenerate every
+build, density costs no diff noise.
 
 ### Build integration
 

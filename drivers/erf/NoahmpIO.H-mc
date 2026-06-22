@@ -9,15 +9,56 @@
 #include <cstddef>
 #include <type_traits>
 
+// The binding contract -- the single source of truth for the C++ <-> Fortran
+// boundary. Order = ABI order. Every side of the boundary (the mirror struct, the
+// ctor/move plumbing, the wiring, and the owner class's own fields below via
+// @NoahmpMacro:CppStorageFields) is projected from this one list. The handle
+// m_noahmpio is only a reference: each projection passes the concrete local names
+// it needs explicitly (e.g. ftype_fi=NoahmpIO_cptr, ctype=o), never derived here.
+@NoahmpMacro:Source m_noahmpio {
+
+    int ids, ide, jds, jde, kds, kde;
+    int ims, ime, jms, jme, kms, kme;
+    int its, ite, jts, jte, kts, kte;
+    int xstart, xend, ystart, yend;
+    int nsoil, nsnow;
+    int numrad = 2;        // number of shortwave radiation bands; ERF may override
+    int itimestep, ntime;
+    int rank, blkid, level;
+    int comm;
+
+    noahmp_real DTBL;
+    noahmp_real ZLVL = -9999.0;
+
+    NoahmpArray2D<noahmp_real> XLAT(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));         // latitude [radians]
+    NoahmpArray2D<noahmp_real> WSLAKEXY(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));     // lake water storage [mm]
+    NoahmpArray3D<noahmp_real> U_PHY(@NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend));        // 3D U wind component [m/s]
+    NoahmpArray3D<noahmp_real> T_PHY(@NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend));        // 3D atmospheric temperature valid at mid-levels [K]
+    NoahmpArray3D<noahmp_real> V_PHY(@NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend));        // 3D V wind component [m/s]
+    NoahmpArray3D<noahmp_real> QV_CURR(@NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend));      // 3D water vapor mixing ratio [kg/kg_dry]
+    NoahmpArray2D<noahmp_real> HFX(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));          // sensible heat flux [W m-2]
+    NoahmpArray2D<noahmp_real> LH(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));           // latent heat flux [W m-2]
+    NoahmpArray2D<noahmp_real> SWDOWN(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));       // solar down at surface [W m-2]
+    NoahmpArray2D<noahmp_real> GLW(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));          // longwave down at surface [W m-2]
+    NoahmpArray2D<noahmp_real> TSK(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));          // surface radiative temperature [K]
+    NoahmpArray2D<noahmp_real> EMISS(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));        // surface bulk emissivity
+    NoahmpArray3D<noahmp_real> ALBSFCDIRXY(@NoahmpMacro:bounds_3d(xstart:xend, 1:numrad, ystart:yend));  // surface albedo (direct)
+    NoahmpArray3D<noahmp_real> ALBSFCDIFXY(@NoahmpMacro:bounds_3d(xstart:xend, 1:numrad, ystart:yend));  // surface albedo (diffuse)
+    NoahmpArray2D<noahmp_real> COSZEN(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));       // cosine zenith angle
+    NoahmpArray3D<noahmp_real> P8W(@NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend));          // 3D pressure, valid at interface [Pa]
+    NoahmpArray2D<noahmp_real> TAU_EW(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));       // wind stress in east-west direction [N/m2]
+    NoahmpArray2D<noahmp_real> TAU_NS(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));       // wind stress in north-south direction [N/m2]
+}
+
 extern "C" {
     struct NoahmpIO_type_fi {
 
-        @NoahmpMacro:FiMembers();
+        @NoahmpMacro:CppMirrorFields(m_noahmpio);
 
         NoahmpIO_type_fi(
-          @NoahmpMacro:FiCtorParams();
+          @NoahmpMacro:CppCtorParams(m_noahmpio);
         ):
-          @NoahmpMacro:FiCtorInit();
+          @NoahmpMacro:CppCtorInit(m_noahmpio);
         {}
     };
 }
@@ -49,7 +90,7 @@ extern "C" {
 // The precision guard runs once via NoahmpIO_AssertAbi().
 // ---------------------------------------------------------------------------
 // Coupled member count; drives the compile-time ABI layout guard.
-@NoahmpMacro:NumMembers();
+inline constexpr std::size_t NOAHMP_IO_FI_NUM_MEMBERS = @NoahmpMacro:MemberCount(m_noahmpio);
 
 static_assert(std::is_standard_layout<NoahmpIO_type_fi>::value,
               "NoahmpIO_type_fi must be standard-layout to share an ABI with the "
@@ -71,44 +112,12 @@ void NoahmpIO_AssertAbi();
 class NoahmpIO_type {
 
     public:
-        @NoahmpMacro:Source {
-
-        int ids, ide, jds, jde, kds, kde;
-        int ims, ime, jms, jme, kms, kme;
-        int its, ite, jts, jte, kts, kte;
-        int xstart, xend, ystart, yend;
-        int nsoil, nsnow;
-        int numrad = 2;        // number of shortwave radiation bands; ERF may override
-        int itimestep, ntime;
-        int rank, blkid, level;
-        int comm;
-
-        noahmp_real DTBL;                      // @NoahmpMacro:scalar
-        noahmp_real ZLVL = -9999.0;            // @NoahmpMacro:scalar
-
-        NoahmpArray2D<noahmp_real> XLAT;         // @NoahmpMacro:bounds_2d(xstart:xend, ystart:yend) doc="latitude [radians]"
-        NoahmpArray2D<noahmp_real> WSLAKEXY;     // @NoahmpMacro:bounds_2d(xstart:xend, ystart:yend) doc="lake water storage [mm]"
-        NoahmpArray3D<noahmp_real> U_PHY;        // @NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend) doc="3D U wind component [m/s]"
-        NoahmpArray3D<noahmp_real> T_PHY;        // @NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend) doc="3D atmospheric temperature valid at mid-levels [K]"
-        NoahmpArray3D<noahmp_real> V_PHY;        // @NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend) doc="3D V wind component [m/s]"
-        NoahmpArray3D<noahmp_real> QV_CURR;      // @NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend) doc="3D water vapor mixing ratio [kg/kg_dry]"
-        NoahmpArray2D<noahmp_real> HFX;          // @NoahmpMacro:bounds_2d(xstart:xend, ystart:yend) doc="sensible heat flux [W m-2]"
-        NoahmpArray2D<noahmp_real> LH;           // @NoahmpMacro:bounds_2d(xstart:xend, ystart:yend) doc="latent heat flux [W m-2]"
-        NoahmpArray2D<noahmp_real> SWDOWN;       // @NoahmpMacro:bounds_2d(xstart:xend, ystart:yend) doc="solar down at surface [W m-2]"
-        NoahmpArray2D<noahmp_real> GLW;          // @NoahmpMacro:bounds_2d(xstart:xend, ystart:yend) doc="longwave down at surface [W m-2]"
-        NoahmpArray2D<noahmp_real> TSK;          // @NoahmpMacro:bounds_2d(xstart:xend, ystart:yend) doc="surface radiative temperature [K]"
-        NoahmpArray2D<noahmp_real> EMISS;        // @NoahmpMacro:bounds_2d(xstart:xend, ystart:yend) doc="surface bulk emissivity"
-        NoahmpArray3D<noahmp_real> ALBSFCDIRXY;  // @NoahmpMacro:bounds_3d(xstart:xend, 1:numrad, ystart:yend) doc="surface albedo (direct)"
-        NoahmpArray3D<noahmp_real> ALBSFCDIFXY;  // @NoahmpMacro:bounds_3d(xstart:xend, 1:numrad, ystart:yend) doc="surface albedo (diffuse)"
-        NoahmpArray2D<noahmp_real> COSZEN;       // @NoahmpMacro:bounds_2d(xstart:xend, ystart:yend) doc="cosine zenith angle"
-        NoahmpArray3D<noahmp_real> P8W;          // @NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend) doc="3D pressure, valid at interface [Pa]"
-        NoahmpArray2D<noahmp_real> TAU_EW;       // @NoahmpMacro:bounds_2d(xstart:xend, ystart:yend) doc="wind stress in east-west direction [N/m2]"
-        NoahmpArray2D<noahmp_real> TAU_NS;       // @NoahmpMacro:bounds_2d(xstart:xend, ystart:yend) doc="wind stress in north-south direction [N/m2]"
-        }
+        // The owner class's real fields, projected from the contract block above.
+        @NoahmpMacro:CppStorageFields(m_noahmpio);
 
         NoahmpIO_type():
           fptr(
-            @NoahmpMacro:TypeCtorFptr();
+            @NoahmpMacro:CppBindAddrs(m_noahmpio);
           ) { NoahmpIO_AssertAbi(); }
 
         // fptr stores the addresses of THIS object's own scalar members, so the
@@ -123,14 +132,14 @@ class NoahmpIO_type {
         NoahmpIO_type& operator=(NoahmpIO_type&&)      = delete;
 
         NoahmpIO_type(NoahmpIO_type&& o) noexcept:
-          @NoahmpMacro:MoveInitList();
+          @NoahmpMacro:CppMoveInit(m_noahmpio, ctype=o);
           fptr(o.fptr)
         {
           // fptr(o.fptr) copied all handles: the array handles (set later by the
           // Fortran side via C_LOC into Fortran-owned memory) are correct as-is;
           // the self-referential scalar handles must be re-pointed from the
           // source's members to THIS object's members.
-          @NoahmpMacro:MoveFptrRepoint();
+          @NoahmpMacro:CppMoveRepoint(m_noahmpio, ctype_fi=fptr);
         }
 
         void ScalarInitDefault();

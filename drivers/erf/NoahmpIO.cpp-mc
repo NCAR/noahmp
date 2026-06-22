@@ -125,7 +125,7 @@ void NoahmpIO_type::ReadRestart(const std::string& dir) {
 
 void NoahmpIO_type::VarInitDefault() {
       NoahmpIOVarInitDefault_fi(&fptr);
-      @NoahmpMacro:VarInitArrays();
+      @NoahmpMacro:CppArrayViews(m_noahmpio, ctype_fi=fptr);
 };
 
 

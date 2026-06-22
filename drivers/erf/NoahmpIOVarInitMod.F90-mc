@@ -548,13 +548,13 @@ contains
 #endif    
 
     ! ERF-coupled arrays: storage the C++ NoahmpIO interface points into via C_LOC.
-    ! Generated from the @NoahmpMacro:bounds_Nd annotations in NoahmpIO.H-mc (the
+    ! Generated from the NoahmpMacro:bounds_Nd annotations in NoahmpIO.H-mc (the
     ! same source that sizes the C++ NoahmpArray extents), so bounds cannot drift.
     ! MUST precede the default-value initialization below: a scalar assignment such
     ! as `NoahmpIO%XLAT = undefined_real` does NOT auto-allocate the allocatable
     ! (only an array-valued RHS would), so the arrays must be allocated first or the
     ! assignment writes through an unallocated descriptor (segfault / UB).
-    @NoahmpMacro:VarInitAllocate();
+    @NoahmpMacro:FortranArrayAllocate(m_noahmpio, ftype=NoahmpIO);
 
     !-------------------------------------------------------------------
     ! Initialize variables with default values
