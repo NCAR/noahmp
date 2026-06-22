@@ -29,9 +29,9 @@ NoahmpIO_type(NoahmpIO_type&& o) noexcept;               // allowed, but re-poin
 
 ## 2. `NoahmpIO_vector`: size once, never relocate
 
-`NoahmpIO_vector : private std::vector<NoahmpIO_type>` — **private** inheritance so
-the mutating half of `std::vector`'s API is unreachable (even via an upcast, which
-is ill-formed for an inaccessible base). Two invariants:
+`NoahmpIO_vector : private std::vector<NoahmpIO_type>` — it inherits **privately**
+from `std::vector`, which hides every vector operation that could move elements in
+memory; the compiler simply won't let a caller reach them. Two invariants:
 
 1. The C++ vector size and the Fortran `NoahmpIO_vect(level)%NoahmpIO` extent must
    stay equal — only `resize(size, level)` keeps them in sync.
@@ -45,9 +45,10 @@ Re-exported (safe once sized): `operator[]`, `at`, `front`, `back`, `data`,
 - `resize(size, level)` is the one sizing entry point. It runs the ABI precision
   guard, refuses a second call (`initialized_`), refuses `size == 0`, sizes the
   C++ vector, then calls `NoahmpIOTypeVectInit_fi`.
-- The Fortran `NoahmpIOTypeVectInit_fi` is **defense-in-depth**: idempotent on the
-  same size, aborts on a conflicting re-init, validates `level ∈
-  [NLEVEL_MIN, NLEVEL_MAX]` and `NBlocks >= 1`, and checks the `allocate` status.
+- The Fortran `NoahmpIOTypeVectInit_fi` is a **second line of defense**: a repeated
+  call with the same size does nothing, a conflicting re-init aborts, it validates
+  `level ∈ [NLEVEL_MIN, NLEVEL_MAX]` and `NBlocks >= 1`, and it checks the
+  `allocate` status.
 
 ## 3. Block resolution: validate before indexing
 

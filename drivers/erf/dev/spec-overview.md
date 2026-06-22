@@ -132,10 +132,31 @@ Hand-written (not generated):
 
 ## 7. Glossary
 
+This is the shared glossary for all the specs; the others link here on first use
+rather than re-defining terms.
+
 - **ABI** — the binary contract between the C++ `NoahmpIO_type_fi` and the
-  Fortran `bind(c)` mirror: same member count, order, all-pointer types.
+  Fortran `bind(c)` mirror: same member count, order, all-pointer types. ("API"
+  is what the *programmer* sees — method names, arguments; "ABI" is what the
+  *compiled binaries* must agree on — byte layout. The boundary needs both.)
 - **`fi`** — "Fortran interop"; the boundary mirror struct and `*_fi` shims.
-- **handle** — an opaque pointer member of `NoahmpIO_type_fi`.
+- **handle / opaque pointer** — a bare memory address with no type information
+  attached; a member of `NoahmpIO_type_fi` is just such an address.
+- **self-referential struct** — an object that stores the addresses of its *own*
+  members, so a second language can read/write them. Powerful, but it means the
+  object must never be moved or copied (see
+  [`spec-memory-safety.md`](spec-memory-safety.md)).
+- **standard-layout / "no padding"** — the struct is a plain flat array of
+  pointers with no hidden bytes inserted by the compiler, so the C++ and Fortran
+  pictures of it line up exactly.
+- **hyperslab** — a NetCDF term: a rectangular sub-region of a larger array, given
+  as an origin (`start`) and a size (`count`). Each block writes its own
+  hyperslab of the shared file (see [`spec-io-parallel.md`](spec-io-parallel.md)).
+- **collective I/O** — every MPI rank participates in one shared write to one file,
+  instead of writing private per-rank files that need stitching afterward.
+- **oracle** — a trusted reference implementation you check a new one against; here,
+  the CPU Fortran path is the oracle for the GPU path
+  (see [`plan-cpp-interface.md`](plan-cpp-interface.md)).
 - **column / 1-D physics** — Noah-MP's per-grid-cell solver (`noahmp_type`,
   `NoahmpMain`), the part destined for the GPU (see
   [`plan-cpp-interface.md`](plan-cpp-interface.md)).

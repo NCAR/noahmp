@@ -20,7 +20,7 @@ user-facing documentation lives at
 | [`spec-io-parallel.md`](spec-io-parallel.md) | Parallel (collective MPI) NetCDF land-output implementation. |
 | [`spec-io-restart.md`](spec-io-restart.md) | Full prognostic-state checkpoint/restart I/O. |
 | [`spec-add-coupled-variable.md`](spec-add-coupled-variable.md) | Workflow: expose a new variable across the boundary. |
-| [`plan-cpp-interface.md`](plan-cpp-interface.md) | Plan/task list to port the driver to C++ and run Noah-MP physics on GPU. |
+| [`plan-cpp-interface.md`](plan-cpp-interface.md) | Plan/task list to GPU-enable Noah-MP via Fortran offload (OpenACC/OpenMP target), keeping `src/` in Fortran and `drivers/erf` as the C++ host. |
 
 ## Conventions used across these docs
 

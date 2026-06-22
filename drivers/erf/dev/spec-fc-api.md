@@ -6,10 +6,13 @@
 
 ## 1. The contract
 
-Every member of the boundary struct `NoahmpIO_type_fi` is an **opaque pointer**.
-A correct C ↔ Fortran mapping therefore requires the *same number* of members, in
-the *same order*, with the *same element precision*, and **no padding**. The
-struct exists twice:
+Every member of the boundary struct `NoahmpIO_type_fi` is an **opaque pointer** (a
+bare memory address with no type attached — see the glossary in
+[`spec-overview.md`](spec-overview.md) §7). A correct C ↔ Fortran mapping
+therefore requires the *same number* of members, in the *same order*, with the
+*same element precision*, and **no padding** (no hidden bytes inserted by the
+compiler — the struct must stay a plain flat array of pointers). The struct
+exists twice:
 
 - **C++** (`extern "C" struct NoahmpIO_type_fi`, in `NoahmpIO.H-mc`).
 - **Fortran** (`type, bind(c) :: NoahmpIO_type_fi`, in `NoahmpIO_fi.F90-mc`).
@@ -141,6 +144,10 @@ Rules the generator enforces (it raises `SystemExit("NoahmpMacro: …")` otherwi
 
 ### Internal architecture (read `tools/NoahmpMacro.py` top-to-bottom)
 
+> Skip this subsection unless you're modifying the generator itself. *Adding* a
+> coupled variable needs only §1 here and
+> [`spec-add-coupled-variable.md`](spec-add-coupled-variable.md).
+
 ```
 parse_source(h_text)   -> ordered [Member(name, kind, rank, begin, end, doc)]
 r_*(members)           -> body LINES for one region
@@ -182,15 +189,15 @@ Because count/order/types match by construction, only the hazards codegen
 1. **Compile-time `static_assert`** (free) in `NoahmpIO.H`:
    `is_standard_layout<NoahmpIO_type_fi>` **and**
    `sizeof == NOAHMP_IO_FI_NUM_MEMBERS * sizeof(void*)`. Pins the C++ side to a
-   flat pointer array; the Fortran `bind(C)` side gets the same layout by
-   companion-C interop. Catches an incompatible compiler pairing / unexpected
-   padding.
+   flat pointer array; the Fortran `bind(C)` side is guaranteed the same layout by
+   the Fortran↔C interoperability standard. Catches an incompatible compiler
+   pairing / unexpected padding.
 2. **Run-time precision check** `NoahmpIO_AssertAbi()`: compares
    `NoahmpRealSize_fi()` (Fortran's `sizeof(real(c_kind_noahmp))`) against
    `sizeof(noahmp_real)`. The struct is all pointers, so its byte size is
    identical for float vs double — *only* a value check can detect a
-   `DOUBLE_PREC` mismatch between the two compilers. Runs once (latched in a
-   `static` lambda), from both `NoahmpIO_type`'s constructor and
+   `DOUBLE_PREC` mismatch between the two compilers. Runs only once (a
+   function-local `static` guards it), from both `NoahmpIO_type`'s constructor and
    `NoahmpIO_vector::resize`, so neither path can skip it.
 
 > **Do not reintroduce** a run-time size or member-order handshake — those only
