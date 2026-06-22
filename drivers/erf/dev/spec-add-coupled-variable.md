@@ -61,8 +61,10 @@ The generator emits the member declarations, all ABI plumbing, **and** the
 Fortran `allocate()` of each coupled array (bounds come straight from the
 `bounds_Nd` annotation). It does **not** touch the rest of the runtime:
 
-- **Arrays**: nothing — the allocate is generated. (Scalars are never allocated;
-  they point at C++-owned storage.)
+- **Arrays**: nothing *for a brand-new variable* — the allocate is generated.
+  (Scalars are never allocated; they point at C++-owned storage.) **If you are
+  promoting a variable that already exists as a Fortran-only allocatable, this is
+  not enough — see [Promoting an existing Fortran-only variable](#promoting-an-existing-fortran-only-variable) below.**
 - **Namelist-guarded scalar** (only for a scalar *also* read from the Fortran
   namelist) — in `NoahmpReadNamelistMod.F90`:
   ```fortran
@@ -78,10 +80,41 @@ If the variable should appear in the per-step land output, add it to
 of [`spec-io-parallel.md`](spec-io-parallel.md). To carry it across
 **restart** instead, see [`spec-io-restart.md`](spec-io-restart.md) §6.
 
+## Promoting an existing Fortran-only variable
+
+Steps 1–3 assume a *brand-new* variable. If instead you are exposing a variable
+that **already exists** as a hand-written Fortran-only allocatable, the generator
+will now emit its declaration *and* its `allocate()` for you — so you must
+**delete the two hand-written copies first**, or they collide with the generated
+ones. Concretely, once the variable's annotated line is in `@NoahmpMacro:Source`:
+
+1. **Remove the manual derived-type declaration** from `NoahmpIOVarType.F90-mc`
+   (the hand-written block *after* the `@NoahmpMacro:VarTypeMembers();` marker,
+   e.g. a `real(kind=kind_noahmp), allocatable, dimension(:,:) :: NAME` line).
+   The generator now emits this member into the `VarTypeMembers` region as
+   `real(kind=c_kind_noahmp), allocatable` (the C-interop kind). Leaving the old
+   line in place is a **duplicate component → hard Fortran compile error**.
+2. **Remove the manual `allocate()`** from `NoahmpIOVarInitMod.F90-mc` (the
+   hand-written `if (.not. allocated(NoahmpIO%NAME)) allocate(...)` line *after*
+   the `@NoahmpMacro:VarInitAllocate();` marker). The generator emits the
+   allocate from the `bounds_Nd` annotation; keeping the old one is a redundant
+   (and possibly bound-conflicting) second allocate.
+
+What you do **not** touch: any Fortran physics that *fills or reads* the variable
+(e.g. `*VarInTransfer`, `ReadLandMain`, the driver). This spec owns only the
+variable's *interface* — its declaration, ABI wiring, and allocation. The kind
+change from `kind_noahmp` to `c_kind_noahmp` is intentional and safe
+(`c_kind_noahmp == kind_noahmp` in every build).
+
+> Net rule: a *new* variable is one line added; a *promoted* variable is one line
+> added **plus two hand-written lines removed** (declaration + allocate).
+
 ## Validation
 
 - `make codegen-check` passes (all targets, incl. the array `allocate()`, in sync
   with the Source block);
+- (if promoting) the old hand-written declaration and `allocate()` are gone — no
+  duplicate-component compile error;
 - any namelist-read scalar has its sentinel-guarded assignment;
 - (if output wanted) the variable is defined **and** written with matching dims;
 - the project builds and `NoahmpIO_AssertAbi()` does not abort.

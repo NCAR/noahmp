@@ -131,7 +131,8 @@ Fortran writes fastest-axis-first, a reader sees axes as listed in §2 — trans
   scale;
 - fail clearly on a missing variable, listing what is present.
 
-A reference tool lives at `tools/plot_land.py` (or build one to this contract).
+No reference plotting tool ships in `tools/` yet (it holds only
+`NoahmpMacro.py`) — build one to this contract.
 
 ## 7. Acceptance checklist
 
