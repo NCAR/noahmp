@@ -30,24 +30,24 @@
     noahmp_real DTBL;
     noahmp_real ZLVL = -9999.0;
 
-    NoahmpArray2D<noahmp_real> XLAT(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));         // latitude [radians]
-    NoahmpArray2D<noahmp_real> WSLAKEXY(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));     // lake water storage [mm]
-    NoahmpArray3D<noahmp_real> U_PHY(@NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend));        // 3D U wind component [m/s]
-    NoahmpArray3D<noahmp_real> T_PHY(@NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend));        // 3D atmospheric temperature valid at mid-levels [K]
-    NoahmpArray3D<noahmp_real> V_PHY(@NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend));        // 3D V wind component [m/s]
-    NoahmpArray3D<noahmp_real> QV_CURR(@NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend));      // 3D water vapor mixing ratio [kg/kg_dry]
-    NoahmpArray2D<noahmp_real> HFX(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));          // sensible heat flux [W m-2]
-    NoahmpArray2D<noahmp_real> LH(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));           // latent heat flux [W m-2]
-    NoahmpArray2D<noahmp_real> SWDOWN(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));       // solar down at surface [W m-2]
-    NoahmpArray2D<noahmp_real> GLW(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));          // longwave down at surface [W m-2]
-    NoahmpArray2D<noahmp_real> TSK(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));          // surface radiative temperature [K]
-    NoahmpArray2D<noahmp_real> EMISS(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));        // surface bulk emissivity
-    NoahmpArray3D<noahmp_real> ALBSFCDIRXY(@NoahmpMacro:bounds_3d(xstart:xend, 1:numrad, ystart:yend));  // surface albedo (direct)
-    NoahmpArray3D<noahmp_real> ALBSFCDIFXY(@NoahmpMacro:bounds_3d(xstart:xend, 1:numrad, ystart:yend));  // surface albedo (diffuse)
-    NoahmpArray2D<noahmp_real> COSZEN(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));       // cosine zenith angle
-    NoahmpArray3D<noahmp_real> P8W(@NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend));          // 3D pressure, valid at interface [Pa]
-    NoahmpArray2D<noahmp_real> TAU_EW(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));       // wind stress in east-west direction [N/m2]
-    NoahmpArray2D<noahmp_real> TAU_NS(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));       // wind stress in north-south direction [N/m2]
+    NoahmpArray2D<noahmp_real> XLAT[xstart:xend, ystart:yend];         // latitude [radians]
+    NoahmpArray2D<noahmp_real> WSLAKEXY[xstart:xend, ystart:yend];     // lake water storage [mm]
+    NoahmpArray3D<noahmp_real> U_PHY[xstart:xend, kms:kme, ystart:yend];        // 3D U wind component [m/s]
+    NoahmpArray3D<noahmp_real> T_PHY[xstart:xend, kms:kme, ystart:yend];        // 3D atmospheric temperature valid at mid-levels [K]
+    NoahmpArray3D<noahmp_real> V_PHY[xstart:xend, kms:kme, ystart:yend];        // 3D V wind component [m/s]
+    NoahmpArray3D<noahmp_real> QV_CURR[xstart:xend, kms:kme, ystart:yend];      // 3D water vapor mixing ratio [kg/kg_dry]
+    NoahmpArray2D<noahmp_real> HFX[xstart:xend, ystart:yend];          // sensible heat flux [W m-2]
+    NoahmpArray2D<noahmp_real> LH[xstart:xend, ystart:yend];           // latent heat flux [W m-2]
+    NoahmpArray2D<noahmp_real> SWDOWN[xstart:xend, ystart:yend];       // solar down at surface [W m-2]
+    NoahmpArray2D<noahmp_real> GLW[xstart:xend, ystart:yend];          // longwave down at surface [W m-2]
+    NoahmpArray2D<noahmp_real> TSK[xstart:xend, ystart:yend];          // surface radiative temperature [K]
+    NoahmpArray2D<noahmp_real> EMISS[xstart:xend, ystart:yend];        // surface bulk emissivity
+    NoahmpArray3D<noahmp_real> ALBSFCDIRXY[xstart:xend, 1:numrad, ystart:yend];  // surface albedo (direct)
+    NoahmpArray3D<noahmp_real> ALBSFCDIFXY[xstart:xend, 1:numrad, ystart:yend];  // surface albedo (diffuse)
+    NoahmpArray2D<noahmp_real> COSZEN[xstart:xend, ystart:yend];       // cosine zenith angle
+    NoahmpArray3D<noahmp_real> P8W[xstart:xend, kms:kme, ystart:yend];          // 3D pressure, valid at interface [Pa]
+    NoahmpArray2D<noahmp_real> TAU_EW[xstart:xend, ystart:yend];       // wind stress in east-west direction [N/m2]
+    NoahmpArray2D<noahmp_real> TAU_NS[xstart:xend, ystart:yend];       // wind stress in north-south direction [N/m2]
 }
 
 extern "C" {

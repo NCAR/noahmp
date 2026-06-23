@@ -23,9 +23,10 @@
 # A binding is identified by a HANDLE (e.g. `m_NoahmpIO`). The handle is ONLY a
 # reference -- the tool derives NO identifiers from it; every concrete site-local
 # name a projection emits is passed explicitly at the call (see PARAMS below).
-# Markers carry the handle, so one tool hosts many bindings. Punctuation splits the
-# two surfaces: `:` for STANDALONE projections, `.` for an IN-DECLARATION field
-# annotation. Every form ends its statement with `;`.
+# Markers carry the handle, so one tool hosts many bindings. Every `@NoahmpMacro:`
+# form is a STANDALONE projection (block or value) and ends its statement with `;`.
+# The one IN-DECLARATION extra -- an array's `[lo:hi, ...]` bounds clause -- carries
+# NO marker; it is pure data on the field's name (see the CONTRACT example below).
 #
 #   * the CONTRACT (exactly one per handle): a single block, the source of truth,
 #     near the top of the owning template -- the ordered field list in the owner
@@ -37,16 +38,18 @@
 #                 int numrad = 2;                     // int with a shared C++/Fortran default
 #                 noahmp_real DTBL;                   // scalar: kind inferred from the type
 #                 noahmp_real ZLVL = -9999.0;         // free-form doc comment, optional
-#                 NoahmpArray2D<noahmp_real> XLAT(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend)); // doc
-#                 NoahmpArray3D<noahmp_real> U_PHY(@NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend)); // doc
+#                 NoahmpArray2D<noahmp_real> XLAT[xstart:xend, ystart:yend];        // doc
+#                 NoahmpArray3D<noahmp_real> U_PHY[xstart:xend, kms:kme, ystart:yend]; // doc
 #             }
 #
 #     RULE: kind is ALWAYS inferred from the declared type (int / noahmp_real /
-#     NoahmpArrayND). The one fact the type cannot carry -- array `bounds_Nd(...)` --
-#     rides in an in-declaration `(@NoahmpMacro:bounds_Nd(...))` annotation (rank
-#     stated in both the type and the annotation; they must agree). Anything after
-#     the line comment is free-form doc, kept verbatim in the owner header and
-#     ignored by the tool (no `doc=` variable).
+#     NoahmpArrayND). The one fact the type cannot carry -- the array's per-rank
+#     bounds -- rides in a trailing `[lo:hi, ...]` clause on the name, Fortran-style
+#     extents in a bracket delimiter distinct from the type's own `<>`. The clause has no
+#     `@NoahmpMacro:` marker: it is pure data, and the bound-pair COUNT must equal
+#     the rank stated by the type (NoahmpArray{2,3}D) -- the tool's one strictness
+#     check. Anything after the line comment is free-form doc, kept verbatim in the
+#     owner header and ignored by the tool (no `doc=` variable).
 #
 #   * a PROJECTION marker names a region, the handle, and any site-local names the
 #     region needs as explicit `key=value` args (never derived from the handle).
@@ -130,7 +133,8 @@ ROOT = os.path.dirname(SCRIPT_DIR)            # drivers/erf
 #   * contract block   -- @NoahmpMacro:Source <handle> { ...fields... }
 #   * block projection -- @NoahmpMacro:<Region>(<handle>[, key=value]...);   (own line)
 #   * value projection -- ... = @NoahmpMacro:MemberCount(<handle>);          (inline)
-#   * field annotation -- NoahmpArray2D<noahmp_real> XLAT(@NoahmpMacro:bounds_2d(lo:hi, lo:hi));
+# The array bounds clause (NoahmpArray2D<noahmp_real> XLAT[lo:hi, lo:hi];) carries no
+# marker -- it is plain data on the name, parsed within the contract block.
 MARKER = "@NoahmpMacro:"                       # the one and only marker prefix
 SOURCE = "Source"                             # the contract block keyword
 
@@ -138,7 +142,7 @@ SOURCE = "Source"                             # the contract block keyword
 # of truth -- and the owner class materializes its own fields through an ordinary
 # region projection, exactly like every other side of the boundary:
 #     @NoahmpMacro:Source m_noahmpio {     <- the contract block (field list)
-#         int ids, ide;  noahmp_real DTBL;  NoahmpArray2D<noahmp_real> XLAT(...);
+#         int ids, ide;  noahmp_real DTBL;  NoahmpArray2D<noahmp_real> XLAT[...];
 #     }
 #     ...
 #     @NoahmpMacro:CppStorageFields(m_noahmpio);   <- emits those fields into the class
@@ -212,16 +216,16 @@ def parse_members(body, cc, tag):
     ordered Member list. `cc` is the owner language's line comment. The type-token
     -> kind recognition (int / noahmp_real / NoahmpArrayND) defines this binding's
     field vocabulary; kind is inferred from the type, never annotated. Array bounds
-    are the one fact the type cannot carry, so they ride in an in-declaration
-    `(@NoahmpMacro:bounds_Nd(...))` annotation; the trailing comment is free-form
-    doc the parser ignores entirely (it survives verbatim into the owner header)."""
+    are the one fact the type cannot carry, so they ride in a trailing `[lo:hi, ...]`
+    clause on the name; the trailing comment is free-form doc the parser ignores
+    entirely (it survives verbatim into the owner header)."""
     members = []
     seen = set()
     for raw in body:
         if raw.strip().startswith(cc):
             continue                                   # guidance/usage comment line
         # Keep only the declaration; the trailing comment is free-form doc (the
-        # bounds annotation now lives in the code, not the comment).
+        # bounds clause lives in the code, not the comment).
         code = (raw.split(cc, 1)[0] if cc in raw else raw).strip()
         if not code or not code.endswith(";"):
             continue                                   # blank / comment-only line
@@ -231,23 +235,25 @@ def parse_members(body, cc, tag):
         # the vocabulary does not know (`int64_t`, `double`, `bool`, ...) is a hard
         # error here, never silently mis-parsed as a known kind.
         if re.match(r"NoahmpArray\w*<", code):
-            # Rank is stated twice -- in the type and in the bounds annotation -- and
-            # the two MUST agree; the annotation also carries the bound list.
-            m = re.match(r"NoahmpArray([23])D<noahmp_real>\s+(\w+)\s*\(\s*"
-                         r"%sbounds_([23])d\s*\(([^)]*)\)\s*\)$"
-                         % re.escape(MARKER), code)
+            # Rank is stated ONCE, by the type (NoahmpArray{2,3}D); the bounds ride
+            # in a trailing `[lo:hi, ...]` clause on the name. The bound-pair COUNT
+            # must equal that rank -- the tool's one strictness check (no separate
+            # rank annotation to keep in sync). The bounds delimiter is `[...]`,
+            # visually distinct from the type's own `<noahmp_real>`; `[^\[\]]*`
+            # keeps the clause from swallowing a nested bracket. The `[...]` form is
+            # ENFORCED: the old `<lo:hi, ...>` clause no longer matches and is a hard
+            # error below.
+            m = re.match(r"NoahmpArray([23])D<noahmp_real>\s+(\w+)\s*\[([^\[\]]*)\]$", code)
             if not m:
                 raise SystemExit("NoahmpMacro: cannot parse array decl (want "
-                                 "`NoahmpArray{2,3}D<noahmp_real> NAME(%sbounds_{2,3}d(lo:hi, ...));`): %r"
-                                 % (MARKER, raw))
-            rank, name, brank = int(m.group(1)), m.group(2), int(m.group(3))
-            if brank != rank:
-                raise SystemExit("NoahmpMacro: array %s is %d-D but annotated bounds_%dd"
-                                 % (name, rank, brank))
-            pairs = [p.strip() for p in m.group(4).split(",") if p.strip()]
+                                 "`NoahmpArray{2,3}D<noahmp_real> NAME[lo:hi, ...];`): %r"
+                                 % raw)
+            rank, name = int(m.group(1)), m.group(2)
+            pairs = [p.strip() for p in m.group(3).split(",") if p.strip()]
             if len(pairs) != rank:
-                raise SystemExit("NoahmpMacro: array %s is %d-D but has %d bound pairs"
-                                 % (name, rank, len(pairs)))
+                raise SystemExit("NoahmpMacro: array %s is %d-D (NoahmpArray%dD) but has "
+                                 "%d bound pair(s); the count must equal the rank"
+                                 % (name, rank, rank, len(pairs)))
             begin, end = [], []
             for p in pairs:
                 if p.count(":") != 1:
@@ -521,8 +527,8 @@ def r_cpp_array_views(b, p):
 def r_cpp_storage_fields(b, p):
     # The C++ owner class's REAL fields, emitted VERBATIM from the contract body
     # (the single source of truth) so initializers (`int numrad = 2;`), trailing doc
-    # comments, and the blank-line grouping survive exactly. Only the in-declaration
-    # `(@NoahmpMacro:bounds_Nd(...))` annotation is stripped and the line re-indented
+    # comments, and the blank-line grouping survive exactly. Only the trailing array
+    # `[lo:hi, ...]` bounds clause is stripped and the line re-indented
     # to the class body; guidance comment lines are dropped. The contract is written
     # in the owner language (C++), so this region is inherently C++.
     indent = "        "
@@ -540,8 +546,8 @@ def r_cpp_storage_fields(b, p):
 
 def r_fortran_array_allocate(b, p):
     # The Fortran-owned storage the C++ view points into. Generated from the SAME
-    # bounds_Nd annotation that drives the C++ extent (r_cpp_array_views), so the
-    # two cannot drift. The derived-type instance (`ftype`) comes from the call
+    # `[lo:hi, ...]` bounds clause that drives the C++ extent (r_cpp_array_views), so
+    # the two cannot drift. The derived-type instance (`ftype`) comes from the call
     # site; the guard keeps it idempotent.
     out = []
     for m in b.members:
@@ -771,10 +777,12 @@ def collect_bindings(templates):
     return bindings
 
 
-# An in-declaration annotation group, parens and all: `(@NoahmpMacro:bounds_2d(...))`.
+# The in-declaration array-bounds clause, square brackets and all: `[xstart:xend, ...]`.
 # Stripped from a field declaration (in CppStorageFields) so the owner class sees a
-# plain member decl. Single `@NoahmpMacro:` surface -- no separate punctuator.
-INLINE_ANNOT_RE = re.compile(r"\(\s*%sbounds_\w+\([^)]*\)\s*\)" % re.escape(MARKER))
+# plain member decl. The `(?<=\w)` pins this to a clause trailing a NAME, and `[...]`
+# is the bounds delimiter exclusively -- the type's own extent uses `<noahmp_real>`,
+# so the bracket form alone cleanly discriminates the bounds clause.
+INLINE_ANNOT_RE = re.compile(r"(?<=\w)\[[^\[\]]*\]")
 
 
 def expand(text, cc, bindings):

@@ -31,8 +31,8 @@ Add **one** line to the `@NoahmpMacro:Source m_noahmpio { … }` block in
 
 ```cpp
 noahmp_real RAINBL;                    // rainfall [mm]
-NoahmpArray2D<noahmp_real> RAINLSM(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend));    // lsm rain
-NoahmpArray3D<noahmp_real> SMOIS(@NoahmpMacro:bounds_3d(xstart:xend, nsoil:nsoil, ystart:yend));
+NoahmpArray2D<noahmp_real> RAINLSM[xstart:xend, ystart:yend];    // lsm rain
+NoahmpArray3D<noahmp_real> SMOIS[xstart:xend, nsoil:nsoil, ystart:yend];
 ```
 
 Rules (the generator errors loudly otherwise — see
@@ -40,9 +40,9 @@ Rules (the generator errors loudly otherwise — see
 
 - Kind is **inferred** from the C++ type (`int` / `noahmp_real` /
   `NoahmpArray{2,3}D`).
-- Arrays carry an in-declaration `(@NoahmpMacro:bounds_{2,3}d(lo:hi, …))` in
-  **Fortran order**; the rank is stated in both the type and the annotation and
-  must agree, and the pair count must match. Every bound token must be a
+- Arrays carry a trailing `[lo:hi, …]` bounds clause on the name, in **Fortran
+  order** (no `@NoahmpMacro:` marker — pure data); the rank is stated **only** by
+  the type and the pair count must equal it. Every bound token must be a
   **literal** or a **coupled member name** (`xstart`, `xend`, `kms`, `kme`,
   `nsoil`, `numrad`, …) — never a Fortran-only parameter.
 - Scalars (`noahmp_real`) need no annotation — the type already says "scalar".
@@ -65,7 +65,7 @@ A plain `make` / `cmake --build` also regenerates before compiling.
 
 The generator emits the member declarations, all ABI plumbing, **and** the
 Fortran `allocate()` of each coupled array (bounds come straight from the
-`bounds_Nd` annotation). It does **not** touch the rest of the runtime:
+`[lo:hi, …]` clause). It does **not** touch the rest of the runtime:
 
 - **Arrays**: nothing *for a brand-new variable* — the allocate is generated.
   (Scalars are never allocated; they point at C++-owned storage.) **If you are
@@ -103,7 +103,7 @@ ones. Concretely, once the variable's line is in the `m_noahmpio` contract block
 2. **Remove the manual `allocate()`** from `NoahmpIOVarInitMod.F90-mc` (the
    hand-written `if (.not. allocated(NoahmpIO%NAME)) allocate(...)` line *after*
    the `@NoahmpMacro:FortranArrayAllocate(m_noahmpio, ftype=NoahmpIO);` marker). The
-   generator emits the allocate from the `bounds_Nd` annotation; keeping the old one
+   generator emits the allocate from the `[lo:hi, …]` clause; keeping the old one
    is a redundant (and possibly bound-conflicting) second allocate.
 
 What you do **not** touch: any Fortran physics that *fills or reads* the variable

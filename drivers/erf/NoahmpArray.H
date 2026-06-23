@@ -12,9 +12,11 @@
 #include <cstdio>
 #endif
 
+// The array views and noahmp_real below are part of the Noah-MP client API.
+
 // Bounds check for the NoahmpArray access operators. In debug builds (NDEBUG not
 // defined) an out-of-range index prints the offending index/range and calls
-// noahmp::fatal() -- which routes through the host's abort handler so the failure
+// NoahmpIO_fatal() -- which routes through the host's abort handler so the failure
 // reaches all ranks. In release builds this is a no-op (zero cost). `idx` is a
 // long so a signed index below a (possibly negative) lower bound is still caught.
 inline void noahmparray_check([[maybe_unused]] long idx, [[maybe_unused]] int lo,
@@ -25,7 +27,7 @@ inline void noahmparray_check([[maybe_unused]] long idx, [[maybe_unused]] int lo
         std::snprintf(buf, sizeof(buf),
                       "NoahmpArray: index %ld out of bounds [%d, %d] on dimension %d",
                       idx, lo, hi, dim);
-        noahmp::fatal(buf);
+        NoahmpIO_fatal(buf);
     }
 #endif
 }

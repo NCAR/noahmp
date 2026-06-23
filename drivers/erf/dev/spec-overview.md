@@ -95,7 +95,7 @@ Per level, the host:
    `@NoahmpMacro:Source` block of `NoahmpIO.H-mc` generates *both* sides. Count,
    order, and precision match by construction. See [`spec-fc-api.md`](spec-fc-api.md).
 2. **No parallel-runtime dependency in Noah-MP.** Noah-MP never calls MPI/AMReX.
-   Fatal errors route through `noahmp::fatal()` → a host-installed handler
+   Fatal errors route through `NoahmpIO_fatal()` → a host-installed handler
    (`amrex::Abort` → `MPI_Abort`). See [`spec-memory-safety.md`](spec-memory-safety.md).
 3. **Precision is host-owned.** `DOUBLE_PREC` selects `noahmp_real` /
    `c_kind_noahmp` so the boundary always matches `amrex::Real`. A run-time guard
@@ -120,10 +120,14 @@ Generated/templated coupling glue (see [`spec-fc-api.md`](spec-fc-api.md)):
 
 Hand-written (not generated):
 
+The public C++ client API is exposed at global scope (`NoahmpIO_type`,
+`NoahmpIO_vector`, `NoahmpArray{2,3}D`, `noahmp_real`,
+`NoahmpIO_fatal` / `NoahmpIO_set_fatal_handler`); see [`spec-fc-api.md`](spec-fc-api.md) §3.
+
 | File | Role |
 |------|------|
 | `NoahmpArray.H` | `NoahmpArray{1,2,3}D` Fortran-layout array views + `noahmp_real` |
-| `NoahmpFatal.H` | `noahmp::fatal` / `set_fatal_handler` abstraction |
+| `NoahmpFatal.H` | `NoahmpIO_fatal` / `NoahmpIO_set_fatal_handler` abstraction |
 | `NoahmpDriverMainMod.F90` | Per-step driver: 2-D ↔ 1-D transfer + `NoahmpMain` |
 | `NoahmpWriteLandMod.F90` | Parallel land-output writer ([`spec-io-parallel.md`](spec-io-parallel.md)) |
 | `NoahmpWrite/ReadRestartMod.F90` | Checkpoint/restart ([`spec-io-restart.md`](spec-io-restart.md)) |

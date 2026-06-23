@@ -58,6 +58,15 @@ is the one thing the run-time guard checks (§5).
 
 ## 3. The C++ API surface (`NoahmpIO_type`)
 
+### Names
+
+The public C++ client API is exposed at global scope: `NoahmpIO_type`,
+`NoahmpIO_vector`, `NoahmpArray{2,3}D<noahmp_real>`, `noahmp_real`, and
+`NoahmpIO_fatal` / `NoahmpIO_set_fatal_handler`. The `extern "C"` Fortran-bridge symbols (the
+`*_fi` functions and the `NoahmpIO_type_fi` mirror struct) keep **C language
+linkage** — their symbol names stay unmangled and match the Fortran `bind(C)`
+side, and the struct is matched by layout, not by name.
+
 Public methods (each maps 1:1 to a `bind(C)` `*_fi` shim in `NoahmpIO.cpp-mc`):
 
 ```cpp
@@ -116,7 +125,7 @@ constructors and move constructor, `NOAHMP_IO_FI_NUM_MEMBERS`, the Fortran
 `bind(C)` type, the coupled members of the storage `NoahmpIO_type`, the
 `C_LOC`/`C_F_POINTER` wiring, the `NoahmpArray` extents, **and** the Fortran
 `allocate()` of each coupled array. The allocate and the C++ view extent come
-from the *same* `bounds_Nd` annotation, so they cannot disagree.
+from the *same* `[lo:hi, …]` bounds clause, so they cannot disagree.
 
 ### Annotation grammar
 
@@ -128,8 +137,8 @@ from the *same* `bounds_Nd` annotation, so they cannot disagree.
   noahmp_real DTBL;                        // scalar: kind inferred from the type
   noahmp_real ZLVL = -9999.0;              // free-form trailing doc, optional
 
-  NoahmpArray2D<noahmp_real> XLAT(@NoahmpMacro:bounds_2d(xstart:xend, ystart:yend)); // latitude [rad]
-  NoahmpArray3D<noahmp_real> U_PHY(@NoahmpMacro:bounds_3d(xstart:xend, kms:kme, ystart:yend)); // U wind
+  NoahmpArray2D<noahmp_real> XLAT[xstart:xend, ystart:yend];            // latitude [rad]
+  NoahmpArray3D<noahmp_real> U_PHY[xstart:xend, kms:kme, ystart:yend];  // U wind
 }
 ```
 
@@ -141,12 +150,13 @@ enforces (raising `SystemExit("NoahmpMacro: …")` otherwise):
   `NoahmpArray{2,3}D`) — never spelled out. (There is no `@NoahmpMacro:scalar`;
   the `noahmp_real` type already says "scalar", exactly as `int` says "int".) A type
   the vocabulary does not know (`double`, `int64_t`, …) is a hard error.
-- **Arrays** carry an in-declaration `(@NoahmpMacro:bounds_{2,3}d(lo:hi, …))`
-  annotation in **Fortran order** — the one fact the type cannot hold. The rank is
-  stated in **both** the type and the annotation and they must agree; the number of
-  bound pairs must match. Every bound token must be a **literal** or a **coupled
-  member name** (`xstart`, `xend`, `kms`, `kme`, `nsoil`, `numrad`, …) so C++ and
-  Fortran resolve it to the *same* value — never a Fortran-only parameter.
+- **Arrays** carry a trailing `[lo:hi, …]` bounds clause on the name, in **Fortran
+  order** — the one fact the type cannot hold. It has no `@NoahmpMacro:` marker; it
+  is pure data. The rank is stated **only** by the type (`NoahmpArray{2,3}D`) and the
+  number of bound pairs must equal it (the tool's one strictness check). Every bound
+  token must be a **literal** or a **coupled member name** (`xstart`, `xend`, `kms`,
+  `kme`, `nsoil`, `numrad`, …) so C++ and Fortran resolve it to the *same* value —
+  never a Fortran-only parameter.
 - **Trailing comments** are free-form doc (no `doc=` form): kept verbatim in the
   owner header, dropped from the Fortran `allocate`, and ignored by the tool.
 - **Ints / scalars** need no annotation; an optional C++ default
@@ -168,8 +178,8 @@ reference — the tool derives **no** identifiers from it. There is ONE marker p
     expanded to a banner-commented body block;
   - **value**: `… = @NoahmpMacro:MemberCount(<handle>);` substituted in place as a
     scalar (shows *where* the constant is assigned; the declaration is hand-written).
-- **Field annotation** — `(@NoahmpMacro:bounds_{2,3}d(...))` inside an array
-  declaration in the contract block (the one thing the C++ type cannot carry).
+- **Array bounds clause** — a trailing `[lo:hi, …]` on an array name in the contract
+  block (the one thing the C++ type cannot carry). It carries no marker — pure data.
 
 Rigidly enforced: a malformed `Source` line, an unknown region, a block region used
 inline (or a value region used as a statement / given params), a marker arg that is

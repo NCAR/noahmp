@@ -20,28 +20,24 @@ extern "C" {
 }
 
 // Fatal-error handling. Noah-MP carries no MPI/AMReX dependency: it calls
-// noahmp::fatal(), and the host (ERF) installs a handler that propagates the
+// NoahmpIO_fatal(), and the host (ERF) installs a handler that propagates the
 // failure across all ranks (e.g. amrex::Abort -> MPI_Abort). With no handler
 // installed we fall back to std::abort(). See NoahmpFatal.H.
-namespace noahmp {
-
 static FatalHandler g_fatal_handler = nullptr;
 
-void set_fatal_handler(FatalHandler handler) { g_fatal_handler = handler; }
+void NoahmpIO_set_fatal_handler(FatalHandler handler) { g_fatal_handler = handler; }
 
-void fatal(const char* msg) {
+void NoahmpIO_fatal(const char* msg) {
     if (msg && *msg) std::cerr << msg << std::endl;
     std::cerr.flush();
     if (g_fatal_handler) g_fatal_handler(msg);  // host: cross-rank propagation
     std::abort();                               // fallback / if handler returns
 }
 
-}  // namespace noahmp
-
 // bind(C) shim so the Fortran coupling layer routes its fatal errors through the
 // same host-installed handler instead of reaching for MPI itself. Fortran prints
 // its own diagnostic first (write(0,*)), so no message is forwarded here.
-extern "C" void NoahmpIO_fatal_c() { noahmp::fatal(nullptr); }
+extern "C" void NoahmpIO_fatal_c() { NoahmpIO_fatal(nullptr); }
 
 // Run-time ABI guard, executed once. Member count and order are identical by
 // construction (both structs are generated from @NoahmpMacro:Source) and the
@@ -60,7 +56,7 @@ void NoahmpIO_AssertAbi() {
                          "defined (or undefined) consistently for BOTH the "
                          "Fortran and C++ compiles of the Noah-MP ERF driver."
                       << std::endl;
-            noahmp::fatal(nullptr);
+            NoahmpIO_fatal(nullptr);
         }
         return true;
     }();
@@ -107,7 +103,7 @@ static int checked_dir_len(const std::string& dir, const char* who) {
          std::cerr << who << ": directory path length " << dir.size()
                    << " exceeds INT_MAX and cannot be passed to the Fortran "
                       "interface." << std::endl;
-         noahmp::fatal(nullptr);
+         NoahmpIO_fatal(nullptr);
      }
      return static_cast<int>(dir.size());
 }
@@ -139,12 +135,12 @@ void NoahmpIO_vector::resize(size_t size, size_t level) {
                       "already been initialized and cannot be resized again; the "
                       "Fortran mirror (NoahmpIO_vect) is allocated only once."
                    << std::endl;
-         noahmp::fatal(nullptr);
+         NoahmpIO_fatal(nullptr);
      }
      if (size == 0) {
          std::cerr << "NoahmpIO_vector::resize(size, level): size must be > 0."
                    << std::endl;
-         noahmp::fatal(nullptr);
+         NoahmpIO_fatal(nullptr);
      }
      std::vector<NoahmpIO_type>::resize(size);
      int _size = static_cast<int>(size);

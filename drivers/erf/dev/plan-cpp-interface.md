@@ -10,7 +10,7 @@
 ## 0. TL;DR
 
 The **boundary** is already C++ (`NoahmpIO_type`, `NoahmpArray`,
-`noahmp::fatal`), and it **stays** that way: `drivers/erf` remains the C++ host
+`NoahmpIO_fatal`), and it **stays** that way: `drivers/erf` remains the C++ host
 ERF calls. The **physics in `src/` stays Fortran** — it is *scalar, per-column*
 math, and we do **not** rewrite it in C++.
 
@@ -97,7 +97,7 @@ A routine on the hot path must be:
    arrays** capped by compile-time maxima.
 3. **I/O-free, intrinsic-safe.** No `print`, no file ops, no MPI in the kernel.
    Errors cannot `abort` per-thread — use a returned status / flagged cell,
-   reduced and reported on the host (`noahmp::fatal`).
+   reduced and reported on the host (`NoahmpIO_fatal`).
 4. **Operating on per-thread-private column state.** The `noahmp_type` working set
    must be `private`/`firstprivate` per loop iteration and **free of allocatable
    components on device** (deep-copy of allocatable-component derived types to the
@@ -190,7 +190,7 @@ the device *across* timesteps (managed memory, or explicit `enter data` /
 3. **Precision discipline unchanged.** `noahmp_real` / `kind_noahmp` everywhere on
    device too. (See [`spec-fc-api.md`](spec-fc-api.md) §2.)
 4. **No allocation, no I/O, no MPI on the device.** Errors flag-and-reduce, then
-   `noahmp::fatal` on the host (see [`spec-memory-safety.md`](spec-memory-safety.md) §5).
+   `NoahmpIO_fatal` on the host (see [`spec-memory-safety.md`](spec-memory-safety.md) §5).
 5. **State resident on device.** Forcing in / fluxes out and I/O are the only
    host↔device transfers; the column working set never leaves the kernel.
 6. **One vendor runtime across the boundary.** AMReX (C++) and Noah-MP (Fortran)

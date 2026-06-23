@@ -73,7 +73,7 @@ views over the Fortran-owned data. Their `operator()` calls
 `noahmparray_check(idx, lo, hi, dim)`:
 
 - **Debug** (`NDEBUG` not defined): an out-of-range index prints the offending
-  index/range/dimension and calls `noahmp::fatal()`.
+  index/range/dimension and calls `NoahmpIO_fatal()`.
 - **Release** (`-DNDEBUG`): compiled out entirely — **zero cost**.
 
 `idx` is a `long` so a signed index below a (possibly negative) lower bound — e.g.
@@ -84,11 +84,11 @@ the negative-indexed snow-layer arrays — is still caught.
 Noah-MP must not depend on MPI/AMReX, so it **never calls `MPI_Abort`**. Instead:
 
 ```cpp
-noahmp::set_fatal_handler([](const char* msg){ amrex::Abort(msg); });  // host, once at init
-noahmp::fatal(msg);                                                    // anywhere in Noah-MP
+NoahmpIO_set_fatal_handler([](const char* msg){ amrex::Abort(msg); });  // host, once at init
+NoahmpIO_fatal(msg);                                                    // anywhere in Noah-MP
 ```
 
-- `fatal()` prints `msg`, calls the host handler (cross-rank propagation), then
+- `NoahmpIO_fatal()` prints `msg`, calls the host handler (cross-rank propagation), then
   falls back to `std::abort()` if no handler is installed or it returns.
 - The Fortran side calls `NoahmpIO_abort()` → the C++ shim `NoahmpIO_fatal_c()` →
   the same handler. A bare Fortran `error stop` would terminate only the calling
@@ -105,4 +105,4 @@ a precondition for the GPU port (see [`plan-cpp-interface.md`](plan-cpp-interfac
 3. Keep every `bind(C)` shim going through `resolve_block`.
 4. Keep `noahmparray_check` zero-cost under `NDEBUG`.
 5. Never reach for MPI inside Noah-MP — always route fatals through
-   `noahmp::fatal` / `NoahmpIO_abort`.
+   `NoahmpIO_fatal` / `NoahmpIO_abort`.
