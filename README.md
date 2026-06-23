@@ -13,27 +13,36 @@ This is the official Noah-MP land surface model unified repository for code down
 Noah-MP model website: https://ral.ucar.edu/solutions/products/noah-multiparameterization-land-surface-model-noah-mp-lsm
 
 
-## Release of Noah-MP refactored/modernized version (since v5.0)
+## Release of Noah-MP refactored/modernized version (v5.X)
 
 The Noah-MP refactored/modernized model version (since v5.0) has been firstly released in March 9, 2023, which is a refactored version by rewriting the entire model with modern Fortran code infrastructure and data structures. All future Noah-MP developments and updates will be made only to this modernized/refactored version. The version 5.0 has the same model physics as the version 4.5, but with a different code infrastructure. More details about the Noah-MP refactored version can be found in the model description paper (He et al., 2023a, https://doi.org/10.5194/gmd-16-5131-2023) and the technical documentation (He et al. 2023b, doi:10.5065/ew8g-yr95). Currently, the Noah-MP refactored version has been coupled with HRLDAS, NASA/LIS, MPAS, and DOE/ERF, while its coupling with other host models (e.g., WRF-Hydro, WRF, UFS, etc.) is still on-going or under planning.
 
 
 ## Noah-MP technical documentation and model description papers
 
-Technical documentation freely available at http://dx.doi.org/10.5065/ew8g-yr95
+The Noah-MP Version 5.0 Technical Note is freely available at http://dx.doi.org/10.5065/ew8g-yr95
 
-**To cite the technical documentation**:  He, C., P. Valayamkunnath, M. Barlage, F. Chen, D. Gochis, R. Cabell, T. Schneider, R. Rasmussen, G.-Y. Niu, Z.-L. Yang, D. Niyogi, and M. Ek (2023): The Community Noah-MP Land Surface Modeling System Technical Description Version 5.0, (No. NCAR/TN-575+STR). doi:10.5065/ew8g-yr95
+The Noah-MP Version 5.2 Technical Note is freely available at https://doi.org/10.5281/zenodo.20802716
 
-**Original Noah-MP model description paper**:   Niu, G. Y., Yang, Z. L., Mitchell, K. E., Chen, F., Ek, M. B., Barlage, M., ... & Xia, Y. (2011). The community Noah land surface model with multiparameterization options (Noah‐MP): 1. Model description and evaluation with local‐scale measurements. Journal of Geophysical Research: Atmospheres, 116(D12).
+**Version 5.0 Technote**: 
+He, C., P. Valayamkunnath, M. Barlage, F. Chen, D. Gochis, R. Cabell, T. Schneider, R. Rasmussen, G.-Y. Niu, Z.-L. Yang, D. Niyogi, and M. Ek (2023): The Community Noah-MP Land Surface Modeling System Technical Description Version 5.0, (No. NCAR/TN-575+STR). doi:10.5065/ew8g-yr95
 
-**Noah-MP version 5.0 model description paper**:  He, C., Valayamkunnath, P., Barlage, M., Chen, F., Gochis, D., Cabell, R., Schneider, T., Rasmussen, R., Niu, G.-Y., Yang, Z.-L., Niyogi, D., and Ek, M.: Modernizing the open-source community Noah with multi-parameterization options (Noah-MP) land surface model (version 5.0) with enhanced modularity, interoperability, and applicability, Geosci. Model Dev., 16, 5131–5151, https://doi.org/10.5194/gmd-16-5131-2023, 2023.
+**Version 5.2 Technote**: 
+He, C., Valayamkunnath, P., Barlage, M., Abolafia-Rosenzweig, R., Lin, T.-S., Zhang, Z., Chen, F., Gochis, D., Cabell, R., Schneider, T., Rasmussen, R., Niu, G.-Y., Yang, Z.-L., Niyogi, D., & Ek, M. (2026). The Community Noah-MP Land Surface Modeling System Technical Description Version 5.2. Zenodo. https://doi.org/10.5281/zenodo.20802716
 
-**Noah-MP development priority paper**: He, C., Chen, F., Barlage, M., Yang, Z.-L., Wegiel, J. W., Niu, G.-Y., Gochis, D., Mocko, D. M., Abolafia-Rosenzweig, R., Zhang, Z., Lin, T.-S., Valayamkunnath, P., Ek, M., and Niyogi, D. (2023): Enhancing the community Noah-MP land model capabilities for Earth sciences and applications, Bull. Amer. Meteor. Soc., E2023–E2029, https://doi.org/10.1175/BAMS-D-23-0249.1
+**Original Noah-MP model description paper**:
+Niu, G. Y., Yang, Z. L., Mitchell, K. E., Chen, F., Ek, M. B., Barlage, M., ... & Xia, Y. (2011). The community Noah land surface model with multiparameterization options (Noah‐MP): 1. Model description and evaluation with local‐scale measurements. Journal of Geophysical Research: Atmospheres, 116(D12).
+
+**Noah-MP version 5.0 model description paper**:  
+He, C., Valayamkunnath, P., Barlage, M., Chen, F., Gochis, D., Cabell, R., Schneider, T., Rasmussen, R., Niu, G.-Y., Yang, Z.-L., Niyogi, D., and Ek, M.: Modernizing the open-source community Noah with multi-parameterization options (Noah-MP) land surface model (version 5.0) with enhanced modularity, interoperability, and applicability, Geosci. Model Dev., 16, 5131–5151, https://doi.org/10.5194/gmd-16-5131-2023, 2023.
+
+**Noah-MP development priority paper**: 
+He, C., Chen, F., Barlage, M., Yang, Z.-L., Wegiel, J. W., Niu, G.-Y., Gochis, D., Mocko, D. M., Abolafia-Rosenzweig, R., Zhang, Z., Lin, T.-S., Valayamkunnath, P., Ek, M., and Niyogi, D. (2023): Enhancing the community Noah-MP land model capabilities for Earth sciences and applications, Bull. Amer. Meteor. Soc., E2023–E2029, https://doi.org/10.1175/BAMS-D-23-0249.1
 
 
-## Noah-MP Strategic Plan Committee
+## Noah-MP Strategic Planning Committee
 
-Cenlin He, Prasanth Valayamkunnath, Michael Barlage, David Mocko, Guo-Yue Niu, Myung-Seo Koo, Fei Chen, Jerry Wiegel, Zong-Liang Yang, Dev Niyogi, Xuemei Wang, Gonzalo Miguez-Macho
+Cenlin He, Prasanth Valayamkunnath, Michael Barlage, David Mocko, Guo-Yue Niu, Myung-Seo Koo, Fei Chen, Jerry W. Wegiel, Zong-Liang Yang, Dev Niyogi, Xuemei Wang, Gonzalo Miguez-Macho
 
 
 ## Noah-MP Code Review Committee

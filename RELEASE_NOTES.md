@@ -1,5 +1,33 @@
 # Noah-MP model release notes
 
+## Noah-MP version 5.2.1 release
+
+### LSM capabilities/enhancements
+
+- none
+
+
+### Driver capabilities/enhancements
+
+- None
+
+
+### LSM bug fixes
+
+- fix for urban physics variables allocation and default urban vertical resolution for BEP (https://github.com/NCAR/noahmp/pull/243)
+- bug fix for canopy interception and canopy evaporation (https://github.com/NCAR/noahmp/pull/238)
+- DOE/ERF driver interface updates (https://github.com/NCAR/noahmp/pull/244)
+
+### Driver bug fixes
+
+- None
+
+
+### External modules capabilities/enhancements
+
+- None
+
+
 ## Noah-MP version 5.2.0 release
 
 ### LSM capabilities/enhancements
