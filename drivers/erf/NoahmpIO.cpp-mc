@@ -1,0 +1,150 @@
+#include <NoahmpIO.H>
+#include <NoahmpArray.H>
+#include <NoahmpFatal.H>
+#include <cstdlib>
+#include <limits>
+
+extern "C" {
+    void NoahmpIOScalarInitDefault_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpIOVarInitDefault_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpInitMain_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpReadNamelist_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpReadTable_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpReadLandHeader_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpReadLandMain_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpDriverMain_fi(NoahmpIO_type_fi* noahmpio);
+    void NoahmpWriteLand_fi(NoahmpIO_type_fi* noahmpio, int* filenum);
+    void NoahmpWriteRestart_fi(NoahmpIO_type_fi* noahmpio, const char* dir, int* dir_len);
+    void NoahmpReadRestart_fi(NoahmpIO_type_fi* noahmpio, const char* dir, int* dir_len);
+    void NoahmpIOTypeVectInit_fi(int* level, int* NBlocks);
+}
+
+// Fatal-error handling. Noah-MP carries no MPI/AMReX dependency: it calls
+// NoahmpIO_fatal(), and the host (ERF) installs a handler that propagates the
+// failure across all ranks (e.g. amrex::Abort -> MPI_Abort). With no handler
+// installed we fall back to std::abort(). See NoahmpFatal.H.
+static FatalHandler g_fatal_handler = nullptr;
+
+void NoahmpIO_set_fatal_handler(FatalHandler handler) { g_fatal_handler = handler; }
+
+void NoahmpIO_fatal(const char* msg) {
+    if (msg && *msg) std::cerr << msg << std::endl;
+    std::cerr.flush();
+    if (g_fatal_handler) g_fatal_handler(msg);  // host: cross-rank propagation
+    std::abort();                               // fallback / if handler returns
+}
+
+// bind(C) shim so the Fortran coupling layer routes its fatal errors through the
+// same host-installed handler instead of reaching for MPI itself. Fortran prints
+// its own diagnostic first (write(0,*)), so no message is forwarded here.
+extern "C" void NoahmpIO_fatal_c() { NoahmpIO_fatal(nullptr); }
+
+// Run-time ABI guard, executed once. Member count and order are identical by
+// construction (both structs are generated from @NoahmpMacro:Source) and the
+// C++ layout is pinned by the static_assert in NoahmpIO.H, so no runtime size or
+// member-order handshake is needed. The one cross-language hazard codegen cannot
+// prevent is a precision (DOUBLE_PREC) mismatch between the two separately-invoked
+// compilers: the struct is all pointers, so its size is precision-invariant and
+// only this value check catches it. See the "ABI guards" comment in NoahmpIO.H.
+void NoahmpIO_AssertAbi() {
+    static const bool ok = []() -> bool {
+        const std::size_t fortran_real_size = NoahmpRealSize_fi();
+        if (fortran_real_size != sizeof(noahmp_real)) {
+            std::cerr << "NoahmpIO precision mismatch: Fortran coupling real is "
+                      << fortran_real_size << " bytes but C++ noahmp_real is "
+                      << sizeof(noahmp_real) << " bytes. DOUBLE_PREC must be "
+                         "defined (or undefined) consistently for BOTH the "
+                         "Fortran and C++ compiles of the Noah-MP ERF driver."
+                      << std::endl;
+            NoahmpIO_fatal(nullptr);
+        }
+        return true;
+    }();
+    (void)ok;
+}
+
+void NoahmpIO_type::ScalarInitDefault() {
+     NoahmpIOScalarInitDefault_fi(&fptr);
+};
+
+
+void NoahmpIO_type::InitMain() {
+     NoahmpInitMain_fi(&fptr);
+};
+
+void NoahmpIO_type::ReadNamelist() {
+     NoahmpReadNamelist_fi(&fptr);
+};
+
+void NoahmpIO_type::ReadTable() {
+     NoahmpReadTable_fi(&fptr);
+};
+
+void NoahmpIO_type::ReadLandHeader() {
+     NoahmpReadLandHeader_fi(&fptr);
+};
+
+void NoahmpIO_type::ReadLandMain() {
+     NoahmpReadLandMain_fi(&fptr);
+};
+
+void NoahmpIO_type::DriverMain() {
+     NoahmpDriverMain_fi(&fptr);
+};
+
+void NoahmpIO_type::WriteLand(int filenum) {
+     NoahmpWriteLand_fi(&fptr, &filenum);
+};
+
+// The directory length is passed to Fortran as an int; guard against a path so
+// long that the size_t -> int cast would overflow to a bogus/negative length.
+static int checked_dir_len(const std::string& dir, const char* who) {
+     if (dir.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+         std::cerr << who << ": directory path length " << dir.size()
+                   << " exceeds INT_MAX and cannot be passed to the Fortran "
+                      "interface." << std::endl;
+         NoahmpIO_fatal(nullptr);
+     }
+     return static_cast<int>(dir.size());
+}
+
+void NoahmpIO_type::WriteRestart(const std::string& dir) {
+     int dir_len = checked_dir_len(dir, "NoahmpIO_type::WriteRestart");
+     NoahmpWriteRestart_fi(&fptr, dir.c_str(), &dir_len);
+};
+
+void NoahmpIO_type::ReadRestart(const std::string& dir) {
+     int dir_len = checked_dir_len(dir, "NoahmpIO_type::ReadRestart");
+     NoahmpReadRestart_fi(&fptr, dir.c_str(), &dir_len);
+};
+
+
+void NoahmpIO_type::VarInitDefault() {
+      NoahmpIOVarInitDefault_fi(&fptr);
+      @NoahmpMacro:CppArrayViews(m_noahmpio, ctype_fi=fptr);
+};
+
+
+void NoahmpIO_vector::resize(size_t size, size_t level) {
+     // Run-time ABI precision cross-check (DOUBLE_PREC must match across the two
+     // compilers). Layout/order are guaranteed by codegen + the static_assert in
+     // NoahmpIO.H. Runs once (also from NoahmpIO_type's constructor).
+     NoahmpIO_AssertAbi();
+     if (initialized_) {
+         std::cerr << "NoahmpIO_vector::resize(size, level): the block array has "
+                      "already been initialized and cannot be resized again; the "
+                      "Fortran mirror (NoahmpIO_vect) is allocated only once."
+                   << std::endl;
+         NoahmpIO_fatal(nullptr);
+     }
+     if (size == 0) {
+         std::cerr << "NoahmpIO_vector::resize(size, level): size must be > 0."
+                   << std::endl;
+         NoahmpIO_fatal(nullptr);
+     }
+     std::vector<NoahmpIO_type>::resize(size);
+     int _size = static_cast<int>(size);
+     int _level = static_cast<int>(level);
+     NoahmpIOTypeVectInit_fi(&_level, &_size);
+     initialized_ = true;
+};

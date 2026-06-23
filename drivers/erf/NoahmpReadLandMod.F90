@@ -1,6 +1,6 @@
 module NoahmpReadLandMod
 
-  use, intrinsic :: iso_c_binding, only: C_INT, C_DOUBLE, C_PTR, C_CHAR
+  use, intrinsic :: iso_c_binding, only: C_INT, C_PTR, C_CHAR
   use netcdf
   use Machine
   use NoahmpIOVarType
@@ -9,17 +9,19 @@ module NoahmpReadLandMod
 
   public :: NoahmpReadLandHeader, NoahmpReadLandMain
 
-  private :: FATAL, NOT_FATAL, get_2d_netcdf, error_handler, get_landuse_netcdf, &
-             get_soilcat_netcdf, get_netcdf_soillevel, init_interp, get_2d_netcdf_cfloat, &
-             get_2d_netcdf_ffloat
+  private :: FATAL, NOT_FATAL, get_2d_netcdf, get_2d_netcdf_c, error_handler, &
+             get_landuse_netcdf, get_soilcat_netcdf, get_netcdf_soillevel, init_interp
 
   logical, parameter :: FATAL = .TRUE.
   logical, parameter :: NOT_FATAL = .FALSE.
 
-  interface get_2d_netcdf
-    module procedure get_2d_netcdf_cfloat
-    module procedure get_2d_netcdf_ffloat
-  end interface get_2d_netcdf
+  ! get_2d_netcdf reads 2-D fields into model-precision (kind_noahmp) arrays via
+  ! the netCDF Fortran API -- it has no C boundary of its own. The few fields that
+  ! are owned by ERF's C++ side (XLAT, TSK) are read through get_2d_netcdf_c, whose
+  ! dummy carries the C-interop kind c_kind_noahmp to mark them as boundary fields,
+  ! mirroring get2d/get2dd in NoahmpReadRestartMod. c_kind_noahmp == kind_noahmp in
+  ! every build, so the two readers are otherwise identical. See the note in
+  ! Machine.F90 on c_kind_noahmp.
 
 contains
 
@@ -29,7 +31,7 @@ subroutine NoahmpReadLandHeader(NoahmpIO)
     type(NoahmpIO_type), intent(inout)  :: NoahmpIO
 
     integer :: ncid, dimid, varid, ierr
-    real, allocatable, dimension(:,:) :: dum2d
+    real(kind_noahmp), allocatable, dimension(:,:) :: dum2d  ! scratch for XLAT/XLONG -> only used to extract lat1/lon1 scalars
     character(len=256) :: units
     integer :: i
     integer :: rank
@@ -162,14 +164,14 @@ subroutine NoahmpReadLandMain(NoahmpIO)
 
     integer :: ierr_snodep, varid
     integer :: idx, isoil
-    real, dimension(100) :: layer_bottom
-    real, dimension(100) :: layer_top
-    real, dimension(NoahmpIO%nsoil)   :: dzs
+    real(kind_noahmp), dimension(100) :: layer_bottom
+    real(kind_noahmp), dimension(100) :: layer_top
+    real(kind_noahmp), dimension(NoahmpIO%nsoil)   :: dzs
 
     real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, &
                     NoahmpIO%ystart-NoahmpIO%yoffset:NoahmpIO%yend-NoahmpIO%yoffset, NoahmpIO%nsoil) :: insoil
 
-    real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, &
+    real(kind_noahmp), dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, &
                     NoahmpIO%nsoil, &
                     NoahmpIO%ystart-NoahmpIO%yoffset:NoahmpIO%yend-NoahmpIO%yoffset) :: soildummy
 
@@ -192,7 +194,7 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     yend = NoahmpIO%yend-NoahmpIO%yoffset
 
     ! Get Latitude (lat)
-    call get_2d_netcdf("XLAT", ncid, NoahmpIO%xlat,  units, xstart, xend, ystart, yend, FATAL, ierr)
+    call get_2d_netcdf_c("XLAT", ncid, NoahmpIO%xlat,  units, xstart, xend, ystart, yend, FATAL, ierr)  ! c_kind_noahmp
 
     ! Get Longitude (lon)
     call get_2d_netcdf("XLONG", ncid, NoahmpIO%xlong, units, xstart, xend, ystart, yend, FATAL, ierr)
@@ -246,7 +248,7 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     endif
 
     call get_2d_netcdf("CANWAT", ncid, NoahmpIO%canwat, units, xstart, xend, ystart, yend, FATAL, ierr)
-    call get_2d_netcdf("TSK",    ncid, NoahmpIO%tsk, units, xstart, xend, ystart, yend, FATAL, ierr)
+    call get_2d_netcdf_c("TSK",  ncid, NoahmpIO%tsk, units, xstart, xend, ystart, yend, FATAL, ierr)  ! c_kind_noahmp
     call get_2d_netcdf("SNOW",   ncid, NoahmpIO%snow, units, xstart, xend, ystart, yend, FATAL, ierr)
     call get_2d_netcdf("SNOWC",  ncid, NoahmpIO%snowc, units, xstart, xend, ystart, yend, FATAL, ierr)
 
@@ -296,24 +298,24 @@ subroutine NoahmpReadLandMain(NoahmpIO)
 
 end subroutine NoahmpReadLandMain
 
-subroutine get_2d_netcdf_cfloat(name, ncid, array, units, xstart, xend, ystart, yend, fatal_if_error, ierr)
+subroutine get_2d_netcdf(name, ncid, array, units, xstart, xend, ystart, yend, fatal_if_error, ierr)
 
     implicit none
 
     character(len=*), intent(in) :: name
     integer, intent(in) :: ncid
     integer, intent(in) :: xstart, xend, ystart, yend
-    real(c_double), dimension(xstart:xend,ystart:yend), intent(out) :: array
+    real(kind_noahmp), dimension(xstart:xend,ystart:yend), intent(out) :: array
     character(len=*), intent(out) :: units
     integer :: iret, varid
     ! FATAL_IF_ERROR:  an input code value:
     !      .TRUE. if an error in reading the data should stop the program.
     !      Otherwise the, IERR error flag is set, but the program continues.
-    logical, intent(in) :: fatal_if_error 
+    logical, intent(in) :: fatal_if_error
     integer, intent(out) :: ierr
- 
+
     units = " "
-    
+
     iret = nf90_inq_varid(ncid,  name,  varid)
     if (iret /= 0) then
        if (FATAL_IF_ERROR) then
@@ -342,26 +344,30 @@ subroutine get_2d_netcdf_cfloat(name, ncid, array, units, xstart, xend, ystart, 
 
     ierr = 0;
 
-end subroutine get_2d_netcdf_cfloat
+end subroutine get_2d_netcdf
 
-subroutine get_2d_netcdf_ffloat(name, ncid, array, units, xstart, xend, ystart, yend, fatal_if_error, ierr)
+! Variant for the 2-D fields owned by ERF's C++ side (XLAT, TSK), whose NoahmpIO
+! components carry the C-interop kind c_kind_noahmp. c_kind_noahmp == kind_noahmp
+! in every build, so this is identical to get_2d_netcdf; it is kept distinct to
+! mark these as the C-boundary fields, mirroring get2dd in NoahmpReadRestartMod.
+subroutine get_2d_netcdf_c(name, ncid, array, units, xstart, xend, ystart, yend, fatal_if_error, ierr)
 
     implicit none
 
     character(len=*), intent(in) :: name
     integer, intent(in) :: ncid
     integer, intent(in) :: xstart, xend, ystart, yend
-    real, dimension(xstart:xend,ystart:yend), intent(out) :: array
+    real(c_kind_noahmp), dimension(xstart:xend,ystart:yend), intent(out) :: array
     character(len=*), intent(out) :: units
     integer :: iret, varid
     ! FATAL_IF_ERROR:  an input code value:
     !      .TRUE. if an error in reading the data should stop the program.
     !      Otherwise the, IERR error flag is set, but the program continues.
-    logical, intent(in) :: fatal_if_error 
+    logical, intent(in) :: fatal_if_error
     integer, intent(out) :: ierr
- 
+
     units = " "
-    
+
     iret = nf90_inq_varid(ncid,  name,  varid)
     if (iret /= 0) then
        if (FATAL_IF_ERROR) then
@@ -390,8 +396,7 @@ subroutine get_2d_netcdf_ffloat(name, ncid, array, units, xstart, xend, ystart, 
 
     ierr = 0;
 
-end subroutine get_2d_netcdf_ffloat
-
+end subroutine get_2d_netcdf_c
 
 subroutine error_handler(status, failure, success)
     !
@@ -465,13 +470,13 @@ subroutine get_netcdf_soillevel(name, ncid, nsoil, array, units, xstart, xend, y
     integer, intent(in) :: ncid
     integer, intent(in) :: nsoil
     integer, intent(in) :: xstart, xend, ystart, yend
-    real, dimension(xstart:xend,nsoil,ystart:yend), intent(out) :: array
+    real(kind_noahmp), dimension(xstart:xend,nsoil,ystart:yend), intent(out) :: array
     character(len=256), intent(out) :: units
-    logical, intent(in) :: fatal_if_error 
+    logical, intent(in) :: fatal_if_error
     integer, intent(out) :: ierr
 
     integer :: iret, varid, isoil
-    real:: insoil(xstart:xend,ystart:yend,nsoil)
+    real(kind_noahmp):: insoil(xstart:xend,ystart:yend,nsoil)
 
     units = " "
 
@@ -512,15 +517,15 @@ end subroutine get_netcdf_soillevel
 subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src, layer_bottom, layer_top, rank)
     implicit none
     integer, intent(in)    :: xstart, xend, ystart, yend, nsoil, nvar
-    real, dimension(nsoil) :: sldpth ! the thickness of each layer
-    real, dimension(xstart:xend, nsoil, ystart:yend), intent(out) :: var
-    real, dimension(xstart:xend, nvar, ystart:yend ), intent(in)  :: src
-    real, dimension(nvar),                            intent(in)  :: layer_bottom ! The depth from the surface of each layer bottom.
-    real, dimension(nvar),                            intent(in)  :: layer_top    ! The depth from the surface of each layer top.
+    real(kind_noahmp), dimension(nsoil) :: sldpth ! the thickness of each layer
+    real(kind_noahmp), dimension(xstart:xend, nsoil, ystart:yend), intent(out) :: var
+    real(kind_noahmp), dimension(xstart:xend, nvar, ystart:yend ), intent(in)  :: src
+    real(kind_noahmp), dimension(nvar),               intent(in)  :: layer_bottom ! The depth from the surface of each layer bottom.
+    real(kind_noahmp), dimension(nvar),               intent(in)  :: layer_top    ! The depth from the surface of each layer top.
     integer :: i, j, k, kk, ktop, kbottom
-    real, dimension(nsoil) :: dst_centerpoint
-    real, dimension(nvar)  :: src_centerpoint
-    real :: fraction
+    real(kind_noahmp), dimension(nsoil) :: dst_centerpoint
+    real(kind_noahmp), dimension(nvar)  :: src_centerpoint
+    real(kind_noahmp) :: fraction
     integer :: ierr
     integer, intent(in) :: rank
 

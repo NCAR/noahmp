@@ -249,7 +249,7 @@ contains
  
   end subroutine NoahmpDriverMain
 
-   SUBROUTINE CAL_MON_DAY(JULDAY, julyr, Jmonth, Jday)
+  subroutine CAL_MON_DAY(JULDAY, julyr, Jmonth, Jday)
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: JULDAY, julyr
       INTEGER, INTENT(OUT) :: Jmonth, Jday
@@ -278,6 +278,6 @@ contains
          i = i+1
       END DO
 
-   END SUBROUTINE CAL_MON_DAY
+   end subroutine CAL_MON_DAY
 
 end module NoahmpDriverMainMod  

@@ -1,0 +1,214 @@
+#ifndef NOAHMP_IO_H
+#define NOAHMP_IO_H
+
+#include <NoahmpArray.H>
+#include <vector>
+#include <string>
+#include <iostream>
+#include <cstdlib>
+#include <cstddef>
+#include <type_traits>
+
+// The binding contract -- the single source of truth for the C++ <-> Fortran
+// boundary. Order = ABI order. Every side of the boundary (the mirror struct, the
+// ctor/move plumbing, the wiring, and the owner class's own fields below via
+// @NoahmpMacro:CppStorageFields) is projected from this one list. The handle
+// m_noahmpio is only a reference: each projection passes the concrete local names
+// it needs explicitly (e.g. ftype_fi=NoahmpIO_cptr, ctype=o), never derived here.
+@NoahmpMacro:Source m_noahmpio {
+
+    int ids, ide, jds, jde, kds, kde;
+    int ims, ime, jms, jme, kms, kme;
+    int its, ite, jts, jte, kts, kte;
+    int xstart, xend, ystart, yend;
+    int nsoil, nsnow;
+    int numrad = 2;        // number of shortwave radiation bands; ERF may override
+    int itimestep, ntime;
+    int rank, blkid, level;
+    int comm;
+
+    noahmp_real DTBL;
+    noahmp_real ZLVL = -9999.0;
+
+    NoahmpArray2D<noahmp_real> XLAT[xstart:xend, ystart:yend];         // latitude [radians]
+    NoahmpArray2D<noahmp_real> WSLAKEXY[xstart:xend, ystart:yend];     // lake water storage [mm]
+    NoahmpArray3D<noahmp_real> U_PHY[xstart:xend, kms:kme, ystart:yend];        // 3D U wind component [m/s]
+    NoahmpArray3D<noahmp_real> T_PHY[xstart:xend, kms:kme, ystart:yend];        // 3D atmospheric temperature valid at mid-levels [K]
+    NoahmpArray3D<noahmp_real> V_PHY[xstart:xend, kms:kme, ystart:yend];        // 3D V wind component [m/s]
+    NoahmpArray3D<noahmp_real> QV_CURR[xstart:xend, kms:kme, ystart:yend];      // 3D water vapor mixing ratio [kg/kg_dry]
+    NoahmpArray2D<noahmp_real> HFX[xstart:xend, ystart:yend];          // sensible heat flux [W m-2]
+    NoahmpArray2D<noahmp_real> LH[xstart:xend, ystart:yend];           // latent heat flux [W m-2]
+    NoahmpArray2D<noahmp_real> SWDOWN[xstart:xend, ystart:yend];       // solar down at surface [W m-2]
+    NoahmpArray2D<noahmp_real> GLW[xstart:xend, ystart:yend];          // longwave down at surface [W m-2]
+    NoahmpArray2D<noahmp_real> TSK[xstart:xend, ystart:yend];          // surface radiative temperature [K]
+    NoahmpArray2D<noahmp_real> EMISS[xstart:xend, ystart:yend];        // surface bulk emissivity
+    NoahmpArray3D<noahmp_real> ALBSFCDIRXY[xstart:xend, 1:numrad, ystart:yend];  // surface albedo (direct)
+    NoahmpArray3D<noahmp_real> ALBSFCDIFXY[xstart:xend, 1:numrad, ystart:yend];  // surface albedo (diffuse)
+    NoahmpArray2D<noahmp_real> COSZEN[xstart:xend, ystart:yend];       // cosine zenith angle
+    NoahmpArray3D<noahmp_real> P8W[xstart:xend, kms:kme, ystart:yend];          // 3D pressure, valid at interface [Pa]
+    NoahmpArray2D<noahmp_real> TAU_EW[xstart:xend, ystart:yend];       // wind stress in east-west direction [N/m2]
+    NoahmpArray2D<noahmp_real> TAU_NS[xstart:xend, ystart:yend];       // wind stress in north-south direction [N/m2]
+}
+
+extern "C" {
+    struct NoahmpIO_type_fi {
+
+        @NoahmpMacro:CppMirrorFields(m_noahmpio);
+
+        NoahmpIO_type_fi(
+          @NoahmpMacro:CppCtorParams(m_noahmpio);
+        ):
+          @NoahmpMacro:CppCtorInit(m_noahmpio);
+        {}
+    };
+}
+
+// ---------------------------------------------------------------------------
+// ABI guards
+//
+// NoahmpIO_type_fi mirrors the bind(C) Fortran derived type of the same name in
+// NoahmpIO_fi.F90. BOTH sides are generated from the single @NoahmpMacro:Source
+// block (see tools/NoahmpMacro.py), so the member COUNT, ORDER, and
+// (all-pointer) TYPES are identical by construction -- they cannot drift unless
+// the generator itself is wrong, which `make codegen-check` catches in CI. The
+// former run-time size and member-order handshakes only re-verified those
+// generated facts, so they have been removed as redundant overhead.
+//
+// Two hazards remain that codegen CANNOT prevent, and each keeps a guard:
+//
+//   * compiler layout / packing -- the static_assert below (compile time, free).
+//     Standard-layout + sizeof == N*sizeof(void*) pins the C++ side to a flat
+//     pointer array; the Fortran bind(C) side is guaranteed the same layout by
+//     companion-C interop. This is the only realistic way the two structs could
+//     differ (e.g. an incompatible compiler pairing), and it costs nothing.
+//   * element precision -- NoahmpRealSize_fi() (run time). The struct is all
+//     pointers, so its size is identical for float vs double; this is the only
+//     way to detect a noahmp_real vs c_kind_noahmp mismatch when DOUBLE_PREC is
+//     applied to only one of the two SEPARATELY-INVOKED compilers (a build-flag
+//     mismatch, which shared source cannot prevent).
+//
+// The precision guard runs once via NoahmpIO_AssertAbi().
+// ---------------------------------------------------------------------------
+// Coupled member count; drives the compile-time ABI layout guard.
+inline constexpr std::size_t NOAHMP_IO_FI_NUM_MEMBERS = @NoahmpMacro:MemberCount(m_noahmpio);
+
+static_assert(std::is_standard_layout<NoahmpIO_type_fi>::value,
+              "NoahmpIO_type_fi must be standard-layout to share an ABI with the "
+              "Fortran bind(C) NoahmpIO_type_fi.");
+static_assert(sizeof(NoahmpIO_type_fi) == NOAHMP_IO_FI_NUM_MEMBERS * sizeof(void*),
+              "NoahmpIO_type_fi is not a flat array of pointers: unexpected "
+              "padding or member count. Both sides are generated from "
+              "@NoahmpMacro:Source; run `make codegen` and rebuild.");
+
+// Returns sizeof(real(c_kind_noahmp)) as seen by the Fortran compiler.
+extern "C" std::size_t NoahmpRealSize_fi();
+
+// Runs the run-time ABI precision guard exactly once, aborting with a diagnostic
+// on mismatch. Cheap to call repeatedly. Invoked from both NoahmpIO_type
+// construction (single-instance path) and NoahmpIO_vector::resize (block-array
+// path) so neither path can skip the check.
+void NoahmpIO_AssertAbi();
+
+class NoahmpIO_type {
+
+    public:
+        // The owner class's real fields, projected from the contract block above.
+        @NoahmpMacro:CppStorageFields(m_noahmpio);
+
+        NoahmpIO_type():
+          fptr(
+            @NoahmpMacro:CppBindAddrs(m_noahmpio);
+          ) { NoahmpIO_AssertAbi(); }
+
+        // fptr stores the addresses of THIS object's own scalar members, so the
+        // struct is self-referential. A default memberwise copy/move would leave
+        // the new object's fptr pointing at the SOURCE's members -- dangling once
+        // the source dies, and silent memory corruption thereafter. Copying is
+        // therefore forbidden. Move cannot simply be deleted because
+        // std::vector<NoahmpIO_type>::resize requires the type be move-
+        // constructible; the move ctor below re-points fptr at the destination.
+        NoahmpIO_type(const NoahmpIO_type&)            = delete;
+        NoahmpIO_type& operator=(const NoahmpIO_type&) = delete;
+        NoahmpIO_type& operator=(NoahmpIO_type&&)      = delete;
+
+        NoahmpIO_type(NoahmpIO_type&& o) noexcept:
+          @NoahmpMacro:CppMoveInit(m_noahmpio, ctype=o);
+          fptr(o.fptr)
+        {
+          // fptr(o.fptr) copied all handles: the array handles (set later by the
+          // Fortran side via C_LOC into Fortran-owned memory) are correct as-is;
+          // the self-referential scalar handles must be re-pointed from the
+          // source's members to THIS object's members.
+          @NoahmpMacro:CppMoveRepoint(m_noahmpio, ctype_fi=fptr);
+        }
+
+        void ScalarInitDefault();
+        void VarInitDefault();
+        void InitMain();
+        void ReadNamelist();
+        void ReadTable();
+        void ReadLandHeader();
+        void ReadLandMain();
+        void DriverMain();
+        void WriteLand(int filenum);
+        void WriteRestart(const std::string& dir);
+        void ReadRestart(const std::string& dir);
+
+    private:
+        NoahmpIO_type_fi fptr;
+};
+
+// ---------------------------------------------------------------------------
+// NoahmpIO_vector
+//
+// Mirrors a Fortran allocatable array (NoahmpIO_vect(level)%NoahmpIO) that is
+// sized exactly ONCE via NoahmpIOTypeVectInit_fi. Two invariants make most of
+// std::vector's mutating API unsafe here:
+//   1. The C++ vector size and the Fortran allocatable extent must stay equal;
+//      only resize(size, level) keeps them in sync.
+//   2. Each element's fptr stores pointers into its own members, so any
+//      operation that relocates elements (grow/reserve/insert/copy) leaves
+//      dangling C pointers that later corrupt memory.
+//
+// Inheritance is therefore PRIVATE: the mutating half of std::vector's API is
+// not part of this type's interface and cannot be reached -- not even through a
+// std::vector<NoahmpIO_type>& upcast, which is ill-formed for an inaccessible
+// base. Only the size-once entry point (resize(size, level)) and a read/element
+// -access subset are re-exported. Any unsupported operation (raw resize,
+// push_back, insert, erase, swap, clear, reserve, assign, ...) is a COMPILE
+// error rather than a silent relocation -- stronger than a run-time guard.
+// ---------------------------------------------------------------------------
+class NoahmpIO_vector : private std::vector<NoahmpIO_type> {
+
+    using base = std::vector<NoahmpIO_type>;
+    bool initialized_ = false;
+
+public:
+    NoahmpIO_vector() = default;
+
+    // Copying/moving the whole container would relocate elements and break the
+    // self-referential fptr pointers; disallow at compile time.
+    NoahmpIO_vector(const NoahmpIO_vector&)            = delete;
+    NoahmpIO_vector& operator=(const NoahmpIO_vector&) = delete;
+    NoahmpIO_vector(NoahmpIO_vector&&)                 = delete;
+    NoahmpIO_vector& operator=(NoahmpIO_vector&&)      = delete;
+
+    // The one supported sizing entry point; errors if called more than once.
+    void resize(size_t size, size_t level);
+
+    // Read-only / element-access subset that is safe once the array is sized.
+    // (Element access and iteration do not relocate elements.)
+    using base::operator[];
+    using base::at;
+    using base::front;
+    using base::back;
+    using base::data;
+    using base::begin;
+    using base::end;
+    using base::cbegin;
+    using base::cend;
+    using base::size;
+    using base::empty;
+};
+
+#endif // NOAHMP_IO_H

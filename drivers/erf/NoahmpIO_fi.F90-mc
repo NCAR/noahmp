@@ -1,0 +1,331 @@
+module NoahmpIO_fi
+
+  use NoahmpIOVarType, ONLY: NoahmpIO_type
+  use NoahmpIOVarInitMod, ONLY: NoahmpIOVarInitDefault
+  use NoahmpInitMainMod, ONLY: NoahmpInitMain
+  use NoahmpReadNamelistMod, ONLY: NoahmpReadNamelist
+  use NoahmpReadTableMod, ONLY: NoahmpReadTable
+  use NoahmpReadLandMod, ONLY: NoahmpReadLandHeader, NoahmpReadLandMain
+  use NoahmpDriverMainMod, ONLY: NoahmpDriverMain
+  use NoahmpWriteLandMod, ONLY: NoahmpWriteLand
+  use NoahmpWriteRestartMod, ONLY: NoahmpWriteRestart
+  use NoahmpReadRestartMod, ONLY: NoahmpReadRestart
+
+  use  iso_c_binding
+
+  implicit none
+
+  ! ---------------------------------------------------------------------------
+  ! Public type for NoahmpIO_level
+  ! --------------------------------------------------------------------------- 
+  type, public :: NoahmpIO_level
+    type(NoahmpIO_type), allocatable :: NoahmpIO(:)
+  end type NoahmpIO_level
+
+  ! ---------------------------------------------------------------------------
+  ! Valid AMR level range for NoahmpIO_vect. Change both bounds here (and the
+  ! matching C++ caller) if the number of supported levels changes.
+  ! ---------------------------------------------------------------------------
+  integer, parameter, public :: NLEVEL_MIN = 0
+  integer, parameter, public :: NLEVEL_MAX = 2
+
+  ! ---------------------------------------------------------------------------
+  ! Public declaration for NoahmpIO array per level
+  ! ---------------------------------------------------------------------------
+  type(NoahmpIO_level), save, target, public :: NoahmpIO_vect(NLEVEL_MIN:NLEVEL_MAX)
+
+  ! ---------------------------------------------------------------------------
+  ! Mirror of extern C struct
+  !
+  ! DEVNOTE :: The order variables between C struct and the binded Fortran type
+  !            should be consistent for memory managment. 
+  ! ---------------------------------------------------------------------------
+  type, bind(c), public :: NoahmpIO_type_fi
+    @NoahmpMacro:FortranMirrorFields(m_noahmpio);
+  end type NoahmpIO_type_fi
+
+contains
+
+  ! ---------------------------------------------------------------------------
+  ! Fatal-error exit. A bare `error stop` terminates only the calling image, so
+  ! peers can deadlock in the next collective. Rather than reach for MPI here
+  ! (Noah-MP keeps no parallel-runtime dependency of its own), route through the
+  ! C++ shim NoahmpIO_fatal_c, which calls the host-installed handler that
+  ! propagates the failure to all ranks (e.g. amrex::Abort -> MPI_Abort). The
+  ! trailing `error stop` is a fallback for when no handler is installed (serial
+  ! build) or the handler returns.
+  ! ---------------------------------------------------------------------------
+  subroutine NoahmpIO_abort()
+    implicit none
+    interface
+       subroutine NoahmpIO_fatal_c() bind(C, name="NoahmpIO_fatal_c")
+       end subroutine NoahmpIO_fatal_c
+    end interface
+    flush(0)
+    call NoahmpIO_fatal_c()
+    error stop 1
+  end subroutine NoahmpIO_abort
+
+  ! ---------------------------------------------------------------------------
+  ! Resolve (level, bid) from the incoming C struct and return a pointer to the
+  ! corresponding block. Validates the C pointers and both indices, aborting
+  ! with a clear message instead of indexing module-global state out of bounds
+  ! (which is silent memory corruption in a release build). Every bind(C) entry
+  ! point routes through this helper.
+  ! ---------------------------------------------------------------------------
+  subroutine resolve_block(NoahmpIO_cptr, blk, level, bid, require_init)
+    use iso_c_binding, only : C_INT, c_associated
+    implicit none
+    type(NoahmpIO_type_fi), intent(in)           :: NoahmpIO_cptr
+    type(NoahmpIO_type),    pointer, intent(out)  :: blk
+    integer(C_INT),         intent(out)           :: level, bid
+    logical,                intent(in),  optional :: require_init
+    integer(C_INT), pointer :: plevel, pbid
+    logical :: check_init
+
+    ! By default require that NoahmpIOScalarInitDefault_fi has already wired the
+    ! block's scalar pointers to C++ memory. ScalarInitDefault itself is the call
+    ! that performs that wiring, so it passes require_init=.false.
+    check_init = .true.
+    if (present(require_init)) check_init = require_init
+
+    if (.not. c_associated(NoahmpIO_cptr%LEVEL) .or. &
+        .not. c_associated(NoahmpIO_cptr%BLKID)) then
+       write(0,*) "NoahmpIO_fi: LEVEL or BLKID C pointer is not associated"
+       call NoahmpIO_abort()
+    end if
+
+    call C_F_POINTER(NoahmpIO_cptr%LEVEL, plevel)
+    call C_F_POINTER(NoahmpIO_cptr%BLKID, pbid)
+    level = plevel
+    bid   = pbid
+
+    if (level < NLEVEL_MIN .or. level > NLEVEL_MAX) then
+       write(0,*) "NoahmpIO_fi: level out of range [", NLEVEL_MIN, ",", &
+                  NLEVEL_MAX, "]:", level
+       call NoahmpIO_abort()
+    end if
+    if (.not. allocated(NoahmpIO_vect(level)%NoahmpIO)) then
+       write(0,*) "NoahmpIO_fi: level not initialized (call NoahmpIOTypeVectInit "// &
+                  "first), level:", level
+       call NoahmpIO_abort()
+    end if
+    if (bid < lbound(NoahmpIO_vect(level)%NoahmpIO, 1) .or. &
+        bid > ubound(NoahmpIO_vect(level)%NoahmpIO, 1)) then
+       write(0,*) "NoahmpIO_fi: blkid out of range [", &
+                  lbound(NoahmpIO_vect(level)%NoahmpIO, 1), ",", &
+                  ubound(NoahmpIO_vect(level)%NoahmpIO, 1), "] for level", &
+                  level, ", blkid:", bid
+       call NoahmpIO_abort()
+    end if
+
+    blk => NoahmpIO_vect(level)%NoahmpIO(bid)
+
+    ! DTBL is associated together with every other scalar pointer at the end of
+    ! NoahmpIOScalarInitDefault_fi, so it is a reliable proxy for "scalars wired".
+    ! This is safe because the pointer components default to => null() in the type
+    ! definition, giving them well-defined association status before that call.
+    if (check_init .and. .not. associated(blk%DTBL)) then
+       write(0,*) "NoahmpIO_fi: block scalars not initialized (call "// &
+                  "NoahmpIOScalarInitDefault first) for level", level, ", blkid", bid
+       call NoahmpIO_abort()
+    end if
+  end subroutine resolve_block
+
+  subroutine NoahmpIOScalarInitDefault_fi(NoahmpIO_cptr) bind(C, name="NoahmpIOScalarInitDefault_fi")
+    use  iso_c_binding, only : C_INT
+    implicit none
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    type(NoahmpIO_type), pointer :: blk
+    integer(C_INT) :: level, bid
+    ! This call performs the scalar wiring, so do not require it to be done yet.
+    call resolve_block(NoahmpIO_cptr, blk, level, bid, require_init=.false.)
+    @NoahmpMacro:FortranScalarWire(m_noahmpio, ftype_fi=NoahmpIO_cptr, ftype=blk);
+  end subroutine NoahmpIOScalarInitDefault_fi
+
+  subroutine NoahmpIOVarInitDefault_fi(NoahmpIO_cptr) bind(C, name="NoahmpIOVarInitDefault_fi")
+    use  iso_c_binding, only : C_INT
+    implicit none
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    type(NoahmpIO_type), pointer :: blk
+    integer(C_INT) :: level, bid
+    call resolve_block(NoahmpIO_cptr, blk, level, bid)
+    call NoahmpIOVarInitDefault(blk)
+    @NoahmpMacro:FortranArrayWire(m_noahmpio, ftype_fi=NoahmpIO_cptr, ftype=blk);
+  end subroutine NoahmpIOVarInitDefault_fi
+
+  subroutine NoahmpInitMain_fi(NoahmpIO_cptr) bind(C, name="NoahmpInitMain_fi")
+    use  iso_c_binding, only : C_INT
+    implicit none 
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    type(NoahmpIO_type), pointer :: blk
+    integer(C_INT) :: level, bid
+    call resolve_block(NoahmpIO_cptr, blk, level, bid)
+    call NoahmpInitMain(blk)
+  end subroutine NoahmpInitMain_fi
+
+  subroutine NoahmpReadTable_fi(NoahmpIO_cptr) bind(C, name="NoahmpReadTable_fi")
+    use  iso_c_binding, only : C_INT
+    implicit none 
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    type(NoahmpIO_type), pointer :: blk
+    integer(C_INT) :: level, bid
+    call resolve_block(NoahmpIO_cptr, blk, level, bid)
+    call NoahmpReadTable(blk)
+  end subroutine NoahmpReadTable_fi
+
+  subroutine NoahmpReadNamelist_fi(NoahmpIO_cptr) bind(C, name="NoahmpReadNamelist_fi")
+    use  iso_c_binding, only : C_INT 
+    implicit none 
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    type(NoahmpIO_type), pointer :: blk
+    integer(C_INT) :: level, bid
+    call resolve_block(NoahmpIO_cptr, blk, level, bid)
+    call NoahmpReadNamelist(blk)
+  end subroutine NoahmpReadNamelist_fi
+
+  subroutine NoahmpReadLandHeader_fi(NoahmpIO_cptr) bind(C, name="NoahmpReadLandHeader_fi")
+    use  iso_c_binding, only : C_INT 
+    implicit none 
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    type(NoahmpIO_type), pointer :: blk
+    integer(C_INT) :: level, bid
+    call resolve_block(NoahmpIO_cptr, blk, level, bid)
+    call NoahmpReadLandHeader(blk)
+  end subroutine NoahmpReadLandHeader_fi
+
+  subroutine NoahmpReadLandMain_fi(NoahmpIO_cptr) bind(C, name="NoahmpReadLandMain_fi")
+    use  iso_c_binding, only : C_INT 
+    implicit none 
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    type(NoahmpIO_type), pointer :: blk
+    integer(C_INT) :: level, bid
+    call resolve_block(NoahmpIO_cptr, blk, level, bid)
+    call NoahmpReadLandMain(blk)
+  end subroutine NoahmpReadLandMain_fi
+
+  subroutine NoahmpDriverMain_fi(NoahmpIO_cptr) bind(C, name="NoahmpDriverMain_fi")
+    use iso_c_binding, only : C_INT 
+    implicit none 
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    type(NoahmpIO_type), pointer :: blk
+    integer(C_INT) :: level, bid
+    call resolve_block(NoahmpIO_cptr, blk, level, bid)
+    call NoahmpDriverMain(blk)
+  end subroutine NoahmpDriverMain_fi
+
+  subroutine NoahmpWriteLand_fi(NoahmpIO_cptr, filenum) bind(C, name="NoahmpWriteLand_fi")
+    use iso_c_binding, only : C_INT 
+    implicit none 
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    integer(C_INT), intent(in) :: filenum
+    type(NoahmpIO_type), pointer :: blk
+    integer(C_INT) :: level, bid
+    call resolve_block(NoahmpIO_cptr, blk, level, bid)
+    call NoahmpWriteLand(blk, filenum, SIZE(NoahmpIO_vect(level)%NoahmpIO))
+  end subroutine NoahmpWriteLand_fi
+
+  subroutine NoahmpWriteRestart_fi(NoahmpIO_cptr, dir_cptr, dir_len) bind(C, name="NoahmpWriteRestart_fi")
+    use iso_c_binding, only : C_INT, C_CHAR
+    implicit none
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    character(kind=C_CHAR), intent(in) :: dir_cptr(*)
+    integer(C_INT), intent(in) :: dir_len
+    type(NoahmpIO_type), pointer :: blk
+    integer(C_INT) :: level, bid
+    integer :: ic
+    if (dir_len < 0) then
+       write(0,*) "NoahmpWriteRestart_fi: negative dir_len (likely an int "// &
+                  "overflow of the C++ string length):", dir_len
+       call NoahmpIO_abort()
+    end if
+    block
+      character(len=dir_len) :: dir
+      do ic = 1, dir_len
+         dir(ic:ic) = dir_cptr(ic)
+      end do
+      call resolve_block(NoahmpIO_cptr, blk, level, bid)
+      call NoahmpWriteRestart(blk, dir, SIZE(NoahmpIO_vect(level)%NoahmpIO))
+    end block
+  end subroutine NoahmpWriteRestart_fi
+
+  subroutine NoahmpReadRestart_fi(NoahmpIO_cptr, dir_cptr, dir_len) bind(C, name="NoahmpReadRestart_fi")
+    use iso_c_binding, only : C_INT, C_CHAR
+    implicit none
+    type(NoahmpIO_type_fi), intent(inout) :: NoahmpIO_cptr
+    character(kind=C_CHAR), intent(in) :: dir_cptr(*)
+    integer(C_INT), intent(in) :: dir_len
+    type(NoahmpIO_type), pointer :: blk
+    integer(C_INT) :: level, bid
+    integer :: ic
+    if (dir_len < 0) then
+       write(0,*) "NoahmpReadRestart_fi: negative dir_len (likely an int "// &
+                  "overflow of the C++ string length):", dir_len
+       call NoahmpIO_abort()
+    end if
+    block
+      character(len=dir_len) :: dir
+      do ic = 1, dir_len
+         dir(ic:ic) = dir_cptr(ic)
+      end do
+      call resolve_block(NoahmpIO_cptr, blk, level, bid)
+      call NoahmpReadRestart(blk, dir, SIZE(NoahmpIO_vect(level)%NoahmpIO))
+    end block
+  end subroutine NoahmpReadRestart_fi
+
+  subroutine NoahmpIOTypeVectInit_fi(level, NBlocks) bind(C, name="NoahmpIOTypeVectInit_fi")
+    use iso_c_binding, only : C_INT
+    implicit none
+    integer(C_INT), intent(in) :: level
+    integer(C_INT), intent(in) :: NBlocks
+    integer :: ierr
+    character(len=256) :: emsg
+
+    if (level < NLEVEL_MIN .or. level > NLEVEL_MAX) then
+       write(0,*) "NoahmpIOTypeVectInit_fi: level out of range [", NLEVEL_MIN, &
+                  ",", NLEVEL_MAX, "]:", level
+       call NoahmpIO_abort()
+    end if
+    if (NBlocks < 1) then
+       write(0,*) "NoahmpIOTypeVectInit_fi: NBlocks must be >= 1, got", NBlocks
+       call NoahmpIO_abort()
+    end if
+    if (allocated(NoahmpIO_vect(level)%NoahmpIO)) then
+       ! Same size -> idempotent no-op; different size -> refuse (would discard
+       ! existing block state). The C++ caller already forbids a second resize,
+       ! so this is a defense-in-depth guard.
+       if (size(NoahmpIO_vect(level)%NoahmpIO) == NBlocks) return
+       write(0,*) "NoahmpIOTypeVectInit_fi: level", level, "already initialized "// &
+                  "with", size(NoahmpIO_vect(level)%NoahmpIO), &
+                  "blocks; refusing to re-init with", NBlocks
+       call NoahmpIO_abort()
+    end if
+
+    allocate(NoahmpIO_vect(level)%NoahmpIO(0:NBlocks-1), stat=ierr, errmsg=emsg)
+    if (ierr /= 0) then
+       write(0,*) "NoahmpIOTypeVectInit_fi: allocate failed: ", trim(emsg)
+       call NoahmpIO_abort()
+    end if
+  end subroutine NoahmpIOTypeVectInit_fi
+
+  ! ---------------------------------------------------------------------------
+  ! Precision guard (run time): report sizeof(real(c_kind_noahmp)) as seen by the
+  ! Fortran compiler. NoahmpIO_type_fi is all C_PTR, so its byte size is identical
+  ! whether the coupling reals are single or double precision -- a size check
+  ! therefore CANNOT detect a float/double mismatch between the two languages
+  ! (e.g. DOUBLE_PREC applied to only one of the separately-invoked compilers).
+  ! The C++ side compares this against sizeof(noahmp_real) to catch exactly that
+  ! case (see NoahmpIO_AssertAbi / resize()). Member count and order need no
+  ! run-time guard: both structs are generated from @NoahmpMacro:Source, so
+  ! they cannot drift, and the C++ static_assert pins the layout.
+  ! ---------------------------------------------------------------------------
+  function NoahmpRealSize_fi() bind(C, name="NoahmpRealSize_fi") result(nbytes)
+    use iso_c_binding, only : C_SIZE_T, C_SIZEOF
+    use Machine, only : c_kind_noahmp
+    implicit none
+    integer(C_SIZE_T) :: nbytes
+    real(kind=c_kind_noahmp) :: probe
+    nbytes = C_SIZEOF(probe)
+  end function NoahmpRealSize_fi
+
+end module NoahmpIO_fi
