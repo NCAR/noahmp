@@ -43,10 +43,6 @@ contains
     if ( .not. allocated (NoahmpIO%ZSOIL)     ) allocate ( NoahmpIO%ZSOIL      (1:NSOIL)                         ) ! depth to soil interfaces [m] 
     if ( .not. allocated (NoahmpIO%IVGTYP)    ) allocate ( NoahmpIO%IVGTYP     (XSTART:XEND,        YSTART:YEND) ) ! vegetation type
     if ( .not. allocated (NoahmpIO%ISLTYP)    ) allocate ( NoahmpIO%ISLTYP     (XSTART:XEND,        YSTART:YEND) ) ! soil type
-    if ( .not. allocated (NoahmpIO%VEGFRA)    ) allocate ( NoahmpIO%VEGFRA     (XSTART:XEND,        YSTART:YEND) ) ! vegetation fraction []
-    if ( .not. allocated (NoahmpIO%TMN)       ) allocate ( NoahmpIO%TMN        (XSTART:XEND,        YSTART:YEND) ) ! deep soil temperature [K]
-    if ( .not. allocated (NoahmpIO%XLAND)     ) allocate ( NoahmpIO%XLAND      (XSTART:XEND,        YSTART:YEND) ) ! =2 ocean; =1 land/seaice
-    if ( .not. allocated (NoahmpIO%XICE)      ) allocate ( NoahmpIO%XICE       (XSTART:XEND,        YSTART:YEND) ) ! fraction of grid that is seaice
     if ( .not. allocated (NoahmpIO%SWDDIR)    ) allocate ( NoahmpIO%SWDDIR     (XSTART:XEND,        YSTART:YEND) ) ! solar down at surface [W m-2] for new urban solar panel
     if ( .not. allocated (NoahmpIO%SWDDIF)    ) allocate ( NoahmpIO%SWDDIF     (XSTART:XEND,        YSTART:YEND) ) ! solar down at surface [W m-2] for new urban solar panel
     if ( .not. allocated (NoahmpIO%SNOWBL)    ) allocate ( NoahmpIO%SNOWBL     (XSTART:XEND,        YSTART:YEND) ) ! snow entering land model [mm] per time step
@@ -63,7 +59,6 @@ contains
     if ( .not. allocated (NoahmpIO%MP_SNOW)   ) allocate ( NoahmpIO%MP_SNOW    (XSTART:XEND,        YSTART:YEND) ) ! non-covective snow (subset of rainnc) [mm]
     if ( .not. allocated (NoahmpIO%MP_GRAUP)  ) allocate ( NoahmpIO%MP_GRAUP   (XSTART:XEND,        YSTART:YEND) ) ! non-convective graupel (subset of rainnc) [mm]
     if ( .not. allocated (NoahmpIO%MP_HAIL)   ) allocate ( NoahmpIO%MP_HAIL    (XSTART:XEND,        YSTART:YEND) ) ! non-convective hail (subset of rainnc) [mm]
-    if ( .not. allocated (NoahmpIO%SEAICE)    ) allocate ( NoahmpIO%SEAICE     (XSTART:XEND,        YSTART:YEND) ) ! seaice fraction
     if ( .not. allocated (NoahmpIO%DZ8W)      ) allocate ( NoahmpIO%DZ8W       (XSTART:XEND,KMS:KME,YSTART:YEND) ) ! thickness of atmo layers [m]
  
     ! spatial varying parameter map
@@ -113,56 +108,11 @@ contains
 
     ! INOUT (with generic LSM equivalent) (as defined in WRF)
     if ( .not. allocated (NoahmpIO%QFX)      ) allocate ( NoahmpIO%QFX       (XSTART:XEND,        YSTART:YEND) ) ! latent heat flux [kg s-1 m-2]
-    if ( .not. allocated (NoahmpIO%GRDFLX)   ) allocate ( NoahmpIO%GRDFLX    (XSTART:XEND,        YSTART:YEND) ) ! ground/snow heat flux [W m-2]
-    if ( .not. allocated (NoahmpIO%SMSTAV)   ) allocate ( NoahmpIO%SMSTAV    (XSTART:XEND,        YSTART:YEND) ) ! soil moisture avail. [not used]
-    if ( .not. allocated (NoahmpIO%SMSTOT)   ) allocate ( NoahmpIO%SMSTOT    (XSTART:XEND,        YSTART:YEND) ) ! total soil water [mm][not used]
-    if ( .not. allocated (NoahmpIO%SFCRUNOFF)) allocate ( NoahmpIO%SFCRUNOFF (XSTART:XEND,        YSTART:YEND) ) ! accumulated surface runoff [m]
-    if ( .not. allocated (NoahmpIO%UDRUNOFF) ) allocate ( NoahmpIO%UDRUNOFF  (XSTART:XEND,        YSTART:YEND) ) ! accumulated sub-surface runoff [m]
-    if ( .not. allocated (NoahmpIO%ALBEDO)   ) allocate ( NoahmpIO%ALBEDO    (XSTART:XEND,        YSTART:YEND) ) ! total grid albedo []
-    if ( .not. allocated (NoahmpIO%SNOWC)    ) allocate ( NoahmpIO%SNOWC     (XSTART:XEND,        YSTART:YEND) ) ! snow cover fraction []
-    if ( .not. allocated (NoahmpIO%SNOW)     ) allocate ( NoahmpIO%SNOW      (XSTART:XEND,        YSTART:YEND) ) ! snow water equivalent [mm]
-    if ( .not. allocated (NoahmpIO%SNOWH)    ) allocate ( NoahmpIO%SNOWH     (XSTART:XEND,        YSTART:YEND) ) ! physical snow depth [m]
-    if ( .not. allocated (NoahmpIO%CANWAT)   ) allocate ( NoahmpIO%CANWAT    (XSTART:XEND,        YSTART:YEND) ) ! total canopy water + ice [mm]
-    if ( .not. allocated (NoahmpIO%ACSNOM)   ) allocate ( NoahmpIO%ACSNOM    (XSTART:XEND,        YSTART:YEND) ) ! accumulated snow melt leaving pack
-    if ( .not. allocated (NoahmpIO%ACSNOW)   ) allocate ( NoahmpIO%ACSNOW    (XSTART:XEND,        YSTART:YEND) ) ! accumulated snow on grid
-    if ( .not. allocated (NoahmpIO%QSFC)     ) allocate ( NoahmpIO%QSFC      (XSTART:XEND,        YSTART:YEND) ) ! bulk surface specific humidity
-    if ( .not. allocated (NoahmpIO%SMOISEQ)  ) allocate ( NoahmpIO%SMOISEQ   (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! equilibrium volumetric soil moisture [m3/m3]
-    if ( .not. allocated (NoahmpIO%SMOIS)    ) allocate ( NoahmpIO%SMOIS     (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! volumetric soil moisture [m3/m3]
-    if ( .not. allocated (NoahmpIO%SH2O)     ) allocate ( NoahmpIO%SH2O      (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! volumetric liquid soil moisture [m3/m3]
-    if ( .not. allocated (NoahmpIO%TSLB)     ) allocate ( NoahmpIO%TSLB      (XSTART:XEND,1:NSOIL,YSTART:YEND) ) ! soil temperature [K]
 
     ! INOUT (with no Noah LSM equivalent) (as defined in WRF)
     if ( .not. allocated (NoahmpIO%ISNOWXY)   ) allocate ( NoahmpIO%ISNOWXY    (XSTART:XEND,               YSTART:YEND) ) ! actual no. of snow layers
-    if ( .not. allocated (NoahmpIO%TVXY)      ) allocate ( NoahmpIO%TVXY       (XSTART:XEND,               YSTART:YEND) ) ! vegetation leaf temperature
-    if ( .not. allocated (NoahmpIO%TGXY)      ) allocate ( NoahmpIO%TGXY       (XSTART:XEND,               YSTART:YEND) ) ! bulk ground surface temperature
-    if ( .not. allocated (NoahmpIO%CANICEXY)  ) allocate ( NoahmpIO%CANICEXY   (XSTART:XEND,               YSTART:YEND) ) ! canopy-intercepted ice (mm)
-    if ( .not. allocated (NoahmpIO%CANLIQXY)  ) allocate ( NoahmpIO%CANLIQXY   (XSTART:XEND,               YSTART:YEND) ) ! canopy-intercepted liquid water (mm)
-    if ( .not. allocated (NoahmpIO%EAHXY)     ) allocate ( NoahmpIO%EAHXY      (XSTART:XEND,               YSTART:YEND) ) ! canopy air vapor pressure (pa)
-    if ( .not. allocated (NoahmpIO%TAHXY)     ) allocate ( NoahmpIO%TAHXY      (XSTART:XEND,               YSTART:YEND) ) ! canopy air temperature (k)
-    if ( .not. allocated (NoahmpIO%CMXY)      ) allocate ( NoahmpIO%CMXY       (XSTART:XEND,               YSTART:YEND) ) ! bulk momentum drag coefficient
-    if ( .not. allocated (NoahmpIO%CHXY)      ) allocate ( NoahmpIO%CHXY       (XSTART:XEND,               YSTART:YEND) ) ! bulk sensible heat exchange coefficient
-    if ( .not. allocated (NoahmpIO%FWETXY)    ) allocate ( NoahmpIO%FWETXY     (XSTART:XEND,               YSTART:YEND) ) ! wetted or snowed fraction of the canopy (-)
-    if ( .not. allocated (NoahmpIO%SNEQVOXY)  ) allocate ( NoahmpIO%SNEQVOXY   (XSTART:XEND,               YSTART:YEND) ) ! snow mass at last time step(mm h2o)
-    if ( .not. allocated (NoahmpIO%ALBOLDXY)  ) allocate ( NoahmpIO%ALBOLDXY   (XSTART:XEND,               YSTART:YEND) ) ! snow albedo at last time step (-)
-    if ( .not. allocated (NoahmpIO%QSNOWXY)   ) allocate ( NoahmpIO%QSNOWXY    (XSTART:XEND,               YSTART:YEND) ) ! snowfall on the ground [mm/s]
-    if ( .not. allocated (NoahmpIO%QRAINXY)   ) allocate ( NoahmpIO%QRAINXY    (XSTART:XEND,               YSTART:YEND) ) ! rainfall on the ground [mm/s]
-    if ( .not. allocated (NoahmpIO%ZWTXY)     ) allocate ( NoahmpIO%ZWTXY      (XSTART:XEND,               YSTART:YEND) ) ! water table depth [m]
-    if ( .not. allocated (NoahmpIO%WAXY)      ) allocate ( NoahmpIO%WAXY       (XSTART:XEND,               YSTART:YEND) ) ! water in the "aquifer" [mm]
-    if ( .not. allocated (NoahmpIO%WTXY)      ) allocate ( NoahmpIO%WTXY       (XSTART:XEND,               YSTART:YEND) ) ! groundwater storage [mm]
-    if ( .not. allocated (NoahmpIO%SMCWTDXY)  ) allocate ( NoahmpIO%SMCWTDXY   (XSTART:XEND,               YSTART:YEND) ) ! soil moisture below the bottom of the column (m3m-3)
-    if ( .not. allocated (NoahmpIO%DEEPRECHXY)) allocate ( NoahmpIO%DEEPRECHXY (XSTART:XEND,               YSTART:YEND) ) ! recharge to the water table when deep (m)
-    if ( .not. allocated (NoahmpIO%RECHXY)    ) allocate ( NoahmpIO%RECHXY     (XSTART:XEND,               YSTART:YEND) ) ! recharge to the water table (diagnostic) (mm)
-    if ( .not. allocated (NoahmpIO%LFMASSXY)  ) allocate ( NoahmpIO%LFMASSXY   (XSTART:XEND,               YSTART:YEND) ) ! leaf mass [g/m2]
-    if ( .not. allocated (NoahmpIO%RTMASSXY)  ) allocate ( NoahmpIO%RTMASSXY   (XSTART:XEND,               YSTART:YEND) ) ! mass of fine roots [g/m2]
-    if ( .not. allocated (NoahmpIO%STMASSXY)  ) allocate ( NoahmpIO%STMASSXY   (XSTART:XEND,               YSTART:YEND) ) ! stem mass [g/m2]
-    if ( .not. allocated (NoahmpIO%WOODXY)    ) allocate ( NoahmpIO%WOODXY     (XSTART:XEND,               YSTART:YEND) ) ! mass of wood (incl. woody roots) [g/m2]
-    if ( .not. allocated (NoahmpIO%GRAINXY)   ) allocate ( NoahmpIO%GRAINXY    (XSTART:XEND,               YSTART:YEND) ) ! mass of grain XING [g/m2]
-    if ( .not. allocated (NoahmpIO%GDDXY)     ) allocate ( NoahmpIO%GDDXY      (XSTART:XEND,               YSTART:YEND) ) ! growing degree days XING FOUR
     if ( .not. allocated (NoahmpIO%STBLCPXY)  ) allocate ( NoahmpIO%STBLCPXY   (XSTART:XEND,               YSTART:YEND) ) ! stable carbon in deep soil [g/m2]
     if ( .not. allocated (NoahmpIO%FASTCPXY)  ) allocate ( NoahmpIO%FASTCPXY   (XSTART:XEND,               YSTART:YEND) ) ! short-lived carbon, shallow soil [g/m2]
-    if ( .not. allocated (NoahmpIO%LAI)       ) allocate ( NoahmpIO%LAI        (XSTART:XEND,               YSTART:YEND) ) ! leaf area index
-    if ( .not. allocated (NoahmpIO%XSAIXY)    ) allocate ( NoahmpIO%XSAIXY     (XSTART:XEND,               YSTART:YEND) ) ! stem area index
-    if ( .not. allocated (NoahmpIO%TAUSSXY)   ) allocate ( NoahmpIO%TAUSSXY    (XSTART:XEND,               YSTART:YEND) ) ! snow age factor
     if ( .not. allocated (NoahmpIO%TSNOXY)    ) allocate ( NoahmpIO%TSNOXY     (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) ) ! snow temperature [K]
     if ( .not. allocated (NoahmpIO%ZSNSOXY)   ) allocate ( NoahmpIO%ZSNSOXY    (XSTART:XEND,-NSNOW+1:NSOIL,YSTART:YEND) ) ! snow layer depth [m]
     if ( .not. allocated (NoahmpIO%SNICEXY)   ) allocate ( NoahmpIO%SNICEXY    (XSTART:XEND,-NSNOW+1:0,    YSTART:YEND) ) ! snow layer ice [mm]
@@ -202,11 +152,8 @@ contains
     if ( .not. allocated (NoahmpIO%EDIRXY)     ) allocate ( NoahmpIO%EDIRXY      (XSTART:XEND,YSTART:YEND) ) ! soil surface evaporation rate (mm/s]
     if ( .not. allocated (NoahmpIO%ETRANXY)    ) allocate ( NoahmpIO%ETRANXY     (XSTART:XEND,YSTART:YEND) ) ! transpiration rate (mm/s)
     if ( .not. allocated (NoahmpIO%FSAXY)      ) allocate ( NoahmpIO%FSAXY       (XSTART:XEND,YSTART:YEND) ) ! total absorbed solar radiation (w/m2)
-    if ( .not. allocated (NoahmpIO%FIRAXY)     ) allocate ( NoahmpIO%FIRAXY      (XSTART:XEND,YSTART:YEND) ) ! total net longwave rad (w/m2) [+ to atm]
     if ( .not. allocated (NoahmpIO%APARXY)     ) allocate ( NoahmpIO%APARXY      (XSTART:XEND,YSTART:YEND) ) ! photosyn active energy by canopy (w/m2)
     if ( .not. allocated (NoahmpIO%PSNXY)      ) allocate ( NoahmpIO%PSNXY       (XSTART:XEND,YSTART:YEND) ) ! total photosynthesis (umol co2/m2/s) [+]
-    if ( .not. allocated (NoahmpIO%SAVXY)      ) allocate ( NoahmpIO%SAVXY       (XSTART:XEND,YSTART:YEND) ) ! solar rad absorbed by veg. (w/m2)
-    if ( .not. allocated (NoahmpIO%SAGXY)      ) allocate ( NoahmpIO%SAGXY       (XSTART:XEND,YSTART:YEND) ) ! solar rad absorbed by ground (w/m2)
     if ( .not. allocated (NoahmpIO%RSSUNXY)    ) allocate ( NoahmpIO%RSSUNXY     (XSTART:XEND,YSTART:YEND) ) ! sunlit leaf stomatal resistance (s/m)
     if ( .not. allocated (NoahmpIO%RSSHAXY)    ) allocate ( NoahmpIO%RSSHAXY     (XSTART:XEND,YSTART:YEND) ) ! shaded leaf stomatal resistance (s/m)
     if ( .not. allocated (NoahmpIO%BGAPXY)     ) allocate ( NoahmpIO%BGAPXY      (XSTART:XEND,YSTART:YEND) ) ! between gap fraction
@@ -217,11 +164,8 @@ contains
     if ( .not. allocated (NoahmpIO%CHBXY)      ) allocate ( NoahmpIO%CHBXY       (XSTART:XEND,YSTART:YEND) ) ! sensible heat exchange coefficient bare-ground
     if ( .not. allocated (NoahmpIO%SHGXY)      ) allocate ( NoahmpIO%SHGXY       (XSTART:XEND,YSTART:YEND) ) ! veg ground sen. heat [w/m2]   [+ to atm]
     if ( .not. allocated (NoahmpIO%SHCXY)      ) allocate ( NoahmpIO%SHCXY       (XSTART:XEND,YSTART:YEND) ) ! canopy sen. heat [w/m2]   [+ to atm]
-    if ( .not. allocated (NoahmpIO%SHBXY)      ) allocate ( NoahmpIO%SHBXY       (XSTART:XEND,YSTART:YEND) ) ! bare sensible heat [w/m2]  [+ to atm]
     if ( .not. allocated (NoahmpIO%EVGXY)      ) allocate ( NoahmpIO%EVGXY       (XSTART:XEND,YSTART:YEND) ) ! veg ground evap. heat [w/m2]  [+ to atm]
-    if ( .not. allocated (NoahmpIO%EVBXY)      ) allocate ( NoahmpIO%EVBXY       (XSTART:XEND,YSTART:YEND) ) ! bare soil evaporation [w/m2]  [+ to atm]
     if ( .not. allocated (NoahmpIO%GHVXY)      ) allocate ( NoahmpIO%GHVXY       (XSTART:XEND,YSTART:YEND) ) ! veg ground heat flux [w/m2]  [+ to soil]
-    if ( .not. allocated (NoahmpIO%GHBXY)      ) allocate ( NoahmpIO%GHBXY       (XSTART:XEND,YSTART:YEND) ) ! bare ground heat flux [w/m2] [+ to soil]
     if ( .not. allocated (NoahmpIO%IRGXY)      ) allocate ( NoahmpIO%IRGXY       (XSTART:XEND,YSTART:YEND) ) ! veg ground net LW rad. [w/m2] [+ to atm]
     if ( .not. allocated (NoahmpIO%IRCXY)      ) allocate ( NoahmpIO%IRCXY       (XSTART:XEND,YSTART:YEND) ) ! canopy net LW rad. [w/m2] [+ to atm]
     if ( .not. allocated (NoahmpIO%IRBXY)      ) allocate ( NoahmpIO%IRBXY       (XSTART:XEND,YSTART:YEND) ) ! bare net longwave rad. [w/m2] [+ to atm]
@@ -237,12 +181,8 @@ contains
     if ( .not. allocated (NoahmpIO%QTDRAIN)    ) allocate ( NoahmpIO%QTDRAIN     (XSTART:XEND,YSTART:YEND) ) ! tile drainage (mm)
     if ( .not. allocated (NoahmpIO%TD_FRACTION)) allocate ( NoahmpIO%TD_FRACTION (XSTART:XEND,YSTART:YEND) ) ! tile drainage fraction
     if ( .not. allocated (NoahmpIO%XLONG)      ) allocate ( NoahmpIO%XLONG       (XSTART:XEND,YSTART:YEND) ) ! longitude
-    if ( .not. allocated (NoahmpIO%TERRAIN)    ) allocate ( NoahmpIO%TERRAIN     (XSTART:XEND,YSTART:YEND) ) ! terrain height
-    if ( .not. allocated (NoahmpIO%GVFMIN)     ) allocate ( NoahmpIO%GVFMIN      (XSTART:XEND,YSTART:YEND) ) ! annual minimum in vegetation fraction
-    if ( .not. allocated (NoahmpIO%GVFMAX)     ) allocate ( NoahmpIO%GVFMAX      (XSTART:XEND,YSTART:YEND) ) ! annual maximum in vegetation fraction
 
     ! additional output variables
-    if ( .not. allocated (NoahmpIO%PAHXY)       ) allocate ( NoahmpIO%PAHXY        (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%PAHGXY)      ) allocate ( NoahmpIO%PAHGXY       (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%PAHBXY)      ) allocate ( NoahmpIO%PAHBXY       (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%PAHVXY)      ) allocate ( NoahmpIO%PAHVXY       (XSTART:XEND,        YSTART:YEND) )
@@ -274,7 +214,6 @@ contains
     if ( .not. allocated (NoahmpIO%EFLXBXY)     ) allocate ( NoahmpIO%EFLXBXY      (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%SOILENERGY)  ) allocate ( NoahmpIO%SOILENERGY   (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%SNOWENERGY)  ) allocate ( NoahmpIO%SNOWENERGY   (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%CANHSXY)     ) allocate ( NoahmpIO%CANHSXY      (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%ACC_DWATERXY)) allocate ( NoahmpIO%ACC_DWATERXY (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%ACC_PRCPXY)  ) allocate ( NoahmpIO%ACC_PRCPXY   (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%ACC_ECANXY)  ) allocate ( NoahmpIO%ACC_ECANXY   (XSTART:XEND,        YSTART:YEND) )

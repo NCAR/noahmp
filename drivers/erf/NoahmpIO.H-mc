@@ -49,6 +49,81 @@
     NoahmpArray2D<noahmp_real> TAU_EW[xstart:xend, ystart:yend];       // wind stress in east-west direction [N/m2]
     NoahmpArray2D<noahmp_real> TAU_NS[xstart:xend, ystart:yend];       // wind stress in north-south direction [N/m2]
     NoahmpArray2D<noahmp_real> RAINBL[xstart:xend, ystart:yend];       // precipitation entering land model [mm] per time step
+
+    // --- IO variables exposed to C++ (init / plotting / checkpoint / restart) ---
+    // Stage 1 (2D real) + Stage 2 (3D soil real). Promoted from hand-written
+    // Fortran-only allocatables; the Fortran IO modules (NoahmpWriteLandMod,
+    // NoahmpWrite/ReadRestartMod) read these same members unchanged. Bounds mirror
+    // the former hand-written allocate()s exactly.
+
+    // Static land / init inputs
+    NoahmpArray2D<noahmp_real> TMN[xstart:xend, ystart:yend];          // deep soil temperature [K]
+    NoahmpArray2D<noahmp_real> XLAND[xstart:xend, ystart:yend];        // =2 ocean; =1 land/seaice
+    NoahmpArray2D<noahmp_real> XICE[xstart:xend, ystart:yend];         // fraction of grid that is seaice
+    NoahmpArray2D<noahmp_real> SEAICE[xstart:xend, ystart:yend];       // seaice fraction
+    NoahmpArray2D<noahmp_real> VEGFRA[xstart:xend, ystart:yend];       // vegetation fraction []
+    NoahmpArray2D<noahmp_real> TERRAIN[xstart:xend, ystart:yend];      // terrain height
+    NoahmpArray2D<noahmp_real> GVFMIN[xstart:xend, ystart:yend];       // annual minimum in vegetation fraction
+    NoahmpArray2D<noahmp_real> GVFMAX[xstart:xend, ystart:yend];       // annual maximum in vegetation fraction
+
+    // Land-output diagnostics (plotting)
+    NoahmpArray2D<noahmp_real> SHBXY[xstart:xend, ystart:yend];        // bare sensible heat [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> EVBXY[xstart:xend, ystart:yend];        // bare soil evaporation [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> SAVXY[xstart:xend, ystart:yend];        // solar rad absorbed by veg. (w/m2)
+    NoahmpArray2D<noahmp_real> SAGXY[xstart:xend, ystart:yend];        // solar rad absorbed by ground (w/m2)
+    NoahmpArray2D<noahmp_real> PAHXY[xstart:xend, ystart:yend];        // precipitation advected heat [W/m2]
+    NoahmpArray2D<noahmp_real> FIRAXY[xstart:xend, ystart:yend];       // total net longwave rad (w/m2) [+ to atm]
+    NoahmpArray2D<noahmp_real> GRDFLX[xstart:xend, ystart:yend];       // ground/snow heat flux [W m-2]
+    NoahmpArray2D<noahmp_real> GHBXY[xstart:xend, ystart:yend];        // bare ground heat flux [w/m2] [+ to soil]
+    NoahmpArray2D<noahmp_real> CANHSXY[xstart:xend, ystart:yend];      // canopy heat storage change [W/m2]
+
+    // Prognostic 2D state (checkpoint / restart)
+    NoahmpArray2D<noahmp_real> SNOW[xstart:xend, ystart:yend];         // snow water equivalent [mm]
+    NoahmpArray2D<noahmp_real> SNOWH[xstart:xend, ystart:yend];        // physical snow depth [m]
+    NoahmpArray2D<noahmp_real> SNOWC[xstart:xend, ystart:yend];        // snow cover fraction []
+    NoahmpArray2D<noahmp_real> CANWAT[xstart:xend, ystart:yend];       // total canopy water + ice [mm]
+    NoahmpArray2D<noahmp_real> ACSNOM[xstart:xend, ystart:yend];       // accumulated snow melt leaving pack
+    NoahmpArray2D<noahmp_real> ACSNOW[xstart:xend, ystart:yend];       // accumulated snow on grid
+    NoahmpArray2D<noahmp_real> QSFC[xstart:xend, ystart:yend];         // bulk surface specific humidity
+    NoahmpArray2D<noahmp_real> TVXY[xstart:xend, ystart:yend];         // vegetation leaf temperature
+    NoahmpArray2D<noahmp_real> TGXY[xstart:xend, ystart:yend];         // bulk ground surface temperature
+    NoahmpArray2D<noahmp_real> CANICEXY[xstart:xend, ystart:yend];     // canopy-intercepted ice [mm]
+    NoahmpArray2D<noahmp_real> CANLIQXY[xstart:xend, ystart:yend];     // canopy-intercepted liquid water [mm]
+    NoahmpArray2D<noahmp_real> EAHXY[xstart:xend, ystart:yend];        // canopy air vapor pressure [pa]
+    NoahmpArray2D<noahmp_real> TAHXY[xstart:xend, ystart:yend];        // canopy air temperature [k]
+    NoahmpArray2D<noahmp_real> CMXY[xstart:xend, ystart:yend];         // bulk momentum drag coefficient
+    NoahmpArray2D<noahmp_real> CHXY[xstart:xend, ystart:yend];         // bulk sensible heat exchange coefficient
+    NoahmpArray2D<noahmp_real> FWETXY[xstart:xend, ystart:yend];       // wetted/snowed fraction of the canopy (-)
+    NoahmpArray2D<noahmp_real> QSNOWXY[xstart:xend, ystart:yend];      // snowfall on the ground [mm/s]
+    NoahmpArray2D<noahmp_real> QRAINXY[xstart:xend, ystart:yend];      // rainfall on the ground [mm/s]
+    NoahmpArray2D<noahmp_real> SNEQVOXY[xstart:xend, ystart:yend];     // snow mass at last time step [mm h2o]
+    NoahmpArray2D<noahmp_real> ALBOLDXY[xstart:xend, ystart:yend];     // snow albedo at last time step (-)
+    NoahmpArray2D<noahmp_real> TAUSSXY[xstart:xend, ystart:yend];      // snow age factor
+    NoahmpArray2D<noahmp_real> ALBEDO[xstart:xend, ystart:yend];       // total grid albedo []
+    NoahmpArray2D<noahmp_real> ZWTXY[xstart:xend, ystart:yend];        // water table depth [m]
+    NoahmpArray2D<noahmp_real> WAXY[xstart:xend, ystart:yend];         // water in the "aquifer" [mm]
+    NoahmpArray2D<noahmp_real> WTXY[xstart:xend, ystart:yend];         // groundwater storage [mm]
+    NoahmpArray2D<noahmp_real> SMCWTDXY[xstart:xend, ystart:yend];     // soil moisture below column bottom [m3/m3]
+    NoahmpArray2D<noahmp_real> DEEPRECHXY[xstart:xend, ystart:yend];   // recharge to water table when deep [m]
+    NoahmpArray2D<noahmp_real> RECHXY[xstart:xend, ystart:yend];       // recharge to the water table (diag) [mm]
+    NoahmpArray2D<noahmp_real> LAI[xstart:xend, ystart:yend];          // leaf area index
+    NoahmpArray2D<noahmp_real> XSAIXY[xstart:xend, ystart:yend];       // stem area index
+    NoahmpArray2D<noahmp_real> SFCRUNOFF[xstart:xend, ystart:yend];    // accumulated surface runoff [m]
+    NoahmpArray2D<noahmp_real> UDRUNOFF[xstart:xend, ystart:yend];     // accumulated sub-surface runoff [m]
+    NoahmpArray2D<noahmp_real> SMSTAV[xstart:xend, ystart:yend];       // soil moisture avail. [not used]
+    NoahmpArray2D<noahmp_real> SMSTOT[xstart:xend, ystart:yend];       // total soil water [mm] [not used]
+    NoahmpArray2D<noahmp_real> LFMASSXY[xstart:xend, ystart:yend];     // leaf mass [g/m2]
+    NoahmpArray2D<noahmp_real> RTMASSXY[xstart:xend, ystart:yend];     // mass of fine roots [g/m2]
+    NoahmpArray2D<noahmp_real> STMASSXY[xstart:xend, ystart:yend];     // stem mass [g/m2]
+    NoahmpArray2D<noahmp_real> WOODXY[xstart:xend, ystart:yend];       // mass of wood (incl. woody roots) [g/m2]
+    NoahmpArray2D<noahmp_real> GRAINXY[xstart:xend, ystart:yend];      // mass of grain [g/m2]
+    NoahmpArray2D<noahmp_real> GDDXY[xstart:xend, ystart:yend];        // growing degree days
+
+    // Prognostic 3D soil state (checkpoint / restart)
+    NoahmpArray3D<noahmp_real> TSLB[xstart:xend, 1:nsoil, ystart:yend];     // soil temperature [K]
+    NoahmpArray3D<noahmp_real> SMOIS[xstart:xend, 1:nsoil, ystart:yend];    // volumetric soil moisture [m3/m3]
+    NoahmpArray3D<noahmp_real> SH2O[xstart:xend, 1:nsoil, ystart:yend];     // volumetric liquid soil moisture [m3/m3]
+    NoahmpArray3D<noahmp_real> SMOISEQ[xstart:xend, 1:nsoil, ystart:yend];  // equilibrium volumetric soil moisture [m3/m3]
 }
 
 extern "C" {
