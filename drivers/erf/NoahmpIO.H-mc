@@ -48,6 +48,7 @@
     NoahmpArray3D<noahmp_real> P8W[xstart:xend, kms:kme, ystart:yend];          // 3D pressure, valid at interface [Pa]
     NoahmpArray2D<noahmp_real> TAU_EW[xstart:xend, ystart:yend];       // wind stress in east-west direction [N/m2]
     NoahmpArray2D<noahmp_real> TAU_NS[xstart:xend, ystart:yend];       // wind stress in north-south direction [N/m2]
+    NoahmpArray2D<noahmp_real> RAINBL[xstart:xend, ystart:yend];       // precipitation entering land model [mm] per time step
 }
 
 extern "C" {

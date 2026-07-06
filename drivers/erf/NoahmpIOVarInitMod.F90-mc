@@ -49,7 +49,6 @@ contains
     if ( .not. allocated (NoahmpIO%XICE)      ) allocate ( NoahmpIO%XICE       (XSTART:XEND,        YSTART:YEND) ) ! fraction of grid that is seaice
     if ( .not. allocated (NoahmpIO%SWDDIR)    ) allocate ( NoahmpIO%SWDDIR     (XSTART:XEND,        YSTART:YEND) ) ! solar down at surface [W m-2] for new urban solar panel
     if ( .not. allocated (NoahmpIO%SWDDIF)    ) allocate ( NoahmpIO%SWDDIF     (XSTART:XEND,        YSTART:YEND) ) ! solar down at surface [W m-2] for new urban solar panel
-    if ( .not. allocated (NoahmpIO%RAINBL)    ) allocate ( NoahmpIO%RAINBL     (XSTART:XEND,        YSTART:YEND) ) ! total precipitation entering land model [mm] per time step
     if ( .not. allocated (NoahmpIO%SNOWBL)    ) allocate ( NoahmpIO%SNOWBL     (XSTART:XEND,        YSTART:YEND) ) ! snow entering land model [mm] per time step
     if ( .not. allocated (NoahmpIO%SR)        ) allocate ( NoahmpIO%SR         (XSTART:XEND,        YSTART:YEND) ) ! frozen precip ratio entering land model [-]
     if ( .not. allocated (NoahmpIO%RAINCV)    ) allocate ( NoahmpIO%RAINCV     (XSTART:XEND,        YSTART:YEND) ) ! convective precip forcing [mm]

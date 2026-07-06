@@ -87,7 +87,6 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SEAICE              ! seaice fraction
 
     ! forcings
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RAINBL              ! precipitation entering land model [mm] per time step
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SNOWBL              ! snow entering land model [mm] per time step
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SR                  ! frozen precip ratio entering land model [-]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RAINCV              ! convective precip forcing [mm]
