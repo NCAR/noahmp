@@ -1,8 +1,10 @@
 # Spec: memory safety & runtime robustness
 
 > Status: living document · Owns: the invariants that keep the self-referential
-> coupling struct from corrupting memory, plus the parallel-safe fatal path.
-> Companion: [`spec-fc-api.md`](spec-fc-api.md).
+> coupling struct from corrupting memory, plus the parallel-safe fatal path, plus
+> (§7) the device-memory rules for the GPU offload.
+> Companion: [`spec-fc-api.md`](spec-fc-api.md),
+> [`plan-cpp-interface.md`](plan-cpp-interface.md).
 
 The coupling struct is **self-referential**: `NoahmpIO_type::fptr` stores the
 addresses of *this object's own* scalar members (so the Fortran side can alias
@@ -98,7 +100,55 @@ NoahmpIO_fatal(msg);                                                    // anywh
 This keeps the *entire* parallel-runtime dependency in the host, not in Noah-MP —
 a precondition for the GPU port (see [`plan-cpp-interface.md`](plan-cpp-interface.md)).
 
-## 6. Invariants to preserve
+## 7. Device memory & GPU coupling (forward-looking)
+
+> Applies once the GPU offload ([`plan-cpp-interface.md`](plan-cpp-interface.md))
+> lands. The host build ignores all of this — the directives are no-ops without
+> offload flags. Recorded here so the safety story is designed, not retrofitted.
+
+The offload keeps the ownership split of §1–§4 and adds a *second* place each
+array lives (GPU memory) plus a *second* runtime (the Fortran offload runtime)
+touching it alongside AMReX. Three rules keep that safe:
+
+1. **Residency is generator-owned and paired with the allocate.** Each Tier-A/B
+   array gets a generated `!$acc enter data create(...)` right after its
+   `allocate()` (see [`spec-fc-api.md`](spec-fc-api.md) §4a). It must be matched by
+   an `exit data` on teardown, and — crucially — **re-issued if the array is ever
+   reallocated**: a reallocate changes the host address, so a stale device mapping
+   (and any exported device pointer) dangles. The driver sizes blocks once
+   (§2 here), which is what makes this tractable.
+
+2. **Coupling is zero-copy via a shared device pointer, and correctness rests on
+   one shared stream — not a host barrier.** For a Tier-A array, Fortran owns the
+   allocation and exports its device address (`acc_deviceptr`, Option B); ERF
+   wraps that address as an `amrex::Array4` and reads/writes it in a `ParallelFor`
+   (see the worked example, [`sketch-couple-variable-gpu.md`](sketch-couple-variable-gpu.md)).
+   Two runtimes writing the same GPU bytes **is a data race unless ordered**. The
+   ordering is provided by binding Noah-MP's OpenACC queue to AMReX's stream
+   (`acc_set_cuda_stream(queue, amrex::Gpu::gpuStream())`) so all coupling kernels
+   run in enqueue order on **one** stream. This *replaces* today's per-step
+   `Gpu::streamSynchronize()` in `ERF_NOAHMP.cpp`; do **not** reintroduce a host
+   barrier, and do **not** put coupling kernels on a second stream without an
+   explicit cross-stream dependency. (Managed/unified memory fixes *coherence* but
+   **not** *ordering* — it does not remove this requirement.)
+
+3. **Host and device copies must be reconciled around host-only operations.** I/O,
+   restart, cold init, and any host-side inspection see the *host* copy. Before a
+   collective NetCDF write, refresh host from device (`!$acc update host`); after a
+   restart read, push device from host (`!$acc update device`). See
+   [`spec-io-parallel.md`](spec-io-parallel.md) §3.1 and
+   [`spec-io-restart.md`](spec-io-restart.md) §4. Skipping this doesn't crash — it
+   silently writes or reads stale data, which is worse.
+
+Bounds checking (`NoahmpArray.H`, §4) does not run inside device kernels — but by
+design `NoahmpArray` is not on the device hot path (the physics reads the Fortran
+allocatables directly; ERF uses the generated `Array4` accessor), so this is
+consistent, not a gap. The ABI is unaffected: Tier-B device-resident arrays carry
+**no** `fi` slot (see [`spec-fc-api.md`](spec-fc-api.md) §4a), so making state
+device-resident never enlarges the self-referential struct or its dangling
+surface.
+
+## 8. Invariants to preserve
 
 1. Never make `NoahmpIO_type` copyable, and keep the move ctor's `fptr` re-point.
 2. Never widen `NoahmpIO_vector`'s re-exported API to anything that can relocate.
@@ -106,3 +156,7 @@ a precondition for the GPU port (see [`plan-cpp-interface.md`](plan-cpp-interfac
 4. Keep `noahmparray_check` zero-cost under `NDEBUG`.
 5. Never reach for MPI inside Noah-MP — always route fatals through
    `NoahmpIO_fatal` / `NoahmpIO_abort`.
+6. (GPU) Keep coupling on the **one shared stream**; never reintroduce a per-step
+   host sync or a second stream without an explicit dependency (§7.2).
+7. (GPU) Re-issue `enter data` on any reallocation; refresh host↔device around all
+   I/O (§7.1, §7.3).

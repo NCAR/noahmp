@@ -19,8 +19,9 @@ user-facing documentation lives at
 | [`spec-memory-safety.md`](spec-memory-safety.md) | Self-referential pointer handling, copy/move bans, bounds checking, fatal-handler abstraction. |
 | [`spec-io-parallel.md`](spec-io-parallel.md) | Parallel (collective MPI) NetCDF land-output implementation. |
 | [`spec-io-restart.md`](spec-io-restart.md) | Full prognostic-state checkpoint/restart I/O. |
-| [`spec-add-coupled-variable.md`](spec-add-coupled-variable.md) | Workflow: expose a new variable across the boundary. |
-| [`plan-cpp-interface.md`](plan-cpp-interface.md) | Plan/task list to GPU-enable Noah-MP via Fortran offload (OpenACC/OpenMP target), keeping `src/` in Fortran and `drivers/erf` as the C++ host. |
+| [`spec-add-coupled-variable.md`](spec-add-coupled-variable.md) | Workflow: expose a new variable across the boundary, incl. picking its tier. |
+| [`plan-cpp-interface.md`](plan-cpp-interface.md) | Plan/task list to GPU-enable Noah-MP via **macro-driven Fortran offload** (OpenACC/OpenMP target): the `@NoahmpMacro` generator emits device residency + coupling accessors, one shared CUDA stream removes the per-step host sync, and tier tags keep the ABI lean. `src/` stays Fortran; `drivers/erf` stays the C++ host. |
+| [`sketch-couple-variable-gpu.md`](sketch-couple-variable-gpu.md) | Worked example: one coupled variable end-to-end (contract line → generated glue → ERF/Noah-MP usage) under the GPU coupling scheme. |
 
 ## Conventions used across these docs
 
@@ -33,3 +34,9 @@ user-facing documentation lives at
   `C_DOUBLE`.
 - **`fi` suffix.** Marks the Fortran-interop boundary mirror (`NoahmpIO_type_fi`
   and the `*_fi` `bind(C)` entry points).
+- **Tiers (`@couple` / `@internal`).** Each coupled array is tagged by how far it
+  travels: **Tier A** (`@couple(dir=…)`) crosses to ERF each step and gets an ABI
+  slot + GPU device accessor; **Tier B** (`@internal`) is device-resident internal
+  state generated with **no** ABI slot; **Tier C** is host-only. This is the lever
+  that keeps the ABI lean under the GPU offload — see
+  [`spec-fc-api.md`](spec-fc-api.md) §4a and [`plan-cpp-interface.md`](plan-cpp-interface.md).

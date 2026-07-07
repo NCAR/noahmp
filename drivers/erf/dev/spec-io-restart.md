@@ -112,6 +112,25 @@ ScalarInitDefault → ReadNamelist → ReadTable → ReadLandHeader → ReadLand
   → (time loop) DriverMain ...
 ```
 
+### 4.1 Host↔device reconciliation (once the GPU offload lands)
+
+Restart state is **device-resident** under the offload
+([`plan-cpp-interface.md`](plan-cpp-interface.md)), so the two `update`s must
+bracket the host-side NetCDF I/O:
+
+- **Write** — refresh host from device *before* `WriteRestart` serializes it:
+  `!$acc update host(<the full prognostic set>)`.
+- **Read** — push the restored values to the device *after* `ReadRestart`
+  overwrites the host arrays, *before* the first `DriverMain` reads them on device:
+  `!$acc update device(<the full prognostic set>)`.
+
+Because bit-exactness is the whole point of restart, the **host Fortran path stays
+the bitwise oracle**: a restart on the GPU path is validated within the documented
+GPU tolerance against it, not bit-for-bit (see
+[`plan-cpp-interface.md`](plan-cpp-interface.md) §4, §5.9). Getting the `update`
+placement wrong reads/writes stale state and silently corrupts the restart — see
+[`spec-memory-safety.md`](spec-memory-safety.md) §7.3.
+
 ## 5. Known constraints / hardening backlog
 
 - **Error handling is `print` + `stop`** in both modules (shared with the land

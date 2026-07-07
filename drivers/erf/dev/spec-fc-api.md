@@ -2,7 +2,9 @@
 
 > Status: living document · Owns: the C++ ↔ Fortran boundary and the generator
 > that builds it. · Companion: [`spec-memory-safety.md`](spec-memory-safety.md),
-> [`spec-add-coupled-variable.md`](spec-add-coupled-variable.md).
+> [`spec-add-coupled-variable.md`](spec-add-coupled-variable.md),
+> [`plan-cpp-interface.md`](plan-cpp-interface.md) (the GPU offload that §4's tier
+> tags exist for).
 
 ## 1. The contract
 
@@ -37,6 +39,26 @@ generator itself is wrong, which `make codegen-check` catches.
   `NoahmpIOVarInitDefault_fi` then `C_LOC`s each allocatable into the matching
   `fptr` handle, and `NoahmpIO_type::VarInitDefault` wraps each handle in a
   `NoahmpArray{2,3}D` view with the right bounds.
+
+### ABI membership is a switch, not a given (tiers)
+
+A generated variable is **not** automatically on the ABI. "Generate the Fortran
+storage" and "put a pointer in `NoahmpIO_type_fi`" are separate switches,
+controlled per member by a **tier tag** (§4). This matters because the GPU port
+([`plan-cpp-interface.md`](plan-cpp-interface.md)) makes hundreds of internal
+arrays device-resident, and putting each in `fi` would balloon the flat pointer
+struct for no reason — ERF never touches them.
+
+| Tier | Tag | In `fi` / C++ view? | Generated |
+|------|-----|---------------------|-----------|
+| **A** ERF-facing coupling | `@couple(dir=in\|out\|inout)` | **yes** | view + `fi` slot + device accessor + `enter data` |
+| **B** internal, device-resident | `@internal` | **no** | Fortran storage + `allocate()` + `enter data` only |
+| **C** host-only | (not in a contract block) | no | nothing (hand-written) |
+
+An untagged array behaves as Tier A today (full projection) for backward
+compatibility; new internal state should be `@internal`. See §4 for how each tag
+maps to region membership, and [`spec-add-coupled-variable.md`](spec-add-coupled-variable.md)
+for the author's-eye workflow.
 
 ## 2. Precision: `noahmp_real` / `c_kind_noahmp`
 
@@ -138,7 +160,12 @@ from the *same* `[lo:hi, …]` bounds clause, so they cannot disagree.
   noahmp_real ZLVL = -9999.0;              // free-form trailing doc, optional
 
   NoahmpArray2D<noahmp_real> XLAT[xstart:xend, ystart:yend];            // latitude [rad]
-  NoahmpArray3D<noahmp_real> U_PHY[xstart:xend, kms:kme, ystart:yend];  // U wind
+
+  // Tier tags (see §4a): classify how far the variable travels.
+  NoahmpArray2D<noahmp_real> SWDOWN[xstart:xend, ystart:yend] @couple(dir=in);   // ERF forcing in
+  NoahmpArray2D<noahmp_real> HFX[xstart:xend, ystart:yend]    @couple(dir=out);  // flux out to ERF
+  NoahmpArray3D<noahmp_real> SMOIS[xstart:xend, nsoil:nsoil, ystart:yend] @internal; // device-resident, no ABI
+  NoahmpArray3D<noahmp_real> U_PHY[xstart:xend, kms:kme, ystart:yend] @couple(dir=in);  // U wind (i,k,j)
 }
 ```
 
@@ -161,6 +188,55 @@ enforces (raising `SystemExit("NoahmpMacro: …")` otherwise):
   owner header, dropped from the Fortran `allocate`, and ignored by the tool.
 - **Ints / scalars** need no annotation; an optional C++ default
   (`int numrad = 2;`) is shared with Fortran.
+- **Tier tags** (`@couple(dir=…)` / `@internal`) are the one annotation the *type*
+  cannot express: they say how far the variable travels, not what it is. They are
+  parsed onto the `Member` and consumed by the region filters in §4a; a tag on a
+  non-array, an unknown `dir`, or both tags on one member is a named error.
+
+### 4a. Tiers & the GPU coupling projections
+
+The tier tags exist so the **same contract line** that generates the ABI can also
+drive GPU device residency and the ERF-facing device accessors — the
+single-source-of-truth principle extended to the offload port
+([`plan-cpp-interface.md`](plan-cpp-interface.md) §5, principle 3). A tag changes
+only **which regions a member flows into**, never how a region renders:
+
+| Region | Tier A (`@couple`) | Tier B (`@internal`) |
+|--------|:---:|:---:|
+| `CppMirrorFields` / `FortranMirrorFields` (`fi` struct) | ✅ | ❌ |
+| `MemberCount` (ABI count / `AssertAbi`) | ✅ | ❌ |
+| `CppStorageFields` (C++ owner view) | ✅ | ❌ |
+| `FortranStorageFields` (Fortran allocatable) | ✅ | ✅ |
+| `FortranArrayAllocate` (`allocate()` + `enter data`) | ✅ | ✅ |
+| `CppCoupleAccessors` (device `*_a4()` / `*_v()`) | ✅ (by `dir`) | ❌ |
+| `FortranDevPtrExport` (`*_devptr_fi` → `acc_deviceptr`) | ✅ | ❌ |
+
+So a `@internal` member costs **zero** ABI (no `fi` slot, no `MemberCount`
+increment, no C++ view) yet still gets generated Fortran storage, `allocate()`,
+and its `!$acc enter data` residency directive. A `@couple` member additionally
+gets the GPU coupling glue described in
+[`sketch-couple-variable-gpu.md`](sketch-couple-variable-gpu.md):
+
+- **`CppCoupleAccessors`** emits, per Tier-A variable, an `amrex::Array4` alias
+  (`*_a4()`) over the shared device memory — or, when the array's Fortran axis
+  order is not `(i,j,k)` (e.g. `U_PHY(i,k,j)`), a stride-matched device accessor
+  (`*_v()`) computed from the `[lo:hi, …]` bounds clause, so C++ and Fortran agree
+  by construction. `dir=in`/`out`/`inout` documents intent and can gate a
+  `const` view.
+- **`FortranDevPtrExport`** emits the `*_devptr_fi` `bind(C)` shim that returns
+  `acc_deviceptr(nm%NAME)` (Option B: Fortran owns, exports the device address for
+  ERF to wrap). See [`spec-memory-safety.md`](spec-memory-safety.md) §7.
+- **`FortranArrayAllocate`** appends `!$acc enter data create(nm%NAME)` after the
+  `allocate` for any tiered array — a harmless no-op in a host (offload-off) build.
+
+Generator implementation: add an `internal` flag and a `couple_dir` field to
+`Member` (parsed in `parse_members`). The ABI-bearing regions — the Mirror pair,
+`MemberCount`, `CppStorageFields`, and the Construct/Wire regions (ctor + move +
+`C_LOC`/`C_F_POINTER` plumbing) — filter on `not m.internal`, so a Tier-B member
+touches none of them. `CppCoupleAccessors`/`FortranDevPtrExport` filter on
+`m.couple_dir is not None`. `FortranStorageFields`/`FortranArrayAllocate` keep
+emitting **all** members. `KIND_TRAITS` is untouched — tiers gate *membership*,
+not per-kind *rendering*.
 
 ### The binding grammar (what you write in the templates)
 
@@ -210,7 +286,8 @@ definition:
 | **Mirror** | `CppMirrorFields` / `FortranMirrorFields` / `MemberCount` (value) | the flat pointer struct on each side + its element count |
 | **Construct** | `CppCtorParams` / `CppCtorInit` / `CppBindAddrs` / `CppMoveInit`(`ctype`) / `CppMoveRepoint`(`ctype_fi`) | ctor + move plumbing for the C++ owner and its mirror |
 | **Wire** | `CppArrayViews`(`ctype_fi`) / `FortranScalarWire`(`ftype_fi`,`ftype`) (`C_F_POINTER`) / `FortranArrayWire`(`ftype_fi`,`ftype`) (`C_LOC`) | physically connect the two representations |
-| **Storage** | `CppStorageFields` / `FortranStorageFields` / `FortranArrayAllocate`(`ftype`) | each owning side's real fields + the Fortran allocation |
+| **Storage** | `CppStorageFields` / `FortranStorageFields` / `FortranArrayAllocate`(`ftype`) | each owning side's real fields + the Fortran allocation (+ `enter data` for tiered arrays) |
+| **Couple/GPU** | `CppCoupleAccessors`(`ctype_fi`) / `FortranDevPtrExport`(`ftype`) | Tier-A device accessors (`*_a4()`/`*_v()`) + `acc_deviceptr` export (see §4a) |
 
 `CppStorageFields` is the C++ owner class's own fields, emitted **verbatim** from the
 contract body (so initializers like `int numrad = 2;`, trailing doc comments, and the
@@ -344,5 +421,10 @@ Because count/order/types match by construction, only the hazards codegen
 - [ ] Precision rule intact (`noahmp_real` / `c_kind_noahmp`, never literal
       `double`/`C_DOUBLE`).
 - [ ] No `@NoahmpMacro:` marker survives into any compiled target.
+- [ ] **Tiers respected**: `@internal` members produce **no** `fi` slot and do not
+      change `NOAHMP_IO_FI_NUM_MEMBERS`; only Tier-A (`@couple`/untagged) members
+      do. `NoahmpIO_AssertAbi()` still passes.
+- [ ] **GPU glue (once the port lands)**: every `@couple` member has a generated
+      accessor and `*_devptr_fi`; every tiered array has its `enter data`.
 - [ ] [`spec-add-coupled-variable.md`](spec-add-coupled-variable.md) still works
       end to end.

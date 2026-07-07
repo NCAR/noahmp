@@ -42,6 +42,21 @@ library* underneath it. The driver's job is to:
 - Scalars are owned by C++ (Fortran points back at them); arrays are owned by
   Fortran (C++ `NoahmpArray` views point into them via `C_LOC`).
 
+Not every array crosses the boundary the same way. Each is classified into a
+**tier** by a `@NoahmpMacro` tag (see [`spec-fc-api.md`](spec-fc-api.md) §4a),
+which decides its ABI cost and — for the GPU port — its device wiring:
+
+- **Tier A** (`@couple`) — the ~18 forcings/fluxes ERF touches each step: full
+  ABI slot + C++ view, and (post-port) a generated device accessor shared with ERF.
+- **Tier B** (`@internal`) — the hundreds of internal state arrays the physics
+  reads/writes: generated Fortran storage + allocation + device residency, **no
+  ABI slot**. ERF never sees them.
+- **Tier C** — host-only (tables, namelist): not in a contract block.
+
+This "generate the storage without paying an ABI slot" split is what keeps the
+flat `fi` struct small even as Noah-MP's full state becomes generator-managed and
+device-resident (see [`plan-cpp-interface.md`](plan-cpp-interface.md) §1).
+
 See [`spec-fc-api.md`](spec-fc-api.md) for the exact wiring and
 [`spec-memory-safety.md`](spec-memory-safety.md) for why this ownership split is
 safe.
@@ -105,6 +120,13 @@ Per level, the host:
    self-referential pointers — compile errors, not run-time surprises.
 5. **Collective, parallel I/O.** All NetCDF output is written collectively over
    `NoahmpIO%comm` (the host's MPI communicator) as parallel NetCDF-4.
+6. **One source of truth generates the GPU glue too, and the ABI stays lean.** The
+   contract block generates not just the ABI but (for the GPU port) each array's
+   device residency and each Tier-A variable's device accessor — no hand-written
+   per-variable device plumbing. Tier tags keep internal state out of the `fi`
+   struct: never widen the ABI merely to make a variable device-resident. See
+   [`plan-cpp-interface.md`](plan-cpp-interface.md) and
+   [`spec-fc-api.md`](spec-fc-api.md) §4a.
 
 ## 6. File map
 
@@ -133,6 +155,13 @@ The public C++ client API is exposed at global scope (`NoahmpIO_type`,
 | `NoahmpWrite/ReadRestartMod.F90` | Checkpoint/restart ([`spec-io-restart.md`](spec-io-restart.md)) |
 | `Noahmp{Init,ReadNamelist,ReadTable,ReadLand}*Mod.F90` | Init / config / static input |
 | `tools/NoahmpMacro.py` | The code generator |
+
+Forward-looking design docs (the GPU offload):
+
+| File | Role |
+|------|------|
+| `plan-cpp-interface.md` | Roadmap to GPU-enable Noah-MP via macro-driven Fortran offload |
+| `sketch-couple-variable-gpu.md` | One variable end-to-end under the GPU coupling scheme (worked example) |
 
 ## 7. Glossary
 
@@ -164,3 +193,19 @@ rather than re-defining terms.
 - **column / 1-D physics** — Noah-MP's per-grid-cell solver (`noahmp_type`,
   `NoahmpMain`), the part destined for the GPU (see
   [`plan-cpp-interface.md`](plan-cpp-interface.md)).
+- **tier (A/B/C)** — a variable's classification by how far it travels, set by a
+  `@NoahmpMacro` tag: **A** (`@couple`) crosses to ERF each step; **B**
+  (`@internal`) is device-resident internal state with no ABI slot; **C** is
+  host-only. See [`spec-fc-api.md`](spec-fc-api.md) §4a.
+- **offload** — compiling the Fortran physics as GPU device code (OpenACC
+  `!$acc`, or OpenMP `target`) rather than porting it to C++; the plan of record
+  for GPU (see [`plan-cpp-interface.md`](plan-cpp-interface.md)).
+- **device residency** — keeping an array in GPU memory across timesteps
+  (`!$acc enter data`), copied to host only for I/O; generator-emitted per tiered
+  array.
+- **shared stream** — the single CUDA stream both AMReX and Noah-MP's OpenACC
+  queue submit to (`acc_set_cuda_stream(queue, amrex::Gpu::gpuStream())`), so
+  their kernels order by the hardware queue instead of a per-step host barrier.
+- **device pointer** — the GPU address of a resident array, exported by Fortran
+  (`acc_deviceptr`) and wrapped by ERF as an `amrex::Array4` so both sides read/
+  write the same bytes with no copy.

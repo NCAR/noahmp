@@ -83,6 +83,25 @@ Key points:
 - Directory creation is done once by `blkid==0` via `execute_command_line("mkdir
   -p …")`.
 
+### 3.1 Device→host refresh (once the GPU offload lands)
+
+Under the GPU offload ([`plan-cpp-interface.md`](plan-cpp-interface.md)) the
+written fields are **device-resident** — the host copy `nf90_put_var` reads is
+stale between steps. Before the collective write (i.e. before the `blkid==0`
+define/first `put_var`), refresh host from device for the output set:
+
+```fortran
+!$acc update host(NoahmpIO%TSK, NoahmpIO%HFX, ...)   ! only the fields being written
+```
+
+The write itself stays **host-side** (parallel NetCDF over `NoahmpIO%comm`); we do
+not do GPU-direct I/O. This is off the hot path (only output steps), so the copy
+cost is acceptable. Omitting it does not crash — it silently writes stale data
+(see [`spec-memory-safety.md`](spec-memory-safety.md) §7.3). The output subset is
+lossy `NF90_FLOAT` anyway, so GPU/host round-off differences here are immaterial
+(contrast the restart path, which must stay bit-exact —
+[`spec-io-restart.md`](spec-io-restart.md) §4).
+
 ## 4. Adding a field to the output
 
 `NoahmpWriteLandMod.F90` is **not** generated — edit it directly, following the
