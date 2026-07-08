@@ -46,8 +46,6 @@ contains
     if ( .not. allocated (NoahmpIO%SWDDIR)    ) allocate ( NoahmpIO%SWDDIR     (XSTART:XEND,        YSTART:YEND) ) ! solar down at surface [W m-2] for new urban solar panel
     if ( .not. allocated (NoahmpIO%SWDDIF)    ) allocate ( NoahmpIO%SWDDIF     (XSTART:XEND,        YSTART:YEND) ) ! solar down at surface [W m-2] for new urban solar panel
     if ( .not. allocated (NoahmpIO%SNOWBL)    ) allocate ( NoahmpIO%SNOWBL     (XSTART:XEND,        YSTART:YEND) ) ! snow entering land model [mm] per time step
-    ! NOTE: SR, MP_RAINNC, MP_SNOW, MP_GRAUP are now @couple members; the generator
-    !       (@NoahmpMacro:FortranArrayAllocate below) allocates them -- do not re-allocate here.
     if ( .not. allocated (NoahmpIO%RAINCV)    ) allocate ( NoahmpIO%RAINCV     (XSTART:XEND,        YSTART:YEND) ) ! convective precip forcing [mm]
     if ( .not. allocated (NoahmpIO%RAINNCV)   ) allocate ( NoahmpIO%RAINNCV    (XSTART:XEND,        YSTART:YEND) ) ! non-convective precip forcing [mm]
     if ( .not. allocated (NoahmpIO%RAINSHV)   ) allocate ( NoahmpIO%RAINSHV    (XSTART:XEND,        YSTART:YEND) ) ! shallow conv. precip forcing [mm]

@@ -81,11 +81,6 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  DZS                 ! thickness of soil layers [m]
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  ZSOIL               ! depth to soil interfaces [m]
 
-    ! forcings
-    ! NOTE: SR, MP_RAINNC, MP_SNOW, MP_GRAUP are now declared in the
-    !       @NoahmpMacro:Source contract block (NoahmpIO.H-mc) as @couple(dir=in),
-    !       so the generator emits their storage here -- do NOT re-declare them
-    !       as hand-written allocatables (would duplicate).
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SNOWBL              ! snow entering land model [mm] per time step
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RAINCV              ! convective precip forcing [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RAINNCV             ! non-convective precip forcing [mm]
