@@ -66,6 +66,12 @@ endif()
 
 target_include_directories(noahmp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 target_include_directories(noahmp PRIVATE $<BUILD_INTERFACE:${NETCDF_INCLUDES}>)
+# netcdf.mod (the Fortran module) lives in the netcdf-fortran include dir, which
+# find_package(NetCDF) exposes as NETCDF_INCLUDES_F90 -- add it so the Fortran
+# sources (e.g. utility/ErrorHandleMod.F90 `use netcdf`) can find it.
+if(NETCDF_INCLUDES_F90)
+    target_include_directories(noahmp PRIVATE $<BUILD_INTERFACE:${NETCDF_INCLUDES_F90}>)
+endif()
 target_link_libraries(noahmp PRIVATE ${NETCDF_LIBRARIES_F90})
 target_link_libraries(noahmp PUBLIC MPI::MPI_Fortran)
 target_include_directories(noahmp INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
