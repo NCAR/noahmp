@@ -49,6 +49,10 @@
     NoahmpArray2D<noahmp_real> TAU_EW[xstart:xend, ystart:yend];       // wind stress in east-west direction [N/m2]
     NoahmpArray2D<noahmp_real> TAU_NS[xstart:xend, ystart:yend];       // wind stress in north-south direction [N/m2]
     NoahmpArray2D<noahmp_real> RAINBL[xstart:xend, ystart:yend];       // precipitation entering land model [mm] per time step
+    NoahmpArray2D<noahmp_real> SR[xstart:xend, ystart:yend];        // frozen precip fraction entering land model [-] (ERF forcing, WRF SR)
+    NoahmpArray2D<noahmp_real> MP_RAINNC[xstart:xend, ystart:yend]; // total non-convective precip this interval [mm] (ERF forcing, WRF MP_RAINNC)
+    NoahmpArray2D<noahmp_real> MP_SNOW[xstart:xend, ystart:yend];   // snow(+ice) subset of MP_RAINNC [mm] (ERF forcing, WRF MP_SNOW)
+    NoahmpArray2D<noahmp_real> MP_GRAUP[xstart:xend, ystart:yend];  // graupel subset of MP_RAINNC [mm] (ERF forcing, WRF MP_GRAUP)
 
     // --- IO variables exposed to C++ (init / plotting / checkpoint / restart) ---
     // Stage 1 (2D real) + Stage 2 (3D soil real). Promoted from hand-written

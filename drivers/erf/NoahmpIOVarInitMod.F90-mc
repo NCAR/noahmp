@@ -46,7 +46,6 @@ contains
     if ( .not. allocated (NoahmpIO%SWDDIR)    ) allocate ( NoahmpIO%SWDDIR     (XSTART:XEND,        YSTART:YEND) ) ! solar down at surface [W m-2] for new urban solar panel
     if ( .not. allocated (NoahmpIO%SWDDIF)    ) allocate ( NoahmpIO%SWDDIF     (XSTART:XEND,        YSTART:YEND) ) ! solar down at surface [W m-2] for new urban solar panel
     if ( .not. allocated (NoahmpIO%SNOWBL)    ) allocate ( NoahmpIO%SNOWBL     (XSTART:XEND,        YSTART:YEND) ) ! snow entering land model [mm] per time step
-    if ( .not. allocated (NoahmpIO%SR)        ) allocate ( NoahmpIO%SR         (XSTART:XEND,        YSTART:YEND) ) ! frozen precip ratio entering land model [-]
     if ( .not. allocated (NoahmpIO%RAINCV)    ) allocate ( NoahmpIO%RAINCV     (XSTART:XEND,        YSTART:YEND) ) ! convective precip forcing [mm]
     if ( .not. allocated (NoahmpIO%RAINNCV)   ) allocate ( NoahmpIO%RAINNCV    (XSTART:XEND,        YSTART:YEND) ) ! non-convective precip forcing [mm]
     if ( .not. allocated (NoahmpIO%RAINSHV)   ) allocate ( NoahmpIO%RAINSHV    (XSTART:XEND,        YSTART:YEND) ) ! shallow conv. precip forcing [mm]
@@ -54,10 +53,7 @@ contains
     if ( .not. allocated (NoahmpIO%GRAUPELNCV)) allocate ( NoahmpIO%GRAUPELNCV (XSTART:XEND,        YSTART:YEND) ) ! non-convective graupel forcing (subset of rainncv) [mm]
     if ( .not. allocated (NoahmpIO%HAILNCV)   ) allocate ( NoahmpIO%HAILNCV    (XSTART:XEND,        YSTART:YEND) ) ! non-convective hail forcing (subset of rainncv) [mm]
     if ( .not. allocated (NoahmpIO%MP_RAINC)  ) allocate ( NoahmpIO%MP_RAINC   (XSTART:XEND,        YSTART:YEND) ) ! convective precip forcing [mm]
-    if ( .not. allocated (NoahmpIO%MP_RAINNC) ) allocate ( NoahmpIO%MP_RAINNC  (XSTART:XEND,        YSTART:YEND) ) ! non-convective precip forcing [mm]
     if ( .not. allocated (NoahmpIO%MP_SHCV)   ) allocate ( NoahmpIO%MP_SHCV    (XSTART:XEND,        YSTART:YEND) ) ! shallow conv. precip forcing [mm]
-    if ( .not. allocated (NoahmpIO%MP_SNOW)   ) allocate ( NoahmpIO%MP_SNOW    (XSTART:XEND,        YSTART:YEND) ) ! non-covective snow (subset of rainnc) [mm]
-    if ( .not. allocated (NoahmpIO%MP_GRAUP)  ) allocate ( NoahmpIO%MP_GRAUP   (XSTART:XEND,        YSTART:YEND) ) ! non-convective graupel (subset of rainnc) [mm]
     if ( .not. allocated (NoahmpIO%MP_HAIL)   ) allocate ( NoahmpIO%MP_HAIL    (XSTART:XEND,        YSTART:YEND) ) ! non-convective hail (subset of rainnc) [mm]
     if ( .not. allocated (NoahmpIO%DZ8W)      ) allocate ( NoahmpIO%DZ8W       (XSTART:XEND,KMS:KME,YSTART:YEND) ) ! thickness of atmo layers [m]
  

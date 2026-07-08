@@ -81,9 +81,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  DZS                 ! thickness of soil layers [m]
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  ZSOIL               ! depth to soil interfaces [m]
 
-    ! forcings
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SNOWBL              ! snow entering land model [mm] per time step
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SR                  ! frozen precip ratio entering land model [-]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RAINCV              ! convective precip forcing [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RAINNCV             ! non-convective precip forcing [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RAINSHV             ! shallow conv. precip forcing [mm]
@@ -91,11 +89,10 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  GRAUPELNCV          ! non-convective graupel forcing (subset of rainncv) [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  HAILNCV             ! non-convective hail forcing (subset of rainncv) [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MP_RAINC            ! convective precipitation entering land model [mm] ! MB/AN : v3.7
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MP_RAINNC           ! large-scale precipitation entering land model [mm]! MB/AN : v3.7
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MP_SHCV             ! shallow conv precip entering land model [mm]      ! MB/AN : v3.7
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MP_SNOW             ! snow precipitation entering land model [mm]       ! MB/AN : v3.7 
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MP_GRAUP            ! graupel precipitation entering land model [mm]    ! MB/AN : v3.7
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MP_HAIL             ! hail precipitation entering land model [mm]       ! MB/AN : v3.7 
+    ! MP_RAINNC / MP_SNOW / MP_GRAUP moved to the @NoahmpMacro:Source contract block
+    ! (NoahmpIO.H-mc) so they are C++-coupled; generator emits their storage here.
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MP_HAIL             ! hail precipitation entering land model [mm]       ! MB/AN : v3.7
     
 #ifdef WRF_HYDRO
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  infxsrt             ! surface infiltration
