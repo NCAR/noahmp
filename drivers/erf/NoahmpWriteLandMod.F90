@@ -24,13 +24,13 @@ contains
 
       ! local variables
       integer :: ierr, start(2), count(2), nx, ny, comp2d, nsoil
-      character(len=5) :: ts_str
+      character(len=32) :: ts_str   ! wide enough for any step count (I5.5 overflowed >99999 -> 'lnd*****')
       character(len=1) :: lev_str
       character(len=100) :: dir, filename
       logical :: ex
 
       if (NoahmpIO%blkid == 0) then
-         write (ts_str, '(I5.5)') filenum
+         write (ts_str, '(I0.5)') filenum   ! zero-pad to >=5 digits, but never truncate
          write (lev_str, '(I1.1)') NoahmpIO%LEVEL
 
          dir = "lnd"//trim(ts_str)

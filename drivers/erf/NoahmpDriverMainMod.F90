@@ -54,14 +54,19 @@ contains
       NoahmpIO%U_PHY(:, 2, :) = NoahmpIO%U_PHY(:, 1, :)            !
       NoahmpIO%V_PHY(:, 2, :) = NoahmpIO%V_PHY(:, 1, :)            !
       NoahmpIO%QV_CURR(:, 2, :) = NoahmpIO%QV_CURR(:, 1, :)          !
-      NoahmpIO%RAINBL = NoahmpIO%RAINBL*NoahmpIO%DTBL  ! RAINBL in WRF is [mm]
-      NoahmpIO%SNOWBL = NoahmpIO%SNOWBL*NoahmpIO%DTBL  !
-      NoahmpIO%SR = 0.0                              ! Will only use component if opt_snf=4
-      NoahmpIO%RAINCV = 0.0
-      NoahmpIO%RAINNCV = NoahmpIO%RAINBL
+      ! Precipitation forcing convention (matches WRF's Noah-MP caller):
+      ! The ERF C++ driver supplies RAINBL as accumulated [mm] over the land-call
+      ! interval, and the WRF-style microphysics breakdown MP_RAINNC (total
+      ! non-convective), MP_SNOW (snow+ice) and MP_GRAUP (graupel) plus the frozen
+      ! fraction SR -- all as @couple(dir=in) members. Do NOT overwrite them here,
+      ! and do NOT multiply RAINBL by DTBL (the shared ForcingVarInTransferMod
+      ! divides by DTBL -> mm/s internally; WRF does not pre-multiply). ERF has no
+      ! convective, shallow-convective or hail channel, so zero only those (matching
+      ! WRF when those OPTIONAL args are absent). SNOWBL is a dead field (never read
+      ! into the core); zero it defensively.
+      NoahmpIO%SNOWBL  = 0.0
+      NoahmpIO%RAINCV  = 0.0
       NoahmpIO%RAINSHV = 0.0
-      NoahmpIO%SNOWNCV = NoahmpIO%SNOWBL
-      NoahmpIO%GRAUPELNCV = 0.0
       NoahmpIO%HAILNCV = 0.0
       NoahmpIO%DZ8W = 2*NoahmpIO%ZLVL                  ! 2* to be consistent with WRF model level
 
@@ -78,11 +83,12 @@ contains
 
       IF (NoahmpIO%ITIMESTEP > 0) THEN
          if (NoahmpIO%rank == 0) write(*,'("Noah-MP running physical processes")')
+         ! MP_RAINNC / MP_SNOW / MP_GRAUP and SR are supplied directly by the ERF
+         ! C++ driver (WRF-style microphysics breakdown, @couple(dir=in)) -- do NOT
+         ! overwrite them. Only the channels ERF lacks are set from the zeroed
+         ! convective/shallow/hail forcings (matches WRF with those args absent).
          NoahmpIO%MP_RAINC = NoahmpIO%RAINCV
-         NoahmpIO%MP_RAINNC = NoahmpIO%RAINNCV
          NoahmpIO%MP_SHCV = NoahmpIO%RAINSHV
-         NoahmpIO%MP_SNOW = NoahmpIO%SNOWNCV
-         NoahmpIO%MP_GRAUP = NoahmpIO%GRAUPELNCV
          NoahmpIO%MP_HAIL = NoahmpIO%HAILNCV
 
     !---------------------------------------------------------------------
