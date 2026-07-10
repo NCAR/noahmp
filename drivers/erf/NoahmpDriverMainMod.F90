@@ -50,13 +50,10 @@ contains
       NoahmpIO%U_PHY(:, 2, :) = NoahmpIO%U_PHY(:, 1, :)
       NoahmpIO%V_PHY(:, 2, :) = NoahmpIO%V_PHY(:, 1, :)
       NoahmpIO%QV_CURR(:, 2, :) = NoahmpIO%QV_CURR(:, 1, :)
-      ! ERF supplies RAINBL and the microphysics breakdown (MP_RAINNC/MP_SNOW/
-      ! MP_GRAUP/SR) as inputs; zero only the channels ERF lacks (convective,
-      ! shallow, hail) and the unused SNOWBL.
+      ! Zero the channels ERF lacks (convective, shallow) and unused SNOWBL.
       NoahmpIO%SNOWBL  = 0.0
       NoahmpIO%RAINCV  = 0.0
       NoahmpIO%RAINSHV = 0.0
-      NoahmpIO%HAILNCV = 0.0
       NoahmpIO%DZ8W = 2*NoahmpIO%ZLVL                  ! 2* to be consistent with WRF model level
 
       NoahmpIO%SWDDIR = NoahmpIO%SWDOWN*0.7                    ! following noahmplsm ATM 70% direct radiation
@@ -72,10 +69,9 @@ contains
 
       IF (NoahmpIO%ITIMESTEP > 0) THEN
          if (NoahmpIO%rank == 0) write(*,'("Noah-MP running physical processes")')
-         ! Convective/shallow/hail channels absent in ERF, set from zeroed forcings.
+         ! Convective/shallow absent in ERF; MP_HAIL is ERF-supplied (not set here).
          NoahmpIO%MP_RAINC = NoahmpIO%RAINCV
          NoahmpIO%MP_SHCV = NoahmpIO%RAINSHV
-         NoahmpIO%MP_HAIL = NoahmpIO%HAILNCV
 
     !  Treatment of Noah-MP soil timestep
     NoahmpIO%CALCULATE_SOIL    = .false.

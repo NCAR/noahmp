@@ -50,6 +50,7 @@
     NoahmpArray2D<noahmp_real> MP_RAINNC[xstart:xend, ystart:yend]; // total non-convective precip this interval [mm] (ERF forcing, WRF MP_RAINNC)
     NoahmpArray2D<noahmp_real> MP_SNOW[xstart:xend, ystart:yend];   // snow(+ice) subset of MP_RAINNC [mm] (ERF forcing, WRF MP_SNOW)
     NoahmpArray2D<noahmp_real> MP_GRAUP[xstart:xend, ystart:yend];  // graupel subset of MP_RAINNC [mm] (ERF forcing, WRF MP_GRAUP)
+    NoahmpArray2D<noahmp_real> MP_HAIL[xstart:xend, ystart:yend];   // hail subset of MP_RAINNC [mm] (ERF forcing, WRF MP_HAIL)
 
     // IO variables exposed to C++ (init / plotting / checkpoint / restart)
 
