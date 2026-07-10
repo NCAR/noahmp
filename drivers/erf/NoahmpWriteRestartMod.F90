@@ -1,19 +1,11 @@
 module NoahmpWriteRestartMod
 
-!------------------------------------------------------------------------------
-! Write the full NoahMP prognostic state to a NetCDF restart file so that an
-! ERF restart reproduces a cold-start trajectory bitwise. This mirrors the
-! collective per-block MPI-IO pattern of NoahmpWriteLandMod, but:
-!   * serializes the PROGNOSTIC state (soil, snow incl. layers, canopy/veg,
-!     albedo history, aquifer, phenology, accumulators) rather than the small
-!     diagnostic/coupling subset the lnd plotfile carries;
-!   * stores reals at the model's working precision (kind_noahmp) so there is
-!     no lossy conversion -- NF90_DOUBLE when kind_noahmp==8, else NF90_REAL;
-!   * stores ISNOWXY (the active snow-layer count) as NF90_INT, which is
-!     required to interpret the negative-indexed snow-layer arrays on restart;
-!   * guards every optional (conditionally allocated) field with allocated().
+! Write the full NoahMP prognostic state to a NetCDF restart file for bit-exact
+! ERF restart. Uses the collective per-block MPI-IO pattern of NoahmpWriteLandMod,
+! but serializes the prognostic state at working precision (NF90_DOUBLE when
+! kind_noahmp==8, else NF90_REAL). ISNOWXY is stored as NF90_INT since it is
+! needed to interpret the negative-indexed snow-layer arrays on restart.
 ! Companion reader: NoahmpReadRestartMod.
-!------------------------------------------------------------------------------
 
    use mpi
    use netcdf
@@ -58,7 +50,6 @@ contains
       character(len=*),    intent(in)    :: dir
       integer,             intent(in)    :: maxblocks
 
-      ! local variables
       integer :: ierr, start(2), count(2)
       integer :: nx, ny, nsoil_d, nsnow_d, nsnso_d
       integer :: rtype
@@ -66,8 +57,7 @@ contains
       character(len=512) :: filename
       logical :: ex
 
-      ! NetCDF real type chosen to match the in-memory kind so the round-trip
-      ! is bit-exact (no float<->double conversion).
+      ! Match the NetCDF real type to the in-memory kind for a bit-exact round-trip.
       rtype = NF90_REAL
       if (kind_noahmp == 8) rtype = NF90_DOUBLE
 
@@ -98,7 +88,7 @@ contains
          ierr = nf90_def_dim(ncid, "NSNOW", NoahmpIO%NSNOW,    nsnow_d)
          ierr = nf90_def_dim(ncid, "NSNSO", NoahmpIO%NSNOW+NoahmpIO%NSOIL, nsnso_d)
 
-         ! Record the layer counts as global attributes for the read-side assert.
+         ! Layer counts as global attributes for the read-side assert.
          ierr = nf90_put_att(ncid, NF90_GLOBAL, "NSOIL", NoahmpIO%NSOIL)
          ierr = nf90_put_att(ncid, NF90_GLOBAL, "NSNOW", NoahmpIO%NSNOW)
 
@@ -135,8 +125,7 @@ contains
          ierr = nf90_def_var(ncid, "CHXY",    rtype, (/nx, ny/), id_ch)
          ierr = nf90_def_var(ncid, "FWETXY",  rtype, (/nx, ny/), id_fwet)
          ierr = nf90_def_var(ncid, "QSFC",    rtype, (/nx, ny/), id_qsfc)
-         ! TSK, EMISS, WSLAKEXY use the C-boundary kind c_kind_noahmp, which
-         ! equals kind_noahmp in every build -> the same rtype as the rest.
+         ! TSK, EMISS, WSLAKEXY use c_kind_noahmp == kind_noahmp, so rtype applies.
          ierr = nf90_def_var(ncid, "TSK",     rtype, (/nx, ny/), id_tsk)
          ierr = nf90_def_var(ncid, "QSNOWXY", rtype, (/nx, ny/), id_qsnow)
          ierr = nf90_def_var(ncid, "QRAINXY", rtype, (/nx, ny/), id_qrain)

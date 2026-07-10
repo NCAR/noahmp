@@ -19,10 +19,9 @@ extern "C" {
     void NoahmpIOTypeVectInit_fi(int* level, int* NBlocks);
 }
 
-// Fatal-error handling. Noah-MP carries no MPI/AMReX dependency: it calls
-// NoahmpIO_fatal(), and the host (ERF) installs a handler that propagates the
-// failure across all ranks (e.g. amrex::Abort -> MPI_Abort). With no handler
-// installed we fall back to std::abort(). See NoahmpFatal.H.
+// Fatal-error handling. Noah-MP has no MPI/AMReX dependency; the host (ERF)
+// installs a handler for cross-rank propagation. With none installed we fall
+// back to std::abort(). See NoahmpFatal.H.
 static FatalHandler g_fatal_handler = nullptr;
 
 void NoahmpIO_set_fatal_handler(FatalHandler handler) { g_fatal_handler = handler; }
@@ -34,18 +33,14 @@ void NoahmpIO_fatal(const char* msg) {
     std::abort();                               // fallback / if handler returns
 }
 
-// bind(C) shim so the Fortran coupling layer routes its fatal errors through the
-// same host-installed handler instead of reaching for MPI itself. Fortran prints
-// its own diagnostic first (write(0,*)), so no message is forwarded here.
+// bind(C) shim so the Fortran coupling layer routes fatal errors through the same
+// host handler. Fortran prints its own diagnostic first, so no message is forwarded.
 extern "C" void NoahmpIO_fatal_c() { NoahmpIO_fatal(nullptr); }
 
-// Run-time ABI guard, executed once. Member count and order are identical by
-// construction (both structs are generated from @NoahmpMacro:Source) and the
-// C++ layout is pinned by the static_assert in NoahmpIO.H, so no runtime size or
-// member-order handshake is needed. The one cross-language hazard codegen cannot
-// prevent is a precision (DOUBLE_PREC) mismatch between the two separately-invoked
-// compilers: the struct is all pointers, so its size is precision-invariant and
-// only this value check catches it. See the "ABI guards" comment in NoahmpIO.H.
+// Run-time ABI guard, executed once. Layout/order are guaranteed by codegen plus
+// the static_assert in NoahmpIO.H; the one hazard those cannot catch is a precision
+// (DOUBLE_PREC) mismatch between the two compilers, since the all-pointer struct is
+// precision-invariant in size. See the "ABI guards" comment in NoahmpIO.H.
 void NoahmpIO_AssertAbi() {
     static const bool ok = []() -> bool {
         const std::size_t fortran_real_size = NoahmpRealSize_fi();
@@ -126,9 +121,7 @@ void NoahmpIO_type::VarInitDefault() {
 
 
 void NoahmpIO_vector::resize(size_t size, size_t level) {
-     // Run-time ABI precision cross-check (DOUBLE_PREC must match across the two
-     // compilers). Layout/order are guaranteed by codegen + the static_assert in
-     // NoahmpIO.H. Runs once (also from NoahmpIO_type's constructor).
+     // Run-time ABI precision cross-check (DOUBLE_PREC must match across compilers).
      NoahmpIO_AssertAbi();
      if (initialized_) {
          std::cerr << "NoahmpIO_vector::resize(size, level): the block array has "

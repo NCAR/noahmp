@@ -3,11 +3,10 @@ module NoahmpIOVarType
 !!! Define Noah-MP Input variables (2D forcing, namelist, table, static)
 !!! Input variable initialization is done in NoahmpIOVarInitMod.F90
 
-! ------------------------ Code history -----------------------------------
+! Code history:
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath & refactor team (He et al. 2023)
-! Fortran-C API: A. Dhruv, M. Buehlmann, & R. Kotamarthi (2024)   
-! -------------------------------------------------------------------------
+! Fortran-C API: A. Dhruv, M. Buehlmann, & R. Kotamarthi (2024)
 
   use, intrinsic :: iso_c_binding, only: C_INT, C_PTR, C_CHAR
   use Machine
@@ -16,21 +15,16 @@ module NoahmpIOVarType
   save
   private
 
-! ---------------------------------------------------------------------------
 ! Native Fortran IO type
-! --------------------------------------------------------------------------- 
   type, public :: NoahmpIO_type
 
-!------------------------------------------------------------------------
 ! general 2-D/3-D Noah-MP variables
-!------------------------------------------------------------------------
 
     ! IN only (as defined in WRF)
-    ! NOTE: every C_INT/c_kind_noahmp pointer component below is associated with
-    ! C++-owned memory in NoahmpIOScalarInitDefault_fi. They are => null() here so
-    ! their association status is well-defined before that call: associated() is
-    ! safe to test (used by the scalar-init guard in NoahmpIO_fi), and an
-    ! out-of-order dereference is a clean null crash rather than silent UB.
+    ! NOTE: C-coupled pointer components below are => null() here so their
+    ! association status is well-defined before C++ associates them in
+    ! NoahmpIOScalarInitDefault_fi: associated() is safe to test (scalar-init
+    ! guard in NoahmpIO_fi), and out-of-order access is a clean null crash.
 
     @NoahmpMacro:FortranStorageFields(m_noahmpio);
 
@@ -90,8 +84,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  HAILNCV             ! non-convective hail forcing (subset of rainncv) [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MP_RAINC            ! convective precipitation entering land model [mm] ! MB/AN : v3.7
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MP_SHCV             ! shallow conv precip entering land model [mm]      ! MB/AN : v3.7
-    ! MP_RAINNC / MP_SNOW / MP_GRAUP moved to the @NoahmpMacro:Source contract block
-    ! (NoahmpIO.H-mc) so they are C++-coupled; generator emits their storage here.
+    ! MP_RAINNC / MP_SNOW / MP_GRAUP are C++-coupled; declared in NoahmpIO.H-mc.
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MP_HAIL             ! hail precipitation entering land model [mm]       ! MB/AN : v3.7
     
 #ifdef WRF_HYDRO
@@ -260,9 +253,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ACC_ETRANIXY        ! accumualted transpiration rate within soil timestep [m/s * dt_soil/dt_main]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACC_GLAFLWXY        ! accumulated glacier excessive flow [mm] per soil timestep
 
-!------------------------------------------------------------------------
 ! Needed for MMF_RUNOFF (IOPT_RUN = 5); not part of MP driver in WRF
-!------------------------------------------------------------------------
 
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MSFTX               ! mapping factor x
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  MSFTY               ! mapping factor y
@@ -284,9 +275,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp)                                 ::  WTDDT  = 30.0       ! frequency of groundwater call [minutes]
     integer                                                ::  STEPWTD             ! step of groundwater call
 
-!------------------------------------------------------------------------
 ! Needed for SNICAR SNOW ALBEDO (IOPT_ALB = 3)
-!------------------------------------------------------------------------
 
     integer                                                ::  SNICAR_BANDNUMBER_OPT         !number of wavelength bands used in SNICAR snow albedo calculation
                                                                                              ! 1->5;2->480
@@ -399,14 +388,10 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RadSwVisFrac                  ! fraction of downward solar visible band
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RadSwDirFrac                  ! fraction of downward solar direct band
 
-!------------------------------------------------------------------------
 ! Needed for TILE DRAINAGE IF IOPT_TDRN = 1 OR 2
-!------------------------------------------------------------------------
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TD_FRACTION         ! tile drainage fraction
 
-!------------------------------------------------------------------------
 ! Needed for crop model (OPT_CROP=1)
-!------------------------------------------------------------------------
 
     integer, allocatable, dimension(:,:)                   :: PGSXY                ! plant growth stage
     integer, allocatable, dimension(:,:)                   :: CROPCAT              ! crop category
@@ -415,17 +400,13 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    :: SEASON_GDD           ! seasonal GDD
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  :: CROPTYPE             ! crop type
 
-!------------------------------------------------------------------------
 ! Needed for wetland model (OPT_WETLAND=1 or 2)
-!------------------------------------------------------------------------
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FSATXY              ! saturated fraction of the grid (-)
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  WSURFXY             ! wetland water storage [mm]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FSATMX              ! maximum saturated fraction
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  WCAP                ! maximum wetland capacity [m]
 
-!------------------------------------------------------------------------
 ! Single- and Multi-layer Urban Models
-!------------------------------------------------------------------------
 
     integer                                                ::  num_urban_atmosphere ! atmospheric levels including ZLVL for BEP/BEM models
     integer                                                ::  IRI_URBAN            ! urban irrigation flag (move from module_sf_urban to here)
@@ -556,22 +537,14 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SWDDIR              ! solar down at surface [W m-2]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SWDDIF
 
-!------------------------------------------------------------------------
 ! 2D variables not used in WRF - should be removed?
-!------------------------------------------------------------------------
 
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  XLONG               ! longitude
-
-!------------------------------------------------------------------------
-! End 2D variables not used in WRF
-!------------------------------------------------------------------------
 
     CHARACTER(LEN=256)                                     ::  MMINSL  = 'STAS'    ! soil classification
     CHARACTER(LEN=256)                                     ::  LLANDUSE            ! (=USGS, using USGS landuse classification)
 
-!------------------------------------------------------------------------
-! Timing:
-!------------------------------------------------------------------------
+! Timing
 
     integer                                                ::  clock_count_1 = 0
     integer                                                ::  clock_count_2 = 0
@@ -581,9 +554,7 @@ module NoahmpIOVarType
     integer                                                ::  count_before_sflx
     integer                                                ::  count_after_sflx
 
-!---------------------------------------------------------------------
-!  DECLARE/Initialize constants
-!---------------------------------------------------------------------
+! Constants
 
     integer                                                ::  I
     integer                                                ::  J
@@ -594,9 +565,7 @@ module NoahmpIOVarType
     logical                                                ::  reset_spinup_date
     logical                                                ::  reset_spinup_datea
 
-!---------------------------------------------------------------------
-!  File naming, parallel
-!---------------------------------------------------------------------
+! File naming, parallel
 
     character(len=19)                                      ::  olddate, &
                                                                newdate, &
@@ -618,9 +587,7 @@ module NoahmpIOVarType
     character(len=256)                                     ::  restart_flnm
     integer                                                ::  ierr
 
-!---------------------------------------------------------------------
 ! Attributes from LDASIN input file (or ERF_SETUP_FILE, as the case may be)
-!---------------------------------------------------------------------
 
     integer                                                ::  IX
     integer                                                ::  JX
@@ -632,9 +599,7 @@ module NoahmpIOVarType
     real(kind=kind_noahmp)                                 ::  LAT1
     real(kind=kind_noahmp)                                 ::  LON1
 
-!---------------------------------------------------------------------
-!  NAMELIST start
-!---------------------------------------------------------------------
+! Namelist
 
     character(len=256)                                     ::  indir
     ! nsoil defined above
@@ -707,9 +672,7 @@ module NoahmpIOVarType
     integer                                                ::  MAX_SOIL_LEVELS
     real(kind=kind_noahmp),  allocatable, dimension(:)     ::  soil_thick_input
 
-!----------------------------------------------------------------
-! Noahmp Parameters Table 
-!----------------------------------------------------------------
+! Noah-MP parameters table
 
     ! vegetation parameters
     character(len=256)                                     :: VEG_DATASET_DESCRIPTION_TABLE

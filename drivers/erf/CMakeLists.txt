@@ -101,3 +101,20 @@ install(EXPORT NoahMPTargets
     NAMESPACE NoahMP::
     DESTINATION lib/cmake/noahmp
 )
+
+# ---------------------------------------------------------------------------
+# Regression tests (drivers/erf/tests). Link against the `noahmp` target and
+# exercise the C++ <-> Fortran coupling boundary through both interfaces.
+#
+# Default follows NOAHMP_MASTER_PROJECT: ON for a standalone
+# `cmake .../drivers/erf` build, OFF when ERF adds this directory as a
+# subproject -- so ERF's own build is never perturbed. Turn on explicitly with
+# `-DNOAHMP_ENABLE_TESTS=ON`. The tests inherit the same precision macro
+# (DOUBLE_PREC) and flags as `noahmp`, so the ABI precision guard stays
+# consistent between the library and its tests.
+# ---------------------------------------------------------------------------
+option(NOAHMP_ENABLE_TESTS "Build Noah-MP ERF driver regression tests" ${NOAHMP_MASTER_PROJECT})
+if(NOAHMP_ENABLE_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()

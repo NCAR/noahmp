@@ -1,12 +1,10 @@
 module NoahmpReadNamelistMod
 
 !!! Initialize Noah-MP namelist variables
-!!! Namelist variables should be first defined in NoahmpIOVarType.F90
+!!! Namelist variables must first be defined in NoahmpIOVarType.F90
 
-! ------------------------ Code history -----------------------------------
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
-! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
-! -------------------------------------------------------------------------
+! Refactored code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
 
   use Machine
   use NoahmpIOVarType
@@ -15,20 +13,14 @@ module NoahmpReadNamelistMod
 
 contains
 
-!=== read namelist values
-
   subroutine NoahmpReadNamelist(NoahmpIO)
 
     implicit none
 
     type(NoahmpIO_type), intent(inout)  :: NoahmpIO
 
-!---------------------------------------------------------------------
-!  NAMELIST start
-!---------------------------------------------------------------------
-
     ! local namelist variables
-    
+
     character(len=256)      :: indir = '.'
     integer                 :: ierr
     integer                 :: NSOIL                 ! number of soil layers
@@ -177,10 +169,7 @@ contains
          forcing_name_OCPHI, forcing_name_OCPHO, forcing_name_DUST1, forcing_name_DUST2,  &
          forcing_name_DUST3, forcing_name_DUST4, forcing_name_DUST5
 
-    !---------------------------------------------------------------
-    !  Initialize namelist variables to dummy values, so we can tell
-    !  if they have not been set properly.
-    !---------------------------------------------------------------
+    ! Initialize to dummy values so unset variables can be detected
     if (.not. allocated(NoahmpIO%soil_thick_input)) allocate(NoahmpIO%soil_thick_input(1:MAX_SOIL_LEVELS))
     NoahmpIO%nsoil                   = undefined_int
     NoahmpIO%soil_thick_input        = undefined_real
@@ -201,10 +190,7 @@ contains
     NoahmpIO%noahmp_output           = 0
     NoahmpIO%nsnow                   = undefined_int
 
-    !---------------------------------------------------------------
-    ! read namelist.input
-    !---------------------------------------------------------------
-    
+    ! read namelist.erf
     open(30, file="namelist.erf", form="FORMATTED")
     read(30, NOAHLSM_OFFLINE, iostat=ierr)
     if (ierr /= 0) then
@@ -215,8 +201,7 @@ contains
     endif
     close(30)
 
-    ! Use the ERF-coupled zlvl if it was set externally; otherwise fall back
-    ! to the namelist value (which has just been read above).
+    ! Prefer an externally set ERF-coupled zlvl; otherwise use the namelist value
     if (NoahmpIO%zlvl == undefined_real) NoahmpIO%zlvl = zlvl
 
     NoahmpIO%DTBL            = real(noah_timestep)
@@ -225,17 +210,11 @@ contains
     NoahmpIO%NSNOW           = nsnow
     NoahmpIO%LLANDUSE        = llanduse
 
-    !---------------------------------------------------------------------
-    !  NAMELIST end
-    !---------------------------------------------------------------------
-   
-    !---------------------------------------------------------------------
-    !  NAMELIST check begin
-    !---------------------------------------------------------------------
+    ! NAMELIST checks
     NoahmpIO%update_lai = .true.   ! default: use LAI if present in forcing file
     if(dynamic_veg_option == 1 .or. dynamic_veg_option == 2 .or. &
        dynamic_veg_option == 3 .or. dynamic_veg_option == 4 .or. &
-       dynamic_veg_option == 5 .or. dynamic_veg_option == 6) &    ! remove dveg=10 and add dveg=1,3,4 into the update_lai flag false condition
+       dynamic_veg_option == 5 .or. dynamic_veg_option == 6) &
        NoahmpIO%update_lai = .false.
 
     NoahmpIO%update_veg = .false.  ! default: don't use VEGFRA if present in forcing file
@@ -281,9 +260,7 @@ contains
         stop
     endif
 
-    !
-    ! Check that OUTPUT_TIMESTEP fits into NOAH_TIMESTEP:
-    !
+    ! OUTPUT_TIMESTEP must be an integer multiple of NOAH_TIMESTEP
     if (output_timestep /= 0) then
        if (mod(output_timestep, noah_timestep) > 0) then
          if (NoahmpIO%rank == 0) write(*, *)
@@ -298,9 +275,7 @@ contains
        endif
     endif
 
-   !
-   ! Check that RESTART_FREQUENCY_HOURS fits into NOAH_TIMESTEP:
-   !
+   ! RESTART_FREQUENCY_HOURS (in seconds) must be an integer multiple of NOAH_TIMESTEP
     if (restart_frequency_hours /= 0) then
        if (mod(restart_frequency_hours*3600, noah_timestep) > 0) then
          if (NoahmpIO%rank == 0) write(*, *)
@@ -360,10 +335,8 @@ contains
        endif
     endif
     
-    !---------------------------------------------------------------------
-    !  Transfer Namelist locals to input data structure
-    !---------------------------------------------------------------------
-    ! physics option 
+    ! Transfer namelist locals into the input data structure
+    ! physics options
     NoahmpIO%IOPT_DVEG                         = dynamic_veg_option 
     NoahmpIO%IOPT_CRS                          = canopy_stomatal_resistance_option
     NoahmpIO%IOPT_BTR                          = btr_option
@@ -481,10 +454,6 @@ contains
     NoahmpIO%forcing_name_DUST3                = forcing_name_DUST3
     NoahmpIO%forcing_name_DUST4                = forcing_name_DUST4
     NoahmpIO%forcing_name_DUST5                = forcing_name_DUST5
-
-!---------------------------------------------------------------------
-!  NAMELIST check end
-!---------------------------------------------------------------------
 
   end subroutine NoahmpReadNamelist
 

@@ -15,13 +15,10 @@ module NoahmpReadLandMod
   logical, parameter :: FATAL = .TRUE.
   logical, parameter :: NOT_FATAL = .FALSE.
 
-  ! get_2d_netcdf reads 2-D fields into model-precision (kind_noahmp) arrays via
-  ! the netCDF Fortran API -- it has no C boundary of its own. The few fields that
-  ! are owned by ERF's C++ side (XLAT, TSK) are read through get_2d_netcdf_c, whose
-  ! dummy carries the C-interop kind c_kind_noahmp to mark them as boundary fields,
-  ! mirroring get2d/get2dd in NoahmpReadRestartMod. c_kind_noahmp == kind_noahmp in
-  ! every build, so the two readers are otherwise identical. See the note in
-  ! Machine.F90 on c_kind_noahmp.
+  ! get_2d_netcdf reads 2-D fields into kind_noahmp arrays; get_2d_netcdf_c reads
+  ! the ERF C++-owned fields (XLAT, TSK) with the C-interop kind c_kind_noahmp.
+  ! c_kind_noahmp == kind_noahmp in every build, so the readers are otherwise
+  ! identical (see Machine.F90).
 
 contains
 
@@ -31,7 +28,7 @@ subroutine NoahmpReadLandHeader(NoahmpIO)
     type(NoahmpIO_type), intent(inout)  :: NoahmpIO
 
     integer :: ncid, dimid, varid, ierr
-    real(kind_noahmp), allocatable, dimension(:,:) :: dum2d  ! scratch for XLAT/XLONG -> only used to extract lat1/lon1 scalars
+    real(kind_noahmp), allocatable, dimension(:,:) :: dum2d  ! scratch to extract lat1/lon1 scalars
     character(len=256) :: units
     integer :: i
     integer :: rank
@@ -193,47 +190,41 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     xend = NoahmpIO%xend-NoahmpIO%xoffset
     yend = NoahmpIO%yend-NoahmpIO%yoffset
 
-    ! Get Latitude (lat)
     call get_2d_netcdf_c("XLAT", ncid, NoahmpIO%xlat,  units, xstart, xend, ystart, yend, FATAL, ierr)  ! c_kind_noahmp
 
-    ! Get Longitude (lon)
     call get_2d_netcdf("XLONG", ncid, NoahmpIO%xlong, units, xstart, xend, ystart, yend, FATAL, ierr)
 
-    ! Get land mask (xland)
     call get_2d_netcdf("XLAND", ncid, NoahmpIO%xland, units, xstart, xend, ystart, yend, NOT_FATAL, ierr)
 
-    ! Get seaice (seaice)
     call get_2d_netcdf("SEAICE", ncid, NoahmpIO%seaice, units, xstart, xend, ystart, yend, NOT_FATAL, ierr)
 
-    ! Get Terrain (avg)
     call get_2d_netcdf("HGT", ncid, NoahmpIO%terrain, units, xstart, xend, ystart, yend, FATAL, ierr)
 
-    ! Get Deep layer temperature (TMN)
+    ! Deep-layer soil temperature
     call get_2d_netcdf("TMN", ncid, NoahmpIO%TMN, units, xstart, xend, ystart, yend, FATAL, ierr)
 
-    ! Get Map Factors (MAPFAC_MX)
+    ! Map factors, only needed for iopt_run=5
     call get_2d_netcdf("MAPFAC_MX", ncid, NoahmpIO%msftx, units, xstart, xend, ystart, yend, NOT_FATAL, ierr)
     if (ierr /= 0) print*, 'Did not find MAPFAC_MX, only needed for iopt_run=5'
 
-    ! Get Map Factors (MAPFAC_MY)
     call get_2d_netcdf("MAPFAC_MY", ncid, NoahmpIO%msfty, units, xstart, xend, ystart, yend, NOT_FATAL, ierr)
     if (ierr /= 0) print*, 'Did not find MAPFAC_MY, only needed for iopt_run=5'
 
-    ! Get Dominant Land Use categories (use)
+    ! Dominant land-use category
     call get_landuse_netcdf(ncid, xdum , units, xstart, xend, ystart, yend)
     NoahmpIO%ivgtyp = nint(xdum)
 
-    ! Get Dominant Soil Type categories in the top layer (stl)
+    ! Dominant top-layer soil-type category
     call get_soilcat_netcdf(ncid, xdum , units, xstart, xend, ystart, yend)
     NoahmpIO%isltyp = nint(xdum)
 
     where (NoahmpIO%SEAICE > 0.0) NoahmpIO%XICE = 1.0
  
-    NoahmpIO%CROPTYPE   = 0       ! make default 0% crops everywhere
+    NoahmpIO%CROPTYPE   = 0       ! no crops by default
 
     NoahmpIO%TD_FRACTION = 0.0
 
-    NoahmpIO%SLOPETYP  =  1 ! it was 2 here and 1 in the noahmpdrv- pvk
+    NoahmpIO%SLOPETYP  =  1 ! matches noahmpdrv
     NoahmpIO%DZS       =  NoahmpIO%SOIL_THICK_INPUT(1:NoahmpIO%NSOIL)
     NoahmpIO%ITIMESTEP = 1
     NoahmpIO%restart_flag = .false.
@@ -286,13 +277,11 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     call get_2d_netcdf("VEGFRA", ncid, NoahmpIO%vegfra, units, xstart, xend, ystart, yend, NOT_FATAL, ierr_vegfra)
     call get_2d_netcdf("LAI", ncid, NoahmpIO%lai, units, xstart, xend, ystart, yend, NOT_FATAL, ierr_lai)
 
-    ! Get Minimum Green Vegetation Fraction SHDMIN
+    ! Min/max green vegetation fraction
     call get_2d_netcdf("SHDMIN", ncid, NoahmpIO%gvfmin, units, xstart, xend, ystart, yend, FATAL, ierr)
 
-    ! Get Minimum Green Vegetation Fraction SHDMAX
     call get_2d_netcdf("SHDMAX", ncid, NoahmpIO%gvfmax, units, xstart, xend, ystart, yend, FATAL, ierr)
 
-    ! Close the NetCDF file
     ierr = nf90_close(ncid)
     if (ierr /= 0) stop "MODULE_NOAHLSM_ERF_INPUT:  READLAND_ERF:  NF90_CLOSE"
 
@@ -308,9 +297,8 @@ subroutine get_2d_netcdf(name, ncid, array, units, xstart, xend, ystart, yend, f
     real(kind_noahmp), dimension(xstart:xend,ystart:yend), intent(out) :: array
     character(len=*), intent(out) :: units
     integer :: iret, varid
-    ! FATAL_IF_ERROR:  an input code value:
-    !      .TRUE. if an error in reading the data should stop the program.
-    !      Otherwise the, IERR error flag is set, but the program continues.
+    ! fatal_if_error = .TRUE. stops the program on a read error; otherwise ierr is
+    ! set and control returns to the caller.
     logical, intent(in) :: fatal_if_error
     integer, intent(out) :: ierr
 
@@ -346,10 +334,9 @@ subroutine get_2d_netcdf(name, ncid, array, units, xstart, xend, ystart, yend, f
 
 end subroutine get_2d_netcdf
 
-! Variant for the 2-D fields owned by ERF's C++ side (XLAT, TSK), whose NoahmpIO
-! components carry the C-interop kind c_kind_noahmp. c_kind_noahmp == kind_noahmp
-! in every build, so this is identical to get_2d_netcdf; it is kept distinct to
-! mark these as the C-boundary fields, mirroring get2dd in NoahmpReadRestartMod.
+! Variant for the ERF C++-owned fields (XLAT, TSK), whose array uses the C-interop
+! kind c_kind_noahmp. Identical to get_2d_netcdf (c_kind_noahmp == kind_noahmp);
+! kept distinct to mark the C boundary, mirroring get2dd in NoahmpReadRestartMod.
 subroutine get_2d_netcdf_c(name, ncid, array, units, xstart, xend, ystart, yend, fatal_if_error, ierr)
 
     implicit none
@@ -360,9 +347,8 @@ subroutine get_2d_netcdf_c(name, ncid, array, units, xstart, xend, ystart, yend,
     real(c_kind_noahmp), dimension(xstart:xend,ystart:yend), intent(out) :: array
     character(len=*), intent(out) :: units
     integer :: iret, varid
-    ! FATAL_IF_ERROR:  an input code value:
-    !      .TRUE. if an error in reading the data should stop the program.
-    !      Otherwise the, IERR error flag is set, but the program continues.
+    ! fatal_if_error = .TRUE. stops the program on a read error; otherwise ierr is
+    ! set and control returns to the caller.
     logical, intent(in) :: fatal_if_error
     integer, intent(out) :: ierr
 
@@ -399,10 +385,7 @@ subroutine get_2d_netcdf_c(name, ncid, array, units, xstart, xend, ystart, yend,
 end subroutine get_2d_netcdf_c
 
 subroutine error_handler(status, failure, success)
-    !
-    ! Check the error flag from a NetCDF function call, and print appropriate
-    ! error message.
-    !
+    ! Check a NetCDF status flag and print an error message (stopping) on failure.
     implicit none
     integer,                    intent(in) :: status
     character(len=*), optional, intent(in) :: failure
@@ -546,9 +529,7 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
     KLOOP : do k = 1, nsoil
 
        if (dst_centerpoint(k) < src_centerpoint(1)) then
-          ! If the center of the destination layer is closer to the surface than
-          ! the center of the topmost source layer, then simply set the 
-          ! value of the destination layer equal to the topmost source layer:
+          ! Destination center shallower than the topmost source: use topmost source
           !if (rank == 0) then
           !   print'("Shallow destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
           !        dst_centerpoint(k), src_centerpoint(1)
@@ -558,9 +539,7 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
        endif
 
        if (dst_centerpoint(k) > src_centerpoint(nvar)) then
-          ! If the center of the destination layer is deeper than
-          ! the center of the deepest source layer, then simply set the 
-          ! value of the destination layer equal to the deepest source layer:
+          ! Destination center deeper than the deepest source: use deepest source
           !if (rank == 0) then
           !   print'("Deep destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
           !        dst_centerpoint(k), src_centerpoint(nvar)
@@ -569,9 +548,7 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
           cycle KLOOP
        endif
 
-       ! Check if the center of the destination layer is "close" to the center
-       ! of a source layer.  If so, simply set the value of the destination layer
-       ! equal to the value of that close soil layer:
+       ! If the destination center is "close" to a source center, use that layer
        do kk = 1, nvar
           if (abs(dst_centerpoint(k)-src_centerpoint(kk)) < 0.01) then
              !if (rank == 0) then
@@ -585,9 +562,8 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
 
        ! Otherwise, do a linear interpolation
 
-       ! Get ktop, the index of the top bracketing layer from the source dataset.
-       ! Which from the bottom up, will be the first source level that is closer 
-       ! to the surface than the destination level
+       ! ktop: top bracketing source layer (first, from the bottom up, shallower
+       ! than the destination level)
        ktop = -99999
        TOPLOOP : do kk = nvar,1,-1
           if (src_centerpoint(kk) < dst_centerpoint(k)) then
@@ -599,9 +575,8 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
 
 
 
-       ! Get kbottom, the index of the bottom bracketing layer from the source dataset.
-       ! Which, from the top down, will be the first source level that is deeper than
-       ! the destination level
+       ! kbottom: bottom bracketing source layer (first, from the top down, deeper
+       ! than the destination level)
        kbottom = -99999
        BOTTOMLOOP : do kk = 1, nvar
           if ( src_centerpoint(kk) > dst_centerpoint(k) ) then

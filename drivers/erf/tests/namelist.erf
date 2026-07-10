@@ -1,0 +1,65 @@
+&NOAHLSM_OFFLINE
+
+! Minimal, self-consistent NOAHLSM_OFFLINE namelist used only by the
+! drivers/erf regression tests (test_config_smoke). It sets no file paths that
+! are actually opened here -- ReadNamelist just parses options and dimensions.
+! Values mirror simulation/Chisholm-View-ERF/namelist.erf so they pass every
+! ReadNamelist consistency check.
+
+ ERF_SETUP_FILE_01 = "unused_by_tests"
+
+ START_YEAR  = 2023
+ START_MONTH = 08
+ START_DAY   = 17
+ START_HOUR  = 06
+ START_MIN   = 00
+
+ KDAY = 2
+ SPINUP_LOOPS = 0
+
+ DYNAMIC_VEG_OPTION                = 4
+ CANOPY_STOMATAL_RESISTANCE_OPTION = 1
+ BTR_OPTION                        = 1
+ SURFACE_RUNOFF_OPTION             = 3
+ SUBSURFACE_RUNOFF_OPTION          = 3
+ DVIC_INFILTRATION_OPTION          = 1
+ SURFACE_DRAG_OPTION               = 1
+ FROZEN_SOIL_OPTION                = 1
+ SUPERCOOLED_WATER_OPTION          = 1
+ RADIATIVE_TRANSFER_OPTION         = 3
+ SNOW_ALBEDO_OPTION                = 1
+ PCP_PARTITION_OPTION              = 1
+ SNOW_THERMAL_CONDUCTIVITY         = 1
+ TBOT_OPTION                       = 2
+ TEMP_TIME_SCHEME_OPTION           = 1
+ GLACIER_OPTION                    = 1
+ SURFACE_RESISTANCE_OPTION         = 1
+ SOIL_DATA_OPTION                  = 1
+ PEDOTRANSFER_OPTION               = 1
+ CROP_OPTION                       = 0
+ IRRIGATION_OPTION                 = 0
+ IRRIGATION_METHOD                 = 0
+ TILE_DRAINAGE_OPTION              = 0
+
+ FORCING_TIMESTEP = 3600
+ NOAH_TIMESTEP    = 3600
+ OUTPUT_TIMESTEP  = 3600
+
+ SPLIT_OUTPUT_COUNT = 24
+ SKIP_FIRST_OUTPUT = .false.
+ RESTART_FREQUENCY_HOURS = 24
+
+ NSNOW = 4
+ NSOIL = 4
+
+ soil_thick_input(1) = 0.10
+ soil_thick_input(2) = 0.30
+ soil_thick_input(3) = 0.60
+ soil_thick_input(4) = 1.00
+
+ ZLVL = 10.0
+
+ SF_URBAN_PHYSICS = 0
+ USE_WUDAPT_LCZ = 0
+
+/

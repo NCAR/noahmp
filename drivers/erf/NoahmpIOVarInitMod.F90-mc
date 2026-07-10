@@ -3,11 +3,10 @@ module NoahmpIOVarInitMod
 !!! Initialize Noah-MP input/output variables
 !!! Input/Output variables should be first defined in NoahmpIOVarType.F90
 
-! ------------------------ Code history -----------------------------------
+! Code history:
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
 ! Fortran-C API: A. Dhruv, M. Buehlmann, & R. Kotamarthi (2024)
-! -------------------------------------------------------------------------
 
   use Machine
   use NoahmpIOVarType
@@ -23,8 +22,7 @@ contains
     implicit none
 
     type(NoahmpIO_type), intent(inout) :: NoahmpIO
-   
-! ------------------------------------------------- 
+
     associate(                               &
               XSTART  =>  NoahmpIO%XSTART   ,&
               XEND    =>  NoahmpIO%XEND     ,&
@@ -36,7 +34,6 @@ contains
               NSNOW   =>  NoahmpIO%NSNOW    ,&
               NUMRAD  =>  NoahmpIO%NUMRAD    &
              )
-! -------------------------------------------------
 
     ! Input variables
     if ( .not. allocated (NoahmpIO%DZS)       ) allocate ( NoahmpIO%DZS        (1:NSOIL)                         ) ! thickness of soil layers [m]
@@ -481,19 +478,15 @@ contains
     if ( .not. allocated (NoahmpIO%ZWATBLE2D) ) allocate ( NoahmpIO%ZWATBLE2D  (XSTART:XEND,YSTART:YEND) )
 #endif    
 
-    ! ERF-coupled arrays: storage the C++ NoahmpIO interface points into via C_LOC.
-    ! Generated from the NoahmpMacro:bounds_Nd annotations in NoahmpIO.H-mc (the
-    ! same source that sizes the C++ NoahmpArray extents), so bounds cannot drift.
-    ! MUST precede the default-value initialization below: a scalar assignment such
-    ! as `NoahmpIO%XLAT = undefined_real` does NOT auto-allocate the allocatable
-    ! (only an array-valued RHS would), so the arrays must be allocated first or the
-    ! assignment writes through an unallocated descriptor (segfault / UB).
+    ! ERF-coupled arrays backing the C++ NoahmpIO interface (via C_LOC); bounds come
+    ! from the NoahmpMacro:bounds_Nd annotations in NoahmpIO.H-mc, so they cannot drift.
+    ! Must precede the default-value init below: scalar assignment does not auto-allocate
+    ! an allocatable, so these must be allocated first to avoid writing through an
+    ! unallocated descriptor.
     @NoahmpMacro:FortranArrayAllocate(m_noahmpio, ftype=NoahmpIO);
 
-    !-------------------------------------------------------------------
     ! Initialize variables with default values
-    !-------------------------------------------------------------------
-    
+
     NoahmpIO%ICE             = undefined_int
     NoahmpIO%IVGTYP          = undefined_int
     NoahmpIO%ISLTYP          = undefined_int

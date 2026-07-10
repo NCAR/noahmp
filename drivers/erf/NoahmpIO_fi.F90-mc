@@ -15,46 +15,31 @@ module NoahmpIO_fi
 
   implicit none
 
-  ! ---------------------------------------------------------------------------
   ! Public type for NoahmpIO_level
-  ! --------------------------------------------------------------------------- 
   type, public :: NoahmpIO_level
     type(NoahmpIO_type), allocatable :: NoahmpIO(:)
   end type NoahmpIO_level
 
-  ! ---------------------------------------------------------------------------
-  ! Valid AMR level range for NoahmpIO_vect. Change both bounds here (and the
-  ! matching C++ caller) if the number of supported levels changes.
-  ! ---------------------------------------------------------------------------
+  ! Valid AMR level range for NoahmpIO_vect. Keep bounds in sync with the C++ caller.
   integer, parameter, public :: NLEVEL_MIN = 0
   integer, parameter, public :: NLEVEL_MAX = 2
 
-  ! ---------------------------------------------------------------------------
-  ! Public declaration for NoahmpIO array per level
-  ! ---------------------------------------------------------------------------
+  ! NoahmpIO array per level
   type(NoahmpIO_level), save, target, public :: NoahmpIO_vect(NLEVEL_MIN:NLEVEL_MAX)
 
-  ! ---------------------------------------------------------------------------
-  ! Mirror of extern C struct
-  !
-  ! DEVNOTE :: The order variables between C struct and the binded Fortran type
-  !            should be consistent for memory managment. 
-  ! ---------------------------------------------------------------------------
+  ! Mirror of the extern C struct. Variable order must match the C struct for
+  ! correct memory layout across the binding.
   type, bind(c), public :: NoahmpIO_type_fi
     @NoahmpMacro:FortranMirrorFields(m_noahmpio);
   end type NoahmpIO_type_fi
 
 contains
 
-  ! ---------------------------------------------------------------------------
   ! Fatal-error exit. A bare `error stop` terminates only the calling image, so
-  ! peers can deadlock in the next collective. Rather than reach for MPI here
-  ! (Noah-MP keeps no parallel-runtime dependency of its own), route through the
-  ! C++ shim NoahmpIO_fatal_c, which calls the host-installed handler that
-  ! propagates the failure to all ranks (e.g. amrex::Abort -> MPI_Abort). The
-  ! trailing `error stop` is a fallback for when no handler is installed (serial
-  ! build) or the handler returns.
-  ! ---------------------------------------------------------------------------
+  ! peers can deadlock in the next collective. Route through the C++ shim
+  ! NoahmpIO_fatal_c, whose host-installed handler propagates the failure to all
+  ! ranks (e.g. amrex::Abort -> MPI_Abort). The trailing `error stop` is a
+  ! fallback when no handler is installed (serial build) or the handler returns.
   subroutine NoahmpIO_abort()
     implicit none
     interface
@@ -66,13 +51,10 @@ contains
     error stop 1
   end subroutine NoahmpIO_abort
 
-  ! ---------------------------------------------------------------------------
   ! Resolve (level, bid) from the incoming C struct and return a pointer to the
   ! corresponding block. Validates the C pointers and both indices, aborting
-  ! with a clear message instead of indexing module-global state out of bounds
-  ! (which is silent memory corruption in a release build). Every bind(C) entry
-  ! point routes through this helper.
-  ! ---------------------------------------------------------------------------
+  ! instead of indexing module-global state out of bounds (silent memory
+  ! corruption in a release build). Every bind(C) entry point routes through here.
   subroutine resolve_block(NoahmpIO_cptr, blk, level, bid, require_init)
     use iso_c_binding, only : C_INT, c_associated
     implicit none
@@ -84,8 +66,7 @@ contains
     logical :: check_init
 
     ! By default require that NoahmpIOScalarInitDefault_fi has already wired the
-    ! block's scalar pointers to C++ memory. ScalarInitDefault itself is the call
-    ! that performs that wiring, so it passes require_init=.false.
+    ! block's scalar pointers to C++ memory; that routine itself passes require_init=.false.
     check_init = .true.
     if (present(require_init)) check_init = require_init
 
@@ -121,10 +102,9 @@ contains
 
     blk => NoahmpIO_vect(level)%NoahmpIO(bid)
 
-    ! DTBL is associated together with every other scalar pointer at the end of
-    ! NoahmpIOScalarInitDefault_fi, so it is a reliable proxy for "scalars wired".
-    ! This is safe because the pointer components default to => null() in the type
-    ! definition, giving them well-defined association status before that call.
+    ! DTBL is wired together with every other scalar pointer at the end of
+    ! NoahmpIOScalarInitDefault_fi, so it is a reliable proxy for "scalars wired"
+    ! (pointer components default to => null(), so association status is well-defined).
     if (check_init .and. .not. associated(blk%DTBL)) then
        write(0,*) "NoahmpIO_fi: block scalars not initialized (call "// &
                   "NoahmpIOScalarInitDefault first) for level", level, ", blkid", bid
@@ -292,8 +272,7 @@ contains
     end if
     if (allocated(NoahmpIO_vect(level)%NoahmpIO)) then
        ! Same size -> idempotent no-op; different size -> refuse (would discard
-       ! existing block state). The C++ caller already forbids a second resize,
-       ! so this is a defense-in-depth guard.
+       ! existing block state). Defense-in-depth: the C++ caller already forbids re-resize.
        if (size(NoahmpIO_vect(level)%NoahmpIO) == NBlocks) return
        write(0,*) "NoahmpIOTypeVectInit_fi: level", level, "already initialized "// &
                   "with", size(NoahmpIO_vect(level)%NoahmpIO), &
@@ -308,17 +287,11 @@ contains
     end if
   end subroutine NoahmpIOTypeVectInit_fi
 
-  ! ---------------------------------------------------------------------------
   ! Precision guard (run time): report sizeof(real(c_kind_noahmp)) as seen by the
-  ! Fortran compiler. NoahmpIO_type_fi is all C_PTR, so its byte size is identical
-  ! whether the coupling reals are single or double precision -- a size check
-  ! therefore CANNOT detect a float/double mismatch between the two languages
-  ! (e.g. DOUBLE_PREC applied to only one of the separately-invoked compilers).
-  ! The C++ side compares this against sizeof(noahmp_real) to catch exactly that
-  ! case (see NoahmpIO_AssertAbi / resize()). Member count and order need no
-  ! run-time guard: both structs are generated from @NoahmpMacro:Source, so
-  ! they cannot drift, and the C++ static_assert pins the layout.
-  ! ---------------------------------------------------------------------------
+  ! Fortran compiler. NoahmpIO_type_fi is all C_PTR, so a struct-size check cannot
+  ! detect a float/double mismatch between the two languages (e.g. DOUBLE_PREC
+  ! applied to only one compiler). The C++ side compares this against
+  ! sizeof(noahmp_real) to catch that case (see NoahmpIO_AssertAbi / resize()).
   function NoahmpRealSize_fi() bind(C, name="NoahmpRealSize_fi") result(nbytes)
     use iso_c_binding, only : C_SIZE_T, C_SIZEOF
     use Machine, only : c_kind_noahmp

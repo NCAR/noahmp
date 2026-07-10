@@ -24,13 +24,14 @@ contains
 
       ! local variables
       integer :: ierr, start(2), count(2), nx, ny, comp2d, nsoil
-      character(len=32) :: ts_str   ! wide enough for any step count (I5.5 overflowed >99999 -> 'lnd*****')
+      character(len=32) :: ts_str   ! wide enough to avoid overflow for large step counts
       character(len=1) :: lev_str
       character(len=100) :: dir, filename
       logical :: ex
 
       if (NoahmpIO%blkid == 0) then
-         write (ts_str, '(I0.5)') filenum   ! zero-pad to >=5 digits, but never truncate
+         write (ts_str, '(I12.5)') filenum   ! zero-pad to >=5 digits, grows for larger counts
+         ts_str = adjustl(ts_str)            ! drop leading blanks, keep leading zeros
          write (lev_str, '(I1.1)') NoahmpIO%LEVEL
 
          dir = "lnd"//trim(ts_str)
@@ -81,7 +82,6 @@ contains
          ierr = nf90_def_var(ncid, "SMOIS", NF90_FLOAT, (/nx, nsoil, ny/), smois)
          ierr = nf90_def_var(ncid, "TAU_EW", NF90_FLOAT, (/nx, ny/), tau_ew)
          ierr = nf90_def_var(ncid, "TAU_NS", NF90_FLOAT, (/nx, ny/), tau_ns)
-         ! End definition mode
          ierr = nf90_enddef(ncid)
       end if
 
@@ -120,7 +120,6 @@ contains
       ierr = nf90_put_var(ncid, tau_ns, NoahmpIO%TAU_NS, start=start, count=count)
 
       if (NoahmpIO%blkid == (maxblocks-1)) then
-         ! Close file
          ierr = nf90_close(ncid)
       end if
 

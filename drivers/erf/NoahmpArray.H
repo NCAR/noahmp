@@ -7,18 +7,15 @@
 #include <NoahmpFatal.H>
 
 #ifndef NDEBUG
-// Debug-only bounds checking needs snprintf for the diagnostic; release
-// (-DNDEBUG) builds compile the check out entirely.
+// Debug-only bounds checking needs snprintf for the diagnostic.
 #include <cstdio>
 #endif
 
 // The array views and noahmp_real below are part of the Noah-MP client API.
 
-// Bounds check for the NoahmpArray access operators. In debug builds (NDEBUG not
-// defined) an out-of-range index prints the offending index/range and calls
-// NoahmpIO_fatal() -- which routes through the host's abort handler so the failure
-// reaches all ranks. In release builds this is a no-op (zero cost). `idx` is a
-// long so a signed index below a (possibly negative) lower bound is still caught.
+// Bounds check for the NoahmpArray access operators; no-op in release builds.
+// NoahmpIO_fatal() routes through the host's abort handler so the failure reaches
+// all ranks. `idx` is a long so a signed index below a negative lower bound is caught.
 inline void noahmparray_check([[maybe_unused]] long idx, [[maybe_unused]] int lo,
                             [[maybe_unused]] int hi, [[maybe_unused]] int dim) {
 #ifndef NDEBUG
@@ -32,11 +29,10 @@ inline void noahmparray_check([[maybe_unused]] long idx, [[maybe_unused]] int lo
 #endif
 }
 
-// Floating-point precision of the ERF<->Noah-MP coupling boundary. ERF (the
-// client) owns this: the build defines DOUBLE_PREC iff ERF/AMReX is double
-// precision, so noahmp_real always matches amrex::Real. This mirrors the
-// Fortran c_kind_noahmp parameter in utility/Machine.F90 (C_DOUBLE/C_FLOAT),
-// and the two must agree for the C<->Fortran ABI to be correct.
+// Floating-point precision of the ERF<->Noah-MP coupling boundary; DOUBLE_PREC is
+// defined iff ERF/AMReX is double precision, so noahmp_real matches amrex::Real.
+// Must agree with the Fortran c_kind_noahmp parameter (utility/Machine.F90) for the
+// C<->Fortran ABI to be correct.
 #ifdef DOUBLE_PREC
 using noahmp_real = double;
 #else
@@ -58,13 +54,11 @@ struct NoahmpArray1D {
     constexpr NoahmpArray1D(T* fortranArray, int begin, int end) noexcept
         : begin(begin), end(end), data(fortranArray) {}
 
-    // Access operator
     T& operator()(int i) {
         noahmparray_check(i, begin, end, 0);
         return data[i-begin];
     }
 
-    // Const access operator
     const T& operator()(int i) const {
         noahmparray_check(i, begin, end, 0);
         return data[i-begin];

@@ -1,16 +1,10 @@
 module NoahmpReadRestartMod
 
-!------------------------------------------------------------------------------
-! Read the full NoahMP prognostic state written by NoahmpWriteRestartMod back
-! into the NoahmpIO arrays on restart. Called AFTER the normal cold init
-! (ReadLandMain/InitMain), so it overwrites the table/wrfinput-initialized
-! state with the checkpointed values; the per-step In-transfer then pulls them
-! into the 1D physics state on the first Advance, giving a bitwise restart.
-!
-! Mandatory fields are required; optional fields are read only if both present
-! in the file and allocated in NoahmpIO (a missing varid is silently skipped,
+! Read the NoahMP prognostic state back into the NoahmpIO arrays on restart.
+! Runs after cold init, overwriting table/wrfinput-initialized state with the
+! checkpointed values for a bitwise restart. Optional fields are read only if
+! present in the file and allocated in NoahmpIO (a missing varid is skipped,
 ! preserving cold-init values). Layer counts are asserted against the file.
-!------------------------------------------------------------------------------
 
    use mpi
    use netcdf
@@ -138,7 +132,7 @@ contains
 
    end subroutine NoahmpReadRestart
 
-   ! ---- helpers --------------------------------------------------------------
+   ! helpers
 
    subroutine get2d(nc, name, arr, start, count, required)
       integer,          intent(in)    :: nc
@@ -162,10 +156,8 @@ contains
       end if
    end subroutine get2d
 
-   ! Variant for the few NoahmpIO 2D fields exposed on the ERF coupling boundary
-   ! (TSK, EMISS, WSLAKEXY), declared with the C-interop kind c_kind_noahmp.
-   ! c_kind_noahmp == kind_noahmp in every build, so this matches the other
-   ! fields; it is kept distinct to mark these as the C-boundary fields.
+   ! Variant for the C-boundary 2D fields (TSK, EMISS, WSLAKEXY) declared with
+   ! the C-interop kind c_kind_noahmp (== kind_noahmp in every build).
    subroutine get2dd(nc, name, arr, start, count, required)
       integer,          intent(in)    :: nc
       character(len=*), intent(in)    :: name
