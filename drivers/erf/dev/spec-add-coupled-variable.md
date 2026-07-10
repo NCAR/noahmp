@@ -27,36 +27,47 @@ build. See [`spec-fc-api.md`](spec-fc-api.md) for the full mechanism.
 
 ## Step 0 — pick the tier (how far does it travel?)
 
-Before adding the line, decide the variable's **tier** — this controls whether it
-costs an ABI slot and whether it gets GPU coupling glue (see
-[`spec-fc-api.md`](spec-fc-api.md) §4a and
+> **Status: planned, not yet implemented.** The tier tags (`@couple` /
+> `@internal`) below are part of the GPU-offload design
+> ([`plan-cpp-interface.md`](plan-cpp-interface.md)); the generator does **not**
+> parse them today. In the current (CPU) code every member you add to the
+> `@NoahmpMacro:Source` block gets a full ABI slot, C++ view, Fortran storage, and
+> `allocate()` — there is no tier to pick yet. **If you are adding a variable
+> today, skip to Step 1 and add the line without a tier tag.** This section is
+> documented now so the ABI is designed for the tiers, not retrofitted to them.
+
+When the tier system lands, you will first decide the variable's **tier** — it
+will control whether the member costs an ABI slot and whether it gets GPU coupling
+glue (see [`spec-fc-api.md`](spec-fc-api.md) §4a and
 [`plan-cpp-interface.md`](plan-cpp-interface.md) §1):
 
-| If the variable… | Tier | Tag |
+| If the variable… | Tier | Tag (planned) |
 |------------------|------|-----|
 | is read from / written to by **ERF each step** (a forcing or a flux) | **A** | `@couple(dir=in\|out\|inout)` |
 | is **internal Noah-MP state** ERF never touches (soil, snow, canopy, …) | **B** | `@internal` |
 | is host-only (tables, namelist scratch) | **C** | *not in a contract block* |
 
-**Default to `@internal`.** Most Noah-MP arrays are internal state; tagging them
-`@internal` gives them generated storage + allocation + device residency at **zero
-ABI cost**. Reserve `@couple` for the ~18 fields that actually cross to ERF —
-over-using it is what bloats the `fi` struct (see the tier table in
-[`spec-fc-api.md`](spec-fc-api.md) §1).
+**Default (once available) will be `@internal`.** Most Noah-MP arrays are internal
+state; tagging them `@internal` will give them generated storage + allocation +
+device residency at **zero ABI cost**, reserving `@couple` for the ~18 fields that
+actually cross to ERF. Until then, every contract-block member behaves as Tier A
+(full projection).
 
 ## Step 1 — declare it in the contract block
 
 Add **one** line to the `@NoahmpMacro:Source m_noahmpio { … }` block in
-`NoahmpIO.H-mc`, with its tier tag. For Tier A the position sets ABI order (order
-in the block = ABI order); Tier B carries no ABI slot so its position is
-cosmetic:
+`NoahmpIO.H-mc`. The position sets ABI order (order in the block = ABI order):
 
 ```cpp
-noahmp_real RAINBL;                                                             // scalar (Tier A by default)
-NoahmpArray2D<noahmp_real> SWDOWN[xstart:xend, ystart:yend] @couple(dir=in);    // ERF forcing → Noah-MP
-NoahmpArray2D<noahmp_real> HFX[xstart:xend, ystart:yend]    @couple(dir=out);   // flux → ERF
-NoahmpArray3D<noahmp_real> SMOIS[xstart:xend, nsoil:nsoil, ystart:yend] @internal;  // internal state, no ABI
+noahmp_real RAINBL;                                                     // scalar
+NoahmpArray2D<noahmp_real> SWDOWN[xstart:xend, ystart:yend];            // ERF forcing → Noah-MP
+NoahmpArray2D<noahmp_real> HFX[xstart:xend, ystart:yend];               // flux → ERF
+NoahmpArray3D<noahmp_real> SMOIS[xstart:xend, nsoil:nsoil, ystart:yend]; // soil moisture
 ```
+
+> **Planned:** once the tier system (Step 0) lands, `@couple(dir=…)` / `@internal`
+> tags will be appended to these lines (`… SWDOWN[…] @couple(dir=in);`). The
+> generator does not accept them today; add the line untagged.
 
 Rules (the generator errors loudly otherwise — see
 [`spec-fc-api.md`](spec-fc-api.md) §4):
@@ -156,10 +167,6 @@ change from `kind_noahmp` to `c_kind_noahmp` is intentional and safe
 
 - `make codegen-check` passes (all targets, incl. the array `allocate()`, in sync
   with the Source block);
-- **tier is right**: a `@internal` variable added **no** `fi` slot (unchanged
-  `NOAHMP_IO_FI_NUM_MEMBERS`); a `@couple` variable did add one and got its device
-  accessor. If you meant it to be internal but the ABI count grew, you tagged it
-  `@couple` (or left it untagged) by mistake;
 - (if promoting) the old hand-written declaration and `allocate()` are gone — no
   duplicate-component compile error;
 - any namelist-read scalar has its sentinel-guarded assignment;

@@ -34,9 +34,11 @@ user-facing documentation lives at
   `C_DOUBLE`.
 - **`fi` suffix.** Marks the Fortran-interop boundary mirror (`NoahmpIO_type_fi`
   and the `*_fi` `bind(C)` entry points).
-- **Tiers (`@couple` / `@internal`).** Each coupled array is tagged by how far it
-  travels: **Tier A** (`@couple(dir=…)`) crosses to ERF each step and gets an ABI
-  slot + GPU device accessor; **Tier B** (`@internal`) is device-resident internal
-  state generated with **no** ABI slot; **Tier C** is host-only. This is the lever
-  that keeps the ABI lean under the GPU offload — see
-  [`spec-fc-api.md`](spec-fc-api.md) §4a and [`plan-cpp-interface.md`](plan-cpp-interface.md).
+- **Tiers (`@couple` / `@internal`) — planned, not yet implemented.** A tier system
+  will tag each coupled array by how far it travels: **Tier A** (`@couple(dir=…)`)
+  crosses to ERF each step and gets an ABI slot + GPU device accessor; **Tier B**
+  (`@internal`) is device-resident internal state with **no** ABI slot; **Tier C**
+  is host-only. It is the lever that will keep the ABI lean under the GPU offload.
+  `NoahmpMacro.py` does not parse these tags today — every contract-block member is
+  fully projected. See [`spec-fc-api.md`](spec-fc-api.md) §4a and
+  [`plan-cpp-interface.md`](plan-cpp-interface.md).

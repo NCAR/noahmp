@@ -42,20 +42,27 @@ library* underneath it. The driver's job is to:
 - Scalars are owned by C++ (Fortran points back at them); arrays are owned by
   Fortran (C++ `NoahmpArray` views point into them via `C_LOC`).
 
-Not every array crosses the boundary the same way. Each is classified into a
-**tier** by a `@NoahmpMacro` tag (see [`spec-fc-api.md`](spec-fc-api.md) §4a),
-which decides its ABI cost and — for the GPU port — its device wiring:
+Not every array is planned to cross the boundary the same way. A **tier** system
+(see [`spec-fc-api.md`](spec-fc-api.md) §4a) would classify each array by a
+`@NoahmpMacro` tag, deciding its ABI cost and — for the GPU port — its device
+wiring:
+
+> **Status: planned, not yet implemented.** The tier tags below are not parsed by
+> `NoahmpMacro.py` today; in the current code every contract-block member is fully
+> projected (Fortran storage + `allocate()` + `fi` slot + C++ view). The tiers are
+> part of the GPU-offload design ([`plan-cpp-interface.md`](plan-cpp-interface.md)).
 
 - **Tier A** (`@couple`) — the ~18 forcings/fluxes ERF touches each step: full
-  ABI slot + C++ view, and (post-port) a generated device accessor shared with ERF.
+  ABI slot + C++ view, and a generated device accessor shared with ERF.
 - **Tier B** (`@internal`) — the hundreds of internal state arrays the physics
   reads/writes: generated Fortran storage + allocation + device residency, **no
   ABI slot**. ERF never sees them.
 - **Tier C** — host-only (tables, namelist): not in a contract block.
 
-This "generate the storage without paying an ABI slot" split is what keeps the
-flat `fi` struct small even as Noah-MP's full state becomes generator-managed and
-device-resident (see [`plan-cpp-interface.md`](plan-cpp-interface.md) §1).
+This planned "generate the storage without paying an ABI slot" split is what will
+keep the flat `fi` struct small even as Noah-MP's full state becomes
+generator-managed and device-resident (see
+[`plan-cpp-interface.md`](plan-cpp-interface.md) §1).
 
 See [`spec-fc-api.md`](spec-fc-api.md) for the exact wiring and
 [`spec-memory-safety.md`](spec-memory-safety.md) for why this ownership split is
@@ -120,11 +127,13 @@ Per level, the host:
    self-referential pointers — compile errors, not run-time surprises.
 5. **Collective, parallel I/O.** All NetCDF output is written collectively over
    `NoahmpIO%comm` (the host's MPI communicator) as parallel NetCDF-4.
-6. **One source of truth generates the GPU glue too, and the ABI stays lean.** The
-   contract block generates not just the ABI but (for the GPU port) each array's
-   device residency and each Tier-A variable's device accessor — no hand-written
-   per-variable device plumbing. Tier tags keep internal state out of the `fi`
-   struct: never widen the ABI merely to make a variable device-resident. See
+6. **One source of truth will generate the GPU glue too, keeping the ABI lean
+   (planned).** The contract block is designed so that — once the GPU port lands —
+   the same lines also generate each array's device residency and each Tier-A
+   variable's device accessor, with no hand-written per-variable device plumbing,
+   and tier tags keep internal state out of the `fi` struct. This is not
+   implemented in `NoahmpMacro.py` yet; today the contract block generates the ABI
+   and Fortran allocation only. See
    [`plan-cpp-interface.md`](plan-cpp-interface.md) and
    [`spec-fc-api.md`](spec-fc-api.md) §4a.
 
@@ -193,10 +202,10 @@ rather than re-defining terms.
 - **column / 1-D physics** — Noah-MP's per-grid-cell solver (`noahmp_type`,
   `NoahmpMain`), the part destined for the GPU (see
   [`plan-cpp-interface.md`](plan-cpp-interface.md)).
-- **tier (A/B/C)** — a variable's classification by how far it travels, set by a
-  `@NoahmpMacro` tag: **A** (`@couple`) crosses to ERF each step; **B**
-  (`@internal`) is device-resident internal state with no ABI slot; **C** is
-  host-only. See [`spec-fc-api.md`](spec-fc-api.md) §4a.
+- **tier (A/B/C)** *(planned)* — a variable's classification by how far it travels,
+  to be set by a `@NoahmpMacro` tag: **A** (`@couple`) crosses to ERF each step;
+  **B** (`@internal`) is device-resident internal state with no ABI slot; **C** is
+  host-only. Not parsed by the generator yet — see [`spec-fc-api.md`](spec-fc-api.md) §4a.
 - **offload** — compiling the Fortran physics as GPU device code (OpenACC
   `!$acc`, or OpenMP `target`) rather than porting it to C++; the plan of record
   for GPU (see [`plan-cpp-interface.md`](plan-cpp-interface.md)).
