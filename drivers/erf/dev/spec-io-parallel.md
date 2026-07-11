@@ -37,7 +37,9 @@ Variable shapes — written from Fortran, so the **fastest-varying axis is first
 
 - **2-D surface** `(NX, NY)`: `TERRAIN, SNOWH, SHBXY, EVBXY, VEGFRA, GVFMIN,
   GVFMAX, TSK, EMISS, SAVXY, SAGXY, PAHXY, FIRAXY, HFX, LH, GRDFLX, GHBXY,
-  CANHSXY, TAU_EW, TAU_NS`
+  CANHSXY, TAU_EW, TAU_NS` plus the core surface diagnostics `T2MVXY, T2MBXY,
+  Q2MVXY, Q2MBXY, TRADXY, FVEGXY, TGVXY, TGBXY, SHGXY, SHCXY, EVGXY, EVCXY,
+  TRXY, RUNSFXY, RUNSBXY, ECANXY, EDIRXY, ETRANXY, FSAXY, RS, Z0, ZNT`
 - **3-D soil** `(NX, NSOIL, NY)`: `TSLB, SMOIS`
 - **3-D 2-component** `(NX, COMP2D, NY)`: `ALBSFCDIRXY, ALBSFCDIFXY`
 

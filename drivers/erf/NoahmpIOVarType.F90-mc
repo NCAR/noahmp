@@ -164,92 +164,10 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    :: IRRSPLH              ! latent heating from sprinkler evaporation (w/m2)
     real(kind=kind_noahmp), allocatable, dimension(:,:)    :: LOCTIM               ! local time
  
-    ! OUT (with no Noah LSM equivalent) (as defined in WRF)
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  T2MVXY              ! 2m temperature of vegetation part
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  T2MBXY              ! 2m temperature of bare ground part
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  Q2MVXY              ! 2m mixing ratio of vegetation part
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  Q2MBXY              ! 2m mixing ratio of bare ground part
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TRADXY              ! surface radiative temperature (k)
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  NEEXY               ! net ecosys exchange (g/m2/s CO2)
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  GPPXY               ! gross primary assimilation [g/m2/s C]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  NPPXY               ! net primary productivity [g/m2/s C]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FVEGXY              ! Noah-MP vegetation fraction [-]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RUNSFXY             ! surface runoff [mm per soil timestep]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RUNSBXY             ! subsurface runoff [mm per soil timestep]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ECANXY              ! evaporation of intercepted water (mm/s)
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  EDIRXY              ! soil surface evaporation rate (mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ETRANXY             ! transpiration rate (mm/s)
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FSAXY               ! total absorbed solar radiation (w/m2)
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  APARXY              ! photosyn active energy by canopy (w/m2)
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  PSNXY               ! total photosynthesis (umol co2/m2/s) [+]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RSSUNXY             ! sunlit leaf stomatal resistance (s/m)
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RSSHAXY             ! shaded leaf stomatal resistance (s/m)
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  BGAPXY              ! between gap fraction
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  WGAPXY              ! within gap fraction
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TGVXY               ! under canopy ground temperature[K]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TGBXY               ! bare ground temperature [K]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  CHVXY               ! sensible heat exchange coefficient vegetated
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  CHBXY               ! sensible heat exchange coefficient bare-ground
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SHGXY               ! veg ground sen. heat [w/m2]   [+ to atm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SHCXY               ! canopy sen. heat [w/m2]   [+ to atm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  EVGXY               ! veg ground evap. heat [w/m2]  [+ to atm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  GHVXY               ! veg ground heat flux [w/m2]  [+ to soil]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  IRGXY               ! veg ground net LW rad. [w/m2] [+ to atm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  IRCXY               ! canopy net LW rad. [w/m2] [+ to atm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  IRBXY               ! bare net longwave rad. [w/m2] [+ to atm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TRXY                ! transpiration [w/m2]  [+ to atm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  EVCXY               ! canopy evaporation heat [w/m2]  [+ to atm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  CHLEAFXY            ! leaf exchange coefficient 
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  CHUCXY              ! under canopy exchange coefficient 
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  CHV2XY              ! veg 2m exchange coefficient 
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  CHB2XY              ! bare 2m exchange coefficient 
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RS                  ! Total stomatal resistance [s/m]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  Z0                  ! roughness length output to WRF
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ZNT                 ! roughness length output to WRF
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QTDRAIN             ! tile drain discharge [mm]
-
-    ! additional output variables
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  PAHGXY              ! precipitation advected heat [W/m2]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  PAHBXY              ! precipitation advected heat [W/m2]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  PAHVXY              ! precipitation advected heat [W/m2]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QINTSXY             ! canopy intercepted snow [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QINTRXY             ! canopy intercepted rain [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QDRIPSXY            ! canopy dripping snow [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QDRIPRXY            ! canopy dripping rain [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QTHROSXY            ! canopy throughfall snow [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QTHRORXY            ! canopy throughfall rain [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QSNSUBXY            ! snowpack sublimation rate [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QMELTXY             ! snowpack melting rate due to phase change [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QSNFROXY            ! snowpack frost rate [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QSUBCXY             ! canopy snow sublimation rate [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QFROCXY             ! canopy snow frost rate [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QEVACXY             ! canopy water evaporation rate [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QDEWCXY             ! canopy water dew rate [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QFRZCXY             ! canopy water freezing rate [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QMELTCXY            ! canopy snow melting rate [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  QSNBOTXY            ! total water (melt+rain through snow) out of snowpack bottom [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  PONDINGXY           ! total surface ponding [mm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FPICEXY             ! fraction of ice in total precipitation
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RAINLSM             ! total rain rate at the surface [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SNOWLSM             ! total snow rate at the surface [mm/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FORCTLSM            ! surface temperature as LSM forcing [K]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FORCQLSM            ! surface specific humidity as LSM forcing [kg/kg]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FORCPLSM            ! surface pressure as LSM forcing [Pa]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FORCZLSM            ! reference height as LSM input [m]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  FORCWLSM            ! surface wind speed as LSM forcing [m/s]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACC_SSOILXY         ! accumulated ground heat flux [W/m2 * dt_soil/dt_main]  
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACC_QINSURXY        ! accumulated water flux into soil [m/s * dt_soil/dt_main]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACC_QSEVAXY         ! accumulated soil surface evaporation [m/s * dt_soil/dt_main]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  EFLXBXY             ! accumulated heat flux through soil bottom per soil timestep [J/m2]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SOILENERGY          ! energy content in soil relative to 273.16 [KJ/m2]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  SNOWENERGY          ! energy content in snow relative to 273.16 [KJ/m2]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACC_DWATERXY        ! accumulated snow,soil,canopy water change per soil timestep [mm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACC_PRCPXY          ! accumulated precipitation per soil timestep [mm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACC_ECANXY          ! accumulated net canopy evaporation per soil timestep [mm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACC_ETRANXY         ! accumulated transpiration per soil timestep [mm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACC_EDIRXY          ! accumulated net ground (soil/snow) evaporation per soil timestep [mm]
-    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ACC_ETRANIXY        ! accumualted transpiration rate within soil timestep [m/s * dt_soil/dt_main]
-    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ACC_GLAFLWXY        ! accumulated glacier excessive flow [mm] per soil timestep
+    ! OUT (with no Noah LSM equivalent) (as defined in WRF) and additional output
+    ! variables are now promoted into the @NoahmpMacro:Source contract block in
+    ! NoahmpIO.H-mc; the generator emits their declarations into the
+    ! @NoahmpMacro:FortranStorageFields region above. Do not re-declare them here.
 
 ! Needed for MMF_RUNOFF (IOPT_RUN = 5); not part of MP driver in WRF
 

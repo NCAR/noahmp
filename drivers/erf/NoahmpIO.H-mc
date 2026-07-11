@@ -122,6 +122,96 @@
     NoahmpArray3D<noahmp_real> SMOIS[xstart:xend, 1:nsoil, ystart:yend];    // volumetric soil moisture [m3/m3]
     NoahmpArray3D<noahmp_real> SH2O[xstart:xend, 1:nsoil, ystart:yend];     // volumetric liquid soil moisture [m3/m3]
     NoahmpArray3D<noahmp_real> SMOISEQ[xstart:xend, 1:nsoil, ystart:yend];  // equilibrium volumetric soil moisture [m3/m3]
+
+    // WRF-alike output diagnostics (computed each step by the out-transfer
+    // routines; promoted from Fortran-only allocatables so ERF can plot them).
+
+    // OUT (with no Noah LSM equivalent) (as defined in WRF)
+    NoahmpArray2D<noahmp_real> T2MVXY[xstart:xend, ystart:yend];       // 2m temperature of vegetation part [K]
+    NoahmpArray2D<noahmp_real> T2MBXY[xstart:xend, ystart:yend];       // 2m temperature of bare ground part [K]
+    NoahmpArray2D<noahmp_real> Q2MVXY[xstart:xend, ystart:yend];       // 2m mixing ratio of vegetation part
+    NoahmpArray2D<noahmp_real> Q2MBXY[xstart:xend, ystart:yend];       // 2m mixing ratio of bare ground part
+    NoahmpArray2D<noahmp_real> TRADXY[xstart:xend, ystart:yend];       // surface radiative temperature [K]
+    NoahmpArray2D<noahmp_real> NEEXY[xstart:xend, ystart:yend];        // net ecosys exchange (g/m2/s CO2)
+    NoahmpArray2D<noahmp_real> GPPXY[xstart:xend, ystart:yend];        // gross primary assimilation [g/m2/s C]
+    NoahmpArray2D<noahmp_real> NPPXY[xstart:xend, ystart:yend];        // net primary productivity [g/m2/s C]
+    NoahmpArray2D<noahmp_real> FVEGXY[xstart:xend, ystart:yend];       // Noah-MP vegetation fraction [-]
+    NoahmpArray2D<noahmp_real> RUNSFXY[xstart:xend, ystart:yend];      // surface runoff [mm per soil timestep]
+    NoahmpArray2D<noahmp_real> RUNSBXY[xstart:xend, ystart:yend];      // subsurface runoff [mm per soil timestep]
+    NoahmpArray2D<noahmp_real> ECANXY[xstart:xend, ystart:yend];       // evaporation of intercepted water [mm/s]
+    NoahmpArray2D<noahmp_real> EDIRXY[xstart:xend, ystart:yend];       // soil surface evaporation rate [mm/s]
+    NoahmpArray2D<noahmp_real> ETRANXY[xstart:xend, ystart:yend];      // transpiration rate [mm/s]
+    NoahmpArray2D<noahmp_real> FSAXY[xstart:xend, ystart:yend];        // total absorbed solar radiation [w/m2]
+    NoahmpArray2D<noahmp_real> APARXY[xstart:xend, ystart:yend];       // photosyn active energy by canopy [w/m2]
+    NoahmpArray2D<noahmp_real> PSNXY[xstart:xend, ystart:yend];        // total photosynthesis (umol co2/m2/s) [+]
+    NoahmpArray2D<noahmp_real> RSSUNXY[xstart:xend, ystart:yend];      // sunlit leaf stomatal resistance [s/m]
+    NoahmpArray2D<noahmp_real> RSSHAXY[xstart:xend, ystart:yend];      // shaded leaf stomatal resistance [s/m]
+    NoahmpArray2D<noahmp_real> BGAPXY[xstart:xend, ystart:yend];       // between gap fraction
+    NoahmpArray2D<noahmp_real> WGAPXY[xstart:xend, ystart:yend];       // within gap fraction
+    NoahmpArray2D<noahmp_real> TGVXY[xstart:xend, ystart:yend];        // under canopy ground temperature [K]
+    NoahmpArray2D<noahmp_real> TGBXY[xstart:xend, ystart:yend];        // bare ground temperature [K]
+    NoahmpArray2D<noahmp_real> CHVXY[xstart:xend, ystart:yend];        // sensible heat exchange coefficient vegetated
+    NoahmpArray2D<noahmp_real> CHBXY[xstart:xend, ystart:yend];        // sensible heat exchange coefficient bare-ground
+    NoahmpArray2D<noahmp_real> SHGXY[xstart:xend, ystart:yend];        // veg ground sen. heat [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> SHCXY[xstart:xend, ystart:yend];        // canopy sen. heat [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> EVGXY[xstart:xend, ystart:yend];        // veg ground evap. heat [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> GHVXY[xstart:xend, ystart:yend];        // veg ground heat flux [w/m2] [+ to soil]
+    NoahmpArray2D<noahmp_real> IRGXY[xstart:xend, ystart:yend];        // veg ground net LW rad. [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> IRCXY[xstart:xend, ystart:yend];        // canopy net LW rad. [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> IRBXY[xstart:xend, ystart:yend];        // bare net longwave rad. [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> TRXY[xstart:xend, ystart:yend];         // transpiration [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> EVCXY[xstart:xend, ystart:yend];        // canopy evaporation heat [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> CHLEAFXY[xstart:xend, ystart:yend];     // leaf exchange coefficient
+    NoahmpArray2D<noahmp_real> CHUCXY[xstart:xend, ystart:yend];       // under canopy exchange coefficient
+    NoahmpArray2D<noahmp_real> CHV2XY[xstart:xend, ystart:yend];       // veg 2m exchange coefficient
+    NoahmpArray2D<noahmp_real> CHB2XY[xstart:xend, ystart:yend];       // bare 2m exchange coefficient
+    NoahmpArray2D<noahmp_real> RS[xstart:xend, ystart:yend];           // total stomatal resistance [s/m]
+    NoahmpArray2D<noahmp_real> Z0[xstart:xend, ystart:yend];           // roughness length output to WRF
+    NoahmpArray2D<noahmp_real> ZNT[xstart:xend, ystart:yend];          // roughness length output to WRF
+    NoahmpArray2D<noahmp_real> QTDRAIN[xstart:xend, ystart:yend];      // tile drain discharge [mm]
+
+    // additional output variables
+    NoahmpArray2D<noahmp_real> PAHGXY[xstart:xend, ystart:yend];       // precipitation advected heat [W/m2]
+    NoahmpArray2D<noahmp_real> PAHBXY[xstart:xend, ystart:yend];       // precipitation advected heat [W/m2]
+    NoahmpArray2D<noahmp_real> PAHVXY[xstart:xend, ystart:yend];       // precipitation advected heat [W/m2]
+    NoahmpArray2D<noahmp_real> QINTSXY[xstart:xend, ystart:yend];      // canopy intercepted snow [mm/s]
+    NoahmpArray2D<noahmp_real> QINTRXY[xstart:xend, ystart:yend];      // canopy intercepted rain [mm/s]
+    NoahmpArray2D<noahmp_real> QDRIPSXY[xstart:xend, ystart:yend];     // canopy dripping snow [mm/s]
+    NoahmpArray2D<noahmp_real> QDRIPRXY[xstart:xend, ystart:yend];     // canopy dripping rain [mm/s]
+    NoahmpArray2D<noahmp_real> QTHROSXY[xstart:xend, ystart:yend];     // canopy throughfall snow [mm/s]
+    NoahmpArray2D<noahmp_real> QTHRORXY[xstart:xend, ystart:yend];     // canopy throughfall rain [mm/s]
+    NoahmpArray2D<noahmp_real> QSNSUBXY[xstart:xend, ystart:yend];     // snowpack sublimation rate [mm/s]
+    NoahmpArray2D<noahmp_real> QMELTXY[xstart:xend, ystart:yend];      // snowpack melting rate due to phase change [mm/s]
+    NoahmpArray2D<noahmp_real> QSNFROXY[xstart:xend, ystart:yend];     // snowpack frost rate [mm/s]
+    NoahmpArray2D<noahmp_real> QSUBCXY[xstart:xend, ystart:yend];      // canopy snow sublimation rate [mm/s]
+    NoahmpArray2D<noahmp_real> QFROCXY[xstart:xend, ystart:yend];      // canopy snow frost rate [mm/s]
+    NoahmpArray2D<noahmp_real> QEVACXY[xstart:xend, ystart:yend];      // canopy water evaporation rate [mm/s]
+    NoahmpArray2D<noahmp_real> QDEWCXY[xstart:xend, ystart:yend];      // canopy water dew rate [mm/s]
+    NoahmpArray2D<noahmp_real> QFRZCXY[xstart:xend, ystart:yend];      // canopy water freezing rate [mm/s]
+    NoahmpArray2D<noahmp_real> QMELTCXY[xstart:xend, ystart:yend];     // canopy snow melting rate [mm/s]
+    NoahmpArray2D<noahmp_real> QSNBOTXY[xstart:xend, ystart:yend];     // total water out of snowpack bottom [mm/s]
+    NoahmpArray2D<noahmp_real> PONDINGXY[xstart:xend, ystart:yend];    // total surface ponding [mm]
+    NoahmpArray2D<noahmp_real> FPICEXY[xstart:xend, ystart:yend];      // fraction of ice in total precipitation
+    NoahmpArray2D<noahmp_real> RAINLSM[xstart:xend, ystart:yend];      // total rain rate at the surface [mm/s]
+    NoahmpArray2D<noahmp_real> SNOWLSM[xstart:xend, ystart:yend];      // total snow rate at the surface [mm/s]
+    NoahmpArray2D<noahmp_real> FORCTLSM[xstart:xend, ystart:yend];     // surface temperature as LSM forcing [K]
+    NoahmpArray2D<noahmp_real> FORCQLSM[xstart:xend, ystart:yend];     // surface specific humidity as LSM forcing [kg/kg]
+    NoahmpArray2D<noahmp_real> FORCPLSM[xstart:xend, ystart:yend];     // surface pressure as LSM forcing [Pa]
+    NoahmpArray2D<noahmp_real> FORCZLSM[xstart:xend, ystart:yend];     // reference height as LSM input [m]
+    NoahmpArray2D<noahmp_real> FORCWLSM[xstart:xend, ystart:yend];     // surface wind speed as LSM forcing [m/s]
+    NoahmpArray2D<noahmp_real> ACC_SSOILXY[xstart:xend, ystart:yend];  // accumulated ground heat flux
+    NoahmpArray2D<noahmp_real> ACC_QINSURXY[xstart:xend, ystart:yend]; // accumulated water flux into soil
+    NoahmpArray2D<noahmp_real> ACC_QSEVAXY[xstart:xend, ystart:yend];  // accumulated soil surface evaporation
+    NoahmpArray2D<noahmp_real> EFLXBXY[xstart:xend, ystart:yend];      // accumulated heat flux through soil bottom [J/m2]
+    NoahmpArray2D<noahmp_real> SOILENERGY[xstart:xend, ystart:yend];   // energy content in soil rel. to 273.16 [KJ/m2]
+    NoahmpArray2D<noahmp_real> SNOWENERGY[xstart:xend, ystart:yend];   // energy content in snow rel. to 273.16 [KJ/m2]
+    NoahmpArray2D<noahmp_real> ACC_DWATERXY[xstart:xend, ystart:yend]; // accumulated snow/soil/canopy water change [mm]
+    NoahmpArray2D<noahmp_real> ACC_PRCPXY[xstart:xend, ystart:yend];   // accumulated precipitation [mm]
+    NoahmpArray2D<noahmp_real> ACC_ECANXY[xstart:xend, ystart:yend];   // accumulated net canopy evaporation [mm]
+    NoahmpArray2D<noahmp_real> ACC_ETRANXY[xstart:xend, ystart:yend];  // accumulated transpiration [mm]
+    NoahmpArray2D<noahmp_real> ACC_EDIRXY[xstart:xend, ystart:yend];   // accumulated net ground evaporation [mm]
+    NoahmpArray3D<noahmp_real> ACC_ETRANIXY[xstart:xend, 1:nsoil, ystart:yend]; // accumulated transpiration rate within soil timestep
+    NoahmpArray2D<noahmp_real> ACC_GLAFLWXY[xstart:xend, ystart:yend]; // accumulated glacier excessive flow [mm]
 }
 
 extern "C" {

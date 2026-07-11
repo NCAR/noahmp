@@ -11,7 +11,12 @@ module NoahmpWriteLandMod
                              albsfcdirxy, albsfcdifxy, &
                              savxy, sagxy, pahxy, firaxy, hfx, &
                              lh, grdflx, ghbxy, canhsxy, tslb, smois, &
-                             tau_ew, tau_ns
+                             tau_ew, tau_ns, &
+                             ! core surface diagnostics
+                             t2mvxy, t2mbxy, q2mvxy, q2mbxy, tradxy, &
+                             fvegxy, tgvxy, tgbxy, shgxy, shcxy, &
+                             evgxy, evcxy, trxy, runsfxy, runsbxy, &
+                             ecanxy, edirxy, etranxy, fsaxy, rs, z0, znt
 
 contains
 
@@ -82,6 +87,29 @@ contains
          ierr = nf90_def_var(ncid, "SMOIS", NF90_FLOAT, (/nx, nsoil, ny/), smois)
          ierr = nf90_def_var(ncid, "TAU_EW", NF90_FLOAT, (/nx, ny/), tau_ew)
          ierr = nf90_def_var(ncid, "TAU_NS", NF90_FLOAT, (/nx, ny/), tau_ns)
+         ! core surface diagnostics
+         ierr = nf90_def_var(ncid, "T2MVXY", NF90_FLOAT, (/nx, ny/), t2mvxy)
+         ierr = nf90_def_var(ncid, "T2MBXY", NF90_FLOAT, (/nx, ny/), t2mbxy)
+         ierr = nf90_def_var(ncid, "Q2MVXY", NF90_FLOAT, (/nx, ny/), q2mvxy)
+         ierr = nf90_def_var(ncid, "Q2MBXY", NF90_FLOAT, (/nx, ny/), q2mbxy)
+         ierr = nf90_def_var(ncid, "TRADXY", NF90_FLOAT, (/nx, ny/), tradxy)
+         ierr = nf90_def_var(ncid, "FVEGXY", NF90_FLOAT, (/nx, ny/), fvegxy)
+         ierr = nf90_def_var(ncid, "TGVXY", NF90_FLOAT, (/nx, ny/), tgvxy)
+         ierr = nf90_def_var(ncid, "TGBXY", NF90_FLOAT, (/nx, ny/), tgbxy)
+         ierr = nf90_def_var(ncid, "SHGXY", NF90_FLOAT, (/nx, ny/), shgxy)
+         ierr = nf90_def_var(ncid, "SHCXY", NF90_FLOAT, (/nx, ny/), shcxy)
+         ierr = nf90_def_var(ncid, "EVGXY", NF90_FLOAT, (/nx, ny/), evgxy)
+         ierr = nf90_def_var(ncid, "EVCXY", NF90_FLOAT, (/nx, ny/), evcxy)
+         ierr = nf90_def_var(ncid, "TRXY", NF90_FLOAT, (/nx, ny/), trxy)
+         ierr = nf90_def_var(ncid, "RUNSFXY", NF90_FLOAT, (/nx, ny/), runsfxy)
+         ierr = nf90_def_var(ncid, "RUNSBXY", NF90_FLOAT, (/nx, ny/), runsbxy)
+         ierr = nf90_def_var(ncid, "ECANXY", NF90_FLOAT, (/nx, ny/), ecanxy)
+         ierr = nf90_def_var(ncid, "EDIRXY", NF90_FLOAT, (/nx, ny/), edirxy)
+         ierr = nf90_def_var(ncid, "ETRANXY", NF90_FLOAT, (/nx, ny/), etranxy)
+         ierr = nf90_def_var(ncid, "FSAXY", NF90_FLOAT, (/nx, ny/), fsaxy)
+         ierr = nf90_def_var(ncid, "RS", NF90_FLOAT, (/nx, ny/), rs)
+         ierr = nf90_def_var(ncid, "Z0", NF90_FLOAT, (/nx, ny/), z0)
+         ierr = nf90_def_var(ncid, "ZNT", NF90_FLOAT, (/nx, ny/), znt)
          ierr = nf90_enddef(ncid)
       end if
 
@@ -118,6 +146,29 @@ contains
                                                        count=(/count(1), NoahmpIO%NSOIL, count(2)/))
       ierr = nf90_put_var(ncid, tau_ew, NoahmpIO%TAU_EW, start=start, count=count)
       ierr = nf90_put_var(ncid, tau_ns, NoahmpIO%TAU_NS, start=start, count=count)
+      ! core surface diagnostics
+      ierr = nf90_put_var(ncid, t2mvxy, NoahmpIO%T2MVXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, t2mbxy, NoahmpIO%T2MBXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, q2mvxy, NoahmpIO%Q2MVXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, q2mbxy, NoahmpIO%Q2MBXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, tradxy, NoahmpIO%TRADXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, fvegxy, NoahmpIO%FVEGXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, tgvxy, NoahmpIO%TGVXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, tgbxy, NoahmpIO%TGBXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, shgxy, NoahmpIO%SHGXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, shcxy, NoahmpIO%SHCXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, evgxy, NoahmpIO%EVGXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, evcxy, NoahmpIO%EVCXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, trxy, NoahmpIO%TRXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, runsfxy, NoahmpIO%RUNSFXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, runsbxy, NoahmpIO%RUNSBXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, ecanxy, NoahmpIO%ECANXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, edirxy, NoahmpIO%EDIRXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, etranxy, NoahmpIO%ETRANXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, fsaxy, NoahmpIO%FSAXY, start=start, count=count)
+      ierr = nf90_put_var(ncid, rs, NoahmpIO%RS, start=start, count=count)
+      ierr = nf90_put_var(ncid, z0, NoahmpIO%Z0, start=start, count=count)
+      ierr = nf90_put_var(ncid, znt, NoahmpIO%ZNT, start=start, count=count)
 
       if (NoahmpIO%blkid == (maxblocks-1)) then
          ierr = nf90_close(ncid)

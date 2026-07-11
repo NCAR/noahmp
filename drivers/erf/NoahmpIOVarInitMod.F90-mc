@@ -128,94 +128,16 @@ contains
     if ( .not. allocated (NoahmpIO%IRRSPLH) ) allocate ( NoahmpIO%IRRSPLH (XSTART:XEND,YSTART:YEND) ) ! latent heating from sprinkler evaporation (w/m2)
     if ( .not. allocated (NoahmpIO%LOCTIM)  ) allocate ( NoahmpIO%LOCTIM  (XSTART:XEND,YSTART:YEND) ) ! local time
   
-    ! OUT (with no Noah LSM equivalent) (as defined in WRF)   
-    if ( .not. allocated (NoahmpIO%T2MVXY)     ) allocate ( NoahmpIO%T2MVXY      (XSTART:XEND,YSTART:YEND) ) ! 2m temperature of vegetation part
-    if ( .not. allocated (NoahmpIO%T2MBXY)     ) allocate ( NoahmpIO%T2MBXY      (XSTART:XEND,YSTART:YEND) ) ! 2m temperature of bare ground part
-    if ( .not. allocated (NoahmpIO%Q2MVXY)     ) allocate ( NoahmpIO%Q2MVXY      (XSTART:XEND,YSTART:YEND) ) ! 2m mixing ratio of vegetation part
-    if ( .not. allocated (NoahmpIO%Q2MBXY)     ) allocate ( NoahmpIO%Q2MBXY      (XSTART:XEND,YSTART:YEND) ) ! 2m mixing ratio of bare ground part
-    if ( .not. allocated (NoahmpIO%TRADXY)     ) allocate ( NoahmpIO%TRADXY      (XSTART:XEND,YSTART:YEND) ) ! surface radiative temperature (k)
-    if ( .not. allocated (NoahmpIO%NEEXY)      ) allocate ( NoahmpIO%NEEXY       (XSTART:XEND,YSTART:YEND) ) ! net ecosys exchange (g/m2/s CO2)
-    if ( .not. allocated (NoahmpIO%GPPXY)      ) allocate ( NoahmpIO%GPPXY       (XSTART:XEND,YSTART:YEND) ) ! gross primary assimilation [g/m2/s C]
-    if ( .not. allocated (NoahmpIO%NPPXY)      ) allocate ( NoahmpIO%NPPXY       (XSTART:XEND,YSTART:YEND) ) ! net primary productivity [g/m2/s C]
-    if ( .not. allocated (NoahmpIO%FVEGXY)     ) allocate ( NoahmpIO%FVEGXY      (XSTART:XEND,YSTART:YEND) ) ! Noah-MP vegetation fraction [-]
-    if ( .not. allocated (NoahmpIO%RUNSFXY)    ) allocate ( NoahmpIO%RUNSFXY     (XSTART:XEND,YSTART:YEND) ) ! surface runoff [mm per soil timestep]
-    if ( .not. allocated (NoahmpIO%RUNSBXY)    ) allocate ( NoahmpIO%RUNSBXY     (XSTART:XEND,YSTART:YEND) ) ! subsurface runoff [mm per soil timestep]
-    if ( .not. allocated (NoahmpIO%ECANXY)     ) allocate ( NoahmpIO%ECANXY      (XSTART:XEND,YSTART:YEND) ) ! evaporation of intercepted water (mm/s)
-    if ( .not. allocated (NoahmpIO%EDIRXY)     ) allocate ( NoahmpIO%EDIRXY      (XSTART:XEND,YSTART:YEND) ) ! soil surface evaporation rate (mm/s]
-    if ( .not. allocated (NoahmpIO%ETRANXY)    ) allocate ( NoahmpIO%ETRANXY     (XSTART:XEND,YSTART:YEND) ) ! transpiration rate (mm/s)
-    if ( .not. allocated (NoahmpIO%FSAXY)      ) allocate ( NoahmpIO%FSAXY       (XSTART:XEND,YSTART:YEND) ) ! total absorbed solar radiation (w/m2)
-    if ( .not. allocated (NoahmpIO%APARXY)     ) allocate ( NoahmpIO%APARXY      (XSTART:XEND,YSTART:YEND) ) ! photosyn active energy by canopy (w/m2)
-    if ( .not. allocated (NoahmpIO%PSNXY)      ) allocate ( NoahmpIO%PSNXY       (XSTART:XEND,YSTART:YEND) ) ! total photosynthesis (umol co2/m2/s) [+]
-    if ( .not. allocated (NoahmpIO%RSSUNXY)    ) allocate ( NoahmpIO%RSSUNXY     (XSTART:XEND,YSTART:YEND) ) ! sunlit leaf stomatal resistance (s/m)
-    if ( .not. allocated (NoahmpIO%RSSHAXY)    ) allocate ( NoahmpIO%RSSHAXY     (XSTART:XEND,YSTART:YEND) ) ! shaded leaf stomatal resistance (s/m)
-    if ( .not. allocated (NoahmpIO%BGAPXY)     ) allocate ( NoahmpIO%BGAPXY      (XSTART:XEND,YSTART:YEND) ) ! between gap fraction
-    if ( .not. allocated (NoahmpIO%WGAPXY)     ) allocate ( NoahmpIO%WGAPXY      (XSTART:XEND,YSTART:YEND) ) ! within gap fraction
-    if ( .not. allocated (NoahmpIO%TGVXY)      ) allocate ( NoahmpIO%TGVXY       (XSTART:XEND,YSTART:YEND) ) ! under canopy ground temperature[K]
-    if ( .not. allocated (NoahmpIO%TGBXY)      ) allocate ( NoahmpIO%TGBXY       (XSTART:XEND,YSTART:YEND) ) ! bare ground temperature [K]
-    if ( .not. allocated (NoahmpIO%CHVXY)      ) allocate ( NoahmpIO%CHVXY       (XSTART:XEND,YSTART:YEND) ) ! sensible heat exchange coefficient vegetated
-    if ( .not. allocated (NoahmpIO%CHBXY)      ) allocate ( NoahmpIO%CHBXY       (XSTART:XEND,YSTART:YEND) ) ! sensible heat exchange coefficient bare-ground
-    if ( .not. allocated (NoahmpIO%SHGXY)      ) allocate ( NoahmpIO%SHGXY       (XSTART:XEND,YSTART:YEND) ) ! veg ground sen. heat [w/m2]   [+ to atm]
-    if ( .not. allocated (NoahmpIO%SHCXY)      ) allocate ( NoahmpIO%SHCXY       (XSTART:XEND,YSTART:YEND) ) ! canopy sen. heat [w/m2]   [+ to atm]
-    if ( .not. allocated (NoahmpIO%EVGXY)      ) allocate ( NoahmpIO%EVGXY       (XSTART:XEND,YSTART:YEND) ) ! veg ground evap. heat [w/m2]  [+ to atm]
-    if ( .not. allocated (NoahmpIO%GHVXY)      ) allocate ( NoahmpIO%GHVXY       (XSTART:XEND,YSTART:YEND) ) ! veg ground heat flux [w/m2]  [+ to soil]
-    if ( .not. allocated (NoahmpIO%IRGXY)      ) allocate ( NoahmpIO%IRGXY       (XSTART:XEND,YSTART:YEND) ) ! veg ground net LW rad. [w/m2] [+ to atm]
-    if ( .not. allocated (NoahmpIO%IRCXY)      ) allocate ( NoahmpIO%IRCXY       (XSTART:XEND,YSTART:YEND) ) ! canopy net LW rad. [w/m2] [+ to atm]
-    if ( .not. allocated (NoahmpIO%IRBXY)      ) allocate ( NoahmpIO%IRBXY       (XSTART:XEND,YSTART:YEND) ) ! bare net longwave rad. [w/m2] [+ to atm]
-    if ( .not. allocated (NoahmpIO%TRXY)       ) allocate ( NoahmpIO%TRXY        (XSTART:XEND,YSTART:YEND) ) ! transpiration [w/m2]  [+ to atm]
-    if ( .not. allocated (NoahmpIO%EVCXY)      ) allocate ( NoahmpIO%EVCXY       (XSTART:XEND,YSTART:YEND) ) ! canopy evaporation heat [w/m2]  [+ to atm]
-    if ( .not. allocated (NoahmpIO%CHLEAFXY)   ) allocate ( NoahmpIO%CHLEAFXY    (XSTART:XEND,YSTART:YEND) ) ! leaf exchange coefficient 
-    if ( .not. allocated (NoahmpIO%CHUCXY)     ) allocate ( NoahmpIO%CHUCXY      (XSTART:XEND,YSTART:YEND) ) ! under canopy exchange coefficient 
-    if ( .not. allocated (NoahmpIO%CHV2XY)     ) allocate ( NoahmpIO%CHV2XY      (XSTART:XEND,YSTART:YEND) ) ! veg 2m exchange coefficient 
-    if ( .not. allocated (NoahmpIO%CHB2XY)     ) allocate ( NoahmpIO%CHB2XY      (XSTART:XEND,YSTART:YEND) ) ! bare 2m exchange coefficient 
-    if ( .not. allocated (NoahmpIO%RS)         ) allocate ( NoahmpIO%RS          (XSTART:XEND,YSTART:YEND) ) ! Total stomatal resistance (s/m)
-    if ( .not. allocated (NoahmpIO%Z0)         ) allocate ( NoahmpIO%Z0          (XSTART:XEND,YSTART:YEND) ) ! roughness length output to WRF 
-    if ( .not. allocated (NoahmpIO%ZNT)        ) allocate ( NoahmpIO%ZNT         (XSTART:XEND,YSTART:YEND) ) ! roughness length output to WRF 
-    if ( .not. allocated (NoahmpIO%QTDRAIN)    ) allocate ( NoahmpIO%QTDRAIN     (XSTART:XEND,YSTART:YEND) ) ! tile drainage (mm)
+    ! OUT (with no Noah LSM equivalent) (as defined in WRF) and the additional
+    ! output variables below are now allocated by the generator from the
+    ! @NoahmpMacro:Source contract block (via @NoahmpMacro:FortranArrayAllocate).
+    ! Only TD_FRACTION (a static tile-drainage input, not an output diagnostic)
+    ! stays hand-allocated here.
     if ( .not. allocated (NoahmpIO%TD_FRACTION)) allocate ( NoahmpIO%TD_FRACTION (XSTART:XEND,YSTART:YEND) ) ! tile drainage fraction
     if ( .not. allocated (NoahmpIO%XLONG)      ) allocate ( NoahmpIO%XLONG       (XSTART:XEND,YSTART:YEND) ) ! longitude
 
-    ! additional output variables
-    if ( .not. allocated (NoahmpIO%PAHGXY)      ) allocate ( NoahmpIO%PAHGXY       (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%PAHBXY)      ) allocate ( NoahmpIO%PAHBXY       (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%PAHVXY)      ) allocate ( NoahmpIO%PAHVXY       (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%QINTSXY)     ) allocate ( NoahmpIO%QINTSXY      (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%QINTRXY)     ) allocate ( NoahmpIO%QINTRXY      (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%QDRIPSXY)    ) allocate ( NoahmpIO%QDRIPSXY     (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%QDRIPRXY)    ) allocate ( NoahmpIO%QDRIPRXY     (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%QTHROSXY)    ) allocate ( NoahmpIO%QTHROSXY     (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%QTHRORXY)    ) allocate ( NoahmpIO%QTHRORXY     (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%QSNSUBXY)    ) allocate ( NoahmpIO%QSNSUBXY     (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%QSNFROXY)    ) allocate ( NoahmpIO%QSNFROXY     (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%QSUBCXY)     ) allocate ( NoahmpIO%QSUBCXY      (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%QFROCXY)     ) allocate ( NoahmpIO%QFROCXY      (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%QEVACXY)     ) allocate ( NoahmpIO%QEVACXY      (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%QDEWCXY)     ) allocate ( NoahmpIO%QDEWCXY      (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%QFRZCXY)     ) allocate ( NoahmpIO%QFRZCXY      (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%QMELTCXY)    ) allocate ( NoahmpIO%QMELTCXY     (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%QSNBOTXY)    ) allocate ( NoahmpIO%QSNBOTXY     (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%QMELTXY)     ) allocate ( NoahmpIO%QMELTXY      (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%PONDINGXY)   ) allocate ( NoahmpIO%PONDINGXY    (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%FPICEXY)     ) allocate ( NoahmpIO%FPICEXY      (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%RAINLSM)     ) allocate ( NoahmpIO%RAINLSM      (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%SNOWLSM)     ) allocate ( NoahmpIO%SNOWLSM      (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%FORCTLSM)    ) allocate ( NoahmpIO%FORCTLSM     (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%FORCQLSM)    ) allocate ( NoahmpIO%FORCQLSM     (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%FORCPLSM)    ) allocate ( NoahmpIO%FORCPLSM     (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%FORCZLSM)    ) allocate ( NoahmpIO%FORCZLSM     (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%FORCWLSM)    ) allocate ( NoahmpIO%FORCWLSM     (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%EFLXBXY)     ) allocate ( NoahmpIO%EFLXBXY      (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%SOILENERGY)  ) allocate ( NoahmpIO%SOILENERGY   (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%SNOWENERGY)  ) allocate ( NoahmpIO%SNOWENERGY   (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%ACC_DWATERXY)) allocate ( NoahmpIO%ACC_DWATERXY (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%ACC_PRCPXY)  ) allocate ( NoahmpIO%ACC_PRCPXY   (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%ACC_ECANXY)  ) allocate ( NoahmpIO%ACC_ECANXY   (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%ACC_ETRANXY) ) allocate ( NoahmpIO%ACC_ETRANXY  (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%ACC_EDIRXY)  ) allocate ( NoahmpIO%ACC_EDIRXY   (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%ACC_SSOILXY) ) allocate ( NoahmpIO%ACC_SSOILXY  (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%ACC_QINSURXY)) allocate ( NoahmpIO%ACC_QINSURXY (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%ACC_QSEVAXY) ) allocate ( NoahmpIO%ACC_QSEVAXY  (XSTART:XEND,        YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%ACC_ETRANIXY)) allocate ( NoahmpIO%ACC_ETRANIXY (XSTART:XEND,1:NSOIL,YSTART:YEND) )
-    if ( .not. allocated (NoahmpIO%ACC_GLAFLWXY)) allocate ( NoahmpIO%ACC_GLAFLWXY (XSTART:XEND,        YSTART:YEND) )
+    ! additional output variables are now allocated by the generator from the
+    ! @NoahmpMacro:Source contract block (via @NoahmpMacro:FortranArrayAllocate).
 
     ! Needed for MMF_RUNOFF (IOPT_RUN = 5); not part of MP driver in WRF
     if ( .not. allocated (NoahmpIO%MSFTX)      ) allocate ( NoahmpIO%MSFTX       (XSTART:XEND,YSTART:YEND) ) 
