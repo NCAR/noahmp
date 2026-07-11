@@ -4,6 +4,7 @@ module NoahmpReadLandMod
   use netcdf
   use Machine
   use NoahmpIOVarType
+  use NoahmpFatalMod, only : NoahmpIO_abort
 
   implicit none
 
@@ -16,9 +17,8 @@ module NoahmpReadLandMod
   logical, parameter :: NOT_FATAL = .FALSE.
 
   ! get_2d_netcdf reads 2-D fields into kind_noahmp arrays; get_2d_netcdf_c reads
-  ! the ERF C++-owned fields (XLAT, TSK) with the C-interop kind c_kind_noahmp.
-  ! c_kind_noahmp == kind_noahmp in every build, so the readers are otherwise
-  ! identical (see Machine.F90).
+  ! the ERF C++-owned fields (XLAT, TSK) with the C-interop kind c_kind_noahmp
+  ! (== kind_noahmp in every build, so the readers are otherwise identical).
 
 contains
 
@@ -249,7 +249,9 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     if (ierr_snodep /= 0) NoahmpIO%fndsnowh = .false.
    
     ierr = nf90_inq_varid(ncid,  "DZS",  varid)
-    ierr = nf90_get_var(ncid, varid, values=dzs, start=(/1/), count=(/NoahmpIO%nsoil/))    
+    call error_handler(ierr, "READLAND_ERF:  Problem finding variable 'DZS' in the wrfinput file.")
+    ierr = nf90_get_var(ncid, varid, values=dzs, start=(/1/), count=(/NoahmpIO%nsoil/))
+    call error_handler(ierr, "READLAND_ERF:  Problem retrieving variable 'DZS' from the wrfinput file.")
 
     layer_top(1) = 0.0
     layer_bottom(1) = dzs(1)
@@ -259,11 +261,7 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     end do
 
     call get_netcdf_soillevel("TSLB", ncid, NoahmpIO%nsoil, soildummy, units,  xstart, xend, ystart, yend, FATAL, ierr)
-    
-    !if (NoahmpIO%rank == 0) write(*, '("layer_bottom(1:nsoil) = ", 4F9.4)') layer_bottom(1:NoahmpIO%nsoil)
-    !if (NoahmpIO%rank == 0) write(*, '("layer_top(1:nsoil)    = ", 4F9.4)') layer_top(1:NoahmpIO%nsoil)
-    !if (NoahmpIO%rank == 0) write(*, '("Soil depth = ", 10F12.6)') NoahmpIO%dzs
-    
+
     call init_interp(NoahmpIO%xstart, NoahmpIO%xend, NoahmpIO%ystart, NoahmpIO%yend, NoahmpIO%nsoil, &
                      NoahmpIO%dzs, NoahmpIO%tslb, NoahmpIO%nsoil, soildummy, layer_bottom(1:NoahmpIO%nsoil), layer_top(1:NoahmpIO%nsoil), NoahmpIO%rank)
 
@@ -283,7 +281,7 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     call get_2d_netcdf("SHDMAX", ncid, NoahmpIO%gvfmax, units, xstart, xend, ystart, yend, FATAL, ierr)
 
     ierr = nf90_close(ncid)
-    if (ierr /= 0) stop "MODULE_NOAHLSM_ERF_INPUT:  READLAND_ERF:  NF90_CLOSE"
+    call error_handler(ierr, "MODULE_NOAHLSM_ERF_INPUT:  READLAND_ERF:  NF90_CLOSE")
 
 end subroutine NoahmpReadLandMain
 
@@ -297,9 +295,7 @@ subroutine get_2d_netcdf(name, ncid, array, units, xstart, xend, ystart, yend, f
     real(kind_noahmp), dimension(xstart:xend,ystart:yend), intent(out) :: array
     character(len=*), intent(out) :: units
     integer :: iret, varid
-    ! fatal_if_error = .TRUE. stops the program on a read error; otherwise ierr is
-    ! set and control returns to the caller.
-    logical, intent(in) :: fatal_if_error
+    logical, intent(in) :: fatal_if_error  ! .TRUE. aborts on error; else set ierr and return
     integer, intent(out) :: ierr
 
     units = " "
@@ -334,9 +330,8 @@ subroutine get_2d_netcdf(name, ncid, array, units, xstart, xend, ystart, yend, f
 
 end subroutine get_2d_netcdf
 
-! Variant for the ERF C++-owned fields (XLAT, TSK), whose array uses the C-interop
-! kind c_kind_noahmp. Identical to get_2d_netcdf (c_kind_noahmp == kind_noahmp);
-! kept distinct to mark the C boundary, mirroring get2dd in NoahmpReadRestartMod.
+! Variant for the ERF C++-owned fields (XLAT, TSK) with C-interop kind c_kind_noahmp;
+! identical to get_2d_netcdf, kept distinct to mark the C boundary (cf. get2dd).
 subroutine get_2d_netcdf_c(name, ncid, array, units, xstart, xend, ystart, yend, fatal_if_error, ierr)
 
     implicit none
@@ -347,9 +342,7 @@ subroutine get_2d_netcdf_c(name, ncid, array, units, xstart, xend, ystart, yend,
     real(c_kind_noahmp), dimension(xstart:xend,ystart:yend), intent(out) :: array
     character(len=*), intent(out) :: units
     integer :: iret, varid
-    ! fatal_if_error = .TRUE. stops the program on a read error; otherwise ierr is
-    ! set and control returns to the caller.
-    logical, intent(in) :: fatal_if_error
+    logical, intent(in) :: fatal_if_error  ! .TRUE. aborts on error; else set ierr and return
     integer, intent(out) :: ierr
 
     units = " "
@@ -385,7 +378,7 @@ subroutine get_2d_netcdf_c(name, ncid, array, units, xstart, xend, ystart, yend,
 end subroutine get_2d_netcdf_c
 
 subroutine error_handler(status, failure, success)
-    ! Check a NetCDF status flag and print an error message (stopping) on failure.
+    ! Abort with a message if a NetCDF status flag indicates failure.
     implicit none
     integer,                    intent(in) :: status
     character(len=*), optional, intent(in) :: failure
@@ -396,7 +389,7 @@ subroutine error_handler(status, failure, success)
        if (present(failure)) then
           write(*,'(/," ***** ", A,/)') failure
        endif
-       stop 'Stopped'
+       call NoahmpIO_abort()
     endif
 
     if (present(success)) then
@@ -418,13 +411,13 @@ subroutine get_landuse_netcdf(ncid, array, units, xstart, xend, ystart, yend)
     iret = nf90_inq_varid(ncid,  trim(name),  varid)
     if (iret /= 0) then
        print*, 'name = "', trim(name)//'"'
-       stop "MODULE_NOAHLSM_ERF_INPUT:  get_landuse_netcdf:  nf90_inq_varid"
+       call error_handler(iret, "MODULE_NOAHLSM_ERF_INPUT:  get_landuse_netcdf:  nf90_inq_varid")
     endif
 
     iret = nf90_get_var(ncid, varid, array, (/xstart+1, ystart+1/), (/xend-xstart+1, yend-ystart+1/))
     if (iret /= 0) then
        print*, 'name = "', trim(name)//'"'
-       stop "MODULE_NOAHLSM_ERF_INPUT:  get_landuse_netcdf:  nf90_get_var"
+       call error_handler(iret, "MODULE_NOAHLSM_ERF_INPUT:  get_landuse_netcdf:  nf90_get_var")
     endif
 end subroutine get_landuse_netcdf
 
@@ -467,7 +460,7 @@ subroutine get_netcdf_soillevel(name, ncid, nsoil, array, units, xstart, xend, y
     if (iret /= 0) then
        if (FATAL_IF_ERROR) then
           print*, 'name = "', trim(name)//'"'
-          stop "MODULE_NOAHLSM_HRLDAS_INPUT:  get_2d_netcdf:  nf90_inq_varid"
+          call error_handler(iret, "MODULE_NOAHLSM_HRLDAS_INPUT:  get_2d_netcdf:  nf90_inq_varid")
        else
           ierr = iret
           return
@@ -478,21 +471,21 @@ subroutine get_netcdf_soillevel(name, ncid, nsoil, array, units, xstart, xend, y
     if (iret /= 0) units = "units unknown"
 
     iret = nf90_get_var(ncid, varid, values=insoil, start=(/xstart+1,ystart+1,1,1/), count=(/xend-xstart+1,yend-ystart+1,nsoil,1/))
-    do isoil = 1,nsoil
-      array(:,isoil,:) = insoil(:,:,isoil)
-    end do
-
+    ! Check the read before reshaping so a non-fatal failure does not copy garbage.
     if (iret /= 0) then
        if (FATAL_IF_ERROR) then
           print*, 'name = "', trim(name)//'"'
           print*, 'varid =', varid
-          print*, trim(nf90_strerror(iret))
-          stop "MODULE_NOAHLSM_HRLDAS_INPUT:  get_2d_netcdf:  nf90_get_var"
+          call error_handler(iret, "MODULE_NOAHLSM_HRLDAS_INPUT:  get_2d_netcdf:  nf90_get_var")
        else
           ierr = iret
           return
        endif
     endif
+
+    do isoil = 1,nsoil
+      array(:,isoil,:) = insoil(:,:,isoil)
+    end do
 
     ierr = 0;
 end subroutine get_netcdf_soillevel
@@ -518,32 +511,22 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
        else
           dst_centerpoint(k) = sldpth(k)/2. + sum(sldpth(1:k-1))
        endif
-       !if (rank == 0) print*, 'k, dst_centerpoint(k) = ', k, dst_centerpoint(k)
     enddo
 
     do k = 1, nvar
        src_centerpoint(k) = 0.5*(layer_bottom(k)+layer_top(k))
-       !if (rank == 0) print*, 'k, src_centerpoint(k) = ', k, src_centerpoint(k)
     enddo
 
     KLOOP : do k = 1, nsoil
 
        if (dst_centerpoint(k) < src_centerpoint(1)) then
           ! Destination center shallower than the topmost source: use topmost source
-          !if (rank == 0) then
-          !   print'("Shallow destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
-          !        dst_centerpoint(k), src_centerpoint(1)
-          !endif
           var(:,k,:) = src(:,1,:)
           cycle KLOOP
        endif
 
        if (dst_centerpoint(k) > src_centerpoint(nvar)) then
           ! Destination center deeper than the deepest source: use deepest source
-          !if (rank == 0) then
-          !   print'("Deep destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
-          !        dst_centerpoint(k), src_centerpoint(nvar)
-          !endif
           var(:,k,:) = src(:,nvar,:)
           cycle KLOOP
        endif
@@ -551,10 +534,6 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
        ! If the destination center is "close" to a source center, use that layer
        do kk = 1, nvar
           if (abs(dst_centerpoint(k)-src_centerpoint(kk)) < 0.01) then
-             !if (rank == 0) then
-             !   print'("(Near) match for destination layer:  Taking destination layer at ",F7.4, " from source layer at ", F7.4)', &
-             !        dst_centerpoint(k), src_centerpoint(kk)
-             !endif
              var(:,k,:) = src(:,kk,:)
              cycle KLOOP
           endif
@@ -573,8 +552,6 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
        enddo TOPLOOP
        if (ktop < -99998) stop "ktop problem"
 
-
-
        ! kbottom: bottom bracketing source layer (first, from the top down, deeper
        ! than the destination level)
        kbottom = -99999
@@ -587,12 +564,6 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
        if (kbottom < -99998) stop "kbottom problem"
 
        fraction = (src_centerpoint(kbottom)-dst_centerpoint(k)) / (src_centerpoint(kbottom)-src_centerpoint(ktop))
-
-       ! print '(I2, 1x, 3F7.3, F8.5)', k, src_centerpoint(ktop), dst_centerpoint(k), src_centerpoint(kbottom), fraction
-
-       !if (rank == 0) then
-       !   print '("dst(",I1,") = src(",I1,")*",F8.5," + src(",I1,")*",F8.5)', k, ktop, fraction, kbottom, (1.0-fraction)
-       !endif
 
        var(:,k,:) = (src(:,ktop,:)*fraction) + (src(:,kbottom,:)*(1.0-fraction))
 

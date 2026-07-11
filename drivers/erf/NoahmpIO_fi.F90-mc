@@ -10,6 +10,7 @@ module NoahmpIO_fi
   use NoahmpWriteLandMod, ONLY: NoahmpWriteLand
   use NoahmpWriteRestartMod, ONLY: NoahmpWriteRestart
   use NoahmpReadRestartMod, ONLY: NoahmpReadRestart
+  use NoahmpFatalMod, ONLY: NoahmpIO_abort
 
   use  iso_c_binding
 
@@ -35,26 +36,12 @@ module NoahmpIO_fi
 
 contains
 
-  ! Fatal-error exit. A bare `error stop` terminates only the calling image, so
-  ! peers can deadlock in the next collective. Route through the C++ shim
-  ! NoahmpIO_fatal_c, whose host-installed handler propagates the failure to all
-  ! ranks (e.g. amrex::Abort -> MPI_Abort). The trailing `error stop` is a
-  ! fallback when no handler is installed (serial build) or the handler returns.
-  subroutine NoahmpIO_abort()
-    implicit none
-    interface
-       subroutine NoahmpIO_fatal_c() bind(C, name="NoahmpIO_fatal_c")
-       end subroutine NoahmpIO_fatal_c
-    end interface
-    flush(0)
-    call NoahmpIO_fatal_c()
-    error stop 1
-  end subroutine NoahmpIO_abort
+  ! NoahmpIO_abort (used throughout this glue layer) is provided by NoahmpFatalMod.
 
   ! Resolve (level, bid) from the incoming C struct and return a pointer to the
-  ! corresponding block. Validates the C pointers and both indices, aborting
-  ! instead of indexing module-global state out of bounds (silent memory
-  ! corruption in a release build). Every bind(C) entry point routes through here.
+  ! corresponding block. Validates the C pointers and both indices, aborting rather
+  ! than indexing module-global state out of bounds. Every bind(C) entry point
+  ! routes through here.
   subroutine resolve_block(NoahmpIO_cptr, blk, level, bid, require_init)
     use iso_c_binding, only : C_INT, c_associated
     implicit none
@@ -65,8 +52,8 @@ contains
     integer(C_INT), pointer :: plevel, pbid
     logical :: check_init
 
-    ! By default require that NoahmpIOScalarInitDefault_fi has already wired the
-    ! block's scalar pointers to C++ memory; that routine itself passes require_init=.false.
+    ! By default require that scalar pointers are wired (NoahmpIOScalarInitDefault_fi,
+    ! which itself passes require_init=.false.).
     check_init = .true.
     if (present(require_init)) check_init = require_init
 
@@ -102,9 +89,8 @@ contains
 
     blk => NoahmpIO_vect(level)%NoahmpIO(bid)
 
-    ! DTBL is wired together with every other scalar pointer at the end of
-    ! NoahmpIOScalarInitDefault_fi, so it is a reliable proxy for "scalars wired"
-    ! (pointer components default to => null(), so association status is well-defined).
+    ! DTBL is wired last in NoahmpIOScalarInitDefault_fi, so it is a reliable proxy
+    ! for "scalars wired" (pointer components default to null()).
     if (check_init .and. .not. associated(blk%DTBL)) then
        write(0,*) "NoahmpIO_fi: block scalars not initialized (call "// &
                   "NoahmpIOScalarInitDefault first) for level", level, ", blkid", bid
@@ -272,7 +258,7 @@ contains
     end if
     if (allocated(NoahmpIO_vect(level)%NoahmpIO)) then
        ! Same size -> idempotent no-op; different size -> refuse (would discard
-       ! existing block state). Defense-in-depth: the C++ caller already forbids re-resize.
+       ! existing block state).
        if (size(NoahmpIO_vect(level)%NoahmpIO) == NBlocks) return
        write(0,*) "NoahmpIOTypeVectInit_fi: level", level, "already initialized "// &
                   "with", size(NoahmpIO_vect(level)%NoahmpIO), &
@@ -287,11 +273,9 @@ contains
     end if
   end subroutine NoahmpIOTypeVectInit_fi
 
-  ! Precision guard (run time): report sizeof(real(c_kind_noahmp)) as seen by the
-  ! Fortran compiler. NoahmpIO_type_fi is all C_PTR, so a struct-size check cannot
-  ! detect a float/double mismatch between the two languages (e.g. DOUBLE_PREC
-  ! applied to only one compiler). The C++ side compares this against
-  ! sizeof(noahmp_real) to catch that case (see NoahmpIO_AssertAbi / resize()).
+  ! Precision guard: report sizeof(real(c_kind_noahmp)) as seen by Fortran. The C++
+  ! side compares it against sizeof(noahmp_real) to catch a float/double mismatch,
+  ! which the all-C_PTR NoahmpIO_type_fi struct size cannot (see NoahmpIO_AssertAbi).
   function NoahmpRealSize_fi() bind(C, name="NoahmpRealSize_fi") result(nbytes)
     use iso_c_binding, only : C_SIZE_T, C_SIZEOF
     use Machine, only : c_kind_noahmp

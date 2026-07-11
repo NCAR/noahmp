@@ -36,6 +36,7 @@ The `tests/NOAH-MP` harness (`build.sh` / `job.submit`) does exactly this.
 | `lifecycle` | C++ | `NoahmpIO_vector`/`NoahmpIO_type` cold-init order; array-view bounds derived from C++-owned scalars (proves scalar wiring) |
 | `sharing` | C++ + Fortran | **zero-copy proof**: C++ view writes seen by the Fortran module-global block and vice versa (2-D + 3-D column-major) |
 | `fortran_alloc` | Fortran | `NoahmpIOVarInitDefault` array shapes/bounds; `NoahmpRealSize_fi`; idempotent `NoahmpIOTypeVectInit_fi` |
+| `water_flux_units` | Fortran | `WaterVarOutTransfer` units/accumulation contract: `QTDRAIN`/`SFCRUNOFF`/`UDRUNOFF` accumulate a depth `[mm per soil timestep]`, `RUNSFXY`/`RUNSBXY` snapshot, glacier sentinel zeroes `TileDrain` and scales runoff by `MainTimeStep` |
 | `cpp_guard_*` | C++ | `NoahmpIO_vector` size-once / non-zero guards (WILL_FAIL) |
 | `fortran_guard_*` | Fortran | `NoahmpIOTypeVectInit_fi` level / NBlocks / re-init validation (WILL_FAIL) |
 

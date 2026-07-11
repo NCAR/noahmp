@@ -136,8 +136,8 @@
     NoahmpArray2D<noahmp_real> GPPXY[xstart:xend, ystart:yend];        // gross primary assimilation [g/m2/s C]
     NoahmpArray2D<noahmp_real> NPPXY[xstart:xend, ystart:yend];        // net primary productivity [g/m2/s C]
     NoahmpArray2D<noahmp_real> FVEGXY[xstart:xend, ystart:yend];       // Noah-MP vegetation fraction [-]
-    NoahmpArray2D<noahmp_real> RUNSFXY[xstart:xend, ystart:yend];      // surface runoff [mm per soil timestep]
-    NoahmpArray2D<noahmp_real> RUNSBXY[xstart:xend, ystart:yend];      // subsurface runoff [mm per soil timestep]
+    NoahmpArray2D<noahmp_real> RUNSFXY[xstart:xend, ystart:yend];      // surface runoff [mm per soil timestep] (glacier points: per main timestep)
+    NoahmpArray2D<noahmp_real> RUNSBXY[xstart:xend, ystart:yend];      // subsurface runoff [mm per soil timestep] (glacier points: per main timestep)
     NoahmpArray2D<noahmp_real> ECANXY[xstart:xend, ystart:yend];       // evaporation of intercepted water [mm/s]
     NoahmpArray2D<noahmp_real> EDIRXY[xstart:xend, ystart:yend];       // soil surface evaporation rate [mm/s]
     NoahmpArray2D<noahmp_real> ETRANXY[xstart:xend, ystart:yend];      // transpiration rate [mm/s]
@@ -168,7 +168,7 @@
     NoahmpArray2D<noahmp_real> RS[xstart:xend, ystart:yend];           // total stomatal resistance [s/m]
     NoahmpArray2D<noahmp_real> Z0[xstart:xend, ystart:yend];           // roughness length output to WRF
     NoahmpArray2D<noahmp_real> ZNT[xstart:xend, ystart:yend];          // roughness length output to WRF
-    NoahmpArray2D<noahmp_real> QTDRAIN[xstart:xend, ystart:yend];      // tile drain discharge [mm]
+    NoahmpArray2D<noahmp_real> QTDRAIN[xstart:xend, ystart:yend];      // tile drain discharge, accumulated depth [mm]
 
     // additional output variables
     NoahmpArray2D<noahmp_real> PAHGXY[xstart:xend, ystart:yend];       // precipitation advected heat [W/m2]

@@ -81,6 +81,19 @@ if("${CMAKE_Fortran_COMPILER_ID}" MATCHES "GNU")
 endif()
 add_test(NAME fortran_alloc COMMAND test_fortran_alloc)
 
+# Water output-transfer units/accumulation contract: drives the real
+# WaterVarOutTransfer and pins the [mm per soil timestep] depth semantics
+# (QTDRAIN/SFCRUNOFF accumulate a depth, RUNSFXY/RUNSBXY snapshot, glacier
+# sentinel zeroes TileDrain + scales runoff by MainTimeStep).
+add_executable(test_water_flux_units test_water_flux_units.F90)
+add_dependencies(test_water_flux_units noahmp)
+target_include_directories(test_water_flux_units PRIVATE ${NOAHMP_MOD_DIR})
+target_link_libraries(test_water_flux_units PRIVATE noahmp)
+if("${CMAKE_Fortran_COMPILER_ID}" MATCHES "GNU")
+    target_compile_options(test_water_flux_units PRIVATE "-ffree-line-length-none")
+endif()
+add_test(NAME water_flux_units COMMAND test_water_flux_units)
+
 # test_abort_handler.cpp routes NoahmpIO_abort's std::abort() to a non-zero
 # std::_Exit so the WILL_FAIL cases below invert cleanly (see note above).
 add_executable(test_fortran_guards test_fortran_guards.F90 test_abort_handler.cpp)

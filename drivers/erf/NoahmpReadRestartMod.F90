@@ -1,15 +1,15 @@
 module NoahmpReadRestartMod
 
-! Read the NoahMP prognostic state back into the NoahmpIO arrays on restart.
-! Runs after cold init, overwriting table/wrfinput-initialized state with the
-! checkpointed values for a bitwise restart. Optional fields are read only if
-! present in the file and allocated in NoahmpIO (a missing varid is skipped,
-! preserving cold-init values). Layer counts are asserted against the file.
+! Read the NoahMP prognostic state back into the NoahmpIO arrays on restart,
+! overwriting cold-init state with the checkpointed values for a bitwise restart.
+! Optional fields are read only if present in the file and allocated (a missing
+! varid is skipped). Layer counts are asserted against the file.
 
    use mpi
    use netcdf
    use Machine, only : kind_noahmp, c_kind_noahmp
    use NoahmpIOVarType
+   use NoahmpFatalMod, only : check_nc, NoahmpIO_abort
 
    implicit none
 
@@ -38,16 +38,16 @@ contains
                           ncid, comm=NoahmpIO%comm, info=MPI_INFO_NULL)
          if (ierr /= nf90_noerr) then
             print *, "NoahmpReadRestart: NetCDF open failed: ", trim(nf90_strerror(ierr))
-            stop
+            call NoahmpIO_abort()
          end if
 
          ! Assert the layer geometry matches; mismatch => corrupt restore.
-         ierr = nf90_get_att(ncid, NF90_GLOBAL, "NSOIL", file_nsoil)
-         ierr = nf90_get_att(ncid, NF90_GLOBAL, "NSNOW", file_nsnow)
+         call check_nc(nf90_get_att(ncid, NF90_GLOBAL, "NSOIL", file_nsoil), "get_att NSOIL")
+         call check_nc(nf90_get_att(ncid, NF90_GLOBAL, "NSNOW", file_nsnow), "get_att NSNOW")
          if (file_nsoil /= NoahmpIO%NSOIL .or. file_nsnow /= NoahmpIO%NSNOW) then
             print *, "NoahmpReadRestart: layer mismatch. file NSOIL/NSNOW=", &
                      file_nsoil, file_nsnow, " run=", NoahmpIO%NSOIL, NoahmpIO%NSNOW
-            stop
+            call NoahmpIO_abort()
          end if
       end if
 
@@ -127,7 +127,7 @@ contains
       if (allocated(NoahmpIO%WSLAKEXY)) call get2dd(ncid, "WSLAKEXY", NoahmpIO%WSLAKEXY, start, count, .false.)  ! c_kind_noahmp
 
       if (NoahmpIO%blkid == (maxblocks-1)) then
-         ierr = nf90_close(ncid)
+         call check_nc(nf90_close(ncid), "close")
       end if
 
    end subroutine NoahmpReadRestart
@@ -145,19 +145,19 @@ contains
       if (ierr /= nf90_noerr) then
          if (required) then
             print *, "NoahmpReadRestart: missing required var ", trim(name)
-            stop
+            call NoahmpIO_abort()
          end if
          return
       end if
       ierr = nf90_get_var(nc, vid, arr, start=start, count=count)
       if (ierr /= nf90_noerr) then
          print *, "NoahmpReadRestart: read failed for ", trim(name), ": ", trim(nf90_strerror(ierr))
-         stop
+         call NoahmpIO_abort()
       end if
    end subroutine get2d
 
-   ! Variant for the C-boundary 2D fields (TSK, EMISS, WSLAKEXY) declared with
-   ! the C-interop kind c_kind_noahmp (== kind_noahmp in every build).
+   ! Variant for C-boundary 2D fields (TSK, EMISS, WSLAKEXY) declared with the
+   ! C-interop kind c_kind_noahmp (== kind_noahmp in every build).
    subroutine get2dd(nc, name, arr, start, count, required)
       integer,          intent(in)    :: nc
       character(len=*), intent(in)    :: name
@@ -169,14 +169,14 @@ contains
       if (ierr /= nf90_noerr) then
          if (required) then
             print *, "NoahmpReadRestart: missing required var ", trim(name)
-            stop
+            call NoahmpIO_abort()
          end if
          return
       end if
       ierr = nf90_get_var(nc, vid, arr, start=start, count=count)
       if (ierr /= nf90_noerr) then
          print *, "NoahmpReadRestart: read failed for ", trim(name), ": ", trim(nf90_strerror(ierr))
-         stop
+         call NoahmpIO_abort()
       end if
    end subroutine get2dd
 
@@ -191,14 +191,14 @@ contains
       if (ierr /= nf90_noerr) then
          if (required) then
             print *, "NoahmpReadRestart: missing required var ", trim(name)
-            stop
+            call NoahmpIO_abort()
          end if
          return
       end if
       ierr = nf90_get_var(nc, vid, arr, start=start, count=count)
       if (ierr /= nf90_noerr) then
          print *, "NoahmpReadRestart: read failed for ", trim(name), ": ", trim(nf90_strerror(ierr))
-         stop
+         call NoahmpIO_abort()
       end if
    end subroutine get2di
 
@@ -213,7 +213,7 @@ contains
       if (ierr /= nf90_noerr) then
          if (required) then
             print *, "NoahmpReadRestart: missing required var ", trim(name)
-            stop
+            call NoahmpIO_abort()
          end if
          return
       end if
@@ -221,7 +221,7 @@ contains
                                         count=(/count(1),nk,count(2)/))
       if (ierr /= nf90_noerr) then
          print *, "NoahmpReadRestart: read failed for ", trim(name), ": ", trim(nf90_strerror(ierr))
-         stop
+         call NoahmpIO_abort()
       end if
    end subroutine get3d
 
