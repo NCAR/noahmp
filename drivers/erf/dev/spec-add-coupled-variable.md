@@ -59,10 +59,10 @@ Add **one** line to the `@NoahmpMacro:Source m_noahmpio { … }` block in
 `NoahmpIO.H-mc`. The position sets ABI order (order in the block = ABI order):
 
 ```cpp
-noahmp_real RAINBL;                                                     // scalar
+noahmp_real DTBL;                                                      // scalar
 NoahmpArray2D<noahmp_real> SWDOWN[xstart:xend, ystart:yend];            // ERF forcing → Noah-MP
-NoahmpArray2D<noahmp_real> HFX[xstart:xend, ystart:yend];               // flux → ERF
-NoahmpArray3D<noahmp_real> SMOIS[xstart:xend, nsoil:nsoil, ystart:yend]; // soil moisture
+NoahmpArray2D<noahmp_real> HFX[xstart:xend, ystart:yend];              // flux → ERF
+NoahmpArray3D<noahmp_real> SMOIS[xstart:xend, 1:nsoil, ystart:yend];   // soil moisture
 ```
 
 > **Planned:** once the tier system (Step 0) lands, `@couple(dir=…)` / `@internal`

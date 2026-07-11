@@ -27,7 +27,7 @@ NoahmpIO_type(NoahmpIO_type&& o) noexcept;               // allowed, but re-poin
   type move-constructible, so move cannot simply be deleted. The move ctor copies
   all handles (`fptr(o.fptr)`) — array handles point into Fortran-owned memory and
   are correct as-is — then **re-points the self-referential scalar handles** from
-  the source's members to the destination's (`@NoahmpMacro:MoveFptrRepoint`).
+  the source's members to the destination's (`@NoahmpMacro:CppMoveRepoint`).
 
 ## 2. `NoahmpIO_vector`: size once, never relocate
 
@@ -127,7 +127,7 @@ touching it alongside AMReX. Three rules keep that safe:
    ordering is provided by binding Noah-MP's OpenACC queue to AMReX's stream
    (`acc_set_cuda_stream(queue, amrex::Gpu::gpuStream())`) so all coupling kernels
    run in enqueue order on **one** stream. This *replaces* today's per-step
-   `Gpu::streamSynchronize()` in `ERF_NOAHMP.cpp`; do **not** reintroduce a host
+   `Gpu::streamSynchronize()` in `ERF_NOAHMP_Advance.cpp`; do **not** reintroduce a host
    barrier, and do **not** put coupling kernels on a second stream without an
    explicit cross-stream dependency. (Managed/unified memory fixes *coherence* but
    **not** *ordering* — it does not remove this requirement.)

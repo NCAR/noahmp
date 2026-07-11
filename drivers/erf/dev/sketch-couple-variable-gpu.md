@@ -118,7 +118,7 @@ is hand-written and stays small.
 
 ## 5. Hand-written usage
 
-### 5a. Once, at init  ·  `ERF_NOAHMP.cpp::Init`  (HAND-WRITTEN, one-time)
+### 5a. Once, at init  ·  `ERF_NOAHMP_Init.cpp::Init`  (HAND-WRITTEN, one-time)
 
 Bind Noah-MP's OpenACC queue to AMReX's stream so kernels on both sides are
 ordered by the hardware queue — this is what removes the per-step host sync.
@@ -128,7 +128,7 @@ ordered by the hardware queue — this is what removes the per-step host sync.
 acc_set_cuda_stream(NOAHMP_ACC_QUEUE, amrex::Gpu::gpuStream());   // one shared stream
 ```
 
-### 5b. Every step  ·  `ERF_NOAHMP.cpp::Advance_With_State`  (HAND-WRITTEN)
+### 5b. Every step  ·  `ERF_NOAHMP_Advance.cpp::Advance_With_State`  (HAND-WRITTEN)
 
 The pinned buffer + `streamSynchronize` + `LoopOnCpu` transpose all go away. ERF
 writes the forcing straight into Noah-MP's device array:
@@ -151,7 +151,7 @@ noahmpio->DriverMain();          // offloaded; reads swdown on device, writes fl
 // output-direction vars (HFX_a4(), TSK_a4(), ...) are READ here, symmetric.
 ```
 
-Compare to today (`ERF_NOAHMP.cpp:339-366`): the `Gpu::streamSynchronize()`, the
+Compare to today (`ERF_NOAHMP_Advance.cpp`, `stage_forcing`): the `Gpu::streamSynchronize()`, the
 `noahmp_input_tmp` pinned FArrayBox, and the `LoopOnCpu` copy into
 `noahmpio->SWDOWN(i,j)` are **all deleted**.
 
@@ -242,7 +242,7 @@ end subroutine
 1. Add the contract line with `@couple(dir=…)` in `NoahmpIO.H-mc` (§1).
 2. `make codegen` — emits the view, `*_devptr()`, `*_a4()`/`*_v()`, storage,
    allocate, `enter data`, and `*_devptr_fi` (§2–§4).
-3. In `ERF_NOAHMP.cpp`: replace the pinned-buffer copy for that variable with a
+3. In `ERF_NOAHMP_Advance.cpp`: replace the pinned-buffer copy for that variable with a
    direct `*_a4()` read/write inside the shared-stream `ParallelFor` (§5b).
 4. In the physics: name it in the offload region's `present(...)` clause; the
    indexing is unchanged (§5c).

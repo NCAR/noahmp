@@ -32,7 +32,7 @@ different from a generic "annotate the physics" port:
    [`sketch-couple-variable-gpu.md`](sketch-couple-variable-gpu.md).
 
 2. **One shared CUDA stream removes the per-step host sync.** Today
-   `ERF_NOAHMP.cpp` bounces every coupling field host↔device through a pinned
+   `ERF_NOAHMP_Advance.cpp` bounces every coupling field host↔device through a pinned
    buffer and calls `Gpu::streamSynchronize()` each step *because Noah-MP runs on
    the host*. Once the physics is offloaded and the coupling arrays are
    device-resident, binding Noah-MP's OpenACC queue to `amrex::Gpu::gpuStream()`
@@ -57,7 +57,7 @@ unmodified-offload (host) Fortran build stays the reference oracle.
 ## 1. The coupling surface, in tiers
 
 The port hinges on classifying every `NoahmpIO` field by *how far it travels*.
-Reading the actual coupling code (`ERF_NOAHMP.cpp`), the ERF↔Noah-MP hot-path
+Reading the actual coupling code (`ERF_NOAHMP_Advance.cpp`), the ERF↔Noah-MP hot-path
 surface is only ~18 fields (`NoahmpInputComp` + `NoahmpOutputComp`), not the ~95
 currently in the contract block, nor the ~500+ Noah-MP allocatables. That gives
 three tiers, each expressed as a `@NoahmpMacro` annotation on the field's
@@ -106,7 +106,7 @@ Two consequences the rest of the plan depends on:
   allocation; the `noahmp_type` column working set becomes device-friendly
   (private per thread, fixed-size, no allocatable components); the `i,j` loop
   becomes an offload region on ERF's stream; the generator emits residency +
-  coupling accessors; `ERF_NOAHMP.cpp` drops the pinned buffers, the transposes,
+  coupling accessors; `ERF_NOAHMP_Advance.cpp` drops the pinned buffers, the transposes,
   and the per-step sync.
 - **Kept as oracle:** the host Fortran path (compile without offload flags).
 
@@ -274,7 +274,7 @@ only for I/O / restart (see [`spec-io-parallel.md`](spec-io-parallel.md) §3.1,
       `*VarInTransfer`/`*VarOutTransfer` modules.
 - [ ] Bind the stream **once** at init: `acc_set_cuda_stream(NOAHMP_ACC_QUEUE,
       amrex::Gpu::gpuStream())` (behind a model-agnostic shim).
-- [ ] Rewrite `ERF_NOAHMP.cpp::Advance_With_State`: gather writes straight into
+- [ ] Rewrite `ERF_NOAHMP_Advance.cpp::Advance_With_State`: gather writes straight into
       the Tier-A device arrays via `*_a4()`; `DriverMain()` runs on the shared
       stream; scatter reads them back. **Delete** `noahmp_input_tmp`,
       `noahmp_output_tmp`, both `LoopOnCpu` transposes, and the per-step
