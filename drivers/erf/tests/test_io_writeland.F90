@@ -37,7 +37,7 @@ program test_io_writeland
   do j = 0, NY-1
      do i = 0, NX-1
         blk%TERRAIN(i,j) = wrf_terrain(i,j)
-        blk%HFX(i,j)     = 10.0_c_kind_noahmp + i + j
+        blk%HFX(i,j)     = 10.0_c_kind_noahmp + 3.0_c_kind_noahmp*i + j  ! asymmetric: catches an i<->j transpose in the writer
         blk%TSK(i,j)     = wrf_tsk(i,j)
         do k = 1, NSOIL
            blk%TSLB(i,k,j) = 280.0_c_kind_noahmp + i + k + 10.0_c_kind_noahmp*j
@@ -96,7 +96,7 @@ contains
     do j = 0, NY-1
        do i = 0, NX-1
           call tio_expect_close(real(r2(i+1,j+1), c_kind_noahmp), &
-               10.0_c_kind_noahmp + i + j, "out HFX")
+               10.0_c_kind_noahmp + 3.0_c_kind_noahmp*i + j, "out HFX")
        end do
     end do
 

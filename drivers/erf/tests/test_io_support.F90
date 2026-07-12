@@ -51,64 +51,72 @@ module NoahmpTestIOSupport
 contains
 
   ! ---- deterministic reference values (i,j are 0-based grid indices) --------
-  ! Layer-independent soil values so the reader's vertical interpolation (file
-  ! layers == model layers here) returns them unchanged, keeping assertions crisp.
+  ! Every field varies by MUCH more than the read assertion's tolerance
+  ! (tio_expect_close uses 1e-3*max(1,|want|)) in BOTH i and j, and with distinct
+  ! i vs j coefficients, so a wrong-cell read -- an off-by-one in either axis, or
+  ! an i<->j transpose -- lands a neighbor's value outside tolerance and FAILS the
+  ! exact-recovery checks. (An earlier version used sub-tolerance gradients like
+  ! 0.01*j, j-independent fields, and the symmetric tsk = 290+i+j; a j-offset or
+  ! transpose could slip through those undetected -- see test_io_readland.) Values
+  ! stay physically plausible so the driver tests can run real physics on this
+  ! fixture. Soil fields are layer-independent so the reader's vertical
+  ! interpolation (file layers == model layers here) is a no-op, keeping crisp.
 
-  pure function wrf_xlat(i, j) result(v)
+  pure function wrf_xlat(i, j) result(v)     ! deg, 35.0 .. 42.5
     integer, intent(in) :: i, j
     real(kind=c_kind_noahmp) :: v
-    v = 35.0_c_kind_noahmp + 0.10_c_kind_noahmp*i + 0.01_c_kind_noahmp*j
+    v = 35.0_c_kind_noahmp + 2.0_c_kind_noahmp*i + 0.5_c_kind_noahmp*j
   end function wrf_xlat
 
-  pure function wrf_xlong(i, j) result(v)
+  pure function wrf_xlong(i, j) result(v)    ! deg, -98.0 .. -90.5
     integer, intent(in) :: i, j
     real(kind=c_kind_noahmp) :: v
-    v = -98.0_c_kind_noahmp + 0.10_c_kind_noahmp*i + 0.01_c_kind_noahmp*j
+    v = -98.0_c_kind_noahmp + 2.0_c_kind_noahmp*i + 0.5_c_kind_noahmp*j
   end function wrf_xlong
 
-  pure function wrf_terrain(i, j) result(v)
+  pure function wrf_terrain(i, j) result(v)  ! m, strong asymmetric gradient
     integer, intent(in) :: i, j
     real(kind=c_kind_noahmp) :: v
     v = 100.0_c_kind_noahmp + real(i, c_kind_noahmp) + 10.0_c_kind_noahmp*j
   end function wrf_terrain
 
-  pure function wrf_tmn(i, j) result(v)
+  pure function wrf_tmn(i, j) result(v)      ! K, 285 .. 306
     integer, intent(in) :: i, j
     real(kind=c_kind_noahmp) :: v
-    v = 285.0_c_kind_noahmp + 0.5_c_kind_noahmp*i + 0.1_c_kind_noahmp*j
+    v = 285.0_c_kind_noahmp + 5.0_c_kind_noahmp*i + 2.0_c_kind_noahmp*j
   end function wrf_tmn
 
-  pure function wrf_tsk(i, j) result(v)
+  pure function wrf_tsk(i, j) result(v)      ! K, 290 .. 311 (asymmetric, not i+j)
     integer, intent(in) :: i, j
     real(kind=c_kind_noahmp) :: v
-    v = 290.0_c_kind_noahmp + real(i, c_kind_noahmp) + real(j, c_kind_noahmp)
+    v = 290.0_c_kind_noahmp + 5.0_c_kind_noahmp*i + 2.0_c_kind_noahmp*j
   end function wrf_tsk
 
-  pure function wrf_canwat(i, j) result(v)
+  pure function wrf_canwat(i, j) result(v)   ! mm, 0.20 .. 1.40 (now j-dependent)
     integer, intent(in) :: i, j
     real(kind=c_kind_noahmp) :: v
-    v = 0.10_c_kind_noahmp * i
+    v = 0.20_c_kind_noahmp + 0.30_c_kind_noahmp*i + 0.10_c_kind_noahmp*j
   end function wrf_canwat
 
-  pure function wrf_tslb(i, j) result(v)
+  pure function wrf_tslb(i, j) result(v)     ! K, strong asymmetric gradient
     integer, intent(in) :: i, j
     real(kind=c_kind_noahmp) :: v
     v = 280.0_c_kind_noahmp + real(i, c_kind_noahmp) + 10.0_c_kind_noahmp*j
   end function wrf_tslb
 
-  pure function wrf_smois(i, j) result(v)
+  pure function wrf_smois(i, j) result(v)    ! vol frac, 0.20 .. 0.32 (now j-dependent)
     integer, intent(in) :: i, j
     real(kind=c_kind_noahmp) :: v
-    v = 0.20_c_kind_noahmp + 0.01_c_kind_noahmp*i
+    v = 0.20_c_kind_noahmp + 0.03_c_kind_noahmp*i + 0.01_c_kind_noahmp*j
   end function wrf_smois
 
-  pure function wrf_ivgtyp(i, j) result(v)
+  pure function wrf_ivgtyp(i, j) result(v)   ! 1..10 land veg (asymmetric; avoids 13/15/17)
     integer, intent(in) :: i, j
     integer :: v
-    v = 1 + mod(i + j, 10)
+    v = 1 + mod(2*i + j, 10)
   end function wrf_ivgtyp
 
-  pure function wrf_isltyp(i, j) result(v)
+  pure function wrf_isltyp(i, j) result(v)   ! 1..8 mineral soil (asymmetric in i,j)
     integer, intent(in) :: i, j
     integer :: v
     v = 1 + mod(i + 2*j, 8)
