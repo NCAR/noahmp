@@ -126,3 +126,95 @@ noahmp_add_cxx_test(test_config_smoke WITH_SUPPORT)
 add_test(NAME config_smoke COMMAND test_config_smoke)
 set_tests_properties(config_smoke PROPERTIES
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+# ---------------------------------------------------------------------------
+# Tier 3 -- NetCDF I/O (read / write / restart / checkpoint) + fatal path.
+#
+# These drive the real NetCDF modules end to end. The read path is serial
+# NetCDF against a wrfinput/WPS file; the write and restart paths use collective
+# parallel NetCDF-4 (NF90_MPIIO), so each test PROGRAM creates its own MPI world
+# (MPI_COMM_WORLD) and runs single-rank. They therefore need the Fortran NetCDF
+# headers/libs and MPI directly (libnoahmp links NetCDF PRIVATE and MPI PUBLIC).
+#
+# Genericity: the read test synthesizes its own tiny wrfinput fixture at run time
+# (no committed multi-hundred-MB data file), so it runs anywhere; point it at any
+# real local WPS/wrfinput file instead with NOAHMP_TEST_WRFINPUT=<path>.
+# ---------------------------------------------------------------------------
+
+# Shared I/O test-support (fixture generation + block setup + MPI world), built
+# once into its own static lib with a private module dir (as noahmp_testsupport).
+add_library(noahmp_io_testsupport STATIC test_io_support.F90)
+add_dependencies(noahmp_io_testsupport noahmp)
+target_link_libraries(noahmp_io_testsupport PUBLIC noahmp ${NETCDF_LIBRARIES_F90})
+target_include_directories(noahmp_io_testsupport PRIVATE
+    ${NOAHMP_MOD_DIR} ${NETCDF_INCLUDES} ${NETCDF_INCLUDES_F90})
+set_target_properties(noahmp_io_testsupport PROPERTIES
+    Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/iomod)
+if("${CMAKE_Fortran_COMPILER_ID}" MATCHES "GNU")
+    target_compile_options(noahmp_io_testsupport PRIVATE "-ffree-line-length-none")
+endif()
+
+# Helper: a Fortran I/O test linking the library, NetCDF, and the I/O support lib.
+# Extra sources (e.g. test_abort_handler.cpp for WILL_FAIL abort cases) via ARGN.
+function(noahmp_add_io_test name)
+    add_executable(${name} ${name}.F90 ${ARGN})
+    add_dependencies(${name} noahmp noahmp_io_testsupport)
+    target_include_directories(${name} PRIVATE
+        ${NOAHMP_MOD_DIR} ${CMAKE_CURRENT_BINARY_DIR}/iomod
+        ${NETCDF_INCLUDES} ${NETCDF_INCLUDES_F90} ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(${name} PRIVATE
+        noahmp_io_testsupport noahmp ${NETCDF_LIBRARIES_F90})
+    if("${CMAKE_Fortran_COMPILER_ID}" MATCHES "GNU")
+        target_compile_options(${name} PRIVATE "-ffree-line-length-none")
+    endif()
+endfunction()
+
+# Read path (serial NetCDF): synthesize a wrfinput fixture and read it back.
+noahmp_add_io_test(test_io_readland)
+add_test(NAME io_readland COMMAND test_io_readland)
+set_tests_properties(io_readland PROPERTIES
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+# Land-output write (parallel NetCDF): write then reopen and compare.
+noahmp_add_io_test(test_io_writeland)
+add_test(NAME io_writeland COMMAND test_io_writeland)
+set_tests_properties(io_writeland PROPERTIES
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+# Checkpoint/restart (parallel NetCDF): bit-exact round trip + a WILL_FAIL
+# layer-mismatch abort. test_abort_handler.cpp routes the mismatch abort to a
+# non-zero _Exit so WILL_FAIL inverts it cleanly.
+noahmp_add_io_test(test_io_restart test_abort_handler.cpp)
+add_test(NAME io_restart_roundtrip COMMAND test_io_restart roundtrip)
+add_test(NAME io_restart_mismatch  COMMAND test_io_restart mismatch)
+set_tests_properties(io_restart_roundtrip io_restart_mismatch PROPERTIES
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(io_restart_mismatch PROPERTIES WILL_FAIL TRUE)
+
+# Full cold-init chain + NoahmpDriverMain over two steps, from a synthetic (or
+# external) wrfinput. Needs the staged namelist.erf + NoahmpTable.TBL in CWD.
+noahmp_add_io_test(test_io_driver)
+add_test(NAME io_driver COMMAND test_io_driver)
+set_tests_properties(io_driver PROPERTIES
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+# Same full step, but driven through the PUBLIC C++ API in ERF's exact call order
+# (ERF_NOAHMP_Init.cpp / ERF_NOAHMP_Advance.cpp). C++ main linking the library +
+# the Fortran I/O support lib (MPI world, fixture, Fortran-only field shims).
+add_executable(test_io_driver_cpp test_io_driver_cpp.cpp)
+add_dependencies(test_io_driver_cpp noahmp noahmp_io_testsupport)
+target_compile_features(test_io_driver_cpp PRIVATE cxx_std_17)
+target_include_directories(test_io_driver_cpp PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(test_io_driver_cpp PRIVATE
+    noahmp_io_testsupport noahmp ${NETCDF_LIBRARIES_F90} ${NOAHMP_FORTRAN_RT})
+add_test(NAME io_driver_cpp COMMAND test_io_driver_cpp)
+set_tests_properties(io_driver_cpp PROPERTIES
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+# NoahmpFatalMod: check_nc success returns; error status and NoahmpIO_abort
+# terminate (WILL_FAIL via the same _Exit-on-fatal handler).
+noahmp_add_io_test(test_io_abort test_abort_handler.cpp)
+add_test(NAME io_abort_check_ok  COMMAND test_io_abort ok)
+add_test(NAME io_abort_check_bad COMMAND test_io_abort checkbad)
+add_test(NAME io_abort_direct    COMMAND test_io_abort abort)
+set_tests_properties(io_abort_check_bad io_abort_direct PROPERTIES WILL_FAIL TRUE)

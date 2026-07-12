@@ -46,8 +46,32 @@ The `tests/NOAH-MP` harness (`build.sh` / `job.submit`) does exactly this.
 |------|-----------|----------------|
 | `config_smoke` | C++ + Fortran | `ReadNamelist` (asserts parsed coupling scalars) and `ReadTable` (asserts known general-parameter table values) via the public C++ API |
 
-Deferred to a future integration tier (need domain-sized NetCDF fixtures + MPI
-launch): `ReadLand*`, `InitMain`, `DriverMain`, `WriteLand`, restart round-trip.
+**Tier 3 — NetCDF I/O + driver (parallel NetCDF-4; each test creates its own MPI world)**
+
+These drive the real NetCDF modules and the physics driver end to end. To stay
+committable they generate their own fixtures instead of depending on a large
+land file: `make_wrfinput` (in `test_io_support.F90`) synthesizes a tiny
+wrfinput/WPS file carrying every attribute/variable the reader needs, and the
+write/restart tests round-trip their own output. The read and driver tests also
+accept **any real local WPS/wrfinput file** via `NOAHMP_TEST_WRFINPUT=<path>`
+(standard `west_east`/`south_north`/`soil_layers_stag` dims), skipping the
+synthetic fixture.
+
+| Test | Interface | What it guards |
+|------|-----------|----------------|
+| `io_readland` | Fortran | `ReadLandHeader`/`ReadLandMain`: header globals (`xsglobal`/offsets), and exact recovery of per-cell fields (`XLAT`, `TERRAIN`, `TMN`, `TSK`, `IVGTYP`, `ISLTYP`, soil `TSLB`/`SMOIS`) written to the fixture |
+| `io_writeland` | Fortran | `NoahmpWriteLand`: reopens the produced `lnd*/Level_0.nc` and checks dims + written `TERRAIN`/`TSK`/`HFX`/`TSLB` values |
+| `io_restart_roundtrip` | Fortran | `WriteRestart`→`ReadRestart` **bit-exact** round trip over the full prognostic state, plus the checkpoint precision (`NF90_DOUBLE`/`REAL`) and `NSOIL`/`NSNOW`/`ISNOWXY` metadata contract |
+| `io_restart_mismatch` | Fortran | restart layer-geometry guard aborts on an `NSOIL` mismatch (WILL_FAIL) |
+| `io_driver` | Fortran | full cold-init chain (`ReadNamelist`→`ReadLandHeader`→`VarInitDefault`→`ReadTable`→`ReadLandMain`→`InitMain`) then `NoahmpDriverMain` over two steps; asserts finite, physical surface state |
+| `io_driver_cpp` | C++ + Fortran | same full step through the **public C++ API in ERF's exact call order** (`ERF_NOAHMP_Init.cpp` / `ERF_NOAHMP_Advance.cpp`), incl. `WriteLand(0)` |
+| `io_abort_check_ok` | Fortran | `NoahmpFatalMod::check_nc` returns on `NF90_NOERR` |
+| `io_abort_check_bad` | Fortran | `check_nc` aborts on a NetCDF error status (WILL_FAIL) |
+| `io_abort_direct` | Fortran | `NoahmpIO_abort` terminates (WILL_FAIL) |
+
+Tier 3 needs a **parallel-I/O-capable** NetCDF (the write/restart paths use
+`NF90_MPIIO`); point `-DNETCDF_DIR` at the project's parallel `netcdf-fortran`
+install (`nc-config --has-parallel4` = yes), as `tests/NOAH-MP/build.sh` does.
 
 ## Files
 
@@ -57,7 +81,11 @@ launch): `ReadLand*`, `InitMain`, `DriverMain`, `WriteLand`, restart round-trip.
   Fortran-owned arrays, probe table scalars.
 - `test_abort_handler.cpp` — routes the fatal `std::abort` to a non-zero
   `_Exit` in the WILL_FAIL executables so CTest inverts the result reliably.
-- `namelist.erf` — minimal valid `NOAHLSM_OFFLINE` fixture for `config_smoke`.
+- `namelist.erf` — minimal valid `NOAHLSM_OFFLINE` fixture for `config_smoke`
+  and the Tier-3 driver tests.
+- `test_io_support.F90` — Tier-3 shared helpers: synthetic wrfinput generator
+  (`make_wrfinput`), single-block setup, MPI-world init, deterministic reference
+  fields, assert harness, and `bind(C)` shims used by `io_driver_cpp`.
 
 ## Notes
 
