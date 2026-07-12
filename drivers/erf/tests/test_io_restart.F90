@@ -16,8 +16,11 @@
 !       metadata, zero the arrays, ReadRestart, and assert BIT-EXACT recovery.
 !       Registered as a normal (must-pass) CTest case.
 !   mismatch            -- write a checkpoint, then corrupt NSOIL and ReadRestart;
-!       the layer-geometry guard must abort. Registered WILL_FAIL (links
-!       test_abort_handler.cpp so the abort becomes a clean non-zero exit).
+!       the layer-geometry guard must abort. Detected by OUTPUT (PASS on the
+!       reader's "layer mismatch" diagnostic, FAIL on the "did NOT occur"
+!       fall-through below) rather than WILL_FAIL: WILL_FAIL would also go green
+!       if WriteRestart aborted first (masking a broken writer without ever
+!       reaching the guard). Links test_abort_handler.cpp for a clean exit.
 ! ===========================================================================
 program test_io_restart
 

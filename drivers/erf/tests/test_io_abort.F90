@@ -10,13 +10,19 @@
 ! Selector argv(1):
 !   ok       -- check_nc(NF90_NOERR, ...) must RETURN normally (no abort); the
 !               program then exits 0. Registered as a normal must-pass case.
-!   checkbad -- check_nc(<a NetCDF error>, ...) must abort. WILL_FAIL.
-!   abort    -- NoahmpIO_abort() called directly must not return. WILL_FAIL.
+!   checkbad -- check_nc(<a NetCDF error>, ...) must abort. Detected by output:
+!               PASS on the forced-error context, FAIL if it reaches "did NOT
+!               abort" (check_nc prints its error line BEFORE it decides to
+!               abort, so an exit-code test alone could not tell the two apart).
+!   abort    -- NoahmpIO_abort() called directly must not return. Detected by
+!               output: PASS on the pre-call marker, FAIL on "returned
+!               unexpectedly" (the call itself emits no diagnostic).
 !
-! Built with test_abort_handler.cpp linked in, which installs a fatal handler
-! that terminates via std::_Exit(7) instead of SIGABRT, so CTest's WILL_FAIL
-! inverts the abort cases cleanly (a signal death is not inverted). The "ok"
-! case never triggers the handler.
+! The abort cases are pinned by PASS/FAIL_REGULAR_EXPRESSION in tests/CMakeLists.txt
+! rather than WILL_FAIL -- WILL_FAIL accepts ANY non-zero exit (a wrong-reason
+! abort, a mistyped selector) as a spurious pass. test_abort_handler.cpp is still
+! linked so the abort terminates cleanly with its output flushed; the "ok" case
+! never triggers the handler.
 ! ===========================================================================
 program test_io_abort
 
@@ -44,7 +50,12 @@ program test_io_abort
      call exit(0)
 
   case ("abort")
-     ! NoahmpIO_abort must terminate; it is [[noreturn]] on the C side.
+     ! NoahmpIO_abort must terminate; it is [[noreturn]] on the C side. It emits
+     ! no diagnostic of its own, so print a marker BEFORE the call: the test is
+     ! detected by output (PASS on this marker, FAIL on the "returned
+     ! unexpectedly" line below), not by exit code -- see tests/CMakeLists.txt.
+     write(*,'(A)') "test_io_abort: reached direct-abort call"
+     flush(6)
      call NoahmpIO_abort()
      write(0,'(A)') "test_io_abort: NoahmpIO_abort returned unexpectedly"
      call exit(0)

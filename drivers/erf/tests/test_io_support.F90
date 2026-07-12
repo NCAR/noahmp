@@ -525,6 +525,28 @@ contains
     call ncchk(nf90_close(ncid), "close ext")
   end subroutine noahmp_test_query_dims_c
 
+  ! Read a field element straight from the Fortran module-global block, so the C++
+  ! driver test can prove its C++ view and the Fortran storage alias the SAME
+  ! element at a given (i,j)/(i,k,j). The C++ side drives everything through its
+  ! own views, so a transposed or offset index map would be self-consistent and
+  ! invisible without a cross-language read like this. (2-D: HFX; 3-D column-major
+  ! (i,layer,j): TSLB.)
+  function noahmp_test_read_hfx_c(level, blkid, i, j) result(val) &
+       bind(C, name="noahmp_test_read_hfx_c")
+    use iso_c_binding, only : C_INT
+    integer(C_INT), value, intent(in) :: level, blkid, i, j
+    real(kind=c_kind_noahmp) :: val
+    val = NoahmpIO_vect(level)%NoahmpIO(blkid)%HFX(i, j)
+  end function noahmp_test_read_hfx_c
+
+  function noahmp_test_read_tslb_c(level, blkid, i, k, j) result(val) &
+       bind(C, name="noahmp_test_read_tslb_c")
+    use iso_c_binding, only : C_INT
+    integer(C_INT), value, intent(in) :: level, blkid, i, k, j
+    real(kind=c_kind_noahmp) :: val
+    val = NoahmpIO_vect(level)%NoahmpIO(blkid)%TSLB(i, k, j)
+  end function noahmp_test_read_tslb_c
+
   ! Convert a C character buffer of known length to a Fortran string.
   pure function cstr(path, plen) result(f)
     use iso_c_binding, only : C_CHAR

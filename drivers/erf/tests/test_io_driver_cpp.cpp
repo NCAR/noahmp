@@ -18,12 +18,20 @@
 // world and generate the synthetic wrfinput, so this file needs no MPI/NetCDF
 // headers. Generic like the Fortran driver test: synthesizes its own fixture, or
 // reads any real file via NOAHMP_TEST_WRFINPUT.
+//
+// Beyond the finite/physical surface-state checks, it also asserts (a) the driver
+// actually produced output -- TSK must differ from the cold-init snapshot, or a
+// no-op driver would pass every plausibility check -- and (b) C++<->Fortran index
+// agreement: an asymmetric pattern written through the C++ views is read back
+// through Fortran accessors at the same (i,j)/(i,k,j), catching a transposed or
+// offset index map that is invisible when every access goes through one side.
 // ---------------------------------------------------------------------------
 #include <NoahmpIO.H>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <vector>
 #include "test_util.H"
 
 // Test-support shims (Fortran, bind(C)) from test_io_support.F90.
@@ -34,6 +42,9 @@ extern "C" {
     void noahmp_test_set_setup_file_c(int level, int blkid, const char* path, int plen);
     void noahmp_test_set_time_c(int level, int blkid, int yr, noahmp_real julian);
     void noahmp_test_query_dims_c(const char* path, int plen, int* nx, int* ny, int* nsoil);
+    // Read Fortran-owned storage directly, to cross-check C++ view index mapping.
+    noahmp_real noahmp_test_read_hfx_c (int level, int blkid, int i, int j);
+    noahmp_real noahmp_test_read_tslb_c(int level, int blkid, int i, int k, int j);
 }
 
 static bool finite_view2d(const NoahmpArray2D<noahmp_real>& a) {
@@ -131,6 +142,15 @@ int main() {
         }
     }
 
+    // Snapshot TSK to prove the driver produces output: every plausibility check
+    // below already holds at cold-init (TSK read from the file at ~290 K, HFX/TSLB
+    // finite), so a driver that silently did nothing would pass them all. The
+    // post-loop delta catches that.
+    std::vector<noahmp_real> tsk0;
+    for (int j = nio.TSK.begin[1]; j <= nio.TSK.end[1]; ++j)
+        for (int i = nio.TSK.begin[0]; i <= nio.TSK.end[0]; ++i)
+            tsk0.push_back(nio.TSK(i, j));
+
     // Advance two steps: itimestep==1 (initial-guess branch) then a normal step.
     for (int it = 1; it <= 2; ++it) {
         nio.itimestep = it;
@@ -147,6 +167,49 @@ int main() {
         CHECK(tsk_ok);                    // TSK stays physically plausible [K]
         std::fprintf(stderr, "  DriverMain iteration %d completed\n", it);
     }
+
+    // Not a no-op: the driver must have written surface temperature. A driver that
+    // returned without touching TSK would leave it bit-identical to the cold-init
+    // read and still satisfy every finiteness/range check above.
+    bool tsk_changed = false;
+    {
+        std::size_t idx = 0;
+        for (int j = nio.TSK.begin[1]; j <= nio.TSK.end[1]; ++j)
+            for (int i = nio.TSK.begin[0]; i <= nio.TSK.end[0]; ++i, ++idx)
+                if (nio.TSK(i, j) != tsk0[idx]) tsk_changed = true;
+    }
+    CHECK(tsk_changed);                   // driver updated TSK (not a no-op)
+
+    // -------- cross-language index agreement (C++ (i,j) == Fortran (i,j)) --------
+    // Everything above touches the arrays exclusively through the C++ views, so a
+    // transposed or offset index map would be self-consistent and invisible (and
+    // the synthetic domain is square, nx==ny, so a transpose would not even change
+    // the shape). Prove the C++ view and the Fortran module-global block address
+    // the SAME element by writing an ASYMMETRIC pattern through the C++ view and
+    // reading it back through a Fortran accessor at the same indices. Done last, on
+    // output fields, so it does not perturb the physics above.
+    bool hfx_alias_ok = true;             // 2-D
+    for (int j = nio.ystart; j <= nio.yend; ++j)
+        for (int i = nio.xstart; i <= nio.xend; ++i)
+            nio.HFX(i, j) = noahmp_real(1000 * i + j);        // 1000*i+j != 1000*j+i
+    for (int j = nio.ystart; j <= nio.yend; ++j)
+        for (int i = nio.xstart; i <= nio.xend; ++i)
+            if (noahmp_test_read_hfx_c(0, 0, i, j) != noahmp_real(1000 * i + j))
+                hfx_alias_ok = false;
+    CHECK(hfx_alias_ok);                  // C++ HFX(i,j) aliases Fortran HFX(i,j)
+
+    bool tslb_alias_ok = true;            // 3-D column-major (i, layer, j)
+    for (int j = nio.ystart; j <= nio.yend; ++j)
+        for (int k = 1; k <= nsoil; ++k)
+            for (int i = nio.xstart; i <= nio.xend; ++i)
+                nio.TSLB(i, k, j) = noahmp_real(100 * i + 10 * k + j);
+    for (int j = nio.ystart; j <= nio.yend; ++j)
+        for (int k = 1; k <= nsoil; ++k)
+            for (int i = nio.xstart; i <= nio.xend; ++i)
+                if (noahmp_test_read_tslb_c(0, 0, i, k, j) !=
+                    noahmp_real(100 * i + 10 * k + j))
+                    tslb_alias_ok = false;
+    CHECK(tslb_alias_ok);                 // C++ TSLB(i,k,j) aliases Fortran TSLB(i,k,j)
 
     noahmp_test_mpi_finalize_c();
     TEST_SUMMARY("test_io_driver_cpp");

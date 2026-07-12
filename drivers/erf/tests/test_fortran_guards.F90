@@ -2,11 +2,15 @@
 ! test_fortran_guards -- input-validation / abort paths (Tier 1).
 !
 ! NoahmpIOTypeVectInit_fi validates its arguments and aborts (write diagnostic +
-! NoahmpIO_abort -> std::abort with no handler installed) rather than corrupting
-! module state. Each abort is a separate CTest case registered WILL_FAIL, so a
-! non-zero termination = the guard fired = the test passes. If a call instead
-! returns normally the program exits 0, which WILL_FAIL flags as a failure --
-! catching a guard that silently stopped firing.
+! NoahmpIO_abort, routed to a clean non-zero _Exit by the linked
+! test_abort_handler.cpp) rather than corrupting module state.
+!
+! Each abort is a separate CTest case detected by OUTPUT
+! (PASS/FAIL_REGULAR_EXPRESSION in tests/CMakeLists.txt): the case's specific
+! validation diagnostic must appear, and the "expected abort did NOT occur"
+! fall-through below must not. This is stricter than WILL_FAIL, which would accept
+! ANY non-zero exit -- a wrong-reason abort or the mistyped-selector exit(2) --
+! as a spurious pass.
 !
 ! Which guard to trigger is selected by argv(1): level | nblocks | reinit.
 ! ===========================================================================

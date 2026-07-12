@@ -3,9 +3,13 @@
 //
 // NoahmpIO_vector must be sized exactly once and never with size 0 (the Fortran
 // mirror is allocated once; relocation would dangle the self-referential
-// pointers). Each violation calls NoahmpIO_fatal -> std::abort (no handler),
-// terminating non-zero. Registered WILL_FAIL, so the abort = pass; a normal
-// return (exit 0) would flag a guard that stopped firing.
+// pointers). Each violation prints a specific diagnostic and calls NoahmpIO_fatal
+// (routed to a clean non-zero _Exit by the linked test_abort_handler.cpp).
+//
+// Detection is by OUTPUT (PASS/FAIL_REGULAR_EXPRESSION in tests/CMakeLists.txt),
+// not exit code: the specific guard message must appear, and the "expected abort
+// did NOT occur" fall-through below must not. This is stricter than WILL_FAIL,
+// which would treat ANY non-zero exit (e.g. a mistyped selector) as a pass.
 //
 // Selector argv[1]: double | zero.
 // ---------------------------------------------------------------------------

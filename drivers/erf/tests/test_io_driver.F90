@@ -44,6 +44,7 @@ program test_io_driver
   logical :: synthetic
   character(len=1024) :: ext_path, path
   integer :: elen, estat
+  real(kind=c_kind_noahmp), allocatable :: tsk0(:,:)   ! TSK snapshot before stepping
 
   call tio_reset()
   call tio_mpi_init(comm)
@@ -133,6 +134,12 @@ program test_io_driver
   blk%MP_GRAUP       = 0.0_c_kind_noahmp
   blk%MP_HAIL        = 0.0_c_kind_noahmp
 
+  ! Snapshot TSK so we can prove the driver actually produced output. Every
+  ! asserted "plausible" value below is already true at cold-init (TSK is read
+  ! from the file at ~290 K, inside [150,400]; HFX/TSLB start finite), so a driver
+  ! that silently did nothing would pass all of them -- this delta catches that.
+  tsk0 = blk%TSK
+
   ! ---- advance two steps: itimestep==1 (initial guess) then a normal step ----
   do it = 1, 2
      blk%ITIMESTEP = it
@@ -149,6 +156,11 @@ program test_io_driver
                      "TSK physically plausible [K]")
      write(*,'(A,I0,A)') "  NoahmpDriverMain iteration ", it, " completed"
   end do
+
+  ! Not a no-op: the driver must have written surface temperature (a driver that
+  ! returned without updating TSK would leave it bit-identical to the cold-init
+  ! read and still satisfy every finiteness/range check above).
+  call tio_expect(any(blk%TSK /= tsk0), "driver updated TSK (not a no-op)")
 
   call tio_mpi_finalize()
   call tio_finish("test_io_driver")

@@ -1,7 +1,4 @@
-# ======================================================================
-# Noah-MP unified Makefile.in (final version)
-# Automatic Fortran dependency tracking + correct build order
-# ======================================================================
+# Noah-MP unified Makefile: automatic Fortran dependency tracking + build order.
 
 # --- Root paths ---
 NOAHMP_HOME     ?= ../..
@@ -16,17 +13,7 @@ CXX      ?= mpicxx
 AR       ?= ar
 
 # --- Flags ---
-# Floating-point precision (the DOUBLE_PREC macro -> kind_noahmp) is selected by
-# the parent build via NOAHMP_PRECISION_FLAG, not hardcoded here. ERF's Make.ERF
-# passes NOAHMP_PRECISION_FLAG=-DDOUBLE_PREC because the ERF<->Noah-MP C++
-# interface is double-precision only. A standalone "make" with no override falls
-# back to Noah-MP's upstream default (single precision).
-#
-# The flag MUST be applied to BOTH the Fortran and C++ compiles: it selects
-# c_kind_noahmp (C_DOUBLE/C_FLOAT) on the Fortran side and noahmp_real
-# (double/float) on the C++ side, and the two must agree byte-for-byte or the
-# shared NoahmpArray element layout is corrupt. Applying it to only one language
-# is a silent ABI mismatch that the pointer-struct size check cannot detect.
+# Precision (DOUBLE_PREC) comes from the parent; apply to BOTH Fortran and C++.
 NOAHMP_PRECISION_FLAG ?=
 FFLAGS_NOAHMP   += -O3 -cpp -fPIC -ffree-line-length-none $(NOAHMP_PRECISION_FLAG) -J$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_INC_DIR))
 CXXFLAGS_NOAHMP += -O3 -fPIC $(NOAHMP_PRECISION_FLAG) -I$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_HOME)/drivers/erf)
@@ -45,22 +32,12 @@ FFLAGS_NOAHMP += $(NETCDF_INCFLAGS)
 # --- Ensure directories exist ---
 $(shell mkdir -p $(NOAHMP_OBJ_DIR) $(NOAHMP_LIB_DIR) $(NOAHMP_INC_DIR))
 
-# ======================================================================
-# Coupling code generation (parse time)
-# ======================================================================
-# The @NoahmpMacro:<region> blocks in NoahmpIO.{H,cpp}, NoahmpIO_fi.F90,
-# NoahmpIOVarType.F90 and NoahmpIOVarInitMod.F90 are expanded from the
-# @NoahmpMacro:source block in the tracked *-mc templates. The generated files are
-# gitignored (not committed), so
-# they must be (re)generated BEFORE the wildcard source discovery below picks
-# them up. The generator is stdlib-only Python and idempotent. Run it here, at
-# parse time, so a fresh checkout builds with no manual step.
+# Coupling codegen (parse time): expand *-mc templates into the gitignored
+# generated sources BEFORE the wildcard discovery below. Idempotent.
 NOAHMP_CODEGEN ?= $(NOAHMP_HOME)/drivers/erf/tools/NoahmpMacro.py
 $(info NoahmpMacro codegen: $(shell python3 $(NOAHMP_CODEGEN) 2>&1))
 
-# ======================================================================
-# Source discovery
-# ======================================================================
+# --- Source discovery ---
 SRC_DIRS := $(NOAHMP_HOME)/src $(NOAHMP_HOME)/utility $(NOAHMP_HOME)/drivers/erf
 
 # Map lowercase module names to actual source files (case-insensitive match)
@@ -76,19 +53,12 @@ OBJS := $(addprefix $(NOAHMP_OBJ_DIR)/, $(notdir $(F90_SRCS:.F90=.o))) \
 
 DEPS := $(OBJS:.o=.d)
 
-# ======================================================================
-# Primary targets
-# ======================================================================
+# --- Primary targets ---
 .PHONY: all_noahmp clean_noahmp noahmp_includes codegen codegen-check
 
 all_noahmp: $(NOAHMP_LIB) noahmp_includes
 
-# ----------------------------------------------------------------------
-# Convenience codegen targets. The glue is already regenerated at parse time
-# above (before source discovery), so the normal build needs no extra step.
-# These let you regenerate or drift-check on demand: run `codegen` after editing
-# a *-mc template, and `codegen-check` in CI to catch drift.
-# ----------------------------------------------------------------------
+# Convenience codegen targets: regenerate in place, or drift-check for CI.
 codegen:
 	@python3 $(NOAHMP_CODEGEN)
 codegen-check:
@@ -99,11 +69,8 @@ $(NOAHMP_LIB): $(OBJS)
 	@echo "Archiving Noah-MP library: $@"
 	$(AR) rcs $@ $^
 
-# ======================================================================
-# Automatic Fortran dependency generation (correct + path-safe)
-# ======================================================================
-# Each .d file will contain lines like:
-#   obj/foo.o: obj/bar.o obj/baz.o
+# --- Automatic Fortran dependency generation (path-safe) ---
+# Each .d file contains lines like: obj/foo.o: obj/bar.o obj/baz.o
 define make-dep
 @echo "Generating dependencies for $<"
 @outfile=$(NOAHMP_OBJ_DIR)/$*.d; \
@@ -130,9 +97,7 @@ ifeq ($(MAKECMDGOALS),all_noahmp)
   -include $(DEPS)
 endif
 
-# ======================================================================
-# Compilation rules
-# ======================================================================
+# --- Compilation rules ---
 
 # --- Fortran src modules ---
 $(NOAHMP_OBJ_DIR)/%.o: $(NOAHMP_HOME)/src/%.F90 $(NOAHMP_OBJ_DIR)/%.d
@@ -158,18 +123,14 @@ $(NOAHMP_OBJ_DIR)/%.o: $(NOAHMP_HOME)/src/%.cpp
 	@echo "Compiling Noah-MP C++: $<"
 	$(CXX) $(CXXFLAGS) $(CXXFLAGS_NOAHMP) -c $< -o $@
 
-# ======================================================================
-# Install headers and modules
-# ======================================================================
+# --- Install headers and modules ---
 noahmp_includes:
 	@mkdir -p $(NOAHMP_INC_DIR)
 	@echo "Installing module (.mod) and header (.H) files: $(NOAHMP_INC_DIR)"
 	@find $(NOAHMP_OBJ_DIR) -maxdepth 1 -type f -name "*.mod" -exec cp -u {} $(NOAHMP_INC_DIR)/ \;
 	@find $(NOAHMP_HOME)/drivers/erf -maxdepth 1 -type f -name "*.H" -exec cp -u {} $(NOAHMP_INC_DIR)/ \;
 
-# ======================================================================
-# Cleaning
-# ======================================================================
+# --- Cleaning ---
 clean_noahmp:
 	@echo "Cleaning Noah-MP build artifacts..."
 	rm -rf $(NOAHMP_OBJ_DIR) $(NOAHMP_LIB_DIR) $(NOAHMP_INC_DIR)

@@ -14,15 +14,8 @@ find_package(NetCDF REQUIRED)
 
 find_package(MPI COMPONENTS Fortran REQUIRED)
 
-# ---------------------------------------------------------------------------
-# Coupling code generation (configure time). The @NoahmpMacro:<region>
-# blocks in NoahmpIO.{H,cpp}, NoahmpIO_fi.F90, NoahmpIOVarType.F90 and
-# NoahmpIOVarInitMod.F90 are expanded from the @NoahmpMacro:source block in the
-# tracked *-mc templates. The generated files are gitignored (not committed), so they MUST be
-# produced before the file(GLOB) below discovers them as sources. The generator
-# is stdlib-only Python and idempotent. Editing a template or the generator
-# re-triggers configure (CMAKE_CONFIGURE_DEPENDS), which regenerates them.
-# ---------------------------------------------------------------------------
+# Coupling codegen (configure time): expand *-mc templates into the gitignored
+# generated sources BEFORE the file(GLOB) below discovers them. Idempotent.
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 set(NOAHMP_CODEGEN ${CMAKE_CURRENT_SOURCE_DIR}/tools/NoahmpMacro.py)
 execute_process(
@@ -52,13 +45,8 @@ file(GLOB NoahMP_Sources
 add_library(noahmp ${NoahMP_Sources})
 add_library(NoahMP::noahmp ALIAS noahmp)
 
-# Floating-point precision (the DOUBLE_PREC macro -> kind_noahmp) is selected by
-# the PARENT project, not here. ERF compiles this library with -DDOUBLE_PREC
-# because the ERF<->Noah-MP C++ interface (NoahmpArray<double>, NoahmpIO_type) is
-# double-precision only; see the ERF root CMakeLists.txt. When this directory is
-# built standalone, precision falls back to Noah-MP's upstream default (single);
-# add the definition explicitly for a double-precision standalone build:
-#   target_compile_definitions(noahmp PRIVATE DOUBLE_PREC)
+# Precision (DOUBLE_PREC -> kind_noahmp) is set by the parent project; ERF uses
+# -DDOUBLE_PREC. Standalone falls back to upstream single unless you add it.
 
 if("${CMAKE_Fortran_COMPILER_ID}" MATCHES "GNU")
     target_compile_options(noahmp PRIVATE "-ffree-line-length-none")
@@ -73,12 +61,7 @@ target_link_libraries(noahmp PRIVATE ${NETCDF_LIBRARIES_F90})
 target_link_libraries(noahmp PUBLIC MPI::MPI_Fortran)
 target_include_directories(noahmp INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
-# ---------------------------------------------------------------------------
-# Convenience codegen targets. The glue is already (re)generated at configure
-# time above; these let you regenerate or drift-check on demand:
-#   cmake --build . --target noahmp_codegen        # regenerate in place
-#   cmake --build . --target noahmp_codegen_check   # fail on drift (for CI)
-# ---------------------------------------------------------------------------
+# Convenience codegen targets: regenerate in place, or drift-check for CI.
 add_custom_target(noahmp_codegen
     COMMAND ${Python3_EXECUTABLE} ${NOAHMP_CODEGEN}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -102,17 +85,8 @@ install(EXPORT NoahMPTargets
     DESTINATION lib/cmake/noahmp
 )
 
-# ---------------------------------------------------------------------------
-# Regression tests (drivers/erf/tests). Link against the `noahmp` target and
-# exercise the C++ <-> Fortran coupling boundary through both interfaces.
-#
-# Default follows NOAHMP_MASTER_PROJECT: ON for a standalone
-# `cmake .../drivers/erf` build, OFF when ERF adds this directory as a
-# subproject -- so ERF's own build is never perturbed. Turn on explicitly with
-# `-DNOAHMP_ENABLE_TESTS=ON`. The tests inherit the same precision macro
-# (DOUBLE_PREC) and flags as `noahmp`, so the ABI precision guard stays
-# consistent between the library and its tests.
-# ---------------------------------------------------------------------------
+# Regression tests (drivers/erf/tests). Default ON standalone, OFF as an ERF
+# subproject; override with -DNOAHMP_ENABLE_TESTS=ON.
 option(NOAHMP_ENABLE_TESTS "Build Noah-MP ERF driver regression tests" ${NOAHMP_MASTER_PROJECT})
 if(NOAHMP_ENABLE_TESTS)
     enable_testing()

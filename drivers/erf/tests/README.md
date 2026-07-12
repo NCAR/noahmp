@@ -24,6 +24,26 @@ ctest --output-on-failure
 
 The `tests/NOAH-MP` harness (`build.sh` / `job.submit`) does exactly this.
 
+## Seeing every test's artifacts and output
+
+Each test runs in its own isolated working directory,
+`<build>/tests/artifacts/<test-name>/`, so the files it generates (synthetic
+`wrfinput` fixtures, `lnd*/Level_*.nc` land output, `rst_*/Level_0.nc` restart
+checkpoints, staged `namelist.erf`/`NoahmpTable.TBL`) never clobber another
+test's and persist after the run for inspection.
+
+To see the files a single test generated:
+
+```sh
+ls <build>/tests/artifacts/io_writeland/    # generated files, persisted
+```
+
+Test console output:
+- `ctest --output-on-failure` — prints a failing test's stdout/stderr inline
+  (what the `NOAH-MP` harness `build.sh` runs).
+- `ctest -V` — full stdout of **every** test live, not just failures.
+- `<build>/Testing/Temporary/LastTest.log` — the raw concatenated CTest log.
+
 ## Coverage
 
 **Tier 1 — coupling machinery (no external data files)**
@@ -63,8 +83,8 @@ synthetic fixture.
 | `io_writeland` | Fortran | `NoahmpWriteLand`: reopens the produced `lnd*/Level_0.nc` and checks dims + written `TERRAIN`/`TSK`/`HFX`/`TSLB` values |
 | `io_restart_roundtrip` | Fortran | `WriteRestart`→`ReadRestart` **bit-exact** round trip over the full prognostic state, plus the checkpoint precision (`NF90_DOUBLE`/`REAL`) and `NSOIL`/`NSNOW`/`ISNOWXY` metadata contract |
 | `io_restart_mismatch` | Fortran | restart layer-geometry guard aborts on an `NSOIL` mismatch (WILL_FAIL) |
-| `io_driver` | Fortran | full cold-init chain (`ReadNamelist`→`ReadLandHeader`→`VarInitDefault`→`ReadTable`→`ReadLandMain`→`InitMain`) then `NoahmpDriverMain` over two steps; asserts finite, physical surface state |
-| `io_driver_cpp` | C++ + Fortran | same full step through the **public C++ API in ERF's exact call order** (`ERF_NOAHMP_Init.cpp` / `ERF_NOAHMP_Advance.cpp`), incl. `WriteLand(0)` |
+| `io_driver` | Fortran | full cold-init chain (`ReadNamelist`→`ReadLandHeader`→`VarInitDefault`→`ReadTable`→`ReadLandMain`→`InitMain`) then `NoahmpDriverMain` over two steps; asserts finite, physical surface state **and** that the driver is not a no-op (`TSK` differs from the cold-init snapshot — otherwise the plausibility checks pass on the read-in values alone) |
+| `io_driver_cpp` | C++ + Fortran | same full step through the **public C++ API in ERF's exact call order** (`ERF_NOAHMP_Init.cpp` / `ERF_NOAHMP_Advance.cpp`), incl. `WriteLand(0)`; plus the not-a-no-op `TSK` delta and a **C++↔Fortran index-agreement** check (asymmetric pattern written via the C++ views is read back through Fortran accessors at the same `(i,j)`/`(i,k,j)`, catching a transposed/offset map invisible when all access goes through one side) |
 | `io_abort_check_ok` | Fortran | `NoahmpFatalMod::check_nc` returns on `NF90_NOERR` |
 | `io_abort_check_bad` | Fortran | `check_nc` aborts on a NetCDF error status (WILL_FAIL) |
 | `io_abort_direct` | Fortran | `NoahmpIO_abort` terminates (WILL_FAIL) |
