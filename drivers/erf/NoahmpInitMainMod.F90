@@ -23,9 +23,9 @@ contains
     type(NoahmpIO_type), intent(inout) :: NoahmpIO
 
     ! local variables
-    integer                                     :: ide,jde,its,jts,itf,jtf
+    integer                                     :: its,jts,itf,jtf
     integer                                     :: I,J,errflag,NS,IZ
-    logical                                     :: urbanpt_flag
+    logical                                     :: urbanpt_flag, snow_on_warm_sfc
     real(kind=kind_noahmp)                      :: BEXP, SMCMAX, PSISAT, FK
     real(kind=kind_noahmp), parameter           :: BLIM  = 5.5
     real(kind=kind_noahmp), parameter           :: HLICE = 3.335E5
@@ -34,12 +34,10 @@ contains
 ! --------------------------------------------------------------------------- 
 
     ! initialize
-    ide = NoahmpIO%ide+1 
-    jde = NoahmpIO%jde+1 
     its = NoahmpIO%its
     jts = NoahmpIO%jts
-    itf = min0(NoahmpIO%ite, ide-1)
-    jtf = min0(NoahmpIO%jte, jde-1)
+    itf = min0(NoahmpIO%ite, NoahmpIO%ide)
+    jtf = min0(NoahmpIO%jte, NoahmpIO%jde)
 
     ! only initialize for non-restart case
     if ( .not. NoahmpIO%restart_flag ) then
@@ -137,8 +135,9 @@ contains
              NoahmpIO%QTDRAIN(I,J)  = 0.0
              NoahmpIO%TVXY(I,J)     = NoahmpIO%TSK(I,J)
              NoahmpIO%TGXY(I,J)     = NoahmpIO%TSK(I,J)
-             if ( (NoahmpIO%SNOW(I,J) > 0.0) .and. (NoahmpIO%TSK(i,j) > 273.15) ) NoahmpIO%TVXY(I,J) = 273.15
-             if ( (NoahmpIO%SNOW(I,J) > 0.0) .and. (NoahmpIO%TSK(I,J) > 273.15) ) NoahmpIO%TGXY(I,J) = 273.15
+             snow_on_warm_sfc = (NoahmpIO%SNOW(I,J) > 0.0) .and. (NoahmpIO%TSK(I,J) > 273.15)
+             if ( snow_on_warm_sfc ) NoahmpIO%TVXY(I,J) = 273.15
+             if ( snow_on_warm_sfc ) NoahmpIO%TGXY(I,J) = 273.15
              NoahmpIO%CANWAT(I,J)   = 0.0
              NoahmpIO%CANLIQXY(I,J) = NoahmpIO%CANWAT(I,J)
              NoahmpIO%CANICEXY(I,J) = 0.0
@@ -146,9 +145,9 @@ contains
              NoahmpIO%TAHXY(I,J)    = NoahmpIO%TSK(I,J)
              NoahmpIO%T2MVXY(I,J)   = NoahmpIO%TSK(I,J)
              NoahmpIO%T2MBXY(I,J)   = NoahmpIO%TSK(I,J)
-             if ( (NoahmpIO%SNOW(I,J) > 0.0) .and. (NoahmpIO%TSK(I,J) > 273.15) ) NoahmpIO%TAHXY(I,J)  = 273.15
-             if ( (NoahmpIO%SNOW(I,J) > 0.0) .and. (NoahmpIO%TSK(I,J) > 273.15) ) NoahmpIO%T2MVXY(I,J) = 273.15
-             if ( (NoahmpIO%SNOW(I,J) > 0.0) .and. (NoahmpIO%TSK(I,J) > 273.15) ) NoahmpIO%T2MBXY(I,J) = 273.15
+             if ( snow_on_warm_sfc ) NoahmpIO%TAHXY(I,J)  = 273.15
+             if ( snow_on_warm_sfc ) NoahmpIO%T2MVXY(I,J) = 273.15
+             if ( snow_on_warm_sfc ) NoahmpIO%T2MBXY(I,J) = 273.15
              NoahmpIO%CMXY(I,J)     = 0.0
              NoahmpIO%CHXY(I,J)     = 0.0
              NoahmpIO%FWETXY(I,J)   = 0.0

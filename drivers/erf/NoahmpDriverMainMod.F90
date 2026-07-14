@@ -40,13 +40,11 @@ contains
     integer                             :: J
     integer                             :: K
     integer                             :: JMONTH, JDAY
-    real(kind=kind_noahmp)              :: SOLAR_TIME 
-    real(kind=kind_noahmp), dimension( 1:NoahmpIO%nsoil ) :: SAND
-    real(kind=kind_noahmp), dimension( 1:NoahmpIO%nsoil ) :: CLAY
-    real(kind=kind_noahmp), dimension( 1:NoahmpIO%nsoil ) :: ORGM
+    real(kind=kind_noahmp)              :: SOLAR_TIME
 
-      NoahmpIO%P8W(:, 2, :) = NoahmpIO%P8W(:, 1, :)              ! WRF uses lowest two layers
-      NoahmpIO%T_PHY(:, 2, :) = NoahmpIO%T_PHY(:, 1, :)            ! only pressure is needed in two layers, fill the rest
+      ! ERF provides one atmospheric level; WRF physics expects two -- duplicate layer 1 into layer 2.
+      NoahmpIO%P8W(:, 2, :) = NoahmpIO%P8W(:, 1, :)
+      NoahmpIO%T_PHY(:, 2, :) = NoahmpIO%T_PHY(:, 1, :)
       NoahmpIO%U_PHY(:, 2, :) = NoahmpIO%U_PHY(:, 1, :)
       NoahmpIO%V_PHY(:, 2, :) = NoahmpIO%V_PHY(:, 1, :)
       NoahmpIO%QV_CURR(:, 2, :) = NoahmpIO%QV_CURR(:, 1, :)
@@ -240,17 +238,17 @@ contains
          LEAP = .TRUE.
       END IF
 
-      i = 1
-      DO WHILE (NOT_FIND_DATE)
+      do i = 1, 12
          IF (itmpday .GT. MONTH(i)) THEN
             itmpday = itmpday-MONTH(i)
          ELSE
             Jday = itmpday
             Jmonth = i
             NOT_FIND_DATE = .false.
+            exit
          END IF
-         i = i+1
-      END DO
+      end do
+      if (NOT_FIND_DATE) stop "CAL_MON_DAY: day-of-year out of valid range (1..YEARLEN)"
 
    end subroutine CAL_MON_DAY
 

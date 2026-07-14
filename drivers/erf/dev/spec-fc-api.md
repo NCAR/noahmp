@@ -166,7 +166,7 @@ from the *same* `[lo:hi, …]` bounds clause, so they cannot disagree.
   int numrad = 2;                          // int with C++ default (shared with Fortran)
 
   noahmp_real DTBL;                        // scalar: kind inferred from the type
-  noahmp_real ZLVL = -9999.0;              // free-form trailing doc, optional
+  noahmp_real ZLVL = noahmp_zlvl_unset;    // C++ default may be a constexpr, not just a literal
 
   NoahmpArray2D<noahmp_real> XLAT[xstart:xend, ystart:yend];            // latitude [rad]
   NoahmpArray2D<noahmp_real> SWDOWN[xstart:xend, ystart:yend];          // ERF forcing in

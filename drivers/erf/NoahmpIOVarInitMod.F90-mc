@@ -879,6 +879,8 @@ contains
     NoahmpIO%soil_update_steps = 1        ! number of model time step to update soil proces
     NoahmpIO%calculate_soil    = .false.  ! index for if do soil process
     NoahmpIO%ITIMESTEP         = 0        ! model time step count
+    NoahmpIO%YR                = 2000     ! default year; wire via ABI for correctness
+    NoahmpIO%JULIAN            = 1.0      ! default day-of-year (Jan 1)
 
 #ifdef WRF_HYDRO
     NoahmpIO%infxsrt         = 0.0

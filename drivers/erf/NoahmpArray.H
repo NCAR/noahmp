@@ -2,7 +2,6 @@
 #define NOAHMPARRAY_H
 
 #include <cstddef>
-#include <initializer_list>
 #include <array>
 #include <NoahmpFatal.H>
 
@@ -38,6 +37,8 @@ using noahmp_real = double;
 #else
 using noahmp_real = float;
 #endif
+// Unset sentinel for ZLVL (== Fortran Machine::undefined_real = -9999.0).
+constexpr noahmp_real noahmp_zlvl_unset = noahmp_real(-9999.0);
 
 template <typename T>
 struct NoahmpArray1D {

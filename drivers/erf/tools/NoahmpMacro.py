@@ -127,28 +127,11 @@ import difflib
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(SCRIPT_DIR)            # drivers/erf
 
-# The macro prefix. ONE punctuator (`@NoahmpMacro:`) for every form; one constant
-# hosts all bindings (multiplicity comes from the HANDLE, not the prefix). The forms
-# are distinguished by POSITION, not by a second punctuator:
-#   * contract block   -- @NoahmpMacro:Source <handle> { ...fields... }
-#   * block projection -- @NoahmpMacro:<Region>(<handle>[, key=value]...);   (own line)
-#   * value projection -- ... = @NoahmpMacro:MemberCount(<handle>);          (inline)
-# The array bounds clause (NoahmpArray2D<noahmp_real> XLAT[lo:hi, lo:hi];) carries no
-# marker -- it is plain data on the name, parsed within the contract block.
+# Marker prefix and form grammar: see module header comment above.
 MARKER = "@NoahmpMacro:"                       # the one and only marker prefix
 SOURCE = "Source"                             # the contract block keyword
 
-# The contract is one block at the top of the owning template -- the single source
-# of truth -- and the owner class materializes its own fields through an ordinary
-# region projection, exactly like every other side of the boundary:
-#     @NoahmpMacro:Source m_noahmpio {     <- the contract block (field list)
-#         int ids, ide;  noahmp_real DTBL;  NoahmpArray2D<noahmp_real> XLAT[...];
-#     }
-#     ...
-#     @NoahmpMacro:CppStorageFields(m_noahmpio);   <- emits those fields into the class
-# The HANDLE is only a reference: projections supply their own concrete names as
-# explicit params (see REGION_PARAMS), so the tool never derives a symbol from it.
-# Block opener `@NoahmpMacro:Source <handle> {`; body until the matching bare `}`.
+# Contract-block syntax and HANDLE semantics: see module header comment above.
 SOURCE_OPEN_RE = re.compile(r"^\s*%s%s\s+(\w+)\s*\{\s*$" % (re.escape(MARKER), SOURCE))
 
 

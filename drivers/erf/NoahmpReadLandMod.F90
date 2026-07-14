@@ -121,8 +121,8 @@ subroutine NoahmpReadLandHeader(NoahmpIO)
         ierr = nf90_open(NoahmpIO%erf_setup_file_03, NF90_NOWRITE, ncid)
         call error_handler(ierr, "READ_ERF_HDRINFO: Problem opening wrfinput file: "//trim(NoahmpIO%erf_setup_file_03)) 
       case default
-        print *, "Error: unsupported level: ", ilev
-        stop
+        if (NoahmpIO%rank == 0) print *, "Error: unsupported level: ", ilev
+        call NoahmpIO_abort()
       end select
 
       ierr = nf90_get_att(ncid, NF90_GLOBAL, "I_PARENT_START", is)
@@ -153,20 +153,13 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     integer :: ncid
     real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, &
                     NoahmpIO%ystart-NoahmpIO%yoffset:NoahmpIO%yend-NoahmpIO%yoffset) :: xdum
-    integer :: rank
-
-    character(len=256) :: titlestr
-    character(len=8)   :: name
     character(len=256) :: llanduse
 
     integer :: ierr_snodep, varid
-    integer :: idx, isoil
+    integer :: isoil
     real(kind_noahmp), dimension(100) :: layer_bottom
     real(kind_noahmp), dimension(100) :: layer_top
     real(kind_noahmp), dimension(NoahmpIO%nsoil)   :: dzs
-
-    real, dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, &
-                    NoahmpIO%ystart-NoahmpIO%yoffset:NoahmpIO%yend-NoahmpIO%yoffset, NoahmpIO%nsoil) :: insoil
 
     real(kind_noahmp), dimension(NoahmpIO%xstart-NoahmpIO%xoffset:NoahmpIO%xend-NoahmpIO%xoffset, &
                     NoahmpIO%nsoil, &
@@ -176,7 +169,6 @@ subroutine NoahmpReadLandMain(NoahmpIO)
     integer :: ierr_lai
 
     integer :: i, j
-    integer :: iret
     integer :: xstart, ystart, xend, yend
 
     if (NoahmpIO%rank == 0) write(*,'("Noah-MP reading ''", A, "'' variables")') trim(NoahmpIO%erf_setup_file_lev)
@@ -550,7 +542,10 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
              exit TOPLOOP
           endif
        enddo TOPLOOP
-       if (ktop < -99998) stop "ktop problem"
+       if (ktop < -99998) then
+          if (rank == 0) write(*,'("***** ERROR: ktop problem in soil layer interpolation")')
+          call NoahmpIO_abort()
+       endif
 
        ! kbottom: bottom bracketing source layer (first, from the top down, deeper
        ! than the destination level)
@@ -561,7 +556,10 @@ subroutine init_interp(xstart, xend, ystart, yend, nsoil, sldpth, var, nvar, src
              exit BOTTOMLOOP
           endif
        enddo BOTTOMLOOP
-       if (kbottom < -99998) stop "kbottom problem"
+       if (kbottom < -99998) then
+          if (rank == 0) write(*,'("***** ERROR: kbottom problem in soil layer interpolation")')
+          call NoahmpIO_abort()
+       endif
 
        fraction = (src_centerpoint(kbottom)-dst_centerpoint(k)) / (src_centerpoint(kbottom)-src_centerpoint(ktop))
 

@@ -37,10 +37,8 @@ void NoahmpIO_fatal(const char* msg) {
 // host handler. Fortran prints its own diagnostic first, so no message is forwarded.
 extern "C" void NoahmpIO_fatal_c() { NoahmpIO_fatal(nullptr); }
 
-// Run-time ABI guard, executed once. Layout/order are guaranteed by codegen plus
-// the static_assert in NoahmpIO.H; the one hazard those cannot catch is a precision
-// (DOUBLE_PREC) mismatch between the two compilers, since the all-pointer struct is
-// precision-invariant in size. See the "ABI guards" comment in NoahmpIO.H.
+// Run-time ABI guard: verifies DOUBLE_PREC precision consistency across compilers.
+// Layout/order covered by codegen static_assert; see "ABI guards" in NoahmpIO.H.
 void NoahmpIO_AssertAbi() {
     static const bool ok = []() -> bool {
         const std::size_t fortran_real_size = NoahmpRealSize_fi();

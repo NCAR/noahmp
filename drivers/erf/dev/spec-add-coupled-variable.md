@@ -115,7 +115,12 @@ Fortran `allocate()` of each coupled array (bounds come straight from the
   if (NoahmpIO%name == undefined_real) NoahmpIO%name = name
   ```
   so a C++-API value wins over the namelist default (`undefined_real = -9999.0`,
-  the same sentinel the C++ member is initialized to).
+  the same sentinel the C++ member is initialized to — e.g. `ZLVL` defaults to the
+  named `noahmp_zlvl_unset` constant in `NoahmpArray.H`, kept equal to
+  `undefined_real` so the two sides agree). If a required scalar has *no* API/
+  namelist value, validate it and `NoahmpIO_abort()` rather than running with the
+  sentinel — as the namelist reader now does for `start_year/month/day` and
+  `NSOIL`.
 
 ## Step 4 (optional) — expose it to the NetCDF land output
 

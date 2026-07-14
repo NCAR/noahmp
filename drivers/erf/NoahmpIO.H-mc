@@ -25,7 +25,7 @@
     int comm;
 
     noahmp_real DTBL;
-    noahmp_real ZLVL = -9999.0;
+    noahmp_real ZLVL = noahmp_zlvl_unset;
 
     NoahmpArray2D<noahmp_real> XLAT[xstart:xend, ystart:yend];         // latitude [radians]
     NoahmpArray2D<noahmp_real> WSLAKEXY[xstart:xend, ystart:yend];     // lake water storage [mm]
@@ -266,10 +266,8 @@ class NoahmpIO_type {
             @NoahmpMacro:CppBindAddrs(m_noahmpio);
           ) { NoahmpIO_AssertAbi(); }
 
-        // fptr holds addresses of THIS object's own scalar members (self-
-        // referential), so a default copy/move would dangle into the source.
-        // Copy is forbidden; move is kept (vector::resize needs it) and re-points
-        // fptr at the destination below.
+        // fptr is self-referential: copy/move without re-pointing would dangle.
+        // Copy is deleted; move is kept (vector::resize) and re-points fptr below.
         NoahmpIO_type(const NoahmpIO_type&)            = delete;
         NoahmpIO_type& operator=(const NoahmpIO_type&) = delete;
         NoahmpIO_type& operator=(NoahmpIO_type&&)      = delete;
@@ -304,9 +302,6 @@ class NoahmpIO_type {
 //   1. C++ size and Fortran extent must stay equal; only resize(size, level) does.
 //   2. Each element's fptr points into its own members, so any relocation
 //      (grow/reserve/insert/copy) leaves dangling C pointers.
-// Inheritance is therefore PRIVATE: only the size-once entry point and a
-// read/element-access subset are re-exported; any unsupported mutating op is a
-// COMPILE error rather than a silent relocation.
 class NoahmpIO_vector : private std::vector<NoahmpIO_type> {
 
     using base = std::vector<NoahmpIO_type>;

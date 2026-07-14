@@ -96,6 +96,16 @@ NoahmpIO_fatal(msg);                                                    // anywh
   the same handler. A bare Fortran `error stop` would terminate only the calling
   image and deadlock peers in the next collective; the `error stop 1` after the
   shim is the serial fallback.
+- **The config/init readers route through this path, not bare `stop`.**
+  `NoahmpReadNamelistMod` (missing/malformed `namelist.erf`, and every option
+  validation — unset `start_year/month/day`, `NSOIL < 1`, bad timesteps, urban
+  levels, …), `NoahmpReadTableMod` (missing `NoahmpTable.TBL`, out-of-range
+  `FILOSS`), and `NoahmpReadLandMod` (unsupported level; `ktop`/`kbottom` soil
+  interpolation failures) all `call NoahmpIO_abort()` — a serial `stop` in cold
+  init would strand peers at the first collective exactly as in the I/O path. The
+  diagnostic `write` is rank-0-guarded so only one line prints. (The remaining
+  bare `stop` is `CAL_MON_DAY`'s internal day-of-year sanity guard in
+  `NoahmpDriverMainMod`, which fires only on a logic error, not on user input.)
 
 This keeps the *entire* parallel-runtime dependency in the host, not in Noah-MP —
 a precondition for the GPU port (see [`plan-cpp-interface.md`](plan-cpp-interface.md)).
