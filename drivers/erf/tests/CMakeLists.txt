@@ -185,6 +185,17 @@ set_tests_properties(io_restart_mismatch PROPERTIES
 noahmp_add_io_test(test_io_driver)
 add_test(NAME io_driver COMMAND test_io_driver)
 
+# Checkpoint/restart REPRODUCIBILITY across time steps: drive NoahmpDriverMain for
+# a continuous run (steps 1..N) vs a checkpoint-at-(N-1) + restart + step-N run,
+# and require the final state to match bit-for-bit. Catches prognostic state the
+# driver evolves but the restart set fails to persist (test_io_restart alone
+# cannot). One process sweeps every Noah-MP subsystem (land/rain/snow/carbon/
+# glacier/groundwater), each driving its state to life and asserting (activity
+# guard) it actually evolved. Needs staged namelist.erf + NoahmpTable.TBL
+# (CONFIG_INPUTS). A single scenario can be run for debugging: `... <name>`.
+noahmp_add_io_test(test_io_restart_step)
+add_test(NAME io_restart_step COMMAND test_io_restart_step all)
+
 # Same full step driven through the PUBLIC C++ API in ERF's exact call order.
 # C++ main linking the library + Fortran I/O support lib.
 add_executable(test_io_driver_cpp test_io_driver_cpp.cpp)
@@ -215,7 +226,7 @@ set_tests_properties(io_abort_direct PROPERTIES
 
 # Give every test its own artifacts/<name>/ working dir. Runs after add_test();
 # the test list comes from the TESTS property so it never drifts.
-set(NOAHMP_CONFIG_INPUT_TESTS config_smoke io_driver io_driver_cpp)
+set(NOAHMP_CONFIG_INPUT_TESTS config_smoke io_driver io_driver_cpp io_restart_step)
 get_property(_noahmp_tests DIRECTORY PROPERTY TESTS)
 foreach(t ${_noahmp_tests})
     if(t IN_LIST NOAHMP_CONFIG_INPUT_TESTS)
