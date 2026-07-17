@@ -117,6 +117,19 @@ contains
       call get2dd(ncid,"EMISS",    NoahmpIO%EMISS,     start, count, .true.)  ! c_kind_noahmp
       call get2d(ncid, "GRDFLX",   NoahmpIO%GRDFLX,    start, count, .true.)
 
+      ! --- soil-cycle accumulators (mid-cycle carry when SOIL_UPDATE_STEPS>1); optional
+      ! so a pre-fix checkpoint still restarts, leaving them at cold-init 0.
+      call get2d(ncid, "ACC_SSOILXY",  NoahmpIO%ACC_SSOILXY,  start, count, .false.)
+      call get2d(ncid, "ACC_QINSURXY", NoahmpIO%ACC_QINSURXY, start, count, .false.)
+      call get2d(ncid, "ACC_QSEVAXY",  NoahmpIO%ACC_QSEVAXY,  start, count, .false.)
+      call get2d(ncid, "ACC_DWATERXY", NoahmpIO%ACC_DWATERXY, start, count, .false.)
+      call get2d(ncid, "ACC_PRCPXY",   NoahmpIO%ACC_PRCPXY,   start, count, .false.)
+      call get2d(ncid, "ACC_ECANXY",   NoahmpIO%ACC_ECANXY,   start, count, .false.)
+      call get2d(ncid, "ACC_ETRANXY",  NoahmpIO%ACC_ETRANXY,  start, count, .false.)
+      call get2d(ncid, "ACC_EDIRXY",   NoahmpIO%ACC_EDIRXY,   start, count, .false.)
+      call get3d(ncid, "ACC_ETRANIXY", NoahmpIO%ACC_ETRANIXY, start, count, NoahmpIO%NSOIL, .false.)
+      call get2d(ncid, "ACC_GLAFLWXY", NoahmpIO%ACC_GLAFLWXY, start, count, .false.)
+
       ! --- optional carbon / lake (only if allocated; missing var is skipped)
       if (allocated(NoahmpIO%LFMASSXY)) call get2d(ncid, "LFMASSXY", NoahmpIO%LFMASSXY, start, count, .false.)
       if (allocated(NoahmpIO%RTMASSXY)) call get2d(ncid, "RTMASSXY", NoahmpIO%RTMASSXY, start, count, .false.)

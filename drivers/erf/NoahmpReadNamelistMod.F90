@@ -210,8 +210,13 @@ contains
         call NoahmpIO_abort()
     endif
 
-    ! Prefer an externally set ERF-coupled zlvl; otherwise use the namelist value
-    if (NoahmpIO%zlvl == undefined_real) NoahmpIO%zlvl = zlvl
+    ! Prefer an externally set ERF-coupled zlvl; otherwise fall back to the namelist
+    ! value, but announce it -- an unstaged reference height means DZ8W=2*ZLVL no
+    ! longer matches where the host samples the forcing (see NoahmpDriverMainMod:55).
+    if (NoahmpIO%zlvl == undefined_real) then
+       NoahmpIO%zlvl = zlvl
+       if (NoahmpIO%rank == 0) write(*,'(" ***** Noah-MP: host did not stage ZLVL; using namelist value ",F0.3," m for the reference height.")') NoahmpIO%zlvl
+    endif
 
     NoahmpIO%DTBL            = real(noah_timestep)
     NoahmpIO%soiltstep       = soil_timestep

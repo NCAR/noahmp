@@ -39,6 +39,10 @@ module NoahmpWriteRestartMod
    ! varids -- optional carbon / lake
    integer, save, private :: id_lfmass, id_rtmass, id_stmass, id_wood, &
                              id_grain, id_gdd, id_wslake
+   ! varids -- soil-cycle accumulators (carried across steps when SOIL_UPDATE_STEPS>1)
+   integer, save, private :: id_acc_ssoil, id_acc_qinsur, id_acc_qseva, id_acc_dwater, &
+                             id_acc_prcp, id_acc_ecan, id_acc_etran, id_acc_edir, &
+                             id_acc_etrani, id_acc_glaflw
 
 contains
 
@@ -152,6 +156,18 @@ contains
          call check_nc(nf90_def_var(ncid, "EMISS",    rtype, (/nx, ny/), id_emiss),     "def_var EMISS")
          call check_nc(nf90_def_var(ncid, "GRDFLX",   rtype, (/nx, ny/), id_grdflx),    "def_var GRDFLX")
 
+         ! --- soil-cycle accumulators (mid-cycle carry when SOIL_UPDATE_STEPS>1)
+         call check_nc(nf90_def_var(ncid, "ACC_SSOILXY", rtype, (/nx, ny/), id_acc_ssoil),  "def_var ACC_SSOILXY")
+         call check_nc(nf90_def_var(ncid, "ACC_QINSURXY",rtype, (/nx, ny/), id_acc_qinsur), "def_var ACC_QINSURXY")
+         call check_nc(nf90_def_var(ncid, "ACC_QSEVAXY", rtype, (/nx, ny/), id_acc_qseva),  "def_var ACC_QSEVAXY")
+         call check_nc(nf90_def_var(ncid, "ACC_DWATERXY",rtype, (/nx, ny/), id_acc_dwater), "def_var ACC_DWATERXY")
+         call check_nc(nf90_def_var(ncid, "ACC_PRCPXY",  rtype, (/nx, ny/), id_acc_prcp),   "def_var ACC_PRCPXY")
+         call check_nc(nf90_def_var(ncid, "ACC_ECANXY",  rtype, (/nx, ny/), id_acc_ecan),   "def_var ACC_ECANXY")
+         call check_nc(nf90_def_var(ncid, "ACC_ETRANXY", rtype, (/nx, ny/), id_acc_etran),  "def_var ACC_ETRANXY")
+         call check_nc(nf90_def_var(ncid, "ACC_EDIRXY",  rtype, (/nx, ny/), id_acc_edir),   "def_var ACC_EDIRXY")
+         call check_nc(nf90_def_var(ncid, "ACC_ETRANIXY",rtype, (/nx, nsoil_d, ny/), id_acc_etrani), "def_var ACC_ETRANIXY")
+         call check_nc(nf90_def_var(ncid, "ACC_GLAFLWXY",rtype, (/nx, ny/), id_acc_glaflw), "def_var ACC_GLAFLWXY")
+
          ! --- optional carbon / dveg (only if allocated)
          if (allocated(NoahmpIO%LFMASSXY)) &
             call check_nc(nf90_def_var(ncid, "LFMASSXY", rtype, (/nx, ny/), id_lfmass), "def_var LFMASSXY")
@@ -237,6 +253,18 @@ contains
       call check_nc(nf90_put_var(ncid, id_smstot,    NoahmpIO%SMSTOT,    start=start, count=count), "put_var SMSTOT")
       call check_nc(nf90_put_var(ncid, id_emiss,     NoahmpIO%EMISS,     start=start, count=count), "put_var EMISS")
       call check_nc(nf90_put_var(ncid, id_grdflx,    NoahmpIO%GRDFLX,    start=start, count=count), "put_var GRDFLX")
+
+      ! --- soil-cycle accumulators
+      call check_nc(nf90_put_var(ncid, id_acc_ssoil,  NoahmpIO%ACC_SSOILXY,  start=start, count=count), "put_var ACC_SSOILXY")
+      call check_nc(nf90_put_var(ncid, id_acc_qinsur, NoahmpIO%ACC_QINSURXY, start=start, count=count), "put_var ACC_QINSURXY")
+      call check_nc(nf90_put_var(ncid, id_acc_qseva,  NoahmpIO%ACC_QSEVAXY,  start=start, count=count), "put_var ACC_QSEVAXY")
+      call check_nc(nf90_put_var(ncid, id_acc_dwater, NoahmpIO%ACC_DWATERXY, start=start, count=count), "put_var ACC_DWATERXY")
+      call check_nc(nf90_put_var(ncid, id_acc_prcp,   NoahmpIO%ACC_PRCPXY,   start=start, count=count), "put_var ACC_PRCPXY")
+      call check_nc(nf90_put_var(ncid, id_acc_ecan,   NoahmpIO%ACC_ECANXY,   start=start, count=count), "put_var ACC_ECANXY")
+      call check_nc(nf90_put_var(ncid, id_acc_etran,  NoahmpIO%ACC_ETRANXY,  start=start, count=count), "put_var ACC_ETRANXY")
+      call check_nc(nf90_put_var(ncid, id_acc_edir,   NoahmpIO%ACC_EDIRXY,   start=start, count=count), "put_var ACC_EDIRXY")
+      call check_nc(nf90_put_var(ncid, id_acc_etrani, NoahmpIO%ACC_ETRANIXY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSOIL,count(2)/)), "put_var ACC_ETRANIXY")
+      call check_nc(nf90_put_var(ncid, id_acc_glaflw, NoahmpIO%ACC_GLAFLWXY, start=start, count=count), "put_var ACC_GLAFLWXY")
 
       ! --- optional carbon / lake
       if (allocated(NoahmpIO%LFMASSXY)) call check_nc(nf90_put_var(ncid, id_lfmass, NoahmpIO%LFMASSXY, start=start, count=count), "put_var LFMASSXY")

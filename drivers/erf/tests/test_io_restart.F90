@@ -162,6 +162,17 @@ contains
     call op2d(b%SMSTOT,   43, mode, "SMSTOT")
     call op2d(b%EMISS,    61, mode, "EMISS")     ! c_kind_noahmp boundary field
     call op2d(b%GRDFLX,   44, mode, "GRDFLX")
+    ! --- soil-cycle accumulators (SOIL_UPDATE_STEPS>1 carry; ETRANI is 3D over soil) ---
+    call op2d(b%ACC_SSOILXY,  71, mode, "ACC_SSOILXY")
+    call op2d(b%ACC_QINSURXY, 72, mode, "ACC_QINSURXY")
+    call op2d(b%ACC_QSEVAXY,  73, mode, "ACC_QSEVAXY")
+    call op2d(b%ACC_DWATERXY, 74, mode, "ACC_DWATERXY")
+    call op2d(b%ACC_PRCPXY,   75, mode, "ACC_PRCPXY")
+    call op2d(b%ACC_ECANXY,   76, mode, "ACC_ECANXY")
+    call op2d(b%ACC_ETRANXY,  77, mode, "ACC_ETRANXY")
+    call op2d(b%ACC_EDIRXY,   78, mode, "ACC_EDIRXY")
+    call op3d(b%ACC_ETRANIXY, 79, mode, "ACC_ETRANIXY")
+    call op2d(b%ACC_GLAFLWXY, 80, mode, "ACC_GLAFLWXY")
     ! --- optional carbon / dveg / lake (only if allocated) ---
     if (allocated(b%LFMASSXY)) call op2d(b%LFMASSXY, 45, mode, "LFMASSXY")
     if (allocated(b%RTMASSXY)) call op2d(b%RTMASSXY, 46, mode, "RTMASSXY")
