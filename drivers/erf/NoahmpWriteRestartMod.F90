@@ -43,6 +43,13 @@ module NoahmpWriteRestartMod
    integer, save, private :: id_acc_ssoil, id_acc_qinsur, id_acc_qseva, id_acc_dwater, &
                              id_acc_prcp, id_acc_ecan, id_acc_etran, id_acc_edir, &
                              id_acc_etrani, id_acc_glaflw
+   ! varids -- optional-mode carried state (only defined when the mode is enabled)
+   integer, save, private :: id_fastcp, id_stblcp, id_pgs, &                      ! carbon / crop
+                             id_irnumsi, id_irnummi, id_irnumfi, &                ! irrigation counters
+                             id_irwatsi, id_irwatmi, id_irwatfi, &                ! irrigation amounts
+                             id_wsurf, id_fsat, &                                 ! wetland
+                             id_snrds, id_bcphi, id_bcpho, id_ocphi, id_ocpho, &  ! SNICAR grain + carbon aerosol
+                             id_dust1, id_dust2, id_dust3, id_dust4, id_dust5     ! SNICAR dust aerosol
 
 contains
 
@@ -184,6 +191,54 @@ contains
          if (allocated(NoahmpIO%WSLAKEXY)) &
             call check_nc(nf90_def_var(ncid, "WSLAKEXY", rtype, (/nx, ny/), id_wslake), "def_var WSLAKEXY")
 
+         ! --- optional-mode carried state (defined only when the mode is enabled)
+         ! carbon pools / crop stage
+         if (allocated(NoahmpIO%FASTCPXY)) &
+            call check_nc(nf90_def_var(ncid, "FASTCPXY", rtype,    (/nx, ny/), id_fastcp), "def_var FASTCPXY")
+         if (allocated(NoahmpIO%STBLCPXY)) &
+            call check_nc(nf90_def_var(ncid, "STBLCPXY", rtype,    (/nx, ny/), id_stblcp), "def_var STBLCPXY")
+         if (allocated(NoahmpIO%PGSXY)) &
+            call check_nc(nf90_def_var(ncid, "PGSXY",    NF90_INT, (/nx, ny/), id_pgs),    "def_var PGSXY")
+         ! irrigation: event counters (int) + water amounts to apply
+         if (allocated(NoahmpIO%IRNUMSI)) &
+            call check_nc(nf90_def_var(ncid, "IRNUMSI",  NF90_INT, (/nx, ny/), id_irnumsi), "def_var IRNUMSI")
+         if (allocated(NoahmpIO%IRNUMMI)) &
+            call check_nc(nf90_def_var(ncid, "IRNUMMI",  NF90_INT, (/nx, ny/), id_irnummi), "def_var IRNUMMI")
+         if (allocated(NoahmpIO%IRNUMFI)) &
+            call check_nc(nf90_def_var(ncid, "IRNUMFI",  NF90_INT, (/nx, ny/), id_irnumfi), "def_var IRNUMFI")
+         if (allocated(NoahmpIO%IRWATSI)) &
+            call check_nc(nf90_def_var(ncid, "IRWATSI",  rtype,    (/nx, ny/), id_irwatsi), "def_var IRWATSI")
+         if (allocated(NoahmpIO%IRWATMI)) &
+            call check_nc(nf90_def_var(ncid, "IRWATMI",  rtype,    (/nx, ny/), id_irwatmi), "def_var IRWATMI")
+         if (allocated(NoahmpIO%IRWATFI)) &
+            call check_nc(nf90_def_var(ncid, "IRWATFI",  rtype,    (/nx, ny/), id_irwatfi), "def_var IRWATFI")
+         ! wetland: storage + saturated fraction
+         if (allocated(NoahmpIO%WSURFXY)) &
+            call check_nc(nf90_def_var(ncid, "WSURFXY",  rtype,    (/nx, ny/), id_wsurf), "def_var WSURFXY")
+         if (allocated(NoahmpIO%FSATXY)) &
+            call check_nc(nf90_def_var(ncid, "FSATXY",   rtype,    (/nx, ny/), id_fsat),  "def_var FSATXY")
+         ! SNICAR: snow-layer grain radius + aerosol masses (NX, NSNOW, NY)
+         if (allocated(NoahmpIO%SNRDSXY)) &
+            call check_nc(nf90_def_var(ncid, "SNRDSXY",  rtype, (/nx, nsnow_d, ny/), id_snrds), "def_var SNRDSXY")
+         if (allocated(NoahmpIO%BCPHIXY)) &
+            call check_nc(nf90_def_var(ncid, "BCPHIXY",  rtype, (/nx, nsnow_d, ny/), id_bcphi), "def_var BCPHIXY")
+         if (allocated(NoahmpIO%BCPHOXY)) &
+            call check_nc(nf90_def_var(ncid, "BCPHOXY",  rtype, (/nx, nsnow_d, ny/), id_bcpho), "def_var BCPHOXY")
+         if (allocated(NoahmpIO%OCPHIXY)) &
+            call check_nc(nf90_def_var(ncid, "OCPHIXY",  rtype, (/nx, nsnow_d, ny/), id_ocphi), "def_var OCPHIXY")
+         if (allocated(NoahmpIO%OCPHOXY)) &
+            call check_nc(nf90_def_var(ncid, "OCPHOXY",  rtype, (/nx, nsnow_d, ny/), id_ocpho), "def_var OCPHOXY")
+         if (allocated(NoahmpIO%DUST1XY)) &
+            call check_nc(nf90_def_var(ncid, "DUST1XY",  rtype, (/nx, nsnow_d, ny/), id_dust1), "def_var DUST1XY")
+         if (allocated(NoahmpIO%DUST2XY)) &
+            call check_nc(nf90_def_var(ncid, "DUST2XY",  rtype, (/nx, nsnow_d, ny/), id_dust2), "def_var DUST2XY")
+         if (allocated(NoahmpIO%DUST3XY)) &
+            call check_nc(nf90_def_var(ncid, "DUST3XY",  rtype, (/nx, nsnow_d, ny/), id_dust3), "def_var DUST3XY")
+         if (allocated(NoahmpIO%DUST4XY)) &
+            call check_nc(nf90_def_var(ncid, "DUST4XY",  rtype, (/nx, nsnow_d, ny/), id_dust4), "def_var DUST4XY")
+         if (allocated(NoahmpIO%DUST5XY)) &
+            call check_nc(nf90_def_var(ncid, "DUST5XY",  rtype, (/nx, nsnow_d, ny/), id_dust5), "def_var DUST5XY")
+
          call check_nc(nf90_enddef(ncid), "enddef")
       end if
 
@@ -274,6 +329,29 @@ contains
       if (allocated(NoahmpIO%GRAINXY))  call check_nc(nf90_put_var(ncid, id_grain,  NoahmpIO%GRAINXY,  start=start, count=count), "put_var GRAINXY")
       if (allocated(NoahmpIO%GDDXY))    call check_nc(nf90_put_var(ncid, id_gdd,    NoahmpIO%GDDXY,    start=start, count=count), "put_var GDDXY")
       if (allocated(NoahmpIO%WSLAKEXY)) call check_nc(nf90_put_var(ncid, id_wslake, NoahmpIO%WSLAKEXY, start=start, count=count), "put_var WSLAKEXY")
+
+      ! --- optional-mode carried state (written only when the mode is enabled)
+      if (allocated(NoahmpIO%FASTCPXY)) call check_nc(nf90_put_var(ncid, id_fastcp,  NoahmpIO%FASTCPXY, start=start, count=count), "put_var FASTCPXY")
+      if (allocated(NoahmpIO%STBLCPXY)) call check_nc(nf90_put_var(ncid, id_stblcp,  NoahmpIO%STBLCPXY, start=start, count=count), "put_var STBLCPXY")
+      if (allocated(NoahmpIO%PGSXY))    call check_nc(nf90_put_var(ncid, id_pgs,     NoahmpIO%PGSXY,    start=start, count=count), "put_var PGSXY")
+      if (allocated(NoahmpIO%IRNUMSI))  call check_nc(nf90_put_var(ncid, id_irnumsi, NoahmpIO%IRNUMSI,  start=start, count=count), "put_var IRNUMSI")
+      if (allocated(NoahmpIO%IRNUMMI))  call check_nc(nf90_put_var(ncid, id_irnummi, NoahmpIO%IRNUMMI,  start=start, count=count), "put_var IRNUMMI")
+      if (allocated(NoahmpIO%IRNUMFI))  call check_nc(nf90_put_var(ncid, id_irnumfi, NoahmpIO%IRNUMFI,  start=start, count=count), "put_var IRNUMFI")
+      if (allocated(NoahmpIO%IRWATSI))  call check_nc(nf90_put_var(ncid, id_irwatsi, NoahmpIO%IRWATSI,  start=start, count=count), "put_var IRWATSI")
+      if (allocated(NoahmpIO%IRWATMI))  call check_nc(nf90_put_var(ncid, id_irwatmi, NoahmpIO%IRWATMI,  start=start, count=count), "put_var IRWATMI")
+      if (allocated(NoahmpIO%IRWATFI))  call check_nc(nf90_put_var(ncid, id_irwatfi, NoahmpIO%IRWATFI,  start=start, count=count), "put_var IRWATFI")
+      if (allocated(NoahmpIO%WSURFXY))  call check_nc(nf90_put_var(ncid, id_wsurf,   NoahmpIO%WSURFXY,  start=start, count=count), "put_var WSURFXY")
+      if (allocated(NoahmpIO%FSATXY))   call check_nc(nf90_put_var(ncid, id_fsat,    NoahmpIO%FSATXY,   start=start, count=count), "put_var FSATXY")
+      if (allocated(NoahmpIO%SNRDSXY))  call check_nc(nf90_put_var(ncid, id_snrds, NoahmpIO%SNRDSXY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var SNRDSXY")
+      if (allocated(NoahmpIO%BCPHIXY))  call check_nc(nf90_put_var(ncid, id_bcphi, NoahmpIO%BCPHIXY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var BCPHIXY")
+      if (allocated(NoahmpIO%BCPHOXY))  call check_nc(nf90_put_var(ncid, id_bcpho, NoahmpIO%BCPHOXY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var BCPHOXY")
+      if (allocated(NoahmpIO%OCPHIXY))  call check_nc(nf90_put_var(ncid, id_ocphi, NoahmpIO%OCPHIXY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var OCPHIXY")
+      if (allocated(NoahmpIO%OCPHOXY))  call check_nc(nf90_put_var(ncid, id_ocpho, NoahmpIO%OCPHOXY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var OCPHOXY")
+      if (allocated(NoahmpIO%DUST1XY))  call check_nc(nf90_put_var(ncid, id_dust1, NoahmpIO%DUST1XY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var DUST1XY")
+      if (allocated(NoahmpIO%DUST2XY))  call check_nc(nf90_put_var(ncid, id_dust2, NoahmpIO%DUST2XY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var DUST2XY")
+      if (allocated(NoahmpIO%DUST3XY))  call check_nc(nf90_put_var(ncid, id_dust3, NoahmpIO%DUST3XY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var DUST3XY")
+      if (allocated(NoahmpIO%DUST4XY))  call check_nc(nf90_put_var(ncid, id_dust4, NoahmpIO%DUST4XY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var DUST4XY")
+      if (allocated(NoahmpIO%DUST5XY))  call check_nc(nf90_put_var(ncid, id_dust5, NoahmpIO%DUST5XY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var DUST5XY")
 
       if (NoahmpIO%blkid == (maxblocks-1)) then
          call check_nc(nf90_close(ncid), "close")

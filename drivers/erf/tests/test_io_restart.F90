@@ -50,6 +50,22 @@ program test_io_restart
   call io_setup_block(blk, level=0, blkid=0, nblocks=1, nx=NX, ny=NY, &
                       nsoil=NSOIL, nsnow=NSNOW, comm=comm)
 
+  ! Optional-mode carried state: carbon/crop/irrigation are allocated unconditionally
+  ! by NoahmpIOVarInitDefault; wetland + SNICAR are mode-gated, so force-allocate them
+  ! here to exercise their restart round-trip (visit_state guards on allocation).
+  if (.not. allocated(blk%WSURFXY)) allocate(blk%WSURFXY(0:NX-1,0:NY-1))
+  if (.not. allocated(blk%FSATXY))  allocate(blk%FSATXY (0:NX-1,0:NY-1))
+  if (.not. allocated(blk%SNRDSXY)) allocate(blk%SNRDSXY(0:NX-1,-NSNOW+1:0,0:NY-1))
+  if (.not. allocated(blk%BCPHIXY)) allocate(blk%BCPHIXY(0:NX-1,-NSNOW+1:0,0:NY-1))
+  if (.not. allocated(blk%BCPHOXY)) allocate(blk%BCPHOXY(0:NX-1,-NSNOW+1:0,0:NY-1))
+  if (.not. allocated(blk%OCPHIXY)) allocate(blk%OCPHIXY(0:NX-1,-NSNOW+1:0,0:NY-1))
+  if (.not. allocated(blk%OCPHOXY)) allocate(blk%OCPHOXY(0:NX-1,-NSNOW+1:0,0:NY-1))
+  if (.not. allocated(blk%DUST1XY)) allocate(blk%DUST1XY(0:NX-1,-NSNOW+1:0,0:NY-1))
+  if (.not. allocated(blk%DUST2XY)) allocate(blk%DUST2XY(0:NX-1,-NSNOW+1:0,0:NY-1))
+  if (.not. allocated(blk%DUST3XY)) allocate(blk%DUST3XY(0:NX-1,-NSNOW+1:0,0:NY-1))
+  if (.not. allocated(blk%DUST4XY)) allocate(blk%DUST4XY(0:NX-1,-NSNOW+1:0,0:NY-1))
+  if (.not. allocated(blk%DUST5XY)) allocate(blk%DUST5XY(0:NX-1,-NSNOW+1:0,0:NY-1))
+
   select case (trim(which))
   case ("mismatch")
      dir = "rst_mismatch"
@@ -181,6 +197,28 @@ contains
     if (allocated(b%GRAINXY))  call op2d(b%GRAINXY,  49, mode, "GRAINXY")
     if (allocated(b%GDDXY))    call op2d(b%GDDXY,    50, mode, "GDDXY")
     if (allocated(b%WSLAKEXY)) call op2d(b%WSLAKEXY, 62, mode, "WSLAKEXY")
+    ! --- optional-mode carried state (carbon/crop, irrigation, wetland, SNICAR) ---
+    if (allocated(b%FASTCPXY)) call op2d (b%FASTCPXY, 81, mode, "FASTCPXY")
+    if (allocated(b%STBLCPXY)) call op2d (b%STBLCPXY, 82, mode, "STBLCPXY")
+    if (allocated(b%PGSXY))    call op2di(b%PGSXY,    83, mode, "PGSXY")
+    if (allocated(b%IRNUMSI))  call op2di(b%IRNUMSI,  84, mode, "IRNUMSI")
+    if (allocated(b%IRNUMMI))  call op2di(b%IRNUMMI,  85, mode, "IRNUMMI")
+    if (allocated(b%IRNUMFI))  call op2di(b%IRNUMFI,  86, mode, "IRNUMFI")
+    if (allocated(b%IRWATSI))  call op2d (b%IRWATSI,  87, mode, "IRWATSI")
+    if (allocated(b%IRWATMI))  call op2d (b%IRWATMI,  88, mode, "IRWATMI")
+    if (allocated(b%IRWATFI))  call op2d (b%IRWATFI,  89, mode, "IRWATFI")
+    if (allocated(b%WSURFXY))  call op2d (b%WSURFXY,  90, mode, "WSURFXY")
+    if (allocated(b%FSATXY))   call op2d (b%FSATXY,   91, mode, "FSATXY")
+    if (allocated(b%SNRDSXY))  call op3d (b%SNRDSXY,  92, mode, "SNRDSXY")
+    if (allocated(b%BCPHIXY))  call op3d (b%BCPHIXY,  93, mode, "BCPHIXY")
+    if (allocated(b%BCPHOXY))  call op3d (b%BCPHOXY,  94, mode, "BCPHOXY")
+    if (allocated(b%OCPHIXY))  call op3d (b%OCPHIXY,  95, mode, "OCPHIXY")
+    if (allocated(b%OCPHOXY))  call op3d (b%OCPHOXY,  96, mode, "OCPHOXY")
+    if (allocated(b%DUST1XY))  call op3d (b%DUST1XY,  97, mode, "DUST1XY")
+    if (allocated(b%DUST2XY))  call op3d (b%DUST2XY,  98, mode, "DUST2XY")
+    if (allocated(b%DUST3XY))  call op3d (b%DUST3XY,  99, mode, "DUST3XY")
+    if (allocated(b%DUST4XY))  call op3d (b%DUST4XY, 100, mode, "DUST4XY")
+    if (allocated(b%DUST5XY))  call op3d (b%DUST5XY, 101, mode, "DUST5XY")
   end subroutine visit_state
 
   ! Assumed-shape dummies index 1..size, so negative snow lower bounds are handled

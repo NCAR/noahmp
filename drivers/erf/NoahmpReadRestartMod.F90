@@ -139,6 +139,30 @@ contains
       if (allocated(NoahmpIO%GDDXY))    call get2d(ncid, "GDDXY",    NoahmpIO%GDDXY,    start, count, .false.)
       if (allocated(NoahmpIO%WSLAKEXY)) call get2dd(ncid, "WSLAKEXY", NoahmpIO%WSLAKEXY, start, count, .false.)  ! c_kind_noahmp
 
+      ! --- optional-mode carried state (restored only if this run enabled the mode
+      ! AND the checkpoint has it; pre-fix / mode-off checkpoints leave cold-init values).
+      if (allocated(NoahmpIO%FASTCPXY)) call get2d (ncid, "FASTCPXY", NoahmpIO%FASTCPXY, start, count, .false.)
+      if (allocated(NoahmpIO%STBLCPXY)) call get2d (ncid, "STBLCPXY", NoahmpIO%STBLCPXY, start, count, .false.)
+      if (allocated(NoahmpIO%PGSXY))    call get2di(ncid, "PGSXY",    NoahmpIO%PGSXY,    start, count, .false.)
+      if (allocated(NoahmpIO%IRNUMSI))  call get2di(ncid, "IRNUMSI",  NoahmpIO%IRNUMSI,  start, count, .false.)
+      if (allocated(NoahmpIO%IRNUMMI))  call get2di(ncid, "IRNUMMI",  NoahmpIO%IRNUMMI,  start, count, .false.)
+      if (allocated(NoahmpIO%IRNUMFI))  call get2di(ncid, "IRNUMFI",  NoahmpIO%IRNUMFI,  start, count, .false.)
+      if (allocated(NoahmpIO%IRWATSI))  call get2d (ncid, "IRWATSI",  NoahmpIO%IRWATSI,  start, count, .false.)
+      if (allocated(NoahmpIO%IRWATMI))  call get2d (ncid, "IRWATMI",  NoahmpIO%IRWATMI,  start, count, .false.)
+      if (allocated(NoahmpIO%IRWATFI))  call get2d (ncid, "IRWATFI",  NoahmpIO%IRWATFI,  start, count, .false.)
+      if (allocated(NoahmpIO%WSURFXY))  call get2d (ncid, "WSURFXY",  NoahmpIO%WSURFXY,  start, count, .false.)
+      if (allocated(NoahmpIO%FSATXY))   call get2d (ncid, "FSATXY",   NoahmpIO%FSATXY,   start, count, .false.)
+      if (allocated(NoahmpIO%SNRDSXY))  call get3d(ncid, "SNRDSXY", NoahmpIO%SNRDSXY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%BCPHIXY))  call get3d(ncid, "BCPHIXY", NoahmpIO%BCPHIXY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%BCPHOXY))  call get3d(ncid, "BCPHOXY", NoahmpIO%BCPHOXY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%OCPHIXY))  call get3d(ncid, "OCPHIXY", NoahmpIO%OCPHIXY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%OCPHOXY))  call get3d(ncid, "OCPHOXY", NoahmpIO%OCPHOXY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%DUST1XY))  call get3d(ncid, "DUST1XY", NoahmpIO%DUST1XY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%DUST2XY))  call get3d(ncid, "DUST2XY", NoahmpIO%DUST2XY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%DUST3XY))  call get3d(ncid, "DUST3XY", NoahmpIO%DUST3XY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%DUST4XY))  call get3d(ncid, "DUST4XY", NoahmpIO%DUST4XY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%DUST5XY))  call get3d(ncid, "DUST5XY", NoahmpIO%DUST5XY, start, count, NoahmpIO%NSNOW, .false.)
+
       if (NoahmpIO%blkid == (maxblocks-1)) then
          call check_nc(nf90_close(ncid), "close")
       end if
