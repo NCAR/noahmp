@@ -166,9 +166,9 @@ contains
     REAL,    DIMENSION(ims:ime,jms:jme),         INTENT(INOUT), OPTIONAL :: RIVERCONDXY  ! river conductance
     REAL,    DIMENSION(ims:ime,jms:jme),         INTENT(INOUT), OPTIONAL :: PEXPXY       ! factor for river conductance
     REAL,    DIMENSION(ims:ime,1:NSOIL,jms:jme), INTENT(INOUT), OPTIONAL :: smoiseq      ! equilibrium soil moisture content [m3m-3]
+    INTEGER,                                     INTENT(INOUT), OPTIONAL :: STEPWTD      ! step of MMF groundwater call 
     ! output only
     INTEGER, DIMENSION(ims:ime,jms:jme), INTENT(OUT)           :: cropcat             ! crop type
-    INTEGER,                             INTENT(OUT), OPTIONAL :: STEPWTD
     ! local
     integer :: itf, jtf, I, J
 ! ----------------------------------------------------------------------------------
@@ -352,6 +352,8 @@ contains
 
     enddo ! I
     enddo ! J
+
+    NoahmpIO%STEPWTD    = STEPWTD
 
     !--------- WRF -> NoahmpIO variables mapping ends
 
