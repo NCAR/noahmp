@@ -49,6 +49,7 @@ contains
     noahmp%config%nmlist%OptGlacierTreatment         = undefined_int
     noahmp%config%nmlist%OptSnowCompaction           = undefined_int 
     noahmp%config%nmlist%OptWetlandModel             = undefined_int
+    noahmp%config%nmlist%OptRoot                     = undefined_int
     noahmp%config%nmlist%OptSnicarSnowShape          = undefined_int
     noahmp%config%nmlist%OptSnicarRTSolver           = undefined_int
     noahmp%config%nmlist%OptSnicarBandNum            = undefined_int

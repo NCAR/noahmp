@@ -269,6 +269,15 @@ contains
           NoahmpIO%STEPWTD = max(NoahmpIO%STEPWTD,1)
        endif
 
+       ! initialize variables for DynaRoot (IOPT_ROOT == 1)
+       if ( NoahmpIO%IOPT_ROOT == 1 ) then
+       ! initialize time step counter
+          NoahmpIO%INACTIVEXY(:,1,:) = 0.0
+          NoahmpIO%INACTIVEXY(:,2:NoahmpIO%NSOIL,:) = 366.0*(86400.0 / NoahmpIO%DTBL)
+       ! initialize root depth  
+          NoahmpIO%NROOT_TABLE = 1
+       endif
+
        ! initialize soil albedo
        NoahmpIO%ALBSOILDIRXY = 0.0
        NoahmpIO%ALBSOILDIFXY = 0.0
