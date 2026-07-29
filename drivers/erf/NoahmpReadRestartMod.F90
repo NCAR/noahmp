@@ -61,6 +61,10 @@ contains
       if (allocated(NoahmpIO%SMOISEQ)) &
          call get3d(ncid, "SMOISEQ", NoahmpIO%SMOISEQ, start, count, NoahmpIO%NSOIL, .false.)
 
+      ! --- soil albedo, banded (carried state; .false. so pre-fix checkpoints still restart -> cold-init 0.0) (#3446)
+      call get3d(ncid, "ALBSOILDIRXY", NoahmpIO%ALBSOILDIRXY, start, count, NoahmpIO%NUMRAD, .false.)
+      call get3d(ncid, "ALBSOILDIFXY", NoahmpIO%ALBSOILDIFXY, start, count, NoahmpIO%NUMRAD, .false.)
+
       ! --- snow layers
       call get3d(ncid, "TSNOXY",  NoahmpIO%TSNOXY,  start, count, NoahmpIO%NSNOW, .true.)
       call get3d(ncid, "SNICEXY", NoahmpIO%SNICEXY, start, count, NoahmpIO%NSNOW, .true.)

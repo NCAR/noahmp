@@ -29,6 +29,8 @@ module NoahmpWriteRestartMod
                              id_qsnow, id_qrain
    ! varids -- albedo history
    integer, save, private :: id_sneqvo, id_albold, id_tauss, id_albedo
+   ! varids -- soil albedo (banded, carried across steps for night/SNICAR restart; #3446)
+   integer, save, private :: id_albsoildir, id_albsoildif
    ! varids -- aquifer / groundwater
    integer, save, private :: id_zwt, id_wa, id_wt, id_smcwtd, id_deeprech, id_rech
    ! varids -- phenology
@@ -62,7 +64,7 @@ contains
       integer,             intent(in)    :: maxblocks
 
       integer :: ierr, start(2), count(2)
-      integer :: nx, ny, nsoil_d, nsnow_d, nsnso_d
+      integer :: nx, ny, nsoil_d, nsnow_d, nsnso_d, nrad_d
       integer :: rtype
       character(len=1)   :: lev_str
       character(len=512) :: filename
@@ -94,6 +96,7 @@ contains
          call check_nc(nf90_def_dim(ncid, "NSOIL", NoahmpIO%NSOIL,    nsoil_d), "def_dim NSOIL")
          call check_nc(nf90_def_dim(ncid, "NSNOW", NoahmpIO%NSNOW,    nsnow_d), "def_dim NSNOW")
          call check_nc(nf90_def_dim(ncid, "NSNSO", NoahmpIO%NSNOW+NoahmpIO%NSOIL, nsnso_d), "def_dim NSNSO")
+         call check_nc(nf90_def_dim(ncid, "NUMRAD", NoahmpIO%NUMRAD, nrad_d),      "def_dim NUMRAD")
 
          ! Layer counts as global attributes for the read-side assert.
          call check_nc(nf90_put_att(ncid, NF90_GLOBAL, "NSOIL", NoahmpIO%NSOIL), "put_att NSOIL")
@@ -107,6 +110,9 @@ contains
             call check_nc(nf90_def_var(ncid, "SMOISEQ", rtype, (/nx, nsoil_d, ny/), id_smoiseq), "def_var SMOISEQ")
 
          ! --- snow layers (NX, NSNOW, NY) and snow+soil (NX, NSNSO, NY)
+         ! soil albedo, banded (NX, NUMRAD, NY) -- carried state (#3446)
+         call check_nc(nf90_def_var(ncid, "ALBSOILDIRXY", rtype, (/nx, nrad_d, ny/), id_albsoildir), "def_var ALBSOILDIRXY")
+         call check_nc(nf90_def_var(ncid, "ALBSOILDIFXY", rtype, (/nx, nrad_d, ny/), id_albsoildif), "def_var ALBSOILDIFXY")
          call check_nc(nf90_def_var(ncid, "TSNOXY",  rtype, (/nx, nsnow_d, ny/), id_tsno),  "def_var TSNOXY")
          call check_nc(nf90_def_var(ncid, "SNICEXY", rtype, (/nx, nsnow_d, ny/), id_snice), "def_var SNICEXY")
          call check_nc(nf90_def_var(ncid, "SNLIQXY", rtype, (/nx, nsnow_d, ny/), id_snliq), "def_var SNLIQXY")
@@ -254,6 +260,8 @@ contains
          call check_nc(nf90_put_var(ncid, id_smoiseq, NoahmpIO%SMOISEQ, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSOIL,count(2)/)), "put_var SMOISEQ")
 
       ! --- snow layers
+      call check_nc(nf90_put_var(ncid, id_albsoildir, NoahmpIO%ALBSOILDIRXY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NUMRAD,count(2)/)), "put_var ALBSOILDIRXY")
+      call check_nc(nf90_put_var(ncid, id_albsoildif, NoahmpIO%ALBSOILDIFXY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NUMRAD,count(2)/)), "put_var ALBSOILDIFXY")
       call check_nc(nf90_put_var(ncid, id_tsno,  NoahmpIO%TSNOXY,  start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var TSNOXY")
       call check_nc(nf90_put_var(ncid, id_snice, NoahmpIO%SNICEXY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var SNICEXY")
       call check_nc(nf90_put_var(ncid, id_snliq, NoahmpIO%SNLIQXY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var SNLIQXY")
