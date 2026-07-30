@@ -166,6 +166,19 @@ contains
       if (allocated(NoahmpIO%DUST3XY))  call get3d(ncid, "DUST3XY", NoahmpIO%DUST3XY, start, count, NoahmpIO%NSNOW, .false.)
       if (allocated(NoahmpIO%DUST4XY))  call get3d(ncid, "DUST4XY", NoahmpIO%DUST4XY, start, count, NoahmpIO%NSNOW, .false.)
       if (allocated(NoahmpIO%DUST5XY))  call get3d(ncid, "DUST5XY", NoahmpIO%DUST5XY, start, count, NoahmpIO%NSNOW, .false.)
+      ! SNICAR freeze rate + mass concentrations: recomputed every step from the
+      ! fields above, but only after this restart's first Advance -- restore them
+      ! so that first step isn't wrong too.
+      if (allocated(NoahmpIO%SNFRXY))          call get3d(ncid, "SNFRXY",          NoahmpIO%SNFRXY,          start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%MassConcBCPHIXY)) call get3d(ncid, "MassConcBCPHIXY", NoahmpIO%MassConcBCPHIXY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%MassConcBCPHOXY)) call get3d(ncid, "MassConcBCPHOXY", NoahmpIO%MassConcBCPHOXY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%MassConcOCPHIXY)) call get3d(ncid, "MassConcOCPHIXY", NoahmpIO%MassConcOCPHIXY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%MassConcOCPHOXY)) call get3d(ncid, "MassConcOCPHOXY", NoahmpIO%MassConcOCPHOXY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%MassConcDUST1XY)) call get3d(ncid, "MassConcDUST1XY", NoahmpIO%MassConcDUST1XY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%MassConcDUST2XY)) call get3d(ncid, "MassConcDUST2XY", NoahmpIO%MassConcDUST2XY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%MassConcDUST3XY)) call get3d(ncid, "MassConcDUST3XY", NoahmpIO%MassConcDUST3XY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%MassConcDUST4XY)) call get3d(ncid, "MassConcDUST4XY", NoahmpIO%MassConcDUST4XY, start, count, NoahmpIO%NSNOW, .false.)
+      if (allocated(NoahmpIO%MassConcDUST5XY)) call get3d(ncid, "MassConcDUST5XY", NoahmpIO%MassConcDUST5XY, start, count, NoahmpIO%NSNOW, .false.)
 
       if (NoahmpIO%blkid == (maxblocks-1)) then
          call check_nc(nf90_close(ncid), "close")

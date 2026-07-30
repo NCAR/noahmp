@@ -51,7 +51,10 @@ module NoahmpWriteRestartMod
                              id_irwatsi, id_irwatmi, id_irwatfi, &                ! irrigation amounts
                              id_wsurf, id_fsat, &                                 ! wetland
                              id_snrds, id_bcphi, id_bcpho, id_ocphi, id_ocpho, &  ! SNICAR grain + carbon aerosol
-                             id_dust1, id_dust2, id_dust3, id_dust4, id_dust5     ! SNICAR dust aerosol
+                             id_dust1, id_dust2, id_dust3, id_dust4, id_dust5, &  ! SNICAR dust aerosol
+                             id_snfr, id_mc_bcphi, id_mc_bcpho, id_mc_ocphi, &    ! SNICAR freeze rate +
+                             id_mc_ocpho, id_mc_dust1, id_mc_dust2, &             ! mass concentrations
+                             id_mc_dust3, id_mc_dust4, id_mc_dust5
 
 contains
 
@@ -244,6 +247,29 @@ contains
             call check_nc(nf90_def_var(ncid, "DUST4XY",  rtype, (/nx, nsnow_d, ny/), id_dust4), "def_var DUST4XY")
          if (allocated(NoahmpIO%DUST5XY)) &
             call check_nc(nf90_def_var(ncid, "DUST5XY",  rtype, (/nx, nsnow_d, ny/), id_dust5), "def_var DUST5XY")
+         ! SNICAR: freeze rate + mass concentrations (recomputed each step from the
+         ! above, but from cold-init values on the first post-restart step -- carry
+         ! them so that step isn't wrong).
+         if (allocated(NoahmpIO%SNFRXY)) &
+            call check_nc(nf90_def_var(ncid, "SNFRXY", rtype, (/nx, nsnow_d, ny/), id_snfr), "def_var SNFRXY")
+         if (allocated(NoahmpIO%MassConcBCPHIXY)) &
+            call check_nc(nf90_def_var(ncid, "MassConcBCPHIXY", rtype, (/nx, nsnow_d, ny/), id_mc_bcphi), "def_var MassConcBCPHIXY")
+         if (allocated(NoahmpIO%MassConcBCPHOXY)) &
+            call check_nc(nf90_def_var(ncid, "MassConcBCPHOXY", rtype, (/nx, nsnow_d, ny/), id_mc_bcpho), "def_var MassConcBCPHOXY")
+         if (allocated(NoahmpIO%MassConcOCPHIXY)) &
+            call check_nc(nf90_def_var(ncid, "MassConcOCPHIXY", rtype, (/nx, nsnow_d, ny/), id_mc_ocphi), "def_var MassConcOCPHIXY")
+         if (allocated(NoahmpIO%MassConcOCPHOXY)) &
+            call check_nc(nf90_def_var(ncid, "MassConcOCPHOXY", rtype, (/nx, nsnow_d, ny/), id_mc_ocpho), "def_var MassConcOCPHOXY")
+         if (allocated(NoahmpIO%MassConcDUST1XY)) &
+            call check_nc(nf90_def_var(ncid, "MassConcDUST1XY", rtype, (/nx, nsnow_d, ny/), id_mc_dust1), "def_var MassConcDUST1XY")
+         if (allocated(NoahmpIO%MassConcDUST2XY)) &
+            call check_nc(nf90_def_var(ncid, "MassConcDUST2XY", rtype, (/nx, nsnow_d, ny/), id_mc_dust2), "def_var MassConcDUST2XY")
+         if (allocated(NoahmpIO%MassConcDUST3XY)) &
+            call check_nc(nf90_def_var(ncid, "MassConcDUST3XY", rtype, (/nx, nsnow_d, ny/), id_mc_dust3), "def_var MassConcDUST3XY")
+         if (allocated(NoahmpIO%MassConcDUST4XY)) &
+            call check_nc(nf90_def_var(ncid, "MassConcDUST4XY", rtype, (/nx, nsnow_d, ny/), id_mc_dust4), "def_var MassConcDUST4XY")
+         if (allocated(NoahmpIO%MassConcDUST5XY)) &
+            call check_nc(nf90_def_var(ncid, "MassConcDUST5XY", rtype, (/nx, nsnow_d, ny/), id_mc_dust5), "def_var MassConcDUST5XY")
 
          call check_nc(nf90_enddef(ncid), "enddef")
       end if
@@ -360,6 +386,16 @@ contains
       if (allocated(NoahmpIO%DUST3XY))  call check_nc(nf90_put_var(ncid, id_dust3, NoahmpIO%DUST3XY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var DUST3XY")
       if (allocated(NoahmpIO%DUST4XY))  call check_nc(nf90_put_var(ncid, id_dust4, NoahmpIO%DUST4XY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var DUST4XY")
       if (allocated(NoahmpIO%DUST5XY))  call check_nc(nf90_put_var(ncid, id_dust5, NoahmpIO%DUST5XY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var DUST5XY")
+      if (allocated(NoahmpIO%SNFRXY))          call check_nc(nf90_put_var(ncid, id_snfr,     NoahmpIO%SNFRXY,          start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var SNFRXY")
+      if (allocated(NoahmpIO%MassConcBCPHIXY)) call check_nc(nf90_put_var(ncid, id_mc_bcphi, NoahmpIO%MassConcBCPHIXY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var MassConcBCPHIXY")
+      if (allocated(NoahmpIO%MassConcBCPHOXY)) call check_nc(nf90_put_var(ncid, id_mc_bcpho, NoahmpIO%MassConcBCPHOXY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var MassConcBCPHOXY")
+      if (allocated(NoahmpIO%MassConcOCPHIXY)) call check_nc(nf90_put_var(ncid, id_mc_ocphi, NoahmpIO%MassConcOCPHIXY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var MassConcOCPHIXY")
+      if (allocated(NoahmpIO%MassConcOCPHOXY)) call check_nc(nf90_put_var(ncid, id_mc_ocpho, NoahmpIO%MassConcOCPHOXY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var MassConcOCPHOXY")
+      if (allocated(NoahmpIO%MassConcDUST1XY)) call check_nc(nf90_put_var(ncid, id_mc_dust1, NoahmpIO%MassConcDUST1XY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var MassConcDUST1XY")
+      if (allocated(NoahmpIO%MassConcDUST2XY)) call check_nc(nf90_put_var(ncid, id_mc_dust2, NoahmpIO%MassConcDUST2XY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var MassConcDUST2XY")
+      if (allocated(NoahmpIO%MassConcDUST3XY)) call check_nc(nf90_put_var(ncid, id_mc_dust3, NoahmpIO%MassConcDUST3XY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var MassConcDUST3XY")
+      if (allocated(NoahmpIO%MassConcDUST4XY)) call check_nc(nf90_put_var(ncid, id_mc_dust4, NoahmpIO%MassConcDUST4XY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var MassConcDUST4XY")
+      if (allocated(NoahmpIO%MassConcDUST5XY)) call check_nc(nf90_put_var(ncid, id_mc_dust5, NoahmpIO%MassConcDUST5XY, start=(/start(1),1,start(2)/), count=(/count(1),NoahmpIO%NSNOW,count(2)/)), "put_var MassConcDUST5XY")
 
       if (NoahmpIO%blkid == (maxblocks-1)) then
          call check_nc(nf90_close(ncid), "close")
