@@ -103,6 +103,10 @@ Some suggestions for model developers to contribute to Noah-MP code through the 
 7. Step (7) The Noah-MP physics and code review committee merges the updated "develop" branch to the master branch during the annual release of new model versions.
 
 
+## Community resources
+
+- Unofficial, community-maintained AI-agent skill for onboarding new users (not an official NCAR resource): [earth-space-ai/noahmp-skill](https://github.com/earth-space-ai/noahmp-skill). It restructures the existing Noah-MP documentation for AI coding agents and defers to this repository as the source of truth.
+
 ## License
 
 The license and terms of use for this software can be found [here](https://github.com/NCAR/noahmp/blob/develop/LICENSE.txt)
