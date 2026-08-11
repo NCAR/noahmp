@@ -478,6 +478,8 @@ contains
     NoahmpIO%WOODXY          = undefined_real
     NoahmpIO%STBLCPXY        = undefined_real
     NoahmpIO%FASTCPXY        = undefined_real
+    NoahmpIO%GRAINXY         = undefined_real
+    NoahmpIO%GDDXY           = undefined_real
     NoahmpIO%LAI             = undefined_real
     NoahmpIO%XSAIXY          = undefined_real
     NoahmpIO%XLONG           = undefined_real
@@ -537,6 +539,10 @@ contains
     NoahmpIO%CANHSXY         = undefined_real
     NoahmpIO%Z0              = undefined_real
     NoahmpIO%ZNT             = undefined_real
+    ! Set only by EnergyVarOutTransfer after an advance; without a default the
+    ! tag-0 WriteLand narrows heap garbage to NF90_FLOAT and aborts on NC_ERANGE.
+    NoahmpIO%TAU_EW          = undefined_real
+    NoahmpIO%TAU_NS          = undefined_real
     NoahmpIO%ALBSNOWDIRXY    = undefined_real
     NoahmpIO%ALBSNOWDIFXY    = undefined_real
     NoahmpIO%ALBSFCDIRXY     = undefined_real
