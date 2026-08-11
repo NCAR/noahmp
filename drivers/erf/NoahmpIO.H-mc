@@ -1,0 +1,337 @@
+#ifndef NOAHMP_IO_H
+#define NOAHMP_IO_H
+
+#include <NoahmpArray.H>
+#include <vector>
+#include <string>
+#include <iostream>
+#include <cstdlib>
+#include <cstddef>
+#include <type_traits>
+
+// The binding contract: single source of truth for the C++ <-> Fortran boundary.
+// Order = ABI order; every side of the boundary (mirror struct, ctor/move
+// plumbing, and the owner class's fields below) is projected from this one list.
+@NoahmpMacro:Source m_noahmpio {
+
+    int ids, ide, jds, jde, kds, kde;
+    int ims, ime, jms, jme, kms, kme;
+    int its, ite, jts, jte, kts, kte;
+    int xstart, xend, ystart, yend;
+    int nsoil, nsnow;
+    int numrad = 2;        // number of shortwave radiation bands; ERF may override
+    int itimestep, ntime;
+    int rank, blkid, level;
+    int comm;
+
+    noahmp_real DTBL;
+    noahmp_real ZLVL = noahmp_zlvl_unset;
+
+    NoahmpArray2D<noahmp_real> XLAT[xstart:xend, ystart:yend];         // latitude [radians]
+    NoahmpArray2D<noahmp_real> WSLAKEXY[xstart:xend, ystart:yend];     // lake water storage [mm]
+    NoahmpArray3D<noahmp_real> U_PHY[xstart:xend, kms:kme, ystart:yend];        // 3D U wind component [m/s]
+    NoahmpArray3D<noahmp_real> T_PHY[xstart:xend, kms:kme, ystart:yend];        // 3D atmospheric temperature valid at mid-levels [K]
+    NoahmpArray3D<noahmp_real> V_PHY[xstart:xend, kms:kme, ystart:yend];        // 3D V wind component [m/s]
+    NoahmpArray3D<noahmp_real> QV_CURR[xstart:xend, kms:kme, ystart:yend];      // 3D water vapor mixing ratio [kg/kg_dry]
+    NoahmpArray2D<noahmp_real> HFX[xstart:xend, ystart:yend];          // sensible heat flux [W m-2]
+    NoahmpArray2D<noahmp_real> LH[xstart:xend, ystart:yend];           // latent heat flux [W m-2]
+    NoahmpArray2D<noahmp_real> SWDOWN[xstart:xend, ystart:yend];       // solar down at surface [W m-2]
+    NoahmpArray2D<noahmp_real> GLW[xstart:xend, ystart:yend];          // longwave down at surface [W m-2]
+    NoahmpArray2D<noahmp_real> TSK[xstart:xend, ystart:yend];          // surface radiative temperature [K]
+    NoahmpArray2D<noahmp_real> EMISS[xstart:xend, ystart:yend];        // surface bulk emissivity
+    NoahmpArray3D<noahmp_real> ALBSFCDIRXY[xstart:xend, 1:numrad, ystart:yend];  // surface albedo (direct)
+    NoahmpArray3D<noahmp_real> ALBSFCDIFXY[xstart:xend, 1:numrad, ystart:yend];  // surface albedo (diffuse)
+    NoahmpArray2D<noahmp_real> COSZEN[xstart:xend, ystart:yend];       // cosine zenith angle
+    NoahmpArray3D<noahmp_real> P8W[xstart:xend, kms:kme, ystart:yend];          // 3D pressure, valid at interface [Pa]
+    NoahmpArray2D<noahmp_real> TAU_EW[xstart:xend, ystart:yend];       // wind stress in east-west direction [N/m2]
+    NoahmpArray2D<noahmp_real> TAU_NS[xstart:xend, ystart:yend];       // wind stress in north-south direction [N/m2]
+    NoahmpArray2D<noahmp_real> RAINBL[xstart:xend, ystart:yend];       // precipitation entering land model [mm] per time step
+    NoahmpArray2D<noahmp_real> SR[xstart:xend, ystart:yend];        // frozen precip fraction entering land model [-] (ERF forcing, WRF SR)
+    NoahmpArray2D<noahmp_real> MP_RAINNC[xstart:xend, ystart:yend]; // total non-convective precip this interval [mm] (ERF forcing, WRF MP_RAINNC)
+    NoahmpArray2D<noahmp_real> MP_SNOW[xstart:xend, ystart:yend];   // snow(+ice) subset of MP_RAINNC [mm] (ERF forcing, WRF MP_SNOW)
+    NoahmpArray2D<noahmp_real> MP_GRAUP[xstart:xend, ystart:yend];  // graupel subset of MP_RAINNC [mm] (ERF forcing, WRF MP_GRAUP)
+    NoahmpArray2D<noahmp_real> MP_HAIL[xstart:xend, ystart:yend];   // hail subset of MP_RAINNC [mm] (ERF forcing, WRF MP_HAIL)
+
+    // IO variables exposed to C++ (init / plotting / checkpoint / restart)
+
+    // Static land / init inputs
+    NoahmpArray2D<noahmp_real> TMN[xstart:xend, ystart:yend];          // deep soil temperature [K]
+    NoahmpArray2D<noahmp_real> XLAND[xstart:xend, ystart:yend];        // =2 ocean; =1 land/seaice
+    NoahmpArray2D<noahmp_real> XICE[xstart:xend, ystart:yend];         // fraction of grid that is seaice
+    NoahmpArray2D<noahmp_real> SEAICE[xstart:xend, ystart:yend];       // seaice fraction
+    NoahmpArray2D<noahmp_real> VEGFRA[xstart:xend, ystart:yend];       // vegetation fraction []
+    NoahmpArray2D<noahmp_real> TERRAIN[xstart:xend, ystart:yend];      // terrain height
+    NoahmpArray2D<noahmp_real> GVFMIN[xstart:xend, ystart:yend];       // annual minimum in vegetation fraction
+    NoahmpArray2D<noahmp_real> GVFMAX[xstart:xend, ystart:yend];       // annual maximum in vegetation fraction
+
+    // Land-output diagnostics (plotting)
+    NoahmpArray2D<noahmp_real> SHBXY[xstart:xend, ystart:yend];        // bare sensible heat [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> EVBXY[xstart:xend, ystart:yend];        // bare soil evaporation [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> SAVXY[xstart:xend, ystart:yend];        // solar rad absorbed by veg. (w/m2)
+    NoahmpArray2D<noahmp_real> SAGXY[xstart:xend, ystart:yend];        // solar rad absorbed by ground (w/m2)
+    NoahmpArray2D<noahmp_real> PAHXY[xstart:xend, ystart:yend];        // precipitation advected heat [W/m2]
+    NoahmpArray2D<noahmp_real> FIRAXY[xstart:xend, ystart:yend];       // total net longwave rad (w/m2) [+ to atm]
+    NoahmpArray2D<noahmp_real> GRDFLX[xstart:xend, ystart:yend];       // ground/snow heat flux [W m-2]
+    NoahmpArray2D<noahmp_real> GHBXY[xstart:xend, ystart:yend];        // bare ground heat flux [w/m2] [+ to soil]
+    NoahmpArray2D<noahmp_real> CANHSXY[xstart:xend, ystart:yend];      // canopy heat storage change [W/m2]
+
+    // Prognostic 2D state (checkpoint / restart)
+    NoahmpArray2D<noahmp_real> SNOW[xstart:xend, ystart:yend];         // snow water equivalent [mm]
+    NoahmpArray2D<noahmp_real> SNOWH[xstart:xend, ystart:yend];        // physical snow depth [m]
+    NoahmpArray2D<noahmp_real> SNOWC[xstart:xend, ystart:yend];        // snow cover fraction []
+    NoahmpArray2D<noahmp_real> CANWAT[xstart:xend, ystart:yend];       // total canopy water + ice [mm]
+    NoahmpArray2D<noahmp_real> ACSNOM[xstart:xend, ystart:yend];       // accumulated snow melt leaving pack
+    NoahmpArray2D<noahmp_real> ACSNOW[xstart:xend, ystart:yend];       // accumulated snow on grid
+    NoahmpArray2D<noahmp_real> QSFC[xstart:xend, ystart:yend];         // bulk surface specific humidity
+    NoahmpArray2D<noahmp_real> TVXY[xstart:xend, ystart:yend];         // vegetation leaf temperature
+    NoahmpArray2D<noahmp_real> TGXY[xstart:xend, ystart:yend];         // bulk ground surface temperature
+    NoahmpArray2D<noahmp_real> CANICEXY[xstart:xend, ystart:yend];     // canopy-intercepted ice [mm]
+    NoahmpArray2D<noahmp_real> CANLIQXY[xstart:xend, ystart:yend];     // canopy-intercepted liquid water [mm]
+    NoahmpArray2D<noahmp_real> EAHXY[xstart:xend, ystart:yend];        // canopy air vapor pressure [pa]
+    NoahmpArray2D<noahmp_real> TAHXY[xstart:xend, ystart:yend];        // canopy air temperature [k]
+    NoahmpArray2D<noahmp_real> CMXY[xstart:xend, ystart:yend];         // bulk momentum drag coefficient
+    NoahmpArray2D<noahmp_real> CHXY[xstart:xend, ystart:yend];         // bulk sensible heat exchange coefficient
+    NoahmpArray2D<noahmp_real> FWETXY[xstart:xend, ystart:yend];       // wetted/snowed fraction of the canopy (-)
+    NoahmpArray2D<noahmp_real> QSNOWXY[xstart:xend, ystart:yend];      // snowfall on the ground [mm/s]
+    NoahmpArray2D<noahmp_real> QRAINXY[xstart:xend, ystart:yend];      // rainfall on the ground [mm/s]
+    NoahmpArray2D<noahmp_real> SNEQVOXY[xstart:xend, ystart:yend];     // snow mass at last time step [mm h2o]
+    NoahmpArray2D<noahmp_real> ALBOLDXY[xstart:xend, ystart:yend];     // snow albedo at last time step (-)
+    NoahmpArray2D<noahmp_real> TAUSSXY[xstart:xend, ystart:yend];      // snow age factor
+    NoahmpArray2D<noahmp_real> ALBEDO[xstart:xend, ystart:yend];       // total grid albedo []
+    NoahmpArray2D<noahmp_real> ZWTXY[xstart:xend, ystart:yend];        // water table depth [m]
+    NoahmpArray2D<noahmp_real> WAXY[xstart:xend, ystart:yend];         // water in the "aquifer" [mm]
+    NoahmpArray2D<noahmp_real> WTXY[xstart:xend, ystart:yend];         // groundwater storage [mm]
+    NoahmpArray2D<noahmp_real> SMCWTDXY[xstart:xend, ystart:yend];     // soil moisture below column bottom [m3/m3]
+    NoahmpArray2D<noahmp_real> DEEPRECHXY[xstart:xend, ystart:yend];   // recharge to water table when deep [m]
+    NoahmpArray2D<noahmp_real> RECHXY[xstart:xend, ystart:yend];       // recharge to the water table (diag) [mm]
+    NoahmpArray2D<noahmp_real> LAI[xstart:xend, ystart:yend];          // leaf area index
+    NoahmpArray2D<noahmp_real> XSAIXY[xstart:xend, ystart:yend];       // stem area index
+    NoahmpArray2D<noahmp_real> SFCRUNOFF[xstart:xend, ystart:yend];    // accumulated surface runoff [m]
+    NoahmpArray2D<noahmp_real> UDRUNOFF[xstart:xend, ystart:yend];     // accumulated sub-surface runoff [m]
+    NoahmpArray2D<noahmp_real> SMSTAV[xstart:xend, ystart:yend];       // soil moisture avail. [not used]
+    NoahmpArray2D<noahmp_real> SMSTOT[xstart:xend, ystart:yend];       // total soil water [mm] [not used]
+    NoahmpArray2D<noahmp_real> LFMASSXY[xstart:xend, ystart:yend];     // leaf mass [g/m2]
+    NoahmpArray2D<noahmp_real> RTMASSXY[xstart:xend, ystart:yend];     // mass of fine roots [g/m2]
+    NoahmpArray2D<noahmp_real> STMASSXY[xstart:xend, ystart:yend];     // stem mass [g/m2]
+    NoahmpArray2D<noahmp_real> WOODXY[xstart:xend, ystart:yend];       // mass of wood (incl. woody roots) [g/m2]
+    NoahmpArray2D<noahmp_real> GRAINXY[xstart:xend, ystart:yend];      // mass of grain [g/m2]
+    NoahmpArray2D<noahmp_real> GDDXY[xstart:xend, ystart:yend];        // growing degree days
+
+    // Prognostic 3D soil state (checkpoint / restart)
+    NoahmpArray3D<noahmp_real> TSLB[xstart:xend, 1:nsoil, ystart:yend];     // soil temperature [K]
+    NoahmpArray3D<noahmp_real> SMOIS[xstart:xend, 1:nsoil, ystart:yend];    // volumetric soil moisture [m3/m3]
+    NoahmpArray3D<noahmp_real> SH2O[xstart:xend, 1:nsoil, ystart:yend];     // volumetric liquid soil moisture [m3/m3]
+    NoahmpArray3D<noahmp_real> SMOISEQ[xstart:xend, 1:nsoil, ystart:yend];  // equilibrium volumetric soil moisture [m3/m3]
+
+    // WRF-alike output diagnostics (computed each step by the out-transfer
+    // routines; promoted from Fortran-only allocatables so ERF can plot them).
+
+    // OUT (with no Noah LSM equivalent) (as defined in WRF)
+    NoahmpArray2D<noahmp_real> T2MVXY[xstart:xend, ystart:yend];       // 2m temperature of vegetation part [K]
+    NoahmpArray2D<noahmp_real> T2MBXY[xstart:xend, ystart:yend];       // 2m temperature of bare ground part [K]
+    NoahmpArray2D<noahmp_real> Q2MVXY[xstart:xend, ystart:yend];       // 2m mixing ratio of vegetation part
+    NoahmpArray2D<noahmp_real> Q2MBXY[xstart:xend, ystart:yend];       // 2m mixing ratio of bare ground part
+    NoahmpArray2D<noahmp_real> TRADXY[xstart:xend, ystart:yend];       // surface radiative temperature [K]
+    NoahmpArray2D<noahmp_real> NEEXY[xstart:xend, ystart:yend];        // net ecosys exchange (g/m2/s CO2)
+    NoahmpArray2D<noahmp_real> GPPXY[xstart:xend, ystart:yend];        // gross primary assimilation [g/m2/s C]
+    NoahmpArray2D<noahmp_real> NPPXY[xstart:xend, ystart:yend];        // net primary productivity [g/m2/s C]
+    NoahmpArray2D<noahmp_real> FVEGXY[xstart:xend, ystart:yend];       // Noah-MP vegetation fraction [-]
+    NoahmpArray2D<noahmp_real> RUNSFXY[xstart:xend, ystart:yend];      // surface runoff [mm per soil timestep] (glacier points: per main timestep)
+    NoahmpArray2D<noahmp_real> RUNSBXY[xstart:xend, ystart:yend];      // subsurface runoff [mm per soil timestep] (glacier points: per main timestep)
+    NoahmpArray2D<noahmp_real> ECANXY[xstart:xend, ystart:yend];       // evaporation of intercepted water [mm/s]
+    NoahmpArray2D<noahmp_real> EDIRXY[xstart:xend, ystart:yend];       // soil surface evaporation rate [mm/s]
+    NoahmpArray2D<noahmp_real> ETRANXY[xstart:xend, ystart:yend];      // transpiration rate [mm/s]
+    NoahmpArray2D<noahmp_real> FSAXY[xstart:xend, ystart:yend];        // total absorbed solar radiation [w/m2]
+    NoahmpArray2D<noahmp_real> APARXY[xstart:xend, ystart:yend];       // photosyn active energy by canopy [w/m2]
+    NoahmpArray2D<noahmp_real> PSNXY[xstart:xend, ystart:yend];        // total photosynthesis (umol co2/m2/s) [+]
+    NoahmpArray2D<noahmp_real> RSSUNXY[xstart:xend, ystart:yend];      // sunlit leaf stomatal resistance [s/m]
+    NoahmpArray2D<noahmp_real> RSSHAXY[xstart:xend, ystart:yend];      // shaded leaf stomatal resistance [s/m]
+    NoahmpArray2D<noahmp_real> BGAPXY[xstart:xend, ystart:yend];       // between gap fraction
+    NoahmpArray2D<noahmp_real> WGAPXY[xstart:xend, ystart:yend];       // within gap fraction
+    NoahmpArray2D<noahmp_real> TGVXY[xstart:xend, ystart:yend];        // under canopy ground temperature [K]
+    NoahmpArray2D<noahmp_real> TGBXY[xstart:xend, ystart:yend];        // bare ground temperature [K]
+    NoahmpArray2D<noahmp_real> CHVXY[xstart:xend, ystart:yend];        // sensible heat exchange coefficient vegetated
+    NoahmpArray2D<noahmp_real> CHBXY[xstart:xend, ystart:yend];        // sensible heat exchange coefficient bare-ground
+    NoahmpArray2D<noahmp_real> SHGXY[xstart:xend, ystart:yend];        // veg ground sen. heat [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> SHCXY[xstart:xend, ystart:yend];        // canopy sen. heat [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> EVGXY[xstart:xend, ystart:yend];        // veg ground evap. heat [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> GHVXY[xstart:xend, ystart:yend];        // veg ground heat flux [w/m2] [+ to soil]
+    NoahmpArray2D<noahmp_real> IRGXY[xstart:xend, ystart:yend];        // veg ground net LW rad. [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> IRCXY[xstart:xend, ystart:yend];        // canopy net LW rad. [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> IRBXY[xstart:xend, ystart:yend];        // bare net longwave rad. [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> TRXY[xstart:xend, ystart:yend];         // transpiration [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> EVCXY[xstart:xend, ystart:yend];        // canopy evaporation heat [w/m2] [+ to atm]
+    NoahmpArray2D<noahmp_real> CHLEAFXY[xstart:xend, ystart:yend];     // leaf exchange coefficient
+    NoahmpArray2D<noahmp_real> CHUCXY[xstart:xend, ystart:yend];       // under canopy exchange coefficient
+    NoahmpArray2D<noahmp_real> CHV2XY[xstart:xend, ystart:yend];       // veg 2m exchange coefficient
+    NoahmpArray2D<noahmp_real> CHB2XY[xstart:xend, ystart:yend];       // bare 2m exchange coefficient
+    NoahmpArray2D<noahmp_real> RS[xstart:xend, ystart:yend];           // total stomatal resistance [s/m]
+    NoahmpArray2D<noahmp_real> Z0[xstart:xend, ystart:yend];           // roughness length output to WRF
+    NoahmpArray2D<noahmp_real> ZNT[xstart:xend, ystart:yend];          // roughness length output to WRF
+    NoahmpArray2D<noahmp_real> QTDRAIN[xstart:xend, ystart:yend];      // tile drain discharge, accumulated depth [mm]
+
+    // additional output variables
+    NoahmpArray2D<noahmp_real> PAHGXY[xstart:xend, ystart:yend];       // precipitation advected heat [W/m2]
+    NoahmpArray2D<noahmp_real> PAHBXY[xstart:xend, ystart:yend];       // precipitation advected heat [W/m2]
+    NoahmpArray2D<noahmp_real> PAHVXY[xstart:xend, ystart:yend];       // precipitation advected heat [W/m2]
+    NoahmpArray2D<noahmp_real> QINTSXY[xstart:xend, ystart:yend];      // canopy intercepted snow [mm/s]
+    NoahmpArray2D<noahmp_real> QINTRXY[xstart:xend, ystart:yend];      // canopy intercepted rain [mm/s]
+    NoahmpArray2D<noahmp_real> QDRIPSXY[xstart:xend, ystart:yend];     // canopy dripping snow [mm/s]
+    NoahmpArray2D<noahmp_real> QDRIPRXY[xstart:xend, ystart:yend];     // canopy dripping rain [mm/s]
+    NoahmpArray2D<noahmp_real> QTHROSXY[xstart:xend, ystart:yend];     // canopy throughfall snow [mm/s]
+    NoahmpArray2D<noahmp_real> QTHRORXY[xstart:xend, ystart:yend];     // canopy throughfall rain [mm/s]
+    NoahmpArray2D<noahmp_real> QSNSUBXY[xstart:xend, ystart:yend];     // snowpack sublimation rate [mm/s]
+    NoahmpArray2D<noahmp_real> QMELTXY[xstart:xend, ystart:yend];      // snowpack melting rate due to phase change [mm/s]
+    NoahmpArray2D<noahmp_real> QSNFROXY[xstart:xend, ystart:yend];     // snowpack frost rate [mm/s]
+    NoahmpArray2D<noahmp_real> QSUBCXY[xstart:xend, ystart:yend];      // canopy snow sublimation rate [mm/s]
+    NoahmpArray2D<noahmp_real> QFROCXY[xstart:xend, ystart:yend];      // canopy snow frost rate [mm/s]
+    NoahmpArray2D<noahmp_real> QEVACXY[xstart:xend, ystart:yend];      // canopy water evaporation rate [mm/s]
+    NoahmpArray2D<noahmp_real> QDEWCXY[xstart:xend, ystart:yend];      // canopy water dew rate [mm/s]
+    NoahmpArray2D<noahmp_real> QFRZCXY[xstart:xend, ystart:yend];      // canopy water freezing rate [mm/s]
+    NoahmpArray2D<noahmp_real> QMELTCXY[xstart:xend, ystart:yend];     // canopy snow melting rate [mm/s]
+    NoahmpArray2D<noahmp_real> QSNBOTXY[xstart:xend, ystart:yend];     // total water out of snowpack bottom [mm/s]
+    NoahmpArray2D<noahmp_real> PONDINGXY[xstart:xend, ystart:yend];    // total surface ponding [mm]
+    NoahmpArray2D<noahmp_real> FPICEXY[xstart:xend, ystart:yend];      // fraction of ice in total precipitation
+    NoahmpArray2D<noahmp_real> RAINLSM[xstart:xend, ystart:yend];      // total rain rate at the surface [mm/s]
+    NoahmpArray2D<noahmp_real> SNOWLSM[xstart:xend, ystart:yend];      // total snow rate at the surface [mm/s]
+    NoahmpArray2D<noahmp_real> FORCTLSM[xstart:xend, ystart:yend];     // surface temperature as LSM forcing [K]
+    NoahmpArray2D<noahmp_real> FORCQLSM[xstart:xend, ystart:yend];     // surface specific humidity as LSM forcing [kg/kg]
+    NoahmpArray2D<noahmp_real> FORCPLSM[xstart:xend, ystart:yend];     // surface pressure as LSM forcing [Pa]
+    NoahmpArray2D<noahmp_real> FORCZLSM[xstart:xend, ystart:yend];     // reference height as LSM input [m]
+    NoahmpArray2D<noahmp_real> FORCWLSM[xstart:xend, ystart:yend];     // surface wind speed as LSM forcing [m/s]
+    NoahmpArray2D<noahmp_real> ACC_SSOILXY[xstart:xend, ystart:yend];  // accumulated ground heat flux
+    NoahmpArray2D<noahmp_real> ACC_QINSURXY[xstart:xend, ystart:yend]; // accumulated water flux into soil
+    NoahmpArray2D<noahmp_real> ACC_QSEVAXY[xstart:xend, ystart:yend];  // accumulated soil surface evaporation
+    NoahmpArray2D<noahmp_real> EFLXBXY[xstart:xend, ystart:yend];      // accumulated heat flux through soil bottom [J/m2]
+    NoahmpArray2D<noahmp_real> SOILENERGY[xstart:xend, ystart:yend];   // energy content in soil rel. to 273.16 [KJ/m2]
+    NoahmpArray2D<noahmp_real> SNOWENERGY[xstart:xend, ystart:yend];   // energy content in snow rel. to 273.16 [KJ/m2]
+    NoahmpArray2D<noahmp_real> ACC_DWATERXY[xstart:xend, ystart:yend]; // accumulated snow/soil/canopy water change [mm]
+    NoahmpArray2D<noahmp_real> ACC_PRCPXY[xstart:xend, ystart:yend];   // accumulated precipitation [mm]
+    NoahmpArray2D<noahmp_real> ACC_ECANXY[xstart:xend, ystart:yend];   // accumulated net canopy evaporation [mm]
+    NoahmpArray2D<noahmp_real> ACC_ETRANXY[xstart:xend, ystart:yend];  // accumulated transpiration [mm]
+    NoahmpArray2D<noahmp_real> ACC_EDIRXY[xstart:xend, ystart:yend];   // accumulated net ground evaporation [mm]
+    NoahmpArray3D<noahmp_real> ACC_ETRANIXY[xstart:xend, 1:nsoil, ystart:yend]; // accumulated transpiration rate within soil timestep
+    NoahmpArray2D<noahmp_real> ACC_GLAFLWXY[xstart:xend, ystart:yend]; // accumulated glacier excessive flow [mm]
+}
+
+extern "C" {
+    struct NoahmpIO_type_fi {
+
+        @NoahmpMacro:CppMirrorFields(m_noahmpio);
+
+        NoahmpIO_type_fi(
+          @NoahmpMacro:CppCtorParams(m_noahmpio);
+        ):
+          @NoahmpMacro:CppCtorInit(m_noahmpio);
+        {}
+    };
+}
+
+// ABI guards. NoahmpIO_type_fi mirrors the bind(C) Fortran derived type in
+// NoahmpIO_fi.F90; both sides are generated from the @NoahmpMacro:Source block,
+// so member count, order, and (all-pointer) types cannot drift (checked by
+// `make codegen-check`). Two hazards codegen cannot prevent each keep a guard:
+//   * compiler layout / packing -- static_assert below (compile time). Standard-
+//     layout + sizeof == N*sizeof(void*) pins the C++ side to a flat pointer
+//     array, matching the Fortran bind(C) side via companion-C interop.
+//   * element precision -- NoahmpRealSize_fi() (run time). Detects a noahmp_real
+//     vs c_kind_noahmp mismatch when DOUBLE_PREC is applied to only one of the
+//     two separately-invoked compilers (which shared source cannot prevent).
+// Coupled member count; drives the compile-time ABI layout guard.
+inline constexpr std::size_t NOAHMP_IO_FI_NUM_MEMBERS = @NoahmpMacro:MemberCount(m_noahmpio);
+
+static_assert(std::is_standard_layout<NoahmpIO_type_fi>::value,
+              "NoahmpIO_type_fi must be standard-layout to share an ABI with the "
+              "Fortran bind(C) NoahmpIO_type_fi.");
+static_assert(sizeof(NoahmpIO_type_fi) == NOAHMP_IO_FI_NUM_MEMBERS * sizeof(void*),
+              "NoahmpIO_type_fi is not a flat array of pointers: unexpected "
+              "padding or member count. Both sides are generated from "
+              "@NoahmpMacro:Source; run `make codegen` and rebuild.");
+
+// Returns sizeof(real(c_kind_noahmp)) as seen by the Fortran compiler.
+extern "C" std::size_t NoahmpRealSize_fi();
+
+// Runs the run-time ABI precision guard once, aborting on mismatch. Invoked from
+// both NoahmpIO_type construction and NoahmpIO_vector::resize so neither skips it.
+void NoahmpIO_AssertAbi();
+
+class NoahmpIO_type {
+
+    public:
+        // The owner class's real fields, projected from the contract block above.
+        @NoahmpMacro:CppStorageFields(m_noahmpio);
+
+        NoahmpIO_type():
+          fptr(
+            @NoahmpMacro:CppBindAddrs(m_noahmpio);
+          ) { NoahmpIO_AssertAbi(); }
+
+        // fptr is self-referential: copy/move without re-pointing would dangle.
+        // Copy is deleted; move is kept (vector::resize) and re-points fptr below.
+        NoahmpIO_type(const NoahmpIO_type&)            = delete;
+        NoahmpIO_type& operator=(const NoahmpIO_type&) = delete;
+        NoahmpIO_type& operator=(NoahmpIO_type&&)      = delete;
+
+        NoahmpIO_type(NoahmpIO_type&& o) noexcept:
+          @NoahmpMacro:CppMoveInit(m_noahmpio, ctype=o);
+          fptr(o.fptr)
+        {
+          // Array handles (Fortran-owned) are correct as copied; re-point only the
+          // self-referential scalar handles at THIS object's members.
+          @NoahmpMacro:CppMoveRepoint(m_noahmpio, ctype_fi=fptr);
+        }
+
+        void ScalarInitDefault();
+        void VarInitDefault();
+        void InitMain();
+        void ReadNamelist();
+        void ReadTable();
+        void ReadLandHeader();
+        void ReadLandMain();
+        void DriverMain();
+        void WriteLand(int filenum);
+        void WriteRestart(const std::string& dir);
+        void ReadRestart(const std::string& dir);
+
+    private:
+        NoahmpIO_type_fi fptr;
+};
+
+// NoahmpIO_vector mirrors a Fortran allocatable array sized exactly ONCE via
+// NoahmpIOTypeVectInit_fi. Two invariants make std::vector's mutating API unsafe:
+//   1. C++ size and Fortran extent must stay equal; only resize(size, level) does.
+//   2. Each element's fptr points into its own members, so any relocation
+//      (grow/reserve/insert/copy) leaves dangling C pointers.
+class NoahmpIO_vector : private std::vector<NoahmpIO_type> {
+
+    using base = std::vector<NoahmpIO_type>;
+    bool initialized_ = false;
+
+public:
+    NoahmpIO_vector() = default;
+
+    // Copying/moving the whole container would relocate elements and break the
+    // self-referential fptr pointers; disallow at compile time.
+    NoahmpIO_vector(const NoahmpIO_vector&)            = delete;
+    NoahmpIO_vector& operator=(const NoahmpIO_vector&) = delete;
+    NoahmpIO_vector(NoahmpIO_vector&&)                 = delete;
+    NoahmpIO_vector& operator=(NoahmpIO_vector&&)      = delete;
+
+    // The one supported sizing entry point; errors if called more than once.
+    void resize(size_t size, size_t level);
+
+    // Read-only / element-access subset, safe once the array is sized.
+    using base::operator[];
+    using base::at;
+    using base::front;
+    using base::back;
+    using base::data;
+    using base::begin;
+    using base::end;
+    using base::cbegin;
+    using base::cend;
+    using base::size;
+    using base::empty;
+};
+
+#endif // NOAHMP_IO_H

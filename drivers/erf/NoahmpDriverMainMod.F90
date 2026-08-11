@@ -27,11 +27,8 @@ contains
 
   subroutine NoahmpDriverMain(NoahmpIO)
   
-! ------------------------ Code history -----------------------------------
-! Original Noah-MP subroutine: noahmplsm
-! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
-! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
-! ------------------------------------------------------------------------- 
+! Code history: original Noah-MP subroutine noahmplsm (Niu et al. 2011);
+! refactored by C. He, P. Valayamkunnath & team (He et al. 2023)
  
     implicit none 
     
@@ -43,26 +40,18 @@ contains
     integer                             :: J
     integer                             :: K
     integer                             :: JMONTH, JDAY
-    real(kind=kind_noahmp)              :: SOLAR_TIME 
-    real(kind=kind_noahmp), dimension( 1:NoahmpIO%nsoil ) :: SAND
-    real(kind=kind_noahmp), dimension( 1:NoahmpIO%nsoil ) :: CLAY
-    real(kind=kind_noahmp), dimension( 1:NoahmpIO%nsoil ) :: ORGM
-! ------------------------------------------------------------------------- 
+    real(kind=kind_noahmp)              :: SOLAR_TIME
 
-      NoahmpIO%P8W(:, 2, :) = NoahmpIO%P8W(:, 1, :)              ! WRF uses lowest two layers
-      NoahmpIO%T_PHY(:, 2, :) = NoahmpIO%T_PHY(:, 1, :)            ! Only pressure is needed in two layer but fill the rest
-      NoahmpIO%U_PHY(:, 2, :) = NoahmpIO%U_PHY(:, 1, :)            !
-      NoahmpIO%V_PHY(:, 2, :) = NoahmpIO%V_PHY(:, 1, :)            !
-      NoahmpIO%QV_CURR(:, 2, :) = NoahmpIO%QV_CURR(:, 1, :)          !
-      NoahmpIO%RAINBL = NoahmpIO%RAINBL*NoahmpIO%DTBL  ! RAINBL in WRF is [mm]
-      NoahmpIO%SNOWBL = NoahmpIO%SNOWBL*NoahmpIO%DTBL  !
-      NoahmpIO%SR = 0.0                              ! Will only use component if opt_snf=4
-      NoahmpIO%RAINCV = 0.0
-      NoahmpIO%RAINNCV = NoahmpIO%RAINBL
+      ! ERF provides one atmospheric level; WRF physics expects two -- duplicate layer 1 into layer 2.
+      NoahmpIO%P8W(:, 2, :) = NoahmpIO%P8W(:, 1, :)
+      NoahmpIO%T_PHY(:, 2, :) = NoahmpIO%T_PHY(:, 1, :)
+      NoahmpIO%U_PHY(:, 2, :) = NoahmpIO%U_PHY(:, 1, :)
+      NoahmpIO%V_PHY(:, 2, :) = NoahmpIO%V_PHY(:, 1, :)
+      NoahmpIO%QV_CURR(:, 2, :) = NoahmpIO%QV_CURR(:, 1, :)
+      ! Zero the channels ERF lacks (convective, shallow) and unused SNOWBL.
+      NoahmpIO%SNOWBL  = 0.0
+      NoahmpIO%RAINCV  = 0.0
       NoahmpIO%RAINSHV = 0.0
-      NoahmpIO%SNOWNCV = NoahmpIO%SNOWBL
-      NoahmpIO%GRAUPELNCV = 0.0
-      NoahmpIO%HAILNCV = 0.0
       NoahmpIO%DZ8W = 2*NoahmpIO%ZLVL                  ! 2* to be consistent with WRF model level
 
       NoahmpIO%SWDDIR = NoahmpIO%SWDOWN*0.7                    ! following noahmplsm ATM 70% direct radiation
@@ -78,16 +67,11 @@ contains
 
       IF (NoahmpIO%ITIMESTEP > 0) THEN
          if (NoahmpIO%rank == 0) write(*,'("Noah-MP running physical processes")')
+         ! Convective/shallow absent in ERF; MP_HAIL is ERF-supplied (not set here).
          NoahmpIO%MP_RAINC = NoahmpIO%RAINCV
-         NoahmpIO%MP_RAINNC = NoahmpIO%RAINNCV
          NoahmpIO%MP_SHCV = NoahmpIO%RAINSHV
-         NoahmpIO%MP_SNOW = NoahmpIO%SNOWNCV
-         NoahmpIO%MP_GRAUP = NoahmpIO%GRAUPELNCV
-         NoahmpIO%MP_HAIL = NoahmpIO%HAILNCV
 
-    !---------------------------------------------------------------------
     !  Treatment of Noah-MP soil timestep
-    !---------------------------------------------------------------------
     NoahmpIO%CALCULATE_SOIL    = .false.
     NoahmpIO%SOIL_UPDATE_STEPS = nint(NoahmpIO%SOILTSTEP / NoahmpIO%DTBL)
     NoahmpIO%SOIL_UPDATE_STEPS = max(NoahmpIO%SOIL_UPDATE_STEPS,1)
@@ -120,14 +104,11 @@ contains
        end if
     endif
 
-    !if ( mod(NoahmpIO%ITIMESTEP, NoahmpIO%SOIL_UPDATE_STEPS) == 0 ) NoahmpIO%CALCULATE_SOIL = .true.
-    ! Prevent stale values of calculate_soil from leaking across cpu threads in if-statement above
+    ! Set directly (not in the if above) to avoid stale calculate_soil across cpu threads
     NoahmpIO%CALCULATE_SOIL = mod(NoahmpIO%ITIMESTEP, NoahmpIO%SOIL_UPDATE_STEPS) == 0
 
-    !---------------------------------------------------------------------
     !  Prepare Noah-MP driver
-    !---------------------------------------------------------------------
-    
+
     ! find length of year for phenology (also S Hemisphere)
     NoahmpIO%YEARLEN = 365
     if (mod(NoahmpIO%YR,4) == 0)then
@@ -182,9 +163,7 @@ contains
           else
              if ( (NoahmpIO%XLAND(I,J)-1.5) >= 0.0 ) cycle ILOOP     ! Skip any open water points
 
-             !------------------------------------------------------------------------------------
-             !  initialize Data Types and transfer all the inputs from 2-D to 1-D column variables
-             !------------------------------------------------------------------------------------
+             !  Initialize data types and transfer inputs from 2-D to 1-D column variables
              call ConfigVarInitDefault  (noahmp)
              call ConfigVarInTransfer   (noahmp, NoahmpIO)
              call ForcingVarInitDefault (noahmp)
@@ -196,11 +175,8 @@ contains
              call BiochemVarInitDefault (noahmp)
              call BiochemVarInTransfer  (noahmp, NoahmpIO)
 
-             !---------------------------------------------------------------------
-             !  hydrological processes for vegetation in urban model
-             !  irrigate vegetaion only in urban area, MAY-SEP, 9-11pm
-             ! need to be separated from Noah-MP into outside urban specific module 
-             !---------------------------------------------------------------------
+             !  Urban vegetation hydrology: irrigate only in urban area, MAY-SEP, 9-11pm.
+             !  TODO: separate urban-specific logic out of the Noah-MP driver.
              if ( (NoahmpIO%IVGTYP(I,J) == NoahmpIO%ISURBAN_TABLE) .or. &
                   (NoahmpIO%IVGTYP(I,J) > NoahmpIO%URBTYPE_beg) ) then
                 if ( (NoahmpIO%SF_URBAN_PHYSICS > 0) .and. (NoahmpIO%IRI_URBAN == 1) ) then
@@ -217,10 +193,8 @@ contains
                 endif
              endif
 
-             !------------------------------------------------------------------------
-             !  Call 1D Noah-MP LSM  
-             !------------------------------------------------------------------------
-         
+             !  Call 1D Noah-MP LSM
+
              ! glacier ice
              if (noahmp%config%domain%VegType == noahmp%config%domain%IndexIcePoint ) then
                  noahmp%config%domain%IndicatorIceSfc = -1  ! Land-ice point      
@@ -232,9 +206,7 @@ contains
                  call NoahmpMain(noahmp)
              endif ! glacial split ends
 
-             !---------------------------------------------------------------------
              !  Transfer 1-D Noah-MP column variables to 2-D output variables
-             !---------------------------------------------------------------------
              call ConfigVarOutTransfer (noahmp, NoahmpIO)
              call ForcingVarOutTransfer(noahmp, NoahmpIO)
              call EnergyVarOutTransfer (noahmp, NoahmpIO)
@@ -249,7 +221,7 @@ contains
  
   end subroutine NoahmpDriverMain
 
-   SUBROUTINE CAL_MON_DAY(JULDAY, julyr, Jmonth, Jday)
+  subroutine CAL_MON_DAY(JULDAY, julyr, Jmonth, Jday)
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: JULDAY, julyr
       INTEGER, INTENT(OUT) :: Jmonth, Jday
@@ -266,18 +238,18 @@ contains
          LEAP = .TRUE.
       END IF
 
-      i = 1
-      DO WHILE (NOT_FIND_DATE)
+      do i = 1, 12
          IF (itmpday .GT. MONTH(i)) THEN
             itmpday = itmpday-MONTH(i)
          ELSE
             Jday = itmpday
             Jmonth = i
             NOT_FIND_DATE = .false.
+            exit
          END IF
-         i = i+1
-      END DO
+      end do
+      if (NOT_FIND_DATE) stop "CAL_MON_DAY: day-of-year out of valid range (1..YEARLEN)"
 
-   END SUBROUTINE CAL_MON_DAY
+   end subroutine CAL_MON_DAY
 
 end module NoahmpDriverMainMod  
