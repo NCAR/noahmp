@@ -77,9 +77,9 @@ define make-dep
 mkdir -p $(dir $$outfile); \
 mods=$$( $(MPIFF) $(FFLAGS) $(FFLAGS_NOAHMP) -cpp -E $< 2>/dev/null | \
 sed 's/!.*//' | \
-grep -E '(^|[^A-Za-z0-9_])use[[:space:]]+[A-Za-z0-9_]+' | \
+grep -E '^[[:space:]]*use[[:space:]]+[A-Za-z0-9_]+' | \
 grep -vE 'netcdf|mpi|iso_fortran_env|omp_lib|iso_c_binding|intrinsic' | \
-sed -E 's|.*use[[:space:]]+([A-Za-z0-9_]+).*|\1|g' | sort -u ); \
+sed -E 's|^[[:space:]]*use[[:space:]]+([A-Za-z0-9_]+).*|\1|g' | sort -u ); \
 printf "$(NOAHMP_OBJ_DIR)/$*.o:" > $$outfile; \
 for m in $$mods; do printf " $(NOAHMP_OBJ_DIR)/$${m}.o"; done >> $$outfile; \
 echo "" >> $$outfile; \
