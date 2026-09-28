@@ -52,8 +52,6 @@
  soil_thick_input(3) = 0.60
  soil_thick_input(4) = 1.00
 
- ZLVL = 10.0
-
  SF_URBAN_PHYSICS = 0
  USE_WUDAPT_LCZ = 0
 

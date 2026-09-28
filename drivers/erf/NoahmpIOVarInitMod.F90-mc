@@ -51,8 +51,7 @@ contains
     if ( .not. allocated (NoahmpIO%HAILNCV)   ) allocate ( NoahmpIO%HAILNCV    (XSTART:XEND,        YSTART:YEND) ) ! non-convective hail forcing (subset of rainncv) [mm]
     if ( .not. allocated (NoahmpIO%MP_RAINC)  ) allocate ( NoahmpIO%MP_RAINC   (XSTART:XEND,        YSTART:YEND) ) ! convective precip forcing [mm]
     if ( .not. allocated (NoahmpIO%MP_SHCV)   ) allocate ( NoahmpIO%MP_SHCV    (XSTART:XEND,        YSTART:YEND) ) ! shallow conv. precip forcing [mm]
-    if ( .not. allocated (NoahmpIO%DZ8W)      ) allocate ( NoahmpIO%DZ8W       (XSTART:XEND,KMS:KME,YSTART:YEND) ) ! thickness of atmo layers [m]
- 
+
     ! spatial varying parameter map
     if ( NoahmpIO%IOPT_SOIL > 1 ) then
        if ( .not. allocated (NoahmpIO%soilcomp)) allocate ( NoahmpIO%soilcomp (XSTART:XEND,1:2*NSOIL,YSTART:YEND) ) ! Soil sand and clay content [fraction]

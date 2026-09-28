@@ -55,11 +55,20 @@ contains
       NoahmpIO%U_PHY(:, 2, :) = NoahmpIO%U_PHY(:, 1, :)
       NoahmpIO%V_PHY(:, 2, :) = NoahmpIO%V_PHY(:, 1, :)
       NoahmpIO%QV_CURR(:, 2, :) = NoahmpIO%QV_CURR(:, 1, :)
+      NoahmpIO%DZ8W(:, 2, :) = NoahmpIO%DZ8W(:, 1, :)
       ! Zero the channels ERF lacks (convective, shallow) and unused SNOWBL.
       NoahmpIO%SNOWBL  = 0.0
       NoahmpIO%RAINCV  = 0.0
       NoahmpIO%RAINSHV = 0.0
-      NoahmpIO%DZ8W = 2*NoahmpIO%ZLVL                  ! 2* to be consistent with WRF model level
+
+      ! The host (ERF) stages DZ8W per column, per step, from its own MOST reference
+      ! height -- see stage_forcing in ERF_NOAHMP_Advance.cpp. Only fall back to the
+      ! ZLVL broadcast (2x for the WRF model-level convention) if nothing was staged,
+      ! which should not happen when driven from ERF.
+      if (any(NoahmpIO%DZ8W == undefined_real)) then
+         NoahmpIO%DZ8W = 2*NoahmpIO%ZLVL
+         if (NoahmpIO%rank == 0) write(*,'(" ***** Noah-MP: host did not stage DZ8W; using ZLVL ",F0.3," m.")') NoahmpIO%ZLVL
+      endif
 
       NoahmpIO%SWDDIR = NoahmpIO%SWDOWN*0.7                    ! following noahmplsm ATM 70% direct radiation
       NoahmpIO%SWDDIF = NoahmpIO%SWDOWN*0.3                    ! following noahmplsm ATM 30% diffuse radiation

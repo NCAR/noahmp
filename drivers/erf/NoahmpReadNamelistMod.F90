@@ -47,6 +47,10 @@ contains
     integer                 :: noahmp_output    = 0
     real(kind=kind_noahmp)  :: urban_atmosphere_thickness = 5.0
     real(kind=kind_noahmp)  :: soil_timestep    = 0.0   ! soil timestep (default=0: same as main noahmp timestep)
+    ! ZLVL is no longer a supported namelist option (see below); kept here only so a
+    ! namelist.erf that still sets it is caught with a clear error instead of an
+    ! opaque namelist-parse failure.
+    real(kind=kind_noahmp)  :: zlvl              = undefined_real
 
     character(len=256)      :: forcing_name_T  = "T2D"
     character(len=256)      :: forcing_name_Q  = "Q2D"
@@ -89,7 +93,6 @@ contains
     logical                 :: skip_first_output                  = .false.
     integer                 :: khour                              = -9999
     integer                 :: kday                               = -9999
-    real(kind=kind_noahmp)  :: zlvl                               = 10.
     character(len=256)      :: erf_setup_file_01                  = " "
     character(len=256)      :: erf_setup_file_02                  = " "
     character(len=256)      :: erf_setup_file_03                  = " "
@@ -202,13 +205,25 @@ contains
     ! Noah-MP's calendar start now comes from the wrfinput/WPS file header read
     ! in NoahmpReadLandHeader, not from namelist.erf START_* entries.
 
-    ! Prefer an externally set ERF-coupled zlvl; otherwise fall back to the namelist
-    ! value, but announce it -- an unstaged reference height means DZ8W=2*ZLVL no
-    ! longer matches where the host samples the forcing (see NoahmpDriverMainMod:55).
-    if (NoahmpIO%zlvl == undefined_real) then
-       NoahmpIO%zlvl = zlvl
-       if (NoahmpIO%rank == 0) write(*,'(" ***** Noah-MP: host did not stage ZLVL; using namelist value ",F0.3," m for the reference height.")') NoahmpIO%zlvl
-    endif
+    ! ZLVL is no longer a namelist option: the atmospheric reference height is staged
+    ! per column into DZ8W by the host on every step (see NoahmpDriverMainMod). Reject
+    ! a namelist.erf that still sets it, rather than silently ignoring the value.
+    if (zlvl /= undefined_real) then
+       if (NoahmpIO%rank == 0) write(*, *)
+       if (NoahmpIO%rank == 0) write(*, '(" ***** Namelist error: ******************************************************")')
+       if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+       if (NoahmpIO%rank == 0) write(*, '(" *****       ZLVL is no longer a namelist.erf option: the atmospheric")')
+       if (NoahmpIO%rank == 0) write(*, '(" *****       reference height is now staged by the host (ERF) per column,")')
+       if (NoahmpIO%rank == 0) write(*, '(" *****       every step. Remove ZLVL from namelist.erf.")')
+       if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+       if (NoahmpIO%rank == 0) write(*, *)
+       call NoahmpIO_abort()
+    end if
+
+    ! ZLVL is retained only as the fallback/default for the per-column DZ8W staging
+    ! (see NoahmpDriverMainMod) and for the BEP/BEM urban-atmosphere-level calculation
+    ! below.
+    NoahmpIO%zlvl = 10.0
 
     NoahmpIO%DTBL            = real(noah_timestep)
     NoahmpIO%soiltstep       = soil_timestep

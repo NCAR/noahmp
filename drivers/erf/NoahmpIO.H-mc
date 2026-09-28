@@ -43,6 +43,7 @@
     NoahmpArray3D<noahmp_real> ALBSFCDIFXY[xstart:xend, 1:numrad, ystart:yend];  // surface albedo (diffuse)
     NoahmpArray2D<noahmp_real> COSZEN[xstart:xend, ystart:yend];       // cosine zenith angle
     NoahmpArray3D<noahmp_real> P8W[xstart:xend, kms:kme, ystart:yend];          // 3D pressure, valid at interface [Pa]
+    NoahmpArray3D<noahmp_real> DZ8W[xstart:xend, kms:kme, ystart:yend];         // thickness of atmo layers [m]
     NoahmpArray2D<noahmp_real> TAU_EW[xstart:xend, ystart:yend];       // wind stress in east-west direction [N/m2]
     NoahmpArray2D<noahmp_real> TAU_NS[xstart:xend, ystart:yend];       // wind stress in north-south direction [N/m2]
     NoahmpArray2D<noahmp_real> RAINBL[xstart:xend, ystart:yend];       // precipitation entering land model [mm] per time step
