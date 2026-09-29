@@ -75,8 +75,8 @@ contains
     enddo
 
     ! initialize grid index
-    itf = min0(ite,(ide+1)-1)
-    jtf = min0(jte,(jde+1)-1)
+    itf = min0(ite, ide)
+    jtf = min0(jte, jde)
 
     ! initialize land mask
     where ( (NoahmpIO%IVGTYP /= NoahmpIO%ISWATER_TABLE) .and. (NoahmpIO%IVGTYP /= NoahmpIO%ISICE_TABLE) )

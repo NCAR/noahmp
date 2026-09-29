@@ -1,21 +1,18 @@
 module NoahmpReadNamelistMod
 
 !!! Initialize Noah-MP namelist variables
-!!! Namelist variables should be first defined in NoahmpIOVarType.F90
+!!! Namelist variables must first be defined in NoahmpIOVarType.F90
 
-! ------------------------ Code history -----------------------------------
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
-! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
-! -------------------------------------------------------------------------
+! Refactored code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
 
   use Machine
   use NoahmpIOVarType
+  use NoahmpFatalMod, only: NoahmpIO_abort
 
   implicit none
 
 contains
-
-!=== read namelist values
 
   subroutine NoahmpReadNamelist(NoahmpIO)
 
@@ -23,26 +20,18 @@ contains
 
     type(NoahmpIO_type), intent(inout)  :: NoahmpIO
 
-!---------------------------------------------------------------------
-!  NAMELIST start
-!---------------------------------------------------------------------
-
     ! local namelist variables
-    
+
     character(len=256)      :: indir = '.'
     integer                 :: ierr
+    integer                 :: nu
     integer                 :: NSOIL                 ! number of soil layers
-    integer                 :: forcing_timestep
-    integer                 :: noah_timestep
-    integer                 :: start_year
-    integer                 :: start_month
-    integer                 :: start_day
-    integer                 :: start_hour
-    integer                 :: start_min
+    integer                 :: forcing_timestep         = -9999
+    integer                 :: noah_timestep            = -9999
     character(len=256)      :: outdir = "."
     character(len=256)      :: restart_filename_requested = " "
-    integer                 :: restart_frequency_hours
-    integer                 :: output_timestep
+    integer                 :: restart_frequency_hours  = 0
+    integer                 :: output_timestep          = 0
     integer                 :: spinup_loops     = 0
     integer                 :: sf_urban_physics = 0
     integer                 :: use_wudapt_lcz   = 0  ! add for LCZ urban
@@ -58,6 +47,10 @@ contains
     integer                 :: noahmp_output    = 0
     real(kind=kind_noahmp)  :: urban_atmosphere_thickness = 5.0
     real(kind=kind_noahmp)  :: soil_timestep    = 0.0   ! soil timestep (default=0: same as main noahmp timestep)
+    ! ZLVL is no longer a supported namelist option (see below); kept here only so a
+    ! namelist.erf that still sets it is caught with a clear error instead of an
+    ! opaque namelist-parse failure.
+    real(kind=kind_noahmp)  :: zlvl              = undefined_real
 
     character(len=256)      :: forcing_name_T  = "T2D"
     character(len=256)      :: forcing_name_Q  = "Q2D"
@@ -100,7 +93,6 @@ contains
     logical                 :: skip_first_output                  = .false.
     integer                 :: khour                              = -9999
     integer                 :: kday                               = -9999
-    real(kind=kind_noahmp)  :: zlvl                               = 10.
     character(len=256)      :: erf_setup_file_01                  = " "
     character(len=256)      :: erf_setup_file_02                  = " "
     character(len=256)      :: erf_setup_file_03                  = " "
@@ -147,7 +139,6 @@ contains
          finemesh,finemesh_factor,forc_typ, snow_assim , GEO_STATIC_FLNM, HRLDAS_ini_typ, &
 #endif
          indir, nsoil, soil_thick_input, forcing_timestep, noah_timestep, soil_timestep,  &
-         start_year, start_month, start_day, start_hour, start_min,                       &
          outdir, skip_first_output, noahmp_output,                                        &
          restart_filename_requested, restart_frequency_hours, output_timestep,            &
          spinup_loops,                                                                    &
@@ -177,10 +168,7 @@ contains
          forcing_name_OCPHI, forcing_name_OCPHO, forcing_name_DUST1, forcing_name_DUST2,  &
          forcing_name_DUST3, forcing_name_DUST4, forcing_name_DUST5
 
-    !---------------------------------------------------------------
-    !  Initialize namelist variables to dummy values, so we can tell
-    !  if they have not been set properly.
-    !---------------------------------------------------------------
+    ! Initialize to dummy values so unset variables can be detected
     if (.not. allocated(NoahmpIO%soil_thick_input)) allocate(NoahmpIO%soil_thick_input(1:MAX_SOIL_LEVELS))
     NoahmpIO%nsoil                   = undefined_int
     NoahmpIO%soil_thick_input        = undefined_real
@@ -193,7 +181,6 @@ contains
     NoahmpIO%start_min               = undefined_int
     NoahmpIO%khour                   = undefined_int
     NoahmpIO%kday                    = undefined_int
-    NoahmpIO%zlvl                    = undefined_real
     NoahmpIO%forcing_timestep        = undefined_int
     NoahmpIO%noah_timestep           = undefined_int
     NoahmpIO%output_timestep         = undefined_int
@@ -202,45 +189,70 @@ contains
     NoahmpIO%noahmp_output           = 0
     NoahmpIO%nsnow                   = undefined_int
 
-    !---------------------------------------------------------------
-    ! read namelist.input
-    !---------------------------------------------------------------
-    
-    open(30, file="namelist.erf", form="FORMATTED")
-    read(30, NOAHLSM_OFFLINE, iostat=ierr)
+    ! read namelist.erf
+    open(newunit=nu, file="namelist.erf", form="FORMATTED", iostat=ierr)
+    if (ierr /= 0) then
+       if (NoahmpIO%rank == 0) write(*,'(" ***** ERROR: cannot open namelist.erf in run directory")')
+       call NoahmpIO_abort()
+    end if
+    read(nu, NOAHLSM_OFFLINE, iostat=ierr)
     if (ierr /= 0) then
        if (NoahmpIO%rank == 0) write(*,'(/," ***** ERROR: Problem reading namelist NOAHLSM_OFFLINE",/)')
-       rewind(30)
-       read(30, NOAHLSM_OFFLINE)
-       stop " ***** ERROR: Problem reading namelist NOAHLSM_OFFLINE"
+       call NoahmpIO_abort()
     endif
-    close(30)
-  
+    close(nu)
+
+    ! Noah-MP's calendar start now comes from the wrfinput/WPS file header read
+    ! in NoahmpReadLandHeader, not from namelist.erf START_* entries.
+
+    ! ZLVL is no longer a namelist option: the atmospheric reference height is staged
+    ! per column into DZ8W by the host on every step (see NoahmpDriverMainMod). Reject
+    ! a namelist.erf that still sets it, rather than silently ignoring the value.
+    if (zlvl /= undefined_real) then
+       if (NoahmpIO%rank == 0) write(*, *)
+       if (NoahmpIO%rank == 0) write(*, '(" ***** Namelist error: ******************************************************")')
+       if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+       if (NoahmpIO%rank == 0) write(*, '(" *****       ZLVL is no longer a namelist.erf option: the atmospheric")')
+       if (NoahmpIO%rank == 0) write(*, '(" *****       reference height is now staged by the host (ERF) per column,")')
+       if (NoahmpIO%rank == 0) write(*, '(" *****       every step. Remove ZLVL from namelist.erf.")')
+       if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
+       if (NoahmpIO%rank == 0) write(*, *)
+       call NoahmpIO_abort()
+    end if
+
+    ! ZLVL is retained only as the fallback/default for the per-column DZ8W staging
+    ! (see NoahmpDriverMainMod) and for the BEP/BEM urban-atmosphere-level calculation
+    ! below.
+    NoahmpIO%zlvl = 10.0
+
     NoahmpIO%DTBL            = real(noah_timestep)
     NoahmpIO%soiltstep       = soil_timestep
     NoahmpIO%NSOIL           = nsoil
     NoahmpIO%NSNOW           = nsnow
     NoahmpIO%LLANDUSE        = llanduse
 
-    !---------------------------------------------------------------------
-    !  NAMELIST end
-    !---------------------------------------------------------------------
-   
-    !---------------------------------------------------------------------
-    !  NAMELIST check begin
-    !---------------------------------------------------------------------
+    ! NAMELIST checks
     NoahmpIO%update_lai = .true.   ! default: use LAI if present in forcing file
     if(dynamic_veg_option == 1 .or. dynamic_veg_option == 2 .or. &
        dynamic_veg_option == 3 .or. dynamic_veg_option == 4 .or. &
-       dynamic_veg_option == 5 .or. dynamic_veg_option == 6) &    ! remove dveg=10 and add dveg=1,3,4 into the update_lai flag false condition
+       dynamic_veg_option == 5 .or. dynamic_veg_option == 6) &
        NoahmpIO%update_lai = .false.
 
     NoahmpIO%update_veg = .false.  ! default: don't use VEGFRA if present in forcing file
     if (dynamic_veg_option == 1 .or. dynamic_veg_option == 6 .or. dynamic_veg_option == 7) &
         NoahmpIO%update_veg = .true.
 
-    if (nsoil < 0) then
-        stop " ***** ERROR: NSOIL must be set in the namelist."
+    if (nsoil < 1) then
+        if (NoahmpIO%rank == 0) write(*,'(" ***** ERROR: NSOIL must be >= 1 in the namelist.")')
+        call NoahmpIO_abort()
+    endif
+
+    if (snow_albedo_option == 3) then
+        if (NoahmpIO%rank == 0) then
+            write(*,'(" ***** ERF does not currently support Noah-MP SNICAR snow albedo (SNOW_ALBEDO_OPTION=3).")')
+            write(*,'(" ***** Please use SNOW_ALBEDO_OPTION=1 (BATS) or SNOW_ALBEDO_OPTION=2 (CLASS).")')
+        end if
+        call NoahmpIO_abort()
     endif
 
     if ((khour < 0) .and. (kday < 0)) then
@@ -248,7 +260,7 @@ contains
         if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
         if (NoahmpIO%rank == 0) write(*, '(" *****      Either KHOUR or KDAY must be defined.")')
         if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
-        stop
+        call NoahmpIO_abort()
     else if (( khour < 0 ) .and. (kday > 0)) then
         NoahmpIO%khour = kday * 24
     else if ((khour > 0) .and. (kday > 0)) then
@@ -264,7 +276,7 @@ contains
         if (NoahmpIO%rank == 0) write(*, '(" *****       FORCING_TIMESTEP needs to be set greater than zero.")')
         if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
         if (NoahmpIO%rank == 0) write(*, *)
-        stop
+        call NoahmpIO_abort()
     endif
 
     if (noah_timestep < 0) then
@@ -275,12 +287,10 @@ contains
         if (NoahmpIO%rank == 0) write(*, '(" *****                     900 seconds is recommended.       ")')
         if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
         if (NoahmpIO%rank == 0) write(*, *)
-        stop
+        call NoahmpIO_abort()
     endif
 
-    !
-    ! Check that OUTPUT_TIMESTEP fits into NOAH_TIMESTEP:
-    !
+    ! OUTPUT_TIMESTEP must be an integer multiple of NOAH_TIMESTEP
     if (output_timestep /= 0) then
        if (mod(output_timestep, noah_timestep) > 0) then
          if (NoahmpIO%rank == 0) write(*, *)
@@ -291,13 +301,11 @@ contains
          if (NoahmpIO%rank == 0) write(*, '(" *****            NOAH_TIMESTEP   = ", I12, " seconds")') noah_timestep
          if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
          if (NoahmpIO%rank == 0) write(*, *)
-         stop
+         call NoahmpIO_abort()
        endif
     endif
 
-   !
-   ! Check that RESTART_FREQUENCY_HOURS fits into NOAH_TIMESTEP:
-   !
+   ! RESTART_FREQUENCY_HOURS (in seconds) must be an integer multiple of NOAH_TIMESTEP
     if (restart_frequency_hours /= 0) then
        if (mod(restart_frequency_hours*3600, noah_timestep) > 0) then
          if (NoahmpIO%rank == 0) write(*, *)
@@ -310,7 +318,7 @@ contains
          if (NoahmpIO%rank == 0) write(*, '(" *****            NOAH_TIMESTEP           = ", I12, " seconds")') noah_timestep
          if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
          if (NoahmpIO%rank == 0) write(*, *)
-         stop
+         call NoahmpIO_abort()
        endif
     endif
 
@@ -321,7 +329,7 @@ contains
          if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
          if (NoahmpIO%rank == 0) write(*, '(" *****       CANOPY_STOMATAL_RESISTANCE_OPTION must be 1 when DYNAMIC_VEG_OPTION == 2/5/6")')
          if (NoahmpIO%rank == 0) write(*, *)
-         stop
+         call NoahmpIO_abort()
       endif
     endif
 
@@ -331,7 +339,7 @@ contains
         if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
         if (NoahmpIO%rank == 0) write(*, '(" *****       SPATIAL_FILENAME must be provided when SOIL_DATA_OPTION == 4")')
         if (NoahmpIO%rank == 0) write(*, *)
-        stop
+        call NoahmpIO_abort()
     endif
 
     if (sf_urban_physics == 2 .or. sf_urban_physics == 3) then
@@ -341,10 +349,10 @@ contains
          if (NoahmpIO%rank == 0) write(*, '(" ***** ")')
          if (NoahmpIO%rank == 0) write(*, '(" *****       When running BEP/BEM, URBAN_ATMOSPHERE_LEVELS must contain at least 3 levels")')
          if (NoahmpIO%rank == 0) write(*, *)
-         stop
+         call NoahmpIO_abort()
        endif
-       NoahmpIO%num_urban_atmosphere = int(zlvl/urban_atmosphere_thickness)
-       if (zlvl - NoahmpIO%num_urban_atmosphere*urban_atmosphere_thickness >= 0.5*urban_atmosphere_thickness)  &
+       NoahmpIO%num_urban_atmosphere = int(NoahmpIO%zlvl/urban_atmosphere_thickness)
+       if (NoahmpIO%zlvl - NoahmpIO%num_urban_atmosphere*urban_atmosphere_thickness >= 0.5*urban_atmosphere_thickness)  &
            NoahmpIO%num_urban_atmosphere = NoahmpIO%num_urban_atmosphere + 1
        if ( NoahmpIO%num_urban_atmosphere <= 2) then
          if (NoahmpIO%rank == 0) write(*, *)
@@ -353,14 +361,12 @@ contains
          if (NoahmpIO%rank == 0) write(*, '(" ***** When running BEP/BEM, num_urban_atmosphere must contain at least 3 levels, ")')
          if (NoahmpIO%rank == 0) write(*, '(" ***** increase ZLVL or decrease URBAN_ATMOSPHERE_THICKNESS")')
          if (NoahmpIO%rank == 0) write(*, *)
-         stop
+         call NoahmpIO_abort()
        endif
     endif
     
-    !---------------------------------------------------------------------
-    !  Transfer Namelist locals to input data structure
-    !---------------------------------------------------------------------
-    ! physics option 
+    ! Transfer namelist locals into the input data structure
+    ! physics options
     NoahmpIO%IOPT_DVEG                         = dynamic_veg_option 
     NoahmpIO%IOPT_CRS                          = canopy_stomatal_resistance_option
     NoahmpIO%IOPT_BTR                          = btr_option
@@ -391,11 +397,6 @@ contains
     NoahmpIO%indir                             = indir
     NoahmpIO%forcing_timestep                  = forcing_timestep
     NoahmpIO%noah_timestep                     = noah_timestep
-    NoahmpIO%start_year                        = start_year
-    NoahmpIO%start_month                       = start_month
-    NoahmpIO%start_day                         = start_day
-    NoahmpIO%start_hour                        = start_hour
-    NoahmpIO%start_min                         = start_min
     NoahmpIO%outdir                            = outdir
     NoahmpIO%noahmp_output                     = noahmp_output
     NoahmpIO%restart_filename_requested        = restart_filename_requested
@@ -428,7 +429,6 @@ contains
     NoahmpIO%split_output_count                = split_output_count
     NoahmpIO%skip_first_output                 = skip_first_output
     NoahmpIO%kday                              = kday
-    NoahmpIO%zlvl                              = zlvl
     NoahmpIO%erf_setup_file_01                 = erf_setup_file_01
     NoahmpIO%erf_setup_file_02                 = erf_setup_file_02
     NoahmpIO%erf_setup_file_03                 = erf_setup_file_03
@@ -441,8 +441,8 @@ contains
     case(2)
       NoahmpIO%erf_setup_file_lev = erf_setup_file_03
     case default
-      print *, "Error: unsupported level: ", NoahmpIO%level
-      stop
+      if (NoahmpIO%rank == 0) print *, "Error: unsupported level: ", NoahmpIO%level
+      call NoahmpIO_abort()
     end select
 
     NoahmpIO%spatial_filename                  = spatial_filename
@@ -479,10 +479,6 @@ contains
     NoahmpIO%forcing_name_DUST3                = forcing_name_DUST3
     NoahmpIO%forcing_name_DUST4                = forcing_name_DUST4
     NoahmpIO%forcing_name_DUST5                = forcing_name_DUST5
-
-!---------------------------------------------------------------------
-!  NAMELIST check end
-!---------------------------------------------------------------------
 
   end subroutine NoahmpReadNamelist
 

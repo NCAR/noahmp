@@ -1,0 +1,5 @@
+# Tell GitHub/Linguist how to syntax-highlight the coupling source-of-truth files.
+# Without this, the unknown *-mc extensions render as plain text on github.com.
+*.cpp-mc linguist-language=C++
+*.H-mc   linguist-language=C++
+*.F90-mc linguist-language=Fortran-Free-Form

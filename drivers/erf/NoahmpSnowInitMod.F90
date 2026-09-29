@@ -39,8 +39,8 @@ contains
 !   SNFRXY  is the snow layer rate of snow freezing [mm/s]
 !------------------------------------------------------------------------------------------
 
-    itf = min0(NoahmpIO%ite, (NoahmpIO%ide+1)-1)
-    jtf = min0(NoahmpIO%jte, (NoahmpIO%jde+1)-1)
+    itf = min0(NoahmpIO%ite, NoahmpIO%ide)
+    jtf = min0(NoahmpIO%jte, NoahmpIO%jde)
 
     do J = NoahmpIO%jts, jtf
        do I = NoahmpIO%its, itf

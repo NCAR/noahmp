@@ -1,7 +1,4 @@
-# ======================================================================
-# Noah-MP unified Makefile.in (final version)
-# Automatic Fortran dependency tracking + correct build order
-# ======================================================================
+# Noah-MP unified Makefile: automatic Fortran dependency tracking + build order.
 
 # --- Root paths ---
 NOAHMP_HOME     ?= ../..
@@ -16,8 +13,10 @@ CXX      ?= mpicxx
 AR       ?= ar
 
 # --- Flags ---
-FFLAGS_NOAHMP   += -O3 -cpp -fPIC -ffree-line-length-none -J$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_INC_DIR))
-CXXFLAGS_NOAHMP += -O3 -fPIC -I$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_HOME)/drivers/erf)
+# Precision (DOUBLE_PREC) comes from the parent; apply to BOTH Fortran and C++.
+NOAHMP_PRECISION_FLAG ?=
+FFLAGS_NOAHMP   += -O3 -cpp -fPIC -ffree-line-length-none $(NOAHMP_PRECISION_FLAG) -J$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_INC_DIR))
+CXXFLAGS_NOAHMP += -O3 -fPIC $(NOAHMP_PRECISION_FLAG) -I$(abspath $(NOAHMP_INC_DIR)) -I$(abspath $(NOAHMP_HOME)/drivers/erf)
 
 # --- NetCDF detection ---
 ifneq (, $(shell which nf-config 2>/dev/null))
@@ -33,9 +32,12 @@ FFLAGS_NOAHMP += $(NETCDF_INCFLAGS)
 # --- Ensure directories exist ---
 $(shell mkdir -p $(NOAHMP_OBJ_DIR) $(NOAHMP_LIB_DIR) $(NOAHMP_INC_DIR))
 
-# ======================================================================
-# Source discovery
-# ======================================================================
+# Coupling codegen (parse time): expand *-mc templates into the gitignored
+# generated sources BEFORE the wildcard discovery below. Idempotent.
+NOAHMP_CODEGEN ?= $(NOAHMP_HOME)/drivers/erf/tools/NoahmpMacro.py
+$(info NoahmpMacro codegen: $(shell python3 $(NOAHMP_CODEGEN) 2>&1))
+
+# --- Source discovery ---
 SRC_DIRS := $(NOAHMP_HOME)/src $(NOAHMP_HOME)/utility $(NOAHMP_HOME)/drivers/erf
 
 # Map lowercase module names to actual source files (case-insensitive match)
@@ -51,32 +53,33 @@ OBJS := $(addprefix $(NOAHMP_OBJ_DIR)/, $(notdir $(F90_SRCS:.F90=.o))) \
 
 DEPS := $(OBJS:.o=.d)
 
-# ======================================================================
-# Primary targets
-# ======================================================================
-.PHONY: all_noahmp clean_noahmp noahmp_includes
+# --- Primary targets ---
+.PHONY: all_noahmp clean_noahmp noahmp_includes codegen codegen-check
 
 all_noahmp: $(NOAHMP_LIB) noahmp_includes
+
+# Convenience codegen targets: regenerate in place, or drift-check for CI.
+codegen:
+	@python3 $(NOAHMP_CODEGEN)
+codegen-check:
+	@python3 $(NOAHMP_CODEGEN) --check
 
 $(NOAHMP_LIB): $(OBJS)
 	@mkdir -p $(NOAHMP_LIB_DIR)
 	@echo "Archiving Noah-MP library: $@"
 	$(AR) rcs $@ $^
 
-# ======================================================================
-# Automatic Fortran dependency generation (correct + path-safe)
-# ======================================================================
-# Each .d file will contain lines like:
-#   obj/foo.o: obj/bar.o obj/baz.o
+# --- Automatic Fortran dependency generation (path-safe) ---
+# Each .d file contains lines like: obj/foo.o: obj/bar.o obj/baz.o
 define make-dep
 @echo "Generating dependencies for $<"
 @outfile=$(NOAHMP_OBJ_DIR)/$*.d; \
 mkdir -p $(dir $$outfile); \
 mods=$$( $(MPIFF) $(FFLAGS) $(FFLAGS_NOAHMP) -cpp -E $< 2>/dev/null | \
 sed 's/!.*//' | \
-grep -E '(^|[^A-Za-z0-9_])use[[:space:]]+[A-Za-z0-9_]+' | \
+grep -E '^[[:space:]]*use[[:space:]]+[A-Za-z0-9_]+' | \
 grep -vE 'netcdf|mpi|iso_fortran_env|omp_lib|iso_c_binding|intrinsic' | \
-sed -E 's|.*use[[:space:]]+([A-Za-z0-9_]+).*|\1|g' | sort -u ); \
+sed -E 's|^[[:space:]]*use[[:space:]]+([A-Za-z0-9_]+).*|\1|g' | sort -u ); \
 printf "$(NOAHMP_OBJ_DIR)/$*.o:" > $$outfile; \
 for m in $$mods; do printf " $(NOAHMP_OBJ_DIR)/$${m}.o"; done >> $$outfile; \
 echo "" >> $$outfile; \
@@ -94,9 +97,7 @@ ifeq ($(MAKECMDGOALS),all_noahmp)
   -include $(DEPS)
 endif
 
-# ======================================================================
-# Compilation rules
-# ======================================================================
+# --- Compilation rules ---
 
 # --- Fortran src modules ---
 $(NOAHMP_OBJ_DIR)/%.o: $(NOAHMP_HOME)/src/%.F90 $(NOAHMP_OBJ_DIR)/%.d
@@ -122,18 +123,20 @@ $(NOAHMP_OBJ_DIR)/%.o: $(NOAHMP_HOME)/src/%.cpp
 	@echo "Compiling Noah-MP C++: $<"
 	$(CXX) $(CXXFLAGS) $(CXXFLAGS_NOAHMP) -c $< -o $@
 
-# ======================================================================
-# Install headers and modules
-# ======================================================================
+# --- Install headers and modules ---
 noahmp_includes:
 	@mkdir -p $(NOAHMP_INC_DIR)
 	@echo "Installing module (.mod) and header (.H) files: $(NOAHMP_INC_DIR)"
 	@find $(NOAHMP_OBJ_DIR) -maxdepth 1 -type f -name "*.mod" -exec cp -u {} $(NOAHMP_INC_DIR)/ \;
 	@find $(NOAHMP_HOME)/drivers/erf -maxdepth 1 -type f -name "*.H" -exec cp -u {} $(NOAHMP_INC_DIR)/ \;
 
-# ======================================================================
-# Cleaning
-# ======================================================================
+# --- Cleaning ---
 clean_noahmp:
 	@echo "Cleaning Noah-MP build artifacts..."
 	rm -rf $(NOAHMP_OBJ_DIR) $(NOAHMP_LIB_DIR) $(NOAHMP_INC_DIR)
+	@echo "Removing generated coupling files (expanded from *-mc templates)..."
+	rm -f $(NOAHMP_HOME)/drivers/erf/NoahmpIO.H \
+	      $(NOAHMP_HOME)/drivers/erf/NoahmpIO.cpp \
+	      $(NOAHMP_HOME)/drivers/erf/NoahmpIO_fi.F90 \
+	      $(NOAHMP_HOME)/drivers/erf/NoahmpIOVarType.F90 \
+	      $(NOAHMP_HOME)/drivers/erf/NoahmpIOVarInitMod.F90
