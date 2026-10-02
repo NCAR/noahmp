@@ -3,11 +3,15 @@ module SnowInputSnicarMod
 !!! read in required SNICAR snow albedo parameter datasets
 !!! This module should be called in host model driver but archived here in NoahMP src cold
 
+#if defined(_MPI) || defined(DM_PARALLEL) || defined(MPP_LAND) || defined(_PARALLEL_)
+#define NOAHMP_MPI
+#endif
+
   use netcdf
   use Machine
   use NoahmpIOVarType, only : NoahmpIO_type
 
-#ifdef _PARALLEL_
+#ifdef NOAHMP_MPI
   use mpi
 #endif
 
@@ -84,7 +88,7 @@ contains
              )
 ! ----------------------------------------------------------------------
 
-#ifdef _PARALLEL_  
+#ifdef NOAHMP_MPI  
     call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierr)
     if (ierr /= MPI_SUCCESS) stop "MPI_COMM_RANK"
 #else

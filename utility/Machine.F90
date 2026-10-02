@@ -6,16 +6,28 @@ module Machine
 
 ! ------------------------ Code history -----------------------------------
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! Sep 13, 2026: add MPAS kind type for coupling with MPAS, Cenlin He
 ! -------------------------------------------------------------------------
+
+! only for MPAS model coupling
+#ifdef NOAHMP_MPAS
+  use mpas_kind_types, only: RKIND
+#endif
 
   implicit none
   save
   private
 
+#ifdef NOAHMP_MPAS
+  integer, public, parameter :: kind_noahmp = RKIND ! MPAS precision
+#else
+
 #ifdef DOUBLE_PREC
   integer, public, parameter :: kind_noahmp = 8 ! double precision
 #else
   integer, public, parameter :: kind_noahmp = 4 ! single precision
+#endif
+
 #endif
 
   integer,                public, parameter :: undefined_int  = -9999       ! undefined integer for variable initialization

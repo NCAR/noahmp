@@ -1,16 +1,56 @@
 # Makefile 
-#
+
 .SUFFIXES:
 .SUFFIXES: .o .F90
 
+# Detect MPAS build from CPPFLAGS
+ifneq (,$(findstring -DNOAHMP_MPAS,$(CPPFLAGS)))
+NOAHMP_MPAS_BUILD = yes
+endif
+
+# Only HRLDAS/community compilation needs this file.
+# It is not needed for "make clean".
+ifneq ($(MAKECMDGOALS),clean)
+ifndef NOAHMP_MPAS_BUILD
 include ../../hrldas/user_build_options
+endif
+endif
+
 
 OBJS = Machine.o \
        CheckNanMod.o \
        PiecewiseLinearInterp1dMod.o
 #      ErrorHandleMod.o
 
-all:	$(OBJS)
+ifdef NOAHMP_MPAS_BUILD
+
+.PHONY: utility utility_lib
+all: dummy utility
+dummy:
+	@echo "****** compiling physics_noahmp/utility ******"
+utility: $(OBJS)
+utility_lib:
+	ar -ru ./../../libphys.a $(OBJS)
+
+else
+
+all: $(OBJS)
+
+endif
+
+#
+# Dependencies:
+#
+CheckNanMod.o: Machine.o
+PiecewiseLinearInterp1dMod.o: Machine.o
+
+
+ifdef NOAHMP_MPAS_BUILD
+
+.F90.o:
+	$(FC) $(CPPFLAGS) $(COREDEF) $(FFLAGS) -c $*.F90 $(CPPINCLUDES) $(FCINCLUDES) -I../../../../framework
+
+else
 
 .F90.o:
 	@echo ""
@@ -19,16 +59,8 @@ all:	$(OBJS)
 	$(COMPILERF90) -c $(F90FLAGS) $(FREESOURCE) $(NETCDFMOD) $(*).f90
 	@echo ""
 
-#
-# This command cleans up object (etc) files:
-#
+endif
 
 clean:
-	rm -f *.o *.mod *.exe *.f90
-
-#
-# Dependencies:
-#
-CheckNanMod.o: Machine.o
-PiecewiseLinearInterp1dMod.o: Machine.o
+	$(RM) *.o *.mod *.exe *.f90 *.i
 
