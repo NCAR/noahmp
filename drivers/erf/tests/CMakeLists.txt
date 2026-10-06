@@ -110,6 +110,11 @@ add_test(NAME fortran_alloc COMMAND test_fortran_alloc)
 noahmp_add_fortran_test(test_water_flux_units)
 add_test(NAME water_flux_units COMMAND test_water_flux_units)
 
+# Day-of-year convention: pins the 0-based JULIAN from NoahmpCalendarAdvance,
+# the int(JULIAN)+1 handed to CAL_MON_DAY, and the phenology month interpolation.
+noahmp_add_fortran_test(test_calendar)
+add_test(NAME calendar COMMAND test_calendar)
+
 # test_abort_handler.cpp routes NoahmpIO_abort's std::abort() to a clean _Exit so
 # the diagnostic flushes; cases below are detected by output, not exit code.
 noahmp_add_fortran_test(test_fortran_guards SOURCES test_abort_handler.cpp)

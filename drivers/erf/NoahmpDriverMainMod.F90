@@ -210,7 +210,8 @@ contains
                 if ( (NoahmpIO%SF_URBAN_PHYSICS > 0) .and. (NoahmpIO%IRI_URBAN == 1) ) then
                    SOLAR_TIME = (NoahmpIO%JULIAN - int(NoahmpIO%JULIAN))*24 + NoahmpIO%XLONG(I,J)/15.0
                    if ( SOLAR_TIME < 0.0 ) SOLAR_TIME = SOLAR_TIME + 24.0
-                   call CAL_MON_DAY(int(NoahmpIO%JULIAN), NoahmpIO%YR, JMONTH, JDAY)
+                   ! JULIAN is 0-based; CAL_MON_DAY takes 1..YEARLEN.
+                   call CAL_MON_DAY(int(NoahmpIO%JULIAN)+1, NoahmpIO%YR, JMONTH, JDAY)
                    if ( (SOLAR_TIME >= 21.0) .and. (SOLAR_TIME <= 23.0) .and. &
                         (JMONTH >= 5) .and. (JMONTH <= 9) ) then
                        noahmp%water%state%SoilMoisture(1) = &
@@ -306,17 +307,21 @@ contains
    end function NoahmpYearLength
 
    ! Advance the namelist start date by elapsed_sec. Returns the calendar year and
-   ! the 1-based day-of-year carrying the fraction of the day (Jan 1 00Z -> 1.0),
-   ! which is the form NoahmpIO%JULIAN is consumed in (DayJulianInYear, SOLAR_TIME,
-   ! CAL_MON_DAY). NoahmpIO is read-only here: the caller assigns the results, so
-   ! YR/JULIAN are never aliased against the intent(in) dummy.
+   ! the day-of-year carrying the fraction of the day, 0-based (Jan 1 00Z -> 0.0)
+   ! so 0 <= JULIAN < YEARLEN. That is the convention DayJulianInYear is consumed
+   ! in: PhenologyMainMod interpolates the monthly table LAI/SAI with
+   ! 12*DayCurrent/NumDayInYear, and the crop and irrigation date checks compare
+   ! against it. Consumers needing a 1-based day convert at the call site.
+   !
+   ! NoahmpIO is read-only here: the caller assigns the results, so YR/JULIAN are
+   ! never aliased against the intent(in) dummy.
    subroutine NoahmpCalendarAdvance(NoahmpIO, elapsed_sec, YR, JULIAN)
 
       implicit none
       type(NoahmpIO_type),    intent(in)  :: NoahmpIO
       real(kind=kind_noahmp), intent(in)  :: elapsed_sec   ! since the start date [s]
       integer,                intent(out) :: YR            ! 4-digit calendar year
-      real(kind=kind_noahmp), intent(out) :: JULIAN        ! day-of-year + day fraction
+      real(kind=kind_noahmp), intent(out) :: JULIAN        ! 0-based day-of-year + day fraction
 
       integer, parameter     :: i8 = selected_int_kind(18)
       integer                :: hh, mm, imon, doy, ylen, dmon
@@ -377,9 +382,8 @@ contains
          sec_of_year = sec_of_year + int(NoahmpYearLength(YR),i8)*86400_i8
       end do
 
-      JULIAN = 1.0_kind_noahmp                                       &
-             + (real(sec_of_year, kind=kind_noahmp) + fsec)          &
-               / 86400.0_kind_noahmp
+      JULIAN = (real(sec_of_year, kind=kind_noahmp) + fsec)          &
+             / 86400.0_kind_noahmp
 
    end subroutine NoahmpCalendarAdvance
 

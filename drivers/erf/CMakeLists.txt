@@ -48,8 +48,10 @@ add_library(NoahMP::noahmp ALIAS noahmp)
 # Precision (DOUBLE_PREC -> kind_noahmp) is set by the parent project; ERF uses
 # -DDOUBLE_PREC. Standalone falls back to upstream single unless you add it.
 
+# The target also compiles C++, so guard by source language: the C++ compiler
+# warns on an unused Fortran flag.
 if("${CMAKE_Fortran_COMPILER_ID}" MATCHES "GNU")
-    target_compile_options(noahmp PRIVATE "-ffree-line-length-none")
+    target_compile_options(noahmp PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:-ffree-line-length-none>)
 endif()
 
 target_include_directories(noahmp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)

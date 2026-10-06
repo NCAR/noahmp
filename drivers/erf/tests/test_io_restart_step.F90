@@ -350,7 +350,7 @@ contains
     call setr(blk%ZLVL, 10.0_c_kind_noahmp)
 
     blk%YR     = 2023
-    blk%JULIAN = 229.0_kind_noahmp
+    blk%JULIAN = 228.0_kind_noahmp   ! 0-based; NoahmpDriverMain recomputes it
 
     call NoahmpReadNamelist(blk)
 

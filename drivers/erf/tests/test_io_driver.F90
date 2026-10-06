@@ -92,7 +92,7 @@ program test_io_driver
   call setr(blk%ZLVL, 10.0_c_kind_noahmp)
 
   blk%YR     = 2023
-  blk%JULIAN = 229.0_kind_noahmp   ! ~Aug 17, matching namelist start date
+  blk%JULIAN = 228.0_kind_noahmp   ! 0-based; NoahmpDriverMain recomputes it
 
   ! ---- ERF cold-init sequence ----
   call NoahmpReadNamelist(blk)                 ! options, nsoil/nsnow, DTBL, soil layers
