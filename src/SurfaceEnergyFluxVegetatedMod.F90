@@ -37,6 +37,7 @@ contains
     integer                               :: LastIter                ! Last iteration
     integer                               :: MoStabParaSgn           ! number of times MoStabParaAbvCan changes sign
     integer                               :: IndexShade              ! index for sunlit/shaded (0=sunlit;1=shaded)
+    real(kind=kind_noahmp)                :: TemperatureCanStart     ! beginning-of-step canopy temperature [K]
     integer, parameter                    :: NumIterC = 20           ! number of iterations for surface temperature (5~20)
     integer, parameter                    :: NumIterG = 5            ! number of iterations for ground temperature (3~5)
     real(kind=kind_noahmp)                :: ExchCoeffShAbvCanTmp    ! sensible heat conductance, canopy air to reference height air [m/s]
@@ -171,6 +172,7 @@ contains
 ! ----------------------------------------------------------------------
 
     ! initialization (including variables that do not depend on stability iteration)
+    TemperatureCanStart = TemperatureCanopy
     LastIter          = 0
     FrictionVelVeg    = 0.1
     TemperatureCanChg = 0.0
@@ -319,7 +321,8 @@ contains
                               CanopyIce*ConstHeatCapacIce/ConstDensityIce      ! [J/m2/K]
        ! compute vegetation temperature change
        EnergyResTmp         = RadSwAbsVeg - RadLwNetCanopy - HeatSensibleCanopy - &
-                              HeatLatentCanEvap - HeatLatentCanTransp + HeatPrecipAdvCanopy
+                              HeatLatentCanEvap - HeatLatentCanTransp + HeatPrecipAdvCanopy - &
+                              VegFrac * HeatCapacCan / MainTimeStep * (TemperatureCanopy-TemperatureCanStart)
        FluxTotCoeff         = VegFrac * (4.0*LwCoeffCan*TemperatureCanopy**3 + ShCoeff + &
                                         (LhCoeff+TranspHeatCoeff)*VapPresSatCanTempD + HeatCapacCan/MainTimeStep)     ! volumetric heat capacity
        TemperatureCanChg    = EnergyResTmp / FluxTotCoeff
@@ -328,7 +331,10 @@ contains
        HeatSensibleCanopy   = HeatSensibleCanopy  + VegFrac * ShCoeff * TemperatureCanChg
        HeatLatentCanEvap    = HeatLatentCanEvap   + VegFrac * LhCoeff * VapPresSatCanTempD * TemperatureCanChg
        HeatLatentCanTransp  = HeatLatentCanTransp + VegFrac * TranspHeatCoeff * VapPresSatCanTempD * TemperatureCanChg
-       HeatCanStorageChg    = VegFrac * HeatCapacCan / MainTimeStep * TemperatureCanChg  ! canopy heat storage change [W/m2]
+       ! Full-step storage at the unrounded Newton state used by the fluxes.
+       ! Rounding stored TV first can exceed the 0.01 W/m2 balance tolerance.
+       HeatCanStorageChg    = VegFrac * HeatCapacCan / MainTimeStep * &
+                              (TemperatureCanopy-TemperatureCanStart+TemperatureCanChg)
        ! update vegetation temperature
        TemperatureCanopy    = TemperatureCanopy + TemperatureCanChg
       !TemperatureCanopyAir = TempShGhTmp + ExchCoeffShFrac * TemperatureCanopy                        ! canopy air T; update here for consistency
