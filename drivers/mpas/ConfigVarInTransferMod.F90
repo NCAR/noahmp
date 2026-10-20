@@ -96,7 +96,7 @@ contains
     noahmp%config%domain%VegType                     = NoahmpIO%IVGTYP(I)
     noahmp%config%domain%CropType                    = NoahmpIO%CROPCAT(I)
     noahmp%config%domain%IndicatorIceSfc             = NoahmpIO%ICE
-    noahmp%config%domain%DayJulianInYear             = NoahmpIO%JULIAN
+    noahmp%config%domain%DayJulianInYear             = NoahmpIO%JULIAN + 1.0 ! host model JULIAN starts at 0 day
     noahmp%config%domain%NumDayInYear                = NoahmpIO%YEARLEN
     noahmp%config%domain%Latitude                    = NoahmpIO%XLAT(I)
     noahmp%config%domain%RefHeightAboveSfc           = NoahmpIO%DZ8W(I,1)*0.5

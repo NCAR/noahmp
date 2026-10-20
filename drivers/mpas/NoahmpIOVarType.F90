@@ -72,7 +72,7 @@ module NoahmpIOVarType
     integer,                allocatable, dimension(:)      ::  IVGTYP              ! vegetation type
     integer,                allocatable, dimension(:)      ::  ISLTYP              ! soil type
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  COSZEN              ! cosine zenith angle
-    real(kind=kind_noahmp), allocatable, dimension(:)      ::  XLAT                ! latitude [rad]
+    real(kind=kind_noahmp), allocatable, dimension(:)      ::  XLAT                ! latitude [degree used in NoahMP]
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  DX                  ! horizontal grid spacing [m]
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  DY                  ! horizontal grid spacing [m]
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  DZ8W                ! thickness of atmo layers [m]
@@ -637,7 +637,7 @@ module NoahmpIOVarType
 ! 2D variables not used in WRF - should be removed?
 !------------------------------------------------------------------------
 
-    real(kind=kind_noahmp), allocatable, dimension(:)      ::  XLONG               ! longitude
+    real(kind=kind_noahmp), allocatable, dimension(:)      ::  XLONG               ! longitude: degree used inside NoahMP
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  TERRAIN             ! terrain height
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  GVFMIN              ! annual minimum in vegetation fraction
     real(kind=kind_noahmp), allocatable, dimension(:)      ::  GVFMAX              ! annual maximum in vegetation fraction
