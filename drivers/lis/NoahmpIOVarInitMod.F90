@@ -257,6 +257,16 @@ contains
     if ( .not. allocated (NoahmpIO%GVFMIN)     ) allocate ( NoahmpIO%GVFMIN      (XSTART:XEND,YSTART:YEND) ) ! annual minimum in vegetation fraction
     if ( .not. allocated (NoahmpIO%GVFMAX)     ) allocate ( NoahmpIO%GVFMAX      (XSTART:XEND,YSTART:YEND) ) ! annual maximum in vegetation fraction
 
+    !output variables needed for GEOS coupling
+    if ( .not. allocated (NoahmpIO%ZPDXY)      ) allocate ( NoahmpIO%ZPDXY       (XSTART:XEND,YSTART:YEND) )
+    if ( .not. allocated (NoahmpIO%USTARVEGXY) ) allocate ( NoahmpIO%USTARVEGXY  (XSTART:XEND,YSTART:YEND) )
+    if ( .not. allocated (NoahmpIO%USTARBAREXY)) allocate ( NoahmpIO%USTARBAREXY (XSTART:XEND,YSTART:YEND) )
+    if ( .not. allocated (NoahmpIO%TAUXXY)     ) allocate ( NoahmpIO%TAUXXY      (XSTART:XEND,YSTART:YEND) )
+    if ( .not. allocated (NoahmpIO%TAUYYXY)    ) allocate ( NoahmpIO%TAUYYXY     (XSTART:XEND,YSTART:YEND) )
+    if ( .not. allocated (NoahmpIO%RHOAIRXY)   ) allocate ( NoahmpIO%RHOAIRXY    (XSTART:XEND,YSTART:YEND) )
+    if ( .not. allocated (NoahmpIO%ALBSFCDIRXY) ) allocate ( NoahmpIO%ALBSFCDIRXY (XSTART:XEND,1:2,YSTART:YEND) ) ! surface albedo direct  (1=vis,2=nir)
+    if ( .not. allocated (NoahmpIO%ALBSFCDIFXY) ) allocate ( NoahmpIO%ALBSFCDIFXY (XSTART:XEND,1:2,YSTART:YEND) ) ! surface albedo diffuse (1=vis,2=nir)
+
     ! additional output variables
     if ( .not. allocated (NoahmpIO%PAHXY)       ) allocate ( NoahmpIO%PAHXY        (XSTART:XEND,        YSTART:YEND) )
     if ( .not. allocated (NoahmpIO%PAHGXY)      ) allocate ( NoahmpIO%PAHGXY       (XSTART:XEND,        YSTART:YEND) )
@@ -613,6 +623,16 @@ contains
     NoahmpIO%MP_HAIL         = 0.0
     NoahmpIO%SFCRUNOFF       = 0.0
     NoahmpIO%UDRUNOFF        = 0.0
+
+    !output variables needed for GEOS coupling
+    NoahmpIO%ZPDXY       = undefined_real
+    NoahmpIO%USTARVEGXY  = undefined_real
+    NoahmpIO%USTARBAREXY = undefined_real
+    NoahmpIO%TAUXXY      = undefined_real
+    NoahmpIO%TAUYYXY     = undefined_real
+    NoahmpIO%RHOAIRXY    = undefined_real
+    NoahmpIO%ALBSFCDIRXY = undefined_real
+    NoahmpIO%ALBSFCDIFXY = undefined_real
 
     ! additional output
     NoahmpIO%PAHXY           = undefined_real
