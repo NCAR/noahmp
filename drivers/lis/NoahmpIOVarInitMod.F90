@@ -634,7 +634,6 @@ contains
     NoahmpIO%RHOAIRXY    = undefined_real
     NoahmpIO%ALBSFCDIRXY = undefined_real
     NoahmpIO%ALBSFCDIFXY = undefined_real
-    NoahmpIO%EXCHCOEFFMOMSFCXY = undefined_real
     NoahmpIO%SOILTIMESTEPXY    = undefined_int
 
     ! additional output
