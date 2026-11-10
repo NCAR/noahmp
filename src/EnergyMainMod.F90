@@ -77,6 +77,8 @@ contains
 
 ! --------------------------------------------------------------------
     associate(                                                                        &
+              GridIndexI              => noahmp%config%domain%GridIndexI             ,&
+              GridIndexJ              => noahmp%config%domain%GridIndexJ             ,&
               PressureAirRefHeight    => noahmp%forcing%PressureAirRefHeight         ,& ! in,    air pressure [Pa] at reference height
               RadLwDownRefHeight      => noahmp%forcing%RadLwDownRefHeight           ,& ! in,    downward longwave radiation [W/m2] at reference height
               RadSwDownRefHeight      => noahmp%forcing%RadSwDownRefHeight           ,& ! in,    downward shortwave radiation [W/m2] at reference height
@@ -219,10 +221,12 @@ contains
 
     call SoilMatricPotential(noahmp)
 
-    if ( OptRoot == 1 ) call DynaRootGrowDie(noahmp)
-
-    ! soil water transpiration factor controlling stomatal resistance and evapotranspiration
-    call SoilWaterTranspiration(noahmp)
+    if ( OptRoot == 1 ) then 
+        call DynaRootGrowDie(noahmp)
+    else
+        ! soil water transpiration factor controlling stomatal resistance and evapotranspiration
+        call SoilWaterTranspiration(noahmp)
+    endif
 
     ! soil surface resistance for ground evaporation/sublimation
     call ResistanceGroundEvaporation(noahmp)

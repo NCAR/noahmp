@@ -28,6 +28,8 @@ contains
     integer                            :: DynaRootLayer   ! deepest layer with active roots
     integer                            :: MaxUptakeLayer  ! deepest layer with active root water uptake
     integer                            :: SoilIceFactor   ! multiplication factor corresponding to IndicatorIceSfc
+    real(kind=kind_noahmp)             :: SoilWetFac      ! temporary variable
+    real(kind=kind_noahmp)             :: MinThr          ! minimum threshold to prevent divided by zero
     real(kind=kind_noahmp)             :: LayerMidpoint   ! depth to midpoint of soil layer [m]
     real(kind=kind_noahmp)             :: MaximumInactiveDays ! max number of days without active roots until layer is inactive [s]
     real(kind=kind_noahmp)             :: MaximumEaseFunction ! maximum column-wise ease function value
@@ -38,27 +40,32 @@ contains
     real(kind=kind_noahmp), allocatable, dimension(:) :: DynaRootMask    ! indicator for presence of active roots (1=roots active; 0=roots not active)
     real(kind=kind_noahmp), allocatable, dimension(:) :: ThicknessSoilLayerTmp   ! ThicknessSoilLayer accounting for location of water table, only for root scheme [mm]    
     real(kind=kind_noahmp), allocatable, dimension(:) :: InactiveDays ! number of days without active roots [s]
+    real(kind=kind_noahmp), allocatable, dimension(:) :: EaseFunctionSat ! ease function at saturation
 ! --------------------------------------------------------------------
     associate(                                                                             &
-              ThicknessSoilLayer        => noahmp%config%domain%ThicknessSoilLayer        ,& ! in,  soil layer thickness [m]
+              ThicknessSnowSoilLayer    => noahmp%config%domain%ThicknessSnowSoilLayer    ,& ! in,  soil layer thickness [m]
               DepthSoilLayer            => noahmp%config%domain%DepthSoilLayer            ,& ! in,  layer-bottom depth from soil surface [m]
               NumSoilLayer              => noahmp%config%domain%NumSoilLayer              ,& ! in,  number of soil layers
               MainTimeStep              => noahmp%config%domain%MainTimeStep              ,& ! in,  main Noah-MP model time step [s]
               IndicatorIceSfc           => noahmp%config%domain%IndicatorIceSfc           ,& ! in,  indicator for sea ice and land ice (1=sea ice; -1=land ice; 0=non-ice)
               WaterTableDepth           => noahmp%water%state%WaterTableDepth             ,& ! in,  depth to water table [m]
               SoilMatPotential          => noahmp%water%state%SoilMatPotential            ,& ! in,  soil matrix potential [m]
+              SoilMatPotentialSat       => noahmp%water%param%SoilMatPotentialSat         ,& ! in,  saturated soil matric potential [m]
               HeightCanopyTop           => noahmp%energy%param%HeightCanopyTop            ,& ! in,  height of canopy top [m]
               InactiveTimeSteps         => noahmp%water%state%InactiveTimeSteps           ,& ! inout, number of time steps without active roots               
               NumSoilLayerRoot          => noahmp%water%param%NumSoilLayerRoot            ,& ! inout,  number of soil layers with root present
+              SoilTranspFac             => noahmp%water%state%SoilTranspFac               ,& ! out, soil water transpiration factor (0 to 1)
+              SoilTranspFacAcc          => noahmp%water%state%SoilTranspFacAcc            ,& ! out, accumulated soil water transpiration factor (0 to 1)
               EaseFunction              => noahmp%water%state%EaseFunction                ,& ! out, ease function
               RootActivity              => noahmp%water%state%RootActivity                ,& ! out, root activity function
               MaxUptakeDepth            => noahmp%water%state%MaxUptakeDepth               & ! out, bottom of deepest root water uptake layer [m]
               )
 ! ----------------------------------------------------------------------
 
-    if (.not. allocated(DynaRootMask)  ) allocate(DynaRootMask  (1:NumSoilLayer))
+    if (.not. allocated(DynaRootMask)   ) allocate(DynaRootMask  (1:NumSoilLayer))
     if (.not. allocated(ThicknessSoilLayerTmp)  ) allocate(ThicknessSoilLayerTmp  (1:NumSoilLayer))
-    if (.not. allocated(InactiveDays)  ) allocate(InactiveDays  (1:NumSoilLayer))
+    if (.not. allocated(InactiveDays)   ) allocate(InactiveDays  (1:NumSoilLayer))
+    if (.not. allocated(EaseFunctionSat)) allocate(EaseFunctionSat (1:NumSoilLayer))
 
     ! initialize
     DynaRootMask          = 0.0
@@ -66,10 +73,12 @@ contains
     EaseFunction          = 0.0
     RootActivity          = 0.0
     InactiveDays          = 0.0
+    SoilTranspFacAcc      = 0.0
 
+    MinThr                = 1.0e-6
     MaximumInactiveDays   = 31536000.0 ! seconds in a year
 
-    ThicknessSoilLayerTmp = ThicknessSoilLayer(1:NumSoilLayer)   ! soil thickness variable for use in root scheme
+    ThicknessSoilLayerTmp = ThicknessSnowSoilLayer(1:NumSoilLayer)   ! soil thickness variable for use in root scheme
 
     ! determine WaterTableLayer
     IF(WaterTableDepth + 1.0E-6 .lt. DepthSoilLayer(NumSoilLayer)) THEN  ! set WaterTableLayer to NumSoilLayer if water table below resolved layers
@@ -130,6 +139,26 @@ contains
     IF(DynaRootLayer .lt. NumSoilLayer)THEN
         IF(EaseFunction(DynaRootLayer+1) .gt. 0.) DynaRootLayer = DynaRootLayer+1
     ENDIF
+    
+    DO IndSoil = 1, MIN(DynaRootLayer, NumSoilLayer)
+        IF (IndSoil==1) THEN            ! get layer midpoints
+                LayerMidpoint = -0.05
+        ELSE
+                LayerMidpoint =  0.5 * (DepthSoilLayer(IndSoil-1) + DepthSoilLayer(IndSoil))
+        ENDIF
+        ! calculate saturated ease function
+        EaseFunctionSat(IndSoil) = MAX(-( LeafWiltMatPotential - SoilMatPotentialSat(IndSoil) )*SoilIceFactor / ( EffectiveCanopyHeight-LayerMidpoint ), 0.)
+
+        SoilWetFac               = EaseFunction(IndSoil) / EaseFunctionSat(IndSoil)
+        SoilWetFac               = min(1.0, max(0.0,SoilWetFac))
+
+        SoilTranspFac(IndSoil)   = max(MinThr, ThicknessSnowSoilLayer(IndSoil) / &
+                                      (-DepthSoilLayer(NumSoilLayerRoot)) * SoilWetFac)
+        SoilTranspFacAcc         = SoilTranspFacAcc + SoilTranspFac(IndSoil)
+    ENDDO
+
+    SoilTranspFacAcc = max(MinThr, SoilTranspFacAcc)
+    SoilTranspFac(1:NumSoilLayerRoot) = SoilTranspFac(1:NumSoilLayerRoot) / SoilTranspFacAcc
 
     ! calculate root activity
     SumEaseFunction = SUM(EaseFunction*ThicknessSoilLayerTmp(1:NumSoilLayer))
