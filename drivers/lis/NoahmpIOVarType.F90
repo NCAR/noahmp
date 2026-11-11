@@ -271,6 +271,17 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  soldrain            ! soil drainage
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  qtiledrain          ! tile drainage
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ZWATBLE2D           ! water table depth
+    
+    !output variables needed for GEOS coupling
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  ZPDXY               ! Zero plane displacement [m]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  USTARVEGXY          ! Friction velocity vegetated [m/s]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  USTARBAREXY         ! Friction velocity bare [m/s]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TAUXXY              ! Wind stress EW [N/m2]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TAUYYXY             ! Wind stress NS [N/m2]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RHOAIRXY            ! Air density ref height [kg/m3]
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIRXY         ! surface albedo, direct beam [-] (1=vis, 2=nir)
+    real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIFXY         ! surface albedo, diffuse    [-] (1=vis, 2=nir)
+    integer, allocatable, dimension(:,:)    ::  SOILTIMESTEPXY
 
     ! additional output variables
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  PAHXY               ! precipitation advected heat [W/m2]
