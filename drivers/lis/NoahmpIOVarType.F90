@@ -281,6 +281,8 @@ module NoahmpIOVarType
     real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  RHOAIRXY            ! Air density ref height [kg/m3]
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIRXY         ! surface albedo, direct beam [-] (1=vis, 2=nir)
     real(kind=kind_noahmp), allocatable, dimension(:,:,:)  ::  ALBSFCDIFXY         ! surface albedo, diffuse    [-] (1=vis, 2=nir)
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  T2MXY               ! Grid mean 2m air temperature [K]
+    real(kind=kind_noahmp), allocatable, dimension(:,:)    ::  TSFCXY              ! Grid mean skin temperature [K]
     integer, allocatable, dimension(:,:)    ::  SOILTIMESTEPXY
 
     ! additional output variables

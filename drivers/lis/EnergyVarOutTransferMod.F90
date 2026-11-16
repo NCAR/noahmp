@@ -149,6 +149,8 @@ contains
     NoahmpIO%TAUXXY      (I,J) = noahmp%energy%state%WindStressEwSfc
     NoahmpIO%TAUYYXY     (I,J) = noahmp%energy%state%WindStressNsSfc
     NoahmpIO%RHOAIRXY    (I,J) = noahmp%energy%state%DensityAirRefHeight 
+    NoahmpIO%T2MXY       (I,J) = noahmp%energy%state%TemperatureAir2m
+    NoahmpIO%TSFCXY      (I,J) = noahmp%energy%state%TemperatureSfc
     NoahmpIO%ALBSFCDIRXY (I,:,J) = noahmp%energy%state%AlbedoSfcDir(:)   ! (1=vis, 2=nir)
     NoahmpIO%ALBSFCDIFXY (I,:,J) = noahmp%energy%state%AlbedoSfcDif(:)   ! (1=vis, 2=nir)
 
