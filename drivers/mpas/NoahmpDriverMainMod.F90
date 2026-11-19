@@ -172,7 +172,7 @@ contains
              if ( (NoahmpIO%SF_URBAN_PHYSICS > 0) .and. (NoahmpIO%IRI_URBAN == 1) ) then
                 SOLAR_TIME = (NoahmpIO%JULIAN - int(NoahmpIO%JULIAN))*24 + NoahmpIO%XLONG(I)/15.0
                 if ( SOLAR_TIME < 0.0 ) SOLAR_TIME = SOLAR_TIME + 24.0
-                call CAL_MON_DAY(int(NoahmpIO%JULIAN), NoahmpIO%YR, JMONTH, JDAY)
+                call CAL_MON_DAY(NoahmpIO%JULDAY, NoahmpIO%YR, JMONTH, JDAY)
                 if ( (SOLAR_TIME >= 21.0) .and. (SOLAR_TIME <= 23.0) .and. &
                      (JMONTH >= 5) .and. (JMONTH <= 9) ) then
                     noahmp%water%state%SoilMoisture(1) = &

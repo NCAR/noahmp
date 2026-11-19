@@ -10,6 +10,7 @@ dummy:
 OBJS =  NoahmpSnowInitMod.o \
 	NoahmpInitMainMod.o \
 	NoahmpDriverMainMod.o \
+	NoahmpUrbanDriverMainMod.o \
 	NoahmpIOVarType.o \
 	NoahmpIOVarInitMod.o \
 	NoahmpIOVarFinalizeMod.o \
@@ -61,6 +62,12 @@ NoahmpDriverMainMod.o:      ../../utility/Machine.o ../../src/NoahmpVarType.o No
                             ForcingVarInTransferMod.o EnergyVarInTransferMod.o \
                             WaterVarInTransferMod.o BiochemVarInTransferMod.o \
 			    ../../../mpas_atmphys_date_time.o
+NoahmpUrbanDriverMainMod.o: NoahmpIOVarType.o \
+	                    ../../../physics_wrf/module_sf_urban.o \
+			    ../../../mpas_atmphys_date_time.o \
+			    ../../../mpas_atmphys_constants.o \
+			    ../../../../../framework/mpas_kind_types.o \
+			    ../../../../../framework/mpas_constants.o
 
 clean:
 	$(RM) *.f90 *.o *.mod
@@ -69,5 +76,5 @@ clean:
 	$(RM) *.i
 
 .F90.o:
-	$(FC) $(CPPFLAGS) $(COREDEF) $(FFLAGS) -c $*.F90 $(CPPINCLUDES) $(FCINCLUDES) -I. -I../../utility -I../../src -I../../../../../framework -I../../../../physics $(MPAS_ESMF_INC)
+	$(FC) $(CPPFLAGS) $(COREDEF) $(FFLAGS) -c $*.F90 $(CPPINCLUDES) $(FCINCLUDES) -I. -I../../utility -I../../src -I../../../../../framework -I../../../../physics -I../../../physics_wrf $(MPAS_ESMF_INC)
 
