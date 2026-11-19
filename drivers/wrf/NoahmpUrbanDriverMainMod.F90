@@ -40,6 +40,13 @@ contains
                       cmcg_urb2d, flxhumvg_urb2d, flxhumt_urb2d,                            & !H urban
                              julian,          julyr,                                        & !H urban
                           frc_urb2d,    utype_urb2d,                                        & !I urban
+                           qf_urb2d,      qfb_urb2d,   qfb_cl_urb2d, qfb_ht_urb2d,          & !H SLUCM+BEM
+                          qfl_urb2d,     qflb_urb2d,     ecac_urb2d,     ec_urb2d,          & !H SLUCM+BEM
+                          cop_urb2d,      tin_urb2d,      hin_urb2d,   hout_urb2d,          & !H SLUCM+BEM
+                         twin_urb2d,     tgin_urb2d,   wbgtin_urb2d,  mrtin_urb2d,          & !H SLUCM+BEM
+                        qbcht_urb2d,    qbrht_urb2d,    qrcht_urb2d,  qrrht_urb2d,          & !H SLUCM+BEM
+                        qvent_urb2d,      qin_urb2d,    event_urb2d,     ein_urb2d,          & !H SLUCM+BEM
+                         eout_urb2d,                                                        & !H SLUCM+BEM
                                 chs,           chs2,           cqs2,                        & !H
                       num_urban_ndm,  urban_map_zrd,  urban_map_zwd, urban_map_gd,          & !I multi-layer urban
                        urban_map_zd,  urban_map_zdf,   urban_map_bd, urban_map_wd,          & !I multi-layer urban
@@ -236,6 +243,33 @@ contains
      REAL, OPTIONAL, DIMENSION( ims:ime, 1:num_wall_layers, jms:jme ), INTENT(INOUT) :: TBL_URB3D
      REAL, OPTIONAL, DIMENSION( ims:ime, 1:num_road_layers, jms:jme ), INTENT(INOUT) :: TGL_URB3D
 
+! SLUCM+BEM diagnostics and indoor state
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: QF_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: QFB_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: QFB_CL_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: QFB_HT_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: QFL_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: QFLB_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: ECAC_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: EC_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: COP_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: TIN_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: HIN_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: HOUT_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: TWIN_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: TGIN_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: WBGTIN_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: MRTIN_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: QBCHT_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: QBRHT_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: QRCHT_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: QRRHT_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: QVENT_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: QIN_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: EVENT_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: EIN_URB2D
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) :: EOUT_URB2D
+
 ! output variable lsm --> surface_driver
 
      REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(OUT) :: PSIM_URB2D
@@ -284,6 +318,14 @@ contains
      REAL :: lf_urb_s
      REAL :: z0_urb
      REAL :: vegfrac
+
+! SLUCM+BEM local diagnostics and indoor humidity state
+     REAL :: QF_URB, QFB_URB, QFB_CL_URB, QFB_HT_URB
+     REAL :: QFL_URB, QFLB_URB, ECAC_URB, EC_URB, COP_URB
+     REAL :: TIN_URB, HIN_URB, HOUT_URB
+     REAL :: TWIN_URB, TGIN_URB, WBGTIN_URB, MRTIN_URB
+     REAL :: QBCHT_URB, QBRHT_URB, QRCHT_URB, QRRHT_URB, QVENT_URB
+     REAL :: QIN_URB, EVENT_URB, EIN_URB, EOUT_URB
 
 ! Local variables
 
@@ -491,6 +533,32 @@ ILOOP : DO I = its, ite
     XXXG_URB = XXXG_URB2D(I,J)
     XXXC_URB = XXXC_URB2D(I,J)
 
+    QF_URB     = QF_URB2D(I,J)
+    QFB_URB    = QFB_URB2D(I,J)
+    QFB_CL_URB = QFB_CL_URB2D(I,J)
+    QFB_HT_URB = QFB_HT_URB2D(I,J)
+    QFL_URB    = QFL_URB2D(I,J)
+    QFLB_URB   = QFLB_URB2D(I,J)
+    ECAC_URB   = ECAC_URB2D(I,J)
+    EC_URB     = EC_URB2D(I,J)
+    COP_URB    = COP_URB2D(I,J)
+    TIN_URB    = TIN_URB2D(I,J)
+    HIN_URB    = HIN_URB2D(I,J)
+    HOUT_URB   = HOUT_URB2D(I,J)
+    TWIN_URB   = TWIN_URB2D(I,J)
+    TGIN_URB   = TGIN_URB2D(I,J)
+    WBGTIN_URB = WBGTIN_URB2D(I,J)
+    MRTIN_URB  = MRTIN_URB2D(I,J)
+    QBCHT_URB  = QBCHT_URB2D(I,J)
+    QBRHT_URB  = QBRHT_URB2D(I,J)
+    QRCHT_URB  = QRCHT_URB2D(I,J)
+    QRRHT_URB  = QRRHT_URB2D(I,J)
+    QVENT_URB  = QVENT_URB2D(I,J)
+    QIN_URB    = QIN_URB2D(I,J)
+    EVENT_URB  = EVENT_URB2D(I,J)
+    EIN_URB    = EIN_URB2D(I,J)
+    EOUT_URB   = EOUT_URB2D(I,J)
+
 ! Limits to avoid dividing by small number
     IF (CHS(I,J) < 1.0E-02) THEN
       CHS(I,J)  = 1.0E-02
@@ -560,7 +628,12 @@ ILOOP : DO I = its, ite
           DRELR_URB,  DRELB_URB,                                                       & ! H
           DRELG_URB,FLXHUMR_URB,FLXHUMB_URB,FLXHUMG_URB,                               &
           TVG_URB,TT_URB,XXXVG_URB,TVGL_URB,SMG_URB,CMCG_URB,FLXHUMVG_URB,FLXHUMT_URB, &
-          lf_urb_s, z0_urb, vegfrac)
+          lf_urb_s, z0_urb, vegfrac,                                                   &
+          QF_URB, QFB_URB, QFB_CL_URB, QFB_HT_URB, QFL_URB, QFLB_URB,                 &
+          ECAC_URB, EC_URB, COP_URB, TIN_URB, HIN_URB, HOUT_URB,                       &
+          TWIN_URB, TGIN_URB, WBGTIN_URB, MRTIN_URB,                                   &
+          QBCHT_URB, QBRHT_URB, QRCHT_URB, QRRHT_URB, QVENT_URB,                       &
+          QIN_URB, EVENT_URB, EIN_URB, EOUT_URB, ITIMESTEP)
 
     TS_URB2D(I,J) = TS_URB
 
@@ -644,6 +717,32 @@ ILOOP : DO I = its, ite
       CMC_SFCDIF(I,J)  = CMC_URB
       CHC_SFCDIF(I,J)  = CHC_URB
     ENDIF
+
+    QF_URB2D(I,J)     = QF_URB
+    QFB_URB2D(I,J)    = QFB_URB
+    QFB_CL_URB2D(I,J) = QFB_CL_URB
+    QFB_HT_URB2D(I,J) = QFB_HT_URB
+    QFL_URB2D(I,J)    = QFL_URB
+    QFLB_URB2D(I,J)   = QFLB_URB
+    ECAC_URB2D(I,J)   = ECAC_URB
+    EC_URB2D(I,J)     = EC_URB
+    COP_URB2D(I,J)    = COP_URB
+    TIN_URB2D(I,J)    = TIN_URB
+    HIN_URB2D(I,J)    = HIN_URB
+    HOUT_URB2D(I,J)   = HOUT_URB
+    TWIN_URB2D(I,J)   = TWIN_URB
+    TGIN_URB2D(I,J)   = TGIN_URB
+    WBGTIN_URB2D(I,J) = WBGTIN_URB
+    MRTIN_URB2D(I,J)  = MRTIN_URB
+    QBCHT_URB2D(I,J)  = QBCHT_URB
+    QBRHT_URB2D(I,J)  = QBRHT_URB
+    QRCHT_URB2D(I,J)  = QRCHT_URB
+    QRRHT_URB2D(I,J)  = QRRHT_URB
+    QVENT_URB2D(I,J)  = QVENT_URB
+    QIN_URB2D(I,J)    = QIN_URB
+    EVENT_URB2D(I,J)  = EVENT_URB
+    EIN_URB2D(I,J)    = EIN_URB
+    EOUT_URB2D(I,J)   = EOUT_URB
 
   ENDIF                                 ! urban land used type block
 
