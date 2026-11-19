@@ -57,7 +57,8 @@ contains
     ! thermal capacity of snow
     do LoopInd = NumSnowLayerNeg+1, 0
        SnowDensBulk(LoopInd)     = (SnowIce(LoopInd) + SnowLiqWater(LoopInd)) / ThicknessSnowSoilLayer(LoopInd)
-       HeatCapacVolSnow(LoopInd) = ConstHeatCapacIce*SnowIceVol(LoopInd) + ConstHeatCapacWater*SnowLiqWaterVol(LoopInd)
+       HeatCapacVolSnow(LoopInd) = (ConstHeatCapacIce/ConstDensityIce*SnowIce(LoopInd) + &
+                                    ConstHeatCapacWater/ConstDensityWater*SnowLiqWater(LoopInd)) / ThicknessSnowSoilLayer(LoopInd)
       !HeatCapacVolSnow(LoopInd) = 0.525e06  ! constant
     enddo
 

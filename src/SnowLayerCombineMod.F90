@@ -31,6 +31,9 @@ contains
     integer                          :: IndNeighbor       ! adjacent node selected for combination
     real(kind=kind_noahmp)           :: SnowIceTmp        ! total ice mass in snow
     real(kind=kind_noahmp)           :: SnowLiqTmp        ! total liquid water in snow
+    real(kind=kind_noahmp)           :: HeatSnowTmp       ! heat of the merged snow layers relative to freezing [J/m2]
+    real(kind=kind_noahmp)           :: HeatCapacTmp      ! heat capacity of the merged snow layer [J/m2/K]
+    real(kind=kind_noahmp)           :: HeatSnowToGround  ! heat of removed snow layers relative to freezing [J/m2]
     real(kind=kind_noahmp)           :: SnowThickMin(3)   ! minimum thickness of each snow layer
     data SnowThickMin /0.025, 0.025, 0.1/                 ! MB: change limit
     !data SnowThickMin /0.045, 0.05, 0.2/
@@ -41,6 +44,7 @@ contains
               NumSnowLayerNeg        => noahmp%config%domain%NumSnowLayerNeg        ,& ! inout, actual number of snow layers (negative)
               ThicknessSnowSoilLayer => noahmp%config%domain%ThicknessSnowSoilLayer ,& ! inout, thickness of snow/soil layers [m]
               TemperatureSoilSnow    => noahmp%energy%state%TemperatureSoilSnow     ,& ! inout, snow and soil layer temperature [K]
+              HeatCapacSoilSnow      => noahmp%energy%state%HeatCapacSoilSnow       ,& ! in,    heat capacity for all snow and soil layers [J/m3/K]
               SnowDepth              => noahmp%water%state%SnowDepth                ,& ! inout, snow depth [m]
               SnowWaterEquiv         => noahmp%water%state%SnowWaterEquiv           ,& ! inout, snow water equivalent [mm]
               SnowIce                => noahmp%water%state%SnowIce                  ,& ! inout, snow layer ice [mm]
@@ -63,14 +67,21 @@ contains
 ! ----------------------------------------------------------------------
 
     ! check and combine small ice content layer
-    NumSnowLayerOld = NumSnowLayerNeg
+    NumSnowLayerOld  = NumSnowLayerNeg
+    HeatSnowToGround = 0.0
 
     do J = NumSnowLayerOld+1,0
        if ( SnowIce(J) <= 0.1 ) then
           if ( J /= 0 ) then
+             HeatSnowTmp = SnowLayerHeatCapac(SnowIce(J),SnowLiqWater(J),ThicknessSnowSoilLayer(J)) * &
+                           (TemperatureSoilSnow(J)-ConstFreezePoint) + &
+                           SnowLayerHeatCapac(SnowIce(J+1),SnowLiqWater(J+1),ThicknessSnowSoilLayer(J+1)) * &
+                           (TemperatureSoilSnow(J+1)-ConstFreezePoint)
              SnowLiqWater(J+1)           = SnowLiqWater(J+1) + SnowLiqWater(J)
              SnowIce(J+1)                = SnowIce(J+1) + SnowIce(J)
              ThicknessSnowSoilLayer(J+1) = ThicknessSnowSoilLayer(J+1) + ThicknessSnowSoilLayer(J)
+             HeatCapacTmp = SnowLayerHeatCapac(SnowIce(J+1),SnowLiqWater(J+1),ThicknessSnowSoilLayer(J+1))
+             if ( HeatCapacTmp > 0.0 ) TemperatureSoilSnow(J+1) = ConstFreezePoint + HeatSnowTmp / HeatCapacTmp
 
              if ( OptSnowAlbedo == 3 ) then
                 MassBChydropho(J+1)      = MassBChydropho(J+1) +  MassBChydropho(J)
@@ -86,9 +97,15 @@ contains
 
           else
              if ( NumSnowLayerNeg < -1 ) then    ! MB/KM: change to NumSnowLayerNeg
+                HeatSnowTmp = SnowLayerHeatCapac(SnowIce(J),SnowLiqWater(J),ThicknessSnowSoilLayer(J)) * &
+                              (TemperatureSoilSnow(J)-ConstFreezePoint) + &
+                              SnowLayerHeatCapac(SnowIce(J-1),SnowLiqWater(J-1),ThicknessSnowSoilLayer(J-1)) * &
+                              (TemperatureSoilSnow(J-1)-ConstFreezePoint)
                 SnowLiqWater(J-1)           = SnowLiqWater(J-1) + SnowLiqWater(J)
                 SnowIce(J-1)                = SnowIce(J-1) + SnowIce(J)
                 ThicknessSnowSoilLayer(J-1) = ThicknessSnowSoilLayer(J-1) + ThicknessSnowSoilLayer(J)
+                HeatCapacTmp = SnowLayerHeatCapac(SnowIce(J-1),SnowLiqWater(J-1),ThicknessSnowSoilLayer(J-1))
+                if ( HeatCapacTmp > 0.0 ) TemperatureSoilSnow(J-1) = ConstFreezePoint + HeatSnowTmp / HeatCapacTmp
 
                 if ( OptSnowAlbedo == 3 ) then
                    MassBChydropho(J-1)      = MassBChydropho(J-1) +  MassBChydropho(J)
@@ -116,6 +133,8 @@ contains
                    SnowWaterEquiv = 0.0
                    SnowDepth      = 0.0
                 endif ! if(SnowIce(J) >= 0.0)
+                HeatSnowToGround  = HeatSnowToGround + (TemperatureSoilSnow(J)-ConstFreezePoint) * &
+                                    SnowLayerHeatCapac(SnowIce(J),SnowLiqWater(J),ThicknessSnowSoilLayer(J))
                 SnowLiqWater(J)   = 0.0
                 SnowIce(J)        = 0.0
                 ThicknessSnowSoilLayer(J) = 0.0
@@ -171,6 +190,12 @@ contains
        SoilIce(1)      = 0.0
     endif
 
+    ! heat of removed snow layers to the top soil layer
+    if ( HeatSnowToGround /= 0.0 ) then
+       TemperatureSoilSnow(1) = TemperatureSoilSnow(1) + HeatSnowToGround / (HeatCapacSoilSnow(1)*ThicknessSnowSoilLayer(1))
+       HeatSnowToGround       = 0.0
+    endif
+
     if ( NumSnowLayerNeg ==0 ) return   ! MB: get out if no longer multi-layer
 
     SnowWaterEquiv = 0.0
@@ -188,10 +213,16 @@ contains
     ! check the snow depth - all snow gone, the liquid water assumes ponding on soil surface.
     ! if ( (SnowDepth < 0.05) .and. (NumSnowLayerNeg < 0) ) then
     if ( (SnowDepth < 0.025) .and. (NumSnowLayerNeg < 0) ) then ! MB: change limit
+       do J = NumSnowLayerNeg+1, 0
+          HeatSnowToGround = HeatSnowToGround + (TemperatureSoilSnow(J)-ConstFreezePoint) * &
+                             SnowLayerHeatCapac(SnowIce(J),SnowLiqWater(J),ThicknessSnowSoilLayer(J))
+       enddo
        NumSnowLayerNeg     = 0
        SnowWaterEquiv      = SnowIceTmp
        PondSfcThinSnwTrans = SnowLiqTmp                ! LIMIT OF NumSnowLayerNeg < 0 MEANS INPUT PONDING
        if ( SnowWaterEquiv <= 0.0 ) SnowDepth = 0.0    ! SHOULD BE ZERO; SEE ABOVE
+       TemperatureSoilSnow(1) = TemperatureSoilSnow(1) + HeatSnowToGround / (HeatCapacSoilSnow(1)*ThicknessSnowSoilLayer(1))
+       HeatSnowToGround       = 0.0
     endif
 
     ! check the snow depth - snow layers combined
@@ -273,5 +304,21 @@ contains
     end associate
 
   end subroutine SnowLayerCombine
+
+  ! heat capacity of a snow layer from its ice and liquid mass [J/m2/K]
+  function SnowLayerHeatCapac(IceLayer, LiqLayer, ThickLayer) result(HeatCapac)
+
+    implicit none
+
+    real(kind=kind_noahmp), intent(in) :: IceLayer      ! snow layer ice [kg/m2]
+    real(kind=kind_noahmp), intent(in) :: LiqLayer      ! snow layer liquid water [kg/m2]
+    real(kind=kind_noahmp), intent(in) :: ThickLayer    ! snow layer thickness [m]
+    real(kind=kind_noahmp)             :: HeatCapac     ! snow layer heat capacity [J/m2/K]
+
+    HeatCapac = 0.0
+    if ( ThickLayer > 0.0 ) HeatCapac = ConstHeatCapacIce/ConstDensityIce * max(0.0,IceLayer) + &
+                                        ConstHeatCapacWater/ConstDensityWater * max(0.0,LiqLayer)
+
+  end function SnowLayerHeatCapac
 
 end module SnowLayerCombineMod

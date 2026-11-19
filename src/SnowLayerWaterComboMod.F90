@@ -44,21 +44,15 @@ contains
     ThickLayerComb = ThickLayer1 + ThickLayer2
     IceLayerComb   = IceLayer1 + IceLayer2
     LiqLayerComb   = LiqLayer1 + LiqLayer2
-    EnthLayer1     = (ConstHeatCapacIce*IceLayer1  + ConstHeatCapacWater*LiqLayer1) * &
+    ! enthalpy with per-mass heat capacities
+    EnthLayer1     = (ConstHeatCapacIce/ConstDensityIce*IceLayer1 + ConstHeatCapacWater/ConstDensityWater*LiqLayer1) * &
                      (TempLayer1-ConstFreezePoint) + ConstLatHeatFusion*LiqLayer1
-    EnthLayer2     = (ConstHeatCapacIce*IceLayer2  + ConstHeatCapacWater*LiqLayer2) * &
+    EnthLayer2     = (ConstHeatCapacIce/ConstDensityIce*IceLayer2 + ConstHeatCapacWater/ConstDensityWater*LiqLayer2) * &
                      (TempLayer2-ConstFreezePoint) + ConstLatHeatFusion*LiqLayer2
 
     EnthLayerComb  = EnthLayer1 + EnthLayer2
-    if ( EnthLayerComb < 0.0 ) then
-       TempLayerComb = ConstFreezePoint + EnthLayerComb / &
-                       (ConstHeatCapacIce*IceLayerComb + ConstHeatCapacWater*LiqLayerComb)
-    else if ( EnthLayerComb <= (ConstLatHeatFusion*LiqLayerComb) ) then
-       TempLayerComb = ConstFreezePoint
-    else
-       TempLayerComb = ConstFreezePoint + (EnthLayerComb-ConstLatHeatFusion*LiqLayerComb) / &
-                       (ConstHeatCapacIce*IceLayerComb + ConstHeatCapacWater*LiqLayerComb)
-    endif
+    TempLayerComb  = ConstFreezePoint + (EnthLayerComb-ConstLatHeatFusion*LiqLayerComb) / &
+                     (ConstHeatCapacIce/ConstDensityIce*IceLayerComb + ConstHeatCapacWater/ConstDensityWater*LiqLayerComb)
 
     ThickLayer1 = ThickLayerComb
     IceLayer1   = IceLayerComb
