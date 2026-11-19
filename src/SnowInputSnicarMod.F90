@@ -3,7 +3,7 @@ module SnowInputSnicarMod
 !!! read in required SNICAR snow albedo parameter datasets
 !!! This module should be called in host model driver but archived here in NoahMP src cold
 
-#if defined(_MPI) || defined(DM_PARALLEL) || defined(MPP_LAND) || defined(_PARALLEL_)
+#if defined(_MPI) || (defined(DM_PARALLEL) && !defined(STUBMPI)) || defined(MPP_LAND) || defined(_PARALLEL_)
 #define NOAHMP_MPI
 #endif
 
